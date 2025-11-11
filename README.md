@@ -44,7 +44,6 @@ The app will be available at `http://localhost:5173`
 - `npm run preview` - Preview production build locally
 - `npm run lint` - Run ESLint
 - `npm run format` - Format code with Prettier
-- `npm run deploy` - Deploy to GitHub Pages
 
 ## Project Structure
 
@@ -68,15 +67,26 @@ src/
 
 ## Deployment
 
-This project is configured for GitHub Pages deployment:
+This project uses **GitHub Actions** for automatic deployment to GitHub Pages.
 
-1. Update the `base` in `vite.config.ts` to match your repository name
-2. Run the deployment command:
-```bash
-npm run deploy
-```
+### Automatic Deployment
 
-The app will be deployed to `https://<username>.github.io/<repo-name>/`
+Every push to the `master` branch automatically triggers a deployment. The workflow:
+1. Checks out your code
+2. Installs dependencies
+3. Builds the production bundle
+4. Deploys to GitHub Pages
+
+### First-Time Setup
+
+To enable GitHub Pages, you need to configure it once in your repository:
+
+1. Go to your repository on GitHub
+2. Click **Settings** → **Pages**
+3. Under **Source**, select **GitHub Actions**
+4. The site will be available at: `https://ismailsunni.github.io/onepieceofdata-react/`
+
+That's it! Every future push to `master` will automatically deploy your changes.
 
 ## Learning React
 
