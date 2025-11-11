@@ -1,25 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import Card from '../components/Card'
 import StatCard from '../components/StatCard'
-import { fetchDatabaseStats, DatabaseStats } from '../services/statsService'
+import { fetchDatabaseStats } from '../services/statsService'
 
 function HomePage() {
-  // State to store the database statistics
-  const [stats, setStats] = useState<DatabaseStats | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  // useEffect runs when component mounts (loads)
-  // It fetches data from Supabase
-  useEffect(() => {
-    async function loadStats() {
-      setLoading(true)
-      const data = await fetchDatabaseStats()
-      setStats(data)
-      setLoading(false)
-    }
-
-    loadStats()
-  }, []) // Empty array means "run only once when component mounts"
+  // Use React Query to fetch and cache database statistics
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ['stats'],
+    queryFn: fetchDatabaseStats,
+  })
 
   return (
     <main className="container mx-auto px-4 py-12">
@@ -44,43 +33,43 @@ function HomePage() {
             icon="📚"
             label="Chapters"
             value={stats?.chapters || 0}
-            loading={loading}
+            loading={isLoading}
           />
           <StatCard
             icon="📖"
             label="Volumes"
             value={stats?.volumes || 0}
-            loading={loading}
+            loading={isLoading}
           />
           <StatCard
             icon="🎭"
             label="Arcs"
             value={stats?.arcs || 0}
-            loading={loading}
+            loading={isLoading}
           />
           <StatCard
             icon="🌊"
             label="Sagas"
             value={stats?.sagas || 0}
-            loading={loading}
+            loading={isLoading}
           />
           <StatCard
             icon="👥"
             label="Characters"
             value={stats?.characters || 0}
-            loading={loading}
+            loading={isLoading}
           />
           <StatCard
             icon="📄"
             label="Total Pages"
             value={stats?.totalPages.toLocaleString() || 0}
-            loading={loading}
+            loading={isLoading}
           />
           <StatCard
             icon="📅"
             label="Publication (days)"
             value={stats?.publicationSpan || 'Unknown'}
-            loading={loading}
+            loading={isLoading}
           />
         </div>
       </div>

@@ -1,4 +1,19 @@
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { SortingState } from '@tanstack/react-table'
+import CharacterTable from '../components/CharacterTable'
+import { fetchCharacters } from '../services/characterService'
+
 function CharactersPage() {
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [globalFilter, setGlobalFilter] = useState('')
+
+  // Use React Query to fetch and cache characters
+  const { data: characters = [], isLoading } = useQuery({
+    queryKey: ['characters'],
+    queryFn: fetchCharacters,
+  })
+
   return (
     <main className="container mx-auto px-4 py-12">
       <h2 className="text-4xl font-bold text-gray-800 mb-6">Characters</h2>
@@ -6,15 +21,34 @@ function CharactersPage() {
         Explore the vast world of One Piece characters.
       </p>
 
-      <div className="bg-white rounded-lg shadow-md p-8">
-        <p className="text-gray-600 text-center">
-          Character data table coming soon...
-        </p>
-        <p className="text-gray-500 text-center mt-4 text-sm">
-          This page will display a searchable, sortable table of all One Piece
-          characters with their bounties, affiliations, and devil fruit powers.
-        </p>
+      {/* Search Box */}
+      <div className="mb-6">
+        <input
+          type="text"
+          placeholder="Search by name..."
+          value={globalFilter}
+          onChange={(e) => setGlobalFilter(e.target.value)}
+          className="w-full md:w-96 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
       </div>
+
+      {/* Loading State */}
+      {isLoading ? (
+        <div className="bg-white rounded-lg shadow-md p-8 text-center">
+          <p className="text-gray-600">Loading characters...</p>
+        </div>
+      ) : (
+        /* Character Table */
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <CharacterTable
+            characters={characters}
+            sorting={sorting}
+            onSortingChange={setSorting}
+            globalFilter={globalFilter}
+            onGlobalFilterChange={setGlobalFilter}
+          />
+        </div>
+      )}
     </main>
   )
 }
