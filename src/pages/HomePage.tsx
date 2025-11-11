@@ -1,6 +1,26 @@
+import { useState, useEffect } from 'react'
 import Card from '../components/Card'
+import StatCard from '../components/StatCard'
+import { fetchDatabaseStats, DatabaseStats } from '../services/statsService'
 
 function HomePage() {
+  // State to store the database statistics
+  const [stats, setStats] = useState<DatabaseStats | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  // useEffect runs when component mounts (loads)
+  // It fetches data from Supabase
+  useEffect(() => {
+    async function loadStats() {
+      setLoading(true)
+      const data = await fetchDatabaseStats()
+      setStats(data)
+      setLoading(false)
+    }
+
+    loadStats()
+  }, []) // Empty array means "run only once when component mounts"
+
   return (
     <main className="container mx-auto px-4 py-12">
       <div className="text-center mb-12">
@@ -14,6 +34,58 @@ function HomePage() {
         </p>
       </div>
 
+      {/* Database Statistics */}
+      <div className="mb-12">
+        <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+          Database Statistics
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+          <StatCard
+            icon="📚"
+            label="Chapters"
+            value={stats?.chapters || 0}
+            loading={loading}
+          />
+          <StatCard
+            icon="📖"
+            label="Volumes"
+            value={stats?.volumes || 0}
+            loading={loading}
+          />
+          <StatCard
+            icon="🎭"
+            label="Arcs"
+            value={stats?.arcs || 0}
+            loading={loading}
+          />
+          <StatCard
+            icon="🌊"
+            label="Sagas"
+            value={stats?.sagas || 0}
+            loading={loading}
+          />
+          <StatCard
+            icon="👥"
+            label="Characters"
+            value={stats?.characters || 0}
+            loading={loading}
+          />
+          <StatCard
+            icon="📄"
+            label="Total Pages"
+            value={stats?.totalPages.toLocaleString() || 0}
+            loading={loading}
+          />
+          <StatCard
+            icon="📅"
+            label="Publication (days)"
+            value={stats?.publicationSpan || 'Unknown'}
+            loading={loading}
+          />
+        </div>
+      </div>
+
+      {/* Feature Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
         <Card
           icon="👤"
