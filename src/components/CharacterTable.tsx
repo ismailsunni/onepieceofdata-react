@@ -4,10 +4,12 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   getFilteredRowModel,
+  getPaginationRowModel,
   flexRender,
   createColumnHelper,
   SortingState,
   OnChangeFn,
+  PaginationState,
 } from '@tanstack/react-table'
 import { Character } from '../types/character'
 
@@ -17,6 +19,8 @@ interface CharacterTableProps {
   onSortingChange: OnChangeFn<SortingState>
   globalFilter: string
   onGlobalFilterChange: (filter: string) => void
+  pagination: PaginationState
+  onPaginationChange: OnChangeFn<PaginationState>
 }
 
 const columnHelper = createColumnHelper<Character>()
@@ -27,6 +31,8 @@ function CharacterTable({
   onSortingChange,
   globalFilter,
   onGlobalFilterChange,
+  pagination,
+  onPaginationChange,
 }: CharacterTableProps) {
   // Define table columns
   const columns = useMemo(
@@ -84,12 +90,15 @@ function CharacterTable({
     state: {
       sorting,
       globalFilter,
+      pagination,
     },
     onSortingChange,
     onGlobalFilterChange,
+    onPaginationChange,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     globalFilterFn: (row, _columnId, filterValue) => {
       const name = row.getValue('name') as string
       return name?.toLowerCase().includes(filterValue.toLowerCase()) || false
@@ -152,9 +161,52 @@ function CharacterTable({
           )}
         </tbody>
       </table>
-      <div className="px-6 py-4 text-sm text-gray-600">
-        Showing {table.getRowModel().rows.length} of {characters.length}{' '}
-        characters
+
+      {/* Pagination Controls */}
+      <div className="px-6 py-4 flex items-center justify-between border-t border-gray-200">
+        <div className="text-sm text-gray-600">
+          Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{' '}
+          {Math.min(
+            (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+            table.getFilteredRowModel().rows.length
+          )}{' '}
+          of {table.getFilteredRowModel().rows.length} characters
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => table.setPageIndex(0)}
+            disabled={!table.getCanPreviousPage()}
+            className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {'<<'}
+          </button>
+          <button
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+            className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {'<'}
+          </button>
+          <span className="text-sm text-gray-700">
+            Page {table.getState().pagination.pageIndex + 1} of{' '}
+            {table.getPageCount()}
+          </span>
+          <button
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+            className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {'>'}
+          </button>
+          <button
+            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+            disabled={!table.getCanNextPage()}
+            className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {'>>'}
+          </button>
+        </div>
       </div>
     </div>
   )

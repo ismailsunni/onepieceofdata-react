@@ -1,12 +1,16 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { SortingState } from '@tanstack/react-table'
+import { SortingState, PaginationState } from '@tanstack/react-table'
 import CharacterTable from '../components/CharacterTable'
 import { fetchCharacters } from '../services/characterService'
 
 function CharactersPage() {
   const [sorting, setSorting] = useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = useState('')
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 15, // Show 15 characters per page
+  })
 
   // Use React Query to fetch and cache characters
   const { data: characters = [], isLoading } = useQuery({
@@ -46,6 +50,8 @@ function CharactersPage() {
             onSortingChange={setSorting}
             globalFilter={globalFilter}
             onGlobalFilterChange={setGlobalFilter}
+            pagination={pagination}
+            onPaginationChange={setPagination}
           />
         </div>
       )}
