@@ -5,7 +5,9 @@ import CharacterTable from '../components/CharacterTable'
 import { fetchCharacters } from '../services/characterService'
 
 function CharactersPage() {
-  const [sorting, setSorting] = useState<SortingState>([])
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: 'appearance_count', desc: true }, // Sort by most appearances by default
+  ])
   const [globalFilter, setGlobalFilter] = useState('')
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,

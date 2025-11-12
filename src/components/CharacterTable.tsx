@@ -64,6 +64,24 @@ function CharacterTable({
           )
         },
       }),
+      columnHelper.accessor('appearance_count', {
+        header: 'Num Appearance',
+        cell: (info) => info.getValue() || '-',
+      }),
+      columnHelper.accessor('first_appearance', {
+        header: 'First Appearance',
+        cell: (info) => {
+          const chapter = info.getValue()
+          return chapter ? `Ch. ${chapter}` : '-'
+        },
+      }),
+      columnHelper.accessor('last_appearance', {
+        header: 'Last Appearance',
+        cell: (info) => {
+          const chapter = info.getValue()
+          return chapter ? `Ch. ${chapter}` : '-'
+        },
+      }),
       columnHelper.accessor('bounty', {
         header: 'Bounty',
         cell: (info) => {
