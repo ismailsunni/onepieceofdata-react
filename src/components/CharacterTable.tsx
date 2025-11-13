@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   useReactTable,
   getCoreRowModel,
@@ -34,6 +35,8 @@ function CharacterTable({
   pagination,
   onPaginationChange,
 }: CharacterTableProps) {
+  const navigate = useNavigate()
+
   // Define table columns
   const columns = useMemo(
     () => [
@@ -41,25 +44,12 @@ function CharacterTable({
         header: 'Name',
         cell: (info) => {
           const name = info.getValue()
-          const characterId = info.row.original.id
           if (!name) return '-'
 
-          // Convert character ID to wiki URL format (e.g., monkey_d_luffy -> Monkey_D._Luffy)
-          const wikiName = characterId
-            .split('_')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-            .join('_')
-          const wikiUrl = `https://onepiece.fandom.com/wiki/${wikiName}`
-
           return (
-            <a
-              href={wikiUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 hover:underline"
-            >
+            <span className="font-medium text-blue-600">
               {name}
-            </a>
+            </span>
           )
         },
       }),
@@ -187,7 +177,12 @@ function CharacterTable({
             </tr>
           ) : (
             table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="hover:bg-gray-50">
+              <tr 
+                key={row.id} 
+                className="hover:bg-gray-50 cursor-pointer transition-colors"
+                onClick={() => navigate(`/characters/${row.original.id}`)}
+                title="Click to view details"
+              >
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}

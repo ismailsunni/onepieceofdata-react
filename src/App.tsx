@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import Header from './components/Header'
 import HomePage from './pages/HomePage'
 import CharactersPage from './pages/CharactersPage'
+import CharacterDetailPage from './pages/CharacterDetailPage'
 import ArcsPage from './pages/ArcsPage'
 import ChaptersPage from './pages/ChaptersPage'
 import DevilFruitsPage from './pages/DevilFruitsPage'
@@ -30,6 +31,7 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/characters" element={<CharactersPage />} />
+            <Route path="/characters/:id" element={<CharacterDetailPage />} />
             <Route path="/arcs" element={<ArcsPage />} />
             <Route path="/chapters" element={<ChaptersPage />} />
             <Route path="/devil-fruits" element={<DevilFruitsPage />} />
