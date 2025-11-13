@@ -14,9 +14,14 @@ import ArcLengthChart from '../components/ArcLengthChart'
 
 function AnalyticsPage() {
   // Fetch all analytics data using React Query
-  const { data: bountyData = [], isLoading: bountyLoading } = useQuery({
-    queryKey: ['analytics', 'bounty-distribution'],
-    queryFn: fetchBountyDistribution,
+  const { data: bountyDataAll = [], isLoading: bountyLoadingAll } = useQuery({
+    queryKey: ['analytics', 'bounty-distribution', 'all'],
+    queryFn: () => fetchBountyDistribution(false),
+  })
+
+  const { data: bountyDataAlive = [], isLoading: bountyLoadingAlive } = useQuery({
+    queryKey: ['analytics', 'bounty-distribution', 'alive'],
+    queryFn: () => fetchBountyDistribution(true),
   })
 
   const { data: statusData = [], isLoading: statusLoading } = useQuery({
@@ -24,9 +29,14 @@ function AnalyticsPage() {
     queryFn: fetchStatusDistribution,
   })
 
-  const { data: topBounties = [], isLoading: topBountiesLoading } = useQuery({
-    queryKey: ['analytics', 'top-bounties'],
-    queryFn: () => fetchTopBounties(10),
+  const { data: topBountiesAll = [], isLoading: topBountiesLoadingAll } = useQuery({
+    queryKey: ['analytics', 'top-bounties', 'all'],
+    queryFn: () => fetchTopBounties(10, false),
+  })
+
+  const { data: topBountiesAlive = [], isLoading: topBountiesLoadingAlive } = useQuery({
+    queryKey: ['analytics', 'top-bounties', 'alive'],
+    queryFn: () => fetchTopBounties(10, true),
   })
 
   const { data: appearanceData = [], isLoading: appearanceLoading } = useQuery({
@@ -40,9 +50,11 @@ function AnalyticsPage() {
   })
 
   const isLoading =
-    bountyLoading ||
+    bountyLoadingAll ||
+    bountyLoadingAlive ||
     statusLoading ||
-    topBountiesLoading ||
+    topBountiesLoadingAll ||
+    topBountiesLoadingAlive ||
     appearanceLoading ||
     arcsLoading
 
@@ -78,8 +90,11 @@ function AnalyticsPage() {
           {/* Two Column Layout for Medium Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Bounty Distribution */}
-            {bountyData.length > 0 && (
-              <BountyDistributionChart data={bountyData} />
+            {bountyDataAll.length > 0 && (
+              <BountyDistributionChart 
+                dataAll={bountyDataAll}
+                dataAlive={bountyDataAlive}
+              />
             )}
 
             {/* Character Status */}
@@ -96,15 +111,18 @@ function AnalyticsPage() {
             )}
 
             {/* Top Bounties - Takes remaining space or full column */}
-            {topBounties.length > 0 && (
-              <TopBountiesChart data={topBounties} />
+            {topBountiesAll.length > 0 && (
+              <TopBountiesChart 
+                dataAll={topBountiesAll}
+                dataAlive={topBountiesAlive}
+              />
             )}
           </div>
 
           {/* Empty State */}
-          {bountyData.length === 0 &&
+          {bountyDataAll.length === 0 &&
             statusData.length === 0 &&
-            topBounties.length === 0 &&
+            topBountiesAll.length === 0 &&
             appearanceData.length === 0 &&
             arcs.length === 0 && (
               <div className="text-center py-20">

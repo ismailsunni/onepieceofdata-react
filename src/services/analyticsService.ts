@@ -26,19 +26,26 @@ export interface AppearanceData {
 
 /**
  * Get distribution of character bounties by ranges
+ * @param aliveOnly - If true, only include characters with status 'Alive'
  */
-export async function fetchBountyDistribution(): Promise<BountyRange[]> {
+export async function fetchBountyDistribution(aliveOnly: boolean = false): Promise<BountyRange[]> {
   try {
     if (!supabase) {
       console.error('Supabase client not initialized')
       return []
     }
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('character')
-      .select('bounty')
+      .select('bounty, status')
       .not('bounty', 'is', null)
       .gt('bounty', 0)
+
+    if (aliveOnly) {
+      query = query.eq('status', 'Alive')
+    }
+
+    const { data, error } = await query
 
     if (error) {
       console.error('Error fetching bounty data:', error)
@@ -56,9 +63,9 @@ export async function fetchBountyDistribution(): Promise<BountyRange[]> {
     ]
 
     // Count characters in each range
-    const distribution: BountyRange[] = ranges.map(range => {
+    const distribution: BountyRange[] = ranges.map((range) => {
       const count = data.filter(
-        char => char.bounty >= range.min && char.bounty < range.max
+        (char) => char.bounty >= range.min && char.bounty < range.max
       ).length
       return {
         range: range.label,
@@ -84,9 +91,7 @@ export async function fetchStatusDistribution(): Promise<StatusDistribution[]> {
       return []
     }
 
-    const { data, error } = await supabase
-      .from('character')
-      .select('status')
+    const { data, error } = await supabase.from('character').select('status')
 
     if (error) {
       console.error('Error fetching status data:', error)
@@ -95,26 +100,26 @@ export async function fetchStatusDistribution(): Promise<StatusDistribution[]> {
 
     // Count each status
     const statusMap = new Map<string, number>()
-    data.forEach(char => {
+    data.forEach((char) => {
       const status = char.status || 'Unknown'
       statusMap.set(status, (statusMap.get(status) || 0) + 1)
     })
 
     // Define colors for each status
     const colorMap: { [key: string]: string } = {
-      'Alive': '#10b981',
-      'Deceased': '#ef4444',
-      'Unknown': '#6b7280',
+      Alive: '#10b981',
+      Deceased: '#ef4444',
+      Unknown: '#6b7280',
     }
 
     // Convert to array format
-    const distribution: StatusDistribution[] = Array.from(statusMap.entries()).map(
-      ([status, count]) => ({
-        status,
-        count,
-        color: colorMap[status] || '#9ca3af',
-      })
-    )
+    const distribution: StatusDistribution[] = Array.from(
+      statusMap.entries()
+    ).map(([status, count]) => ({
+      status,
+      count,
+      color: colorMap[status] || '#9ca3af',
+    }))
 
     return distribution.sort((a, b) => b.count - a.count)
   } catch (error) {
@@ -125,19 +130,30 @@ export async function fetchStatusDistribution(): Promise<StatusDistribution[]> {
 
 /**
  * Get top characters by bounty
+ * @param limit - Number of top bounties to return
+ * @param aliveOnly - If true, only include characters with status 'Alive'
  */
-export async function fetchTopBounties(limit: number = 10): Promise<TopBounty[]> {
+export async function fetchTopBounties(
+  limit: number = 10,
+  aliveOnly: boolean = false
+): Promise<TopBounty[]> {
   try {
     if (!supabase) {
       console.error('Supabase client not initialized')
       return []
     }
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('character')
-      .select('name, bounty, origin')
+      .select('name, bounty, origin, status')
       .not('bounty', 'is', null)
       .gt('bounty', 0)
+
+    if (aliveOnly) {
+      query = query.eq('status', 'Alive')
+    }
+
+    const { data, error } = await query
       .order('bounty', { ascending: false })
       .limit(limit)
 
@@ -146,7 +162,7 @@ export async function fetchTopBounties(limit: number = 10): Promise<TopBounty[]>
       return []
     }
 
-    return data.map(char => ({
+    return data.map((char) => ({
       name: char.name || 'Unknown',
       bounty: char.bounty || 0,
       origin: char.origin,
@@ -189,9 +205,11 @@ export async function fetchAppearanceDistribution(): Promise<AppearanceData[]> {
     ]
 
     // Count characters in each range
-    const distribution: AppearanceData[] = ranges.map(range => {
+    const distribution: AppearanceData[] = ranges.map((range) => {
       const count = data.filter(
-        char => char.appearance_count! >= range.min && char.appearance_count! < range.max
+        (char) =>
+          char.appearance_count! >= range.min &&
+          char.appearance_count! < range.max
       ).length
       return {
         chapterRange: range.label,
@@ -209,7 +227,9 @@ export async function fetchAppearanceDistribution(): Promise<AppearanceData[]> {
 /**
  * Get blood type distribution
  */
-export async function fetchBloodTypeDistribution(): Promise<{ bloodType: string; count: number }[]> {
+export async function fetchBloodTypeDistribution(): Promise<
+  { bloodType: string; count: number }[]
+> {
   try {
     if (!supabase) {
       console.error('Supabase client not initialized')
@@ -228,7 +248,7 @@ export async function fetchBloodTypeDistribution(): Promise<{ bloodType: string;
 
     // Count each blood type
     const bloodTypeMap = new Map<string, number>()
-    data.forEach(char => {
+    data.forEach((char) => {
       const bloodType = char.blood_type_group
       if (bloodType) {
         bloodTypeMap.set(bloodType, (bloodTypeMap.get(bloodType) || 0) + 1)

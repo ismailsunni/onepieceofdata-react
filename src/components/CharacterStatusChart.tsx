@@ -17,7 +17,7 @@ const RADIAN = Math.PI / 180
 
 const renderCustomizedLabel = (props: PieLabelRenderProps) => {
   const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props
-  
+
   if (
     cx === undefined ||
     cy === undefined ||

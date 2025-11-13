@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   BarChart,
   Bar,
@@ -11,18 +12,49 @@ import {
 import { BountyRange } from '../services/analyticsService'
 
 interface BountyDistributionChartProps {
-  data: BountyRange[]
+  dataAll: BountyRange[]
+  dataAlive: BountyRange[]
 }
 
-function BountyDistributionChart({ data }: BountyDistributionChartProps) {
+function BountyDistributionChart({ dataAll, dataAlive }: BountyDistributionChartProps) {
+  const [showAliveOnly, setShowAliveOnly] = useState(false)
+  const data = showAliveOnly ? dataAlive : dataAll
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <h3 className="text-xl font-semibold text-gray-800 mb-4">
-        Bounty Distribution
-      </h3>
-      <p className="text-sm text-gray-600 mb-4">
-        Number of characters in each bounty range (Berries)
-      </p>
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">
+            Bounty Distribution
+          </h3>
+          <p className="text-sm text-gray-600">
+            Number of characters in each bounty range (Berries)
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600">Filter:</span>
+          <button
+            onClick={() => setShowAliveOnly(false)}
+            className={`px-3 py-1 text-sm rounded-md transition-colors ${
+              !showAliveOnly
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setShowAliveOnly(true)}
+            className={`px-3 py-1 text-sm rounded-md transition-colors ${
+              showAliveOnly
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Alive Only
+          </button>
+        </div>
+      </div>
       <ResponsiveContainer width="100%" height={350}>
         <BarChart
           data={data}
