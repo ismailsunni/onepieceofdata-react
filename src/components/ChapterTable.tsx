@@ -43,7 +43,35 @@ function ChapterTable({
       }),
       columnHelper.accessor('title', {
         header: 'Title',
-        cell: (info) => info.getValue() || '-',
+        cell: (info) => {
+          const title = info.getValue()
+          const chapterNumber = info.row.original.number
+          const wikiUrl = `https://onepiece.fandom.com/wiki/Chapter_${chapterNumber}`
+          
+          if (!title) {
+            return (
+              <a
+                href={wikiUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 hover:underline"
+              >
+                -
+              </a>
+            )
+          }
+          
+          return (
+            <a
+              href={wikiUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 hover:underline"
+            >
+              {title}
+            </a>
+          )
+        },
       }),
       columnHelper.accessor('date', {
         header: 'Release Date',
