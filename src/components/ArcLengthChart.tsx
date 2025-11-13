@@ -17,8 +17,9 @@ interface ArcLengthChartProps {
 interface ChartDataPoint {
   saga: string
   totalChapters: number
+  era?: 'Paradise' | 'New World'
   arcOrder: Array<{ name: string; chapters: number; startChapter: number }>
-  [arcName: string]: number | string | Array<{ name: string; chapters: number; startChapter: number }>
+  [arcName: string]: number | string | Array<{ name: string; chapters: number; startChapter: number }> | 'Paradise' | 'New World' | undefined
 }
 
 interface PayloadItem {
@@ -39,11 +40,12 @@ interface CustomTooltipProps {
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (active && payload && payload.length) {
     const totalChapters = payload[0].payload?.totalChapters || 0
-    const arcOrder = (payload[0].payload as ChartDataPoint)?.arcOrder || []
-    
+    const chartData = payload[0].payload as ChartDataPoint
+    const arcOrder = chartData?.arcOrder || []
+
     // Sort arcs by their start chapter to show in chronological order
     const sortedArcs = [...arcOrder].sort((a, b) => a.startChapter - b.startChapter)
-    
+
     return (
       <div
         style={{
@@ -56,10 +58,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
         }}
       >
         <p style={{ fontWeight: 'bold', color: '#1f2937', marginBottom: '8px' }}>
-          {label}
-        </p>
-        <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '8px' }}>
-          Total: {totalChapters} chapters
+          {label} ({totalChapters})
         </p>
         <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '8px' }}>
           {sortedArcs.map((arc, index) => {
@@ -70,7 +69,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
                 <span style={{ color: payloadItem?.color || '#6b7280' }}>●</span>
                 {' '}
                 <span style={{ fontSize: '13px' }}>
-                  {arc.name}: {arc.chapters} chapters
+                  {arc.name} ({arc.chapters})
                 </span>
               </div>
             )
@@ -126,6 +125,21 @@ function ArcLengthChart({ arcs }: ArcLengthChartProps) {
     d.saga === 'Fish-Man Island' || d.saga === 'Fishman Island' || d.saga === 'Fish Man Island'
   )
 
+  // Add era information to each data point
+  chartData.forEach((dataPoint, index) => {
+    if (splitIndex > 0) {
+      dataPoint.era = index < splitIndex ? 'Paradise' : 'New World'
+    }
+  })
+
+  // Calculate total chapters for Paradise and New World
+  const paradiseChapters = splitIndex > 0
+    ? chartData.slice(0, splitIndex).reduce((sum, d) => sum + d.totalChapters, 0)
+    : 0
+  const newWorldChapters = splitIndex > 0 && splitIndex < chartData.length
+    ? chartData.slice(splitIndex).reduce((sum, d) => sum + d.totalChapters, 0)
+    : 0
+
   // Generate a better color palette (using a more harmonious scheme)
   const colors = [
     '#1e40af', '#dc2626', '#059669', '#d97706', '#7c3aed',
@@ -138,7 +152,7 @@ function ArcLengthChart({ arcs }: ArcLengthChartProps) {
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h3 className="text-xl font-semibold text-gray-800 mb-4">
-        Arc Length by Saga (Stacked by Arc)
+        Arc and Saga Lengths in Chapters
       </h3>
       <ResponsiveContainer width="100%" height={500}>
         <BarChart
@@ -154,7 +168,7 @@ function ArcLengthChart({ arcs }: ArcLengthChartProps) {
               fill="#dbeafe"
               fillOpacity={0.5}
               label={{
-                value: 'Paradise',
+                value: `Paradise (${paradiseChapters})`,
                 position: 'insideTop',
                 fill: '#1e40af',
                 fontSize: 14,
@@ -171,7 +185,7 @@ function ArcLengthChart({ arcs }: ArcLengthChartProps) {
               fill="#fef2f2"
               fillOpacity={0.5}
               label={{
-                value: 'New World',
+                value: `New World (${newWorldChapters})`,
                 position: 'insideTop',
                 fill: '#dc2626',
                 fontSize: 14,
