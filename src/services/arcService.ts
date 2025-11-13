@@ -10,8 +10,14 @@ export async function fetchArcs(): Promise<Arc[]> {
 
     // Fetch arcs and sagas separately
     const [arcsResponse, sagasResponse] = await Promise.all([
-      supabase.from('arc').select('*').order('start_chapter', { ascending: true }),
-      supabase.from('saga').select('*').order('start_chapter', { ascending: true }),
+      supabase
+        .from('arc')
+        .select('*')
+        .order('start_chapter', { ascending: true }),
+      supabase
+        .from('saga')
+        .select('*')
+        .order('start_chapter', { ascending: true }),
     ])
 
     if (arcsResponse.error) {

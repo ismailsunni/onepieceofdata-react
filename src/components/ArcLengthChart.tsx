@@ -6,11 +6,70 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  ReferenceArea,
 } from 'recharts'
 import { Arc } from '../types/arc'
 
 interface ArcLengthChartProps {
   arcs: Arc[]
+}
+
+interface ChartDataPoint {
+  saga: string
+  totalChapters: number
+  [arcName: string]: number | string
+}
+
+interface PayloadItem {
+  name?: string
+  value?: number
+  color?: string
+  dataKey?: string
+  payload?: ChartDataPoint
+}
+
+interface CustomTooltipProps {
+  active?: boolean
+  payload?: PayloadItem[]
+  label?: string
+}
+
+// Custom tooltip component - must be outside to avoid recreation on each render
+function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
+  if (active && payload && payload.length) {
+    const totalChapters = payload[0].payload?.totalChapters || 0
+    return (
+      <div
+        style={{
+          backgroundColor: '#ffffff',
+          border: '1px solid #e5e7eb',
+          borderRadius: '0.375rem',
+          padding: '12px',
+          maxHeight: '300px',
+          overflow: 'auto',
+        }}
+      >
+        <p style={{ fontWeight: 'bold', color: '#1f2937', marginBottom: '8px' }}>
+          {label}
+        </p>
+        <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '8px' }}>
+          Total: {totalChapters} chapters
+        </p>
+        <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '8px' }}>
+          {payload.map((entry, index) => (
+            <div key={index} style={{ marginBottom: '4px' }}>
+              <span style={{ color: entry.color }}>●</span>
+              {' '}
+              <span style={{ fontSize: '13px' }}>
+                {entry.name}: {entry.value} chapters
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+  return null
 }
 
 function ArcLengthChart({ arcs }: ArcLengthChartProps) {
@@ -32,6 +91,7 @@ function ArcLengthChart({ arcs }: ArcLengthChartProps) {
   sagaMap.forEach((saga) => {
     const dataPoint: Record<string, string | number> = {
       saga: saga.title,
+      totalChapters: saga.arcs.reduce((sum, arc) => sum + (arc.end_chapter - arc.start_chapter + 1), 0),
     }
 
     saga.arcs.forEach((arc) => {
@@ -42,6 +102,12 @@ function ArcLengthChart({ arcs }: ArcLengthChartProps) {
 
     chartData.push(dataPoint)
   })
+
+  // Find the index to split Paradise and New World
+  // Summit War is the last saga in Paradise, Fish-Man Island is first in New World
+  const splitIndex = chartData.findIndex((d) =>
+    d.saga === 'Fish-Man Island' || d.saga === 'Fishman Island' || d.saga === 'Fish Man Island'
+  )
 
   // Generate a better color palette (using a more harmonious scheme)
   const colors = [
@@ -63,6 +129,40 @@ function ArcLengthChart({ arcs }: ArcLengthChartProps) {
           margin={{ top: 20, right: 30, left: 60, bottom: 60 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          {/* Background for Paradise (first half) */}
+          {splitIndex > 0 && (
+            <ReferenceArea
+              x1={chartData[0].saga}
+              x2={chartData[splitIndex - 1].saga}
+              fill="#dbeafe"
+              fillOpacity={0.5}
+              label={{
+                value: 'Paradise',
+                position: 'insideTop',
+                fill: '#1e40af',
+                fontSize: 14,
+                fontWeight: 'bold',
+                offset: 10,
+              }}
+            />
+          )}
+          {/* Background for New World (second half) */}
+          {splitIndex > 0 && splitIndex < chartData.length && (
+            <ReferenceArea
+              x1={chartData[splitIndex].saga}
+              x2={chartData[chartData.length - 1].saga}
+              fill="#fef2f2"
+              fillOpacity={0.5}
+              label={{
+                value: 'New World',
+                position: 'insideTop',
+                fill: '#dc2626',
+                fontSize: 14,
+                fontWeight: 'bold',
+                offset: 10,
+              }}
+            />
+          )}
           <XAxis
             dataKey="saga"
             angle={-45}
@@ -84,17 +184,7 @@ function ArcLengthChart({ arcs }: ArcLengthChartProps) {
             stroke="#6b7280"
             domain={[0, 200]}
           />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: '#ffffff',
-              border: '1px solid #e5e7eb',
-              borderRadius: '0.375rem',
-              maxHeight: '300px',
-              overflow: 'auto',
-            }}
-            labelStyle={{ fontWeight: 'bold', color: '#1f2937', marginBottom: '8px' }}
-            formatter={(value: number, name: string) => [`${value} chapters`, name]}
-          />
+          <Tooltip content={<CustomTooltip />} />
           {Array.from(arcNames).map((arcName, index) => (
             <Bar
               key={arcName}
