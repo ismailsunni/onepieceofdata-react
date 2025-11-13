@@ -1,10 +1,6 @@
 import { supabase } from './supabase'
 import { Arc } from '../types/arc'
 
-interface ArcWithSagaArray extends Omit<Arc, 'saga'> {
-  saga?: Array<{ title: string }> | { title: string }
-}
-
 export async function fetchArcs(): Promise<Arc[]> {
   try {
     if (!supabase) {
@@ -12,52 +8,46 @@ export async function fetchArcs(): Promise<Arc[]> {
       return []
     }
 
-    const { data, error } = await supabase
-      .from('arc')
-      .select(
-        `
-        *,
-        saga!fk_arc_saga (
-          title
-        )
-      `
-      )
-      .order('start_chapter', { ascending: true })
+    // Fetch arcs and sagas separately
+    const [arcsResponse, sagasResponse] = await Promise.all([
+      supabase.from('arc').select('*').order('start_chapter', { ascending: true }),
+      supabase.from('saga').select('*').order('start_chapter', { ascending: true }),
+    ])
 
-    if (error) {
-      console.error('Error fetching arcs:', error)
+    if (arcsResponse.error) {
+      console.error('Error fetching arcs:', arcsResponse.error)
       return []
     }
 
-    console.log('Raw arc data:', data) // Debug log
+    if (sagasResponse.error) {
+      console.error('Error fetching sagas:', sagasResponse.error)
+      // Continue without saga data
+    }
 
-    // Transform the data to flatten the saga object
-    const transformedData: Arc[] = ((data as ArcWithSagaArray[]) || []).map(
-      (arc) => {
-        console.log('Processing arc:', arc.title, 'saga:', arc.saga) // Debug log
+    const arcs = arcsResponse.data || []
+    const sagas = sagasResponse.data || []
 
-        let sagaData: { title: string } | undefined = undefined
-        if (arc.saga) {
-          if (Array.isArray(arc.saga) && arc.saga.length > 0) {
-            sagaData = arc.saga[0]
-          } else if (typeof arc.saga === 'object' && 'title' in arc.saga) {
-            sagaData = arc.saga
-          }
-        }
+    // Match each arc to a saga based on chapter ranges
+    const transformedData: Arc[] = arcs.map((arc) => {
+      // Find the saga that contains this arc's start_chapter
+      const matchingSaga = sagas.find(
+        (saga) =>
+          arc.start_chapter >= saga.start_chapter &&
+          arc.start_chapter <= saga.end_chapter
+      )
 
-        return {
-          arc_id: arc.arc_id,
-          title: arc.title,
-          japanese_title: arc.japanese_title,
-          romanized_title: arc.romanized_title,
-          start_chapter: arc.start_chapter,
-          end_chapter: arc.end_chapter,
-          saga_id: arc.saga_id,
-          description: arc.description,
-          saga: sagaData,
-        }
+      return {
+        arc_id: arc.arc_id,
+        title: arc.title,
+        japanese_title: arc.japanese_title,
+        romanized_title: arc.romanized_title,
+        start_chapter: arc.start_chapter,
+        end_chapter: arc.end_chapter,
+        saga_id: matchingSaga?.saga_id || arc.saga_id,
+        description: arc.description,
+        saga: matchingSaga ? { title: matchingSaga.title } : undefined,
       }
-    )
+    })
 
     return transformedData
   } catch (error) {
