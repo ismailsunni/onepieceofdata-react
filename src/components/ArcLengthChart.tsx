@@ -202,6 +202,12 @@ function ArcLengthChart({ arcs }: ArcLengthChartProps) {
             interval={0}
             tick={{ fontSize: 12 }}
             stroke="#6b7280"
+            label={{
+              value: 'Saga',
+              position: 'insideBottom',
+              offset: -10,
+              style: { fontSize: 14, fill: '#6b7280', textAnchor: 'middle' },
+            }}
           />
           <YAxis
             label={{

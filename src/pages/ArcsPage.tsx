@@ -26,17 +26,6 @@ function ArcsPage() {
         Follow the journey through each saga and arc of One Piece.
       </p>
 
-      {/* Search Box */}
-      <div className="mb-6">
-        <input
-          type="text"
-          placeholder="Search by arc or saga name..."
-          value={globalFilter}
-          onChange={(e) => setGlobalFilter(e.target.value)}
-          className="w-full md:w-96 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
-      </div>
-
       {/* Loading State */}
       {isLoading ? (
         <div className="bg-white rounded-lg shadow-md p-8 text-center">
@@ -47,6 +36,17 @@ function ArcsPage() {
           {/* Arc Length Chart */}
           <div className="mb-8">
             <ArcLengthChart arcs={arcs} />
+          </div>
+
+          {/* Search Box */}
+          <div className="mb-6">
+            <input
+              type="text"
+              placeholder="Search by arc or saga name..."
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="w-full md:w-96 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
           </div>
 
           {/* Arc Table */}
