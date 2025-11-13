@@ -28,6 +28,9 @@ function Navigation() {
       <NavLink to="/devil-fruits" className={getLinkClass}>
         Devil Fruits
       </NavLink>
+      <NavLink to="/analytics" className={getLinkClass}>
+        Analytics
+      </NavLink>
     </nav>
   )
 }
