@@ -22,6 +22,9 @@ function Navigation() {
       <NavLink to="/arcs" className={getLinkClass}>
         Arcs
       </NavLink>
+      <NavLink to="/chapters" className={getLinkClass}>
+        Chapters
+      </NavLink>
       <NavLink to="/devil-fruits" className={getLinkClass}>
         Devil Fruits
       </NavLink>

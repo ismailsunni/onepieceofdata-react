@@ -4,6 +4,7 @@ import Header from './components/Header'
 import HomePage from './pages/HomePage'
 import CharactersPage from './pages/CharactersPage'
 import ArcsPage from './pages/ArcsPage'
+import ChaptersPage from './pages/ChaptersPage'
 import DevilFruitsPage from './pages/DevilFruitsPage'
 
 // Create a client with longer cache times for static data
@@ -29,6 +30,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/characters" element={<CharactersPage />} />
             <Route path="/arcs" element={<ArcsPage />} />
+            <Route path="/chapters" element={<ChaptersPage />} />
             <Route path="/devil-fruits" element={<DevilFruitsPage />} />
           </Routes>
         </div>
