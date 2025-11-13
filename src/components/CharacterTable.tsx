@@ -43,14 +43,14 @@ function CharacterTable({
           const name = info.getValue()
           const characterId = info.row.original.id
           if (!name) return '-'
-          
+
           // Convert character ID to wiki URL format (e.g., monkey_d_luffy -> Monkey_D._Luffy)
           const wikiName = characterId
             .split('_')
             .map(word => word.charAt(0).toUpperCase() + word.slice(1))
             .join('_')
           const wikiUrl = `https://onepiece.fandom.com/wiki/${wikiName}`
-          
+
           return (
             <a
               href={wikiUrl}

@@ -47,7 +47,7 @@ function ChapterTable({
           const title = info.getValue()
           const chapterNumber = info.row.original.number
           const wikiUrl = `https://onepiece.fandom.com/wiki/Chapter_${chapterNumber}`
-          
+
           if (!title) {
             return (
               <a
@@ -60,7 +60,7 @@ function ChapterTable({
               </a>
             )
           }
-          
+
           return (
             <a
               href={wikiUrl}

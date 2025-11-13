@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { SortingState, PaginationState } from '@tanstack/react-table'
 import ArcTable from '../components/ArcTable'
+import ArcLengthChart from '../components/ArcLengthChart'
 import { fetchArcs } from '../services/arcService'
 
 function ArcsPage() {
@@ -42,18 +43,25 @@ function ArcsPage() {
           <p className="text-gray-600">Loading arcs...</p>
         </div>
       ) : (
-        /* Arc Table */
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <ArcTable
-            arcs={arcs}
-            sorting={sorting}
-            onSortingChange={setSorting}
-            globalFilter={globalFilter}
-            onGlobalFilterChange={setGlobalFilter}
-            pagination={pagination}
-            onPaginationChange={setPagination}
-          />
-        </div>
+        <>
+          {/* Arc Length Chart */}
+          <div className="mb-8">
+            <ArcLengthChart arcs={arcs} />
+          </div>
+
+          {/* Arc Table */}
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <ArcTable
+              arcs={arcs}
+              sorting={sorting}
+              onSortingChange={setSorting}
+              globalFilter={globalFilter}
+              onGlobalFilterChange={setGlobalFilter}
+              pagination={pagination}
+              onPaginationChange={setPagination}
+            />
+          </div>
+        </>
       )}
     </main>
   )
