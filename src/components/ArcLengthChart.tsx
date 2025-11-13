@@ -17,7 +17,8 @@ interface ArcLengthChartProps {
 interface ChartDataPoint {
   saga: string
   totalChapters: number
-  [arcName: string]: number | string
+  arcOrder: Array<{ name: string; chapters: number; startChapter: number }>
+  [arcName: string]: number | string | Array<{ name: string; chapters: number; startChapter: number }>
 }
 
 interface PayloadItem {
@@ -38,6 +39,11 @@ interface CustomTooltipProps {
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (active && payload && payload.length) {
     const totalChapters = payload[0].payload?.totalChapters || 0
+    const arcOrder = (payload[0].payload as ChartDataPoint)?.arcOrder || []
+    
+    // Sort arcs by their start chapter to show in chronological order
+    const sortedArcs = [...arcOrder].sort((a, b) => a.startChapter - b.startChapter)
+    
     return (
       <div
         style={{
@@ -56,15 +62,19 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
           Total: {totalChapters} chapters
         </p>
         <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '8px' }}>
-          {payload.map((entry, index) => (
-            <div key={index} style={{ marginBottom: '4px' }}>
-              <span style={{ color: entry.color }}>●</span>
-              {' '}
-              <span style={{ fontSize: '13px' }}>
-                {entry.name}: {entry.value} chapters
-              </span>
-            </div>
-          ))}
+          {sortedArcs.map((arc, index) => {
+            // Find the corresponding payload item to get the color
+            const payloadItem = payload.find(p => p.name === arc.name)
+            return (
+              <div key={index} style={{ marginBottom: '4px' }}>
+                <span style={{ color: payloadItem?.color || '#6b7280' }}>●</span>
+                {' '}
+                <span style={{ fontSize: '13px' }}>
+                  {arc.name}: {arc.chapters} chapters
+                </span>
+              </div>
+            )
+          })}
         </div>
       </div>
     )
@@ -85,19 +95,26 @@ function ArcLengthChart({ arcs }: ArcLengthChartProps) {
   })
 
   // Transform data for stacked bar chart
-  const chartData: Record<string, string | number>[] = []
+  const chartData: ChartDataPoint[] = []
   const arcNames = new Set<string>()
 
   sagaMap.forEach((saga) => {
-    const dataPoint: Record<string, string | number> = {
+    const arcOrder: Array<{ name: string; chapters: number; startChapter: number }> = []
+    const dataPoint: ChartDataPoint = {
       saga: saga.title,
       totalChapters: saga.arcs.reduce((sum, arc) => sum + (arc.end_chapter - arc.start_chapter + 1), 0),
+      arcOrder: arcOrder,
     }
 
     saga.arcs.forEach((arc) => {
       const chapters = arc.end_chapter - arc.start_chapter + 1
       dataPoint[arc.title] = chapters
       arcNames.add(arc.title)
+      arcOrder.push({
+        name: arc.title,
+        chapters: chapters,
+        startChapter: arc.start_chapter,
+      })
     })
 
     chartData.push(dataPoint)
