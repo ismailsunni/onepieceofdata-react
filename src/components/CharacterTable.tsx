@@ -177,8 +177,8 @@ function CharacterTable({
             </tr>
           ) : (
             table.getRowModel().rows.map((row) => (
-              <tr 
-                key={row.id} 
+              <tr
+                key={row.id}
                 className="hover:bg-gray-50 cursor-pointer transition-colors"
                 onClick={() => navigate(`/characters/${row.original.id}`)}
                 title="Click to view details"

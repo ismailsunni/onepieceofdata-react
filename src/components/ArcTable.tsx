@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   useReactTable,
   getCoreRowModel,
@@ -34,12 +35,18 @@ function ArcTable({
   pagination,
   onPaginationChange,
 }: ArcTableProps) {
+  const navigate = useNavigate()
+
   // Define table columns
   const columns = useMemo(
     () => [
       columnHelper.accessor('title', {
         header: 'Arc Name',
-        cell: (info) => info.getValue() || '-',
+        cell: (info) => (
+          <span className="font-medium text-blue-600">
+            {info.getValue() || '-'}
+          </span>
+        ),
       }),
       columnHelper.accessor('start_chapter', {
         header: 'Start Chapter',
@@ -138,7 +145,12 @@ function ArcTable({
             </tr>
           ) : (
             table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="hover:bg-gray-50">
+              <tr
+                key={row.id}
+                className="hover:bg-gray-50 cursor-pointer transition-colors"
+                onClick={() => navigate(`/arcs/${row.original.arc_id}`)}
+                title="Click to view details"
+              >
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}

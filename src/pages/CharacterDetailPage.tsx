@@ -161,7 +161,7 @@ function CharacterDetailPage() {
             {/* Basic Information */}
             <div className="space-y-4">
               <h2 className="text-2xl font-bold text-gray-800 mb-4">Basic Information</h2>
-              
+
               <DetailRow label="ID" value={character.id} />
               <DetailRow label="Name" value={character.name} />
               <DetailRow label="Origin" value={character.origin} />
@@ -174,7 +174,7 @@ function CharacterDetailPage() {
             {/* Statistics */}
             <div className="space-y-4">
               <h2 className="text-2xl font-bold text-gray-800 mb-4">Statistics</h2>
-              
+
               <DetailRow label="Current Bounty" value={formatBounty(character.bounty)} />
               <DetailRow label="Bounty History" value={character.bounties} />
               <DetailRow label="First Appearance" value={character.first_appearance ? `Chapter ${character.first_appearance}` : null} />
@@ -188,7 +188,7 @@ function CharacterDetailPage() {
           {(character.chapter_list || character.volume_list) && (
             <div className="border-t pt-8">
               <h2 className="text-2xl font-bold text-gray-800 mb-4">Appearance Details</h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {character.chapter_list && character.chapter_list.length > 0 && (
                   <div>

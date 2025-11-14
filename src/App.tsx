@@ -5,6 +5,7 @@ import HomePage from './pages/HomePage'
 import CharactersPage from './pages/CharactersPage'
 import CharacterDetailPage from './pages/CharacterDetailPage'
 import ArcsPage from './pages/ArcsPage'
+import ArcDetailPage from './pages/ArcDetailPage'
 import ChaptersPage from './pages/ChaptersPage'
 import DevilFruitsPage from './pages/DevilFruitsPage'
 import AnalyticsPage from './pages/AnalyticsPage'
@@ -33,6 +34,7 @@ function App() {
             <Route path="/characters" element={<CharactersPage />} />
             <Route path="/characters/:id" element={<CharacterDetailPage />} />
             <Route path="/arcs" element={<ArcsPage />} />
+            <Route path="/arcs/:id" element={<ArcDetailPage />} />
             <Route path="/chapters" element={<ChaptersPage />} />
             <Route path="/devil-fruits" element={<DevilFruitsPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
