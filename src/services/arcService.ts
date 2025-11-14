@@ -33,14 +33,24 @@ export async function fetchArcs(): Promise<Arc[]> {
     const arcs = arcsResponse.data || []
     const sagas = sagasResponse.data || []
 
-    // Match each arc to a saga based on chapter ranges
+    // Transform arcs data and match with sagas
     const transformedData: Arc[] = arcs.map((arc) => {
-      // Find the saga that contains this arc's start_chapter
-      const matchingSaga = sagas.find(
-        (saga) =>
-          arc.start_chapter >= saga.start_chapter &&
-          arc.start_chapter <= saga.end_chapter
-      )
+      // Use saga_id from database if it exists, otherwise compute based on chapter ranges
+      let sagaId = arc.saga_id
+      let matchingSaga = null
+
+      if (sagaId) {
+        // If saga_id exists in arc, find the matching saga by ID
+        matchingSaga = sagas.find((saga) => saga.saga_id === sagaId)
+      } else {
+        // Fallback: compute saga based on chapter ranges if saga_id is missing
+        matchingSaga = sagas.find(
+          (saga) =>
+            arc.start_chapter >= saga.start_chapter &&
+            arc.start_chapter <= saga.end_chapter
+        )
+        sagaId = matchingSaga?.saga_id || null
+      }
 
       return {
         arc_id: arc.arc_id,
@@ -49,7 +59,7 @@ export async function fetchArcs(): Promise<Arc[]> {
         romanized_title: arc.romanized_title,
         start_chapter: arc.start_chapter,
         end_chapter: arc.end_chapter,
-        saga_id: matchingSaga?.saga_id || arc.saga_id,
+        saga_id: sagaId,
         description: arc.description,
         saga: matchingSaga ? { title: matchingSaga.title } : undefined,
       }

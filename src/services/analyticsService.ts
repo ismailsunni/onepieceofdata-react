@@ -30,7 +30,7 @@ function formatBountyRange(min: number, max: number): string {
     if (num >= 1000) return `${num / 1000}K`
     return num.toString()
   }
-  
+
   if (max === Infinity) return `${formatNumber(min)}+`
   return `${formatNumber(min)}-${formatNumber(max)}`
 }
@@ -110,7 +110,7 @@ export async function fetchBountyDistribution(): Promise<BountyRange[]> {
       {
         min: 5000000000,
         max: Infinity,
-        powerTier: 'Legends (5B+)',
+        powerTier: 'Legends',
         color: '#dc2626',
       },
     ]
@@ -120,10 +120,14 @@ export async function fetchBountyDistribution(): Promise<BountyRange[]> {
       const charsInRange = data.filter(
         (char) => char.bounty >= range.min && char.bounty < range.max
       )
-      
-      const alive = charsInRange.filter(char => char.status === 'Alive').length
-      const notAlive = charsInRange.filter(char => char.status !== 'Alive').length
-      
+
+      const alive = charsInRange.filter(
+        (char) => char.status === 'Alive'
+      ).length
+      const notAlive = charsInRange.filter(
+        (char) => char.status !== 'Alive'
+      ).length
+
       return {
         range: formatBountyRange(range.min, range.max),
         count: charsInRange.length,
@@ -171,11 +175,16 @@ export async function fetchBountyStats(): Promise<BountyStats> {
 
     if (bountyError) {
       console.error('Error fetching characters with bounty:', bountyError)
-      return { totalCharacters: totalCharacters || 0, charactersWithBounty: 0, percentage: 0 }
+      return {
+        totalCharacters: totalCharacters || 0,
+        charactersWithBounty: 0,
+        percentage: 0,
+      }
     }
 
-    const percentage = totalCharacters 
-      ? Math.round((charactersWithBounty || 0) / totalCharacters * 100 * 10) / 10 
+    const percentage = totalCharacters
+      ? Math.round(((charactersWithBounty || 0) / totalCharacters) * 100 * 10) /
+        10
       : 0
 
     return {

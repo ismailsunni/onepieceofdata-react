@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import {
   fetchBountyDistribution,
+  fetchBountyStats,
   fetchStatusDistribution,
   fetchTopBounties,
   fetchAppearanceDistribution,
@@ -14,14 +15,14 @@ import ArcLengthChart from '../components/ArcLengthChart'
 
 function AnalyticsPage() {
   // Fetch all analytics data using React Query
-  const { data: bountyDataAll = [], isLoading: bountyLoadingAll } = useQuery({
-    queryKey: ['analytics', 'bounty-distribution', 'all'],
-    queryFn: () => fetchBountyDistribution(false),
+  const { data: bountyData = [], isLoading: bountyLoading } = useQuery({
+    queryKey: ['analytics', 'bounty-distribution'],
+    queryFn: fetchBountyDistribution,
   })
 
-  const { data: bountyDataAlive = [], isLoading: bountyLoadingAlive } = useQuery({
-    queryKey: ['analytics', 'bounty-distribution', 'alive'],
-    queryFn: () => fetchBountyDistribution(true),
+  const { data: bountyStats, isLoading: bountyStatsLoading } = useQuery({
+    queryKey: ['analytics', 'bounty-stats'],
+    queryFn: fetchBountyStats,
   })
 
   const { data: statusData = [], isLoading: statusLoading } = useQuery({
@@ -50,8 +51,8 @@ function AnalyticsPage() {
   })
 
   const isLoading =
-    bountyLoadingAll ||
-    bountyLoadingAlive ||
+    bountyLoading ||
+    bountyStatsLoading ||
     statusLoading ||
     topBountiesLoadingAll ||
     topBountiesLoadingAlive ||
@@ -90,10 +91,10 @@ function AnalyticsPage() {
           {/* Two Column Layout for Medium Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Bounty Distribution */}
-            {bountyDataAll.length > 0 && (
-              <BountyDistributionChart 
-                dataAll={bountyDataAll}
-                dataAlive={bountyDataAlive}
+            {bountyData.length > 0 && (
+              <BountyDistributionChart
+                data={bountyData}
+                stats={bountyStats}
               />
             )}
 
@@ -112,7 +113,7 @@ function AnalyticsPage() {
 
             {/* Top Bounties - Takes remaining space or full column */}
             {topBountiesAll.length > 0 && (
-              <TopBountiesChart 
+              <TopBountiesChart
                 dataAll={topBountiesAll}
                 dataAlive={topBountiesAlive}
               />
@@ -120,7 +121,7 @@ function AnalyticsPage() {
           </div>
 
           {/* Empty State */}
-          {bountyDataAll.length === 0 &&
+          {bountyData.length === 0 &&
             statusData.length === 0 &&
             topBountiesAll.length === 0 &&
             appearanceData.length === 0 &&
