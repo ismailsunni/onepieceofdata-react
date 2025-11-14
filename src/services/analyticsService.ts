@@ -4,6 +4,7 @@ export interface BountyRange {
   range: string
   count: number
   color: string
+  powerTier: string // Store the power tier name separately
 }
 
 export interface StatusDistribution {
@@ -11,6 +12,19 @@ export interface StatusDistribution {
   count: number
   color: string
   [key: string]: string | number // Index signature for recharts compatibility
+}
+
+// Helper function to format bounty ranges
+function formatBountyRange(min: number, max: number): string {
+  const formatNumber = (num: number): string => {
+    if (num >= 1000000000) return `${num / 1000000000}B`
+    if (num >= 1000000) return `${num / 1000000}M`
+    if (num >= 1000) return `${num / 1000}K`
+    return num.toString()
+  }
+  
+  if (max === Infinity) return `${formatNumber(min)}+`
+  return `${formatNumber(min)}-${formatNumber(max)}`
 }
 
 export interface TopBounty {
@@ -25,10 +39,12 @@ export interface AppearanceData {
 }
 
 /**
- * Get distribution of character bounties by ranges
+ * Get distribution of character bounties by ranges with power tier groupings
  * @param aliveOnly - If true, only include characters with status 'Alive'
  */
-export async function fetchBountyDistribution(aliveOnly: boolean = false): Promise<BountyRange[]> {
+export async function fetchBountyDistribution(
+  aliveOnly: boolean = false
+): Promise<BountyRange[]> {
   try {
     if (!supabase) {
       console.error('Supabase client not initialized')
@@ -52,14 +68,51 @@ export async function fetchBountyDistribution(aliveOnly: boolean = false): Promi
       return []
     }
 
-    // Define bounty ranges
+    // Define bounty ranges with power tier labels
     const ranges = [
-      { min: 0, max: 50000000, label: '0-50M', color: '#3b82f6' },
-      { min: 50000000, max: 100000000, label: '50-100M', color: '#8b5cf6' },
-      { min: 100000000, max: 300000000, label: '100-300M', color: '#ec4899' },
-      { min: 300000000, max: 500000000, label: '300-500M', color: '#f59e0b' },
-      { min: 500000000, max: 1000000000, label: '500M-1B', color: '#ef4444' },
-      { min: 1000000000, max: Infinity, label: '1B+', color: '#dc2626' },
+      { min: 0, max: 100000, powerTier: 'Cute Pirates', color: '#93c5fd' },
+      {
+        min: 100000,
+        max: 1000000,
+        powerTier: 'Fodder Pirates / Warrant Officer',
+        color: '#60a5fa',
+      },
+      {
+        min: 1000000,
+        max: 100000000,
+        powerTier: 'Common Pirates / Marines Commander',
+        color: '#3b82f6',
+      },
+      {
+        min: 100000000,
+        max: 500000000,
+        powerTier: 'Supernova / Commodore / Rear Admiral',
+        color: '#8b5cf6',
+      },
+      {
+        min: 500000000,
+        max: 1000000000,
+        powerTier: 'Shichibukai / Yonkou Members',
+        color: '#ec4899',
+      },
+      {
+        min: 1000000000,
+        max: 3000000000,
+        powerTier: 'Yonkou Commanders / Vice Admiral',
+        color: '#f59e0b',
+      },
+      {
+        min: 3000000000,
+        max: 5000000000,
+        powerTier: 'Yonkou / Admiral',
+        color: '#ef4444',
+      },
+      {
+        min: 5000000000,
+        max: Infinity,
+        powerTier: 'Legends (5B+)',
+        color: '#dc2626',
+      },
     ]
 
     // Count characters in each range
@@ -68,12 +121,14 @@ export async function fetchBountyDistribution(aliveOnly: boolean = false): Promi
         (char) => char.bounty >= range.min && char.bounty < range.max
       ).length
       return {
-        range: range.label,
+        range: formatBountyRange(range.min, range.max),
         count,
         color: range.color,
+        powerTier: range.powerTier,
       }
     })
 
+    // Return all ranges to show complete power tier hierarchy
     return distribution
   } catch (error) {
     console.error('Error in fetchBountyDistribution:', error)
