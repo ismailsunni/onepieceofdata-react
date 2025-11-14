@@ -5,6 +5,14 @@ export interface BountyRange {
   count: number
   color: string
   powerTier: string // Store the power tier name separately
+  alive: number // Count of alive characters
+  notAlive: number // Count of deceased/unknown characters
+}
+
+export interface BountyStats {
+  totalCharacters: number
+  charactersWithBounty: number
+  percentage: number
 }
 
 export interface StatusDistribution {
@@ -40,28 +48,20 @@ export interface AppearanceData {
 
 /**
  * Get distribution of character bounties by ranges with power tier groupings
- * @param aliveOnly - If true, only include characters with status 'Alive'
+ * Returns stacked data with alive vs not alive counts
  */
-export async function fetchBountyDistribution(
-  aliveOnly: boolean = false
-): Promise<BountyRange[]> {
+export async function fetchBountyDistribution(): Promise<BountyRange[]> {
   try {
     if (!supabase) {
       console.error('Supabase client not initialized')
       return []
     }
 
-    let query = supabase
+    const { data, error } = await supabase
       .from('character')
       .select('bounty, status')
       .not('bounty', 'is', null)
       .gt('bounty', 0)
-
-    if (aliveOnly) {
-      query = query.eq('status', 'Alive')
-    }
-
-    const { data, error } = await query
 
     if (error) {
       console.error('Error fetching bounty data:', error)
@@ -115,16 +115,22 @@ export async function fetchBountyDistribution(
       },
     ]
 
-    // Count characters in each range
+    // Count characters in each range, separated by alive status
     const distribution: BountyRange[] = ranges.map((range) => {
-      const count = data.filter(
+      const charsInRange = data.filter(
         (char) => char.bounty >= range.min && char.bounty < range.max
-      ).length
+      )
+      
+      const alive = charsInRange.filter(char => char.status === 'Alive').length
+      const notAlive = charsInRange.filter(char => char.status !== 'Alive').length
+      
       return {
         range: formatBountyRange(range.min, range.max),
-        count,
+        count: charsInRange.length,
         color: range.color,
         powerTier: range.powerTier,
+        alive,
+        notAlive,
       }
     })
 
@@ -133,6 +139,53 @@ export async function fetchBountyDistribution(
   } catch (error) {
     console.error('Error in fetchBountyDistribution:', error)
     return []
+  }
+}
+
+/**
+ * Get statistics about characters with bounties
+ */
+export async function fetchBountyStats(): Promise<BountyStats> {
+  try {
+    if (!supabase) {
+      console.error('Supabase client not initialized')
+      return { totalCharacters: 0, charactersWithBounty: 0, percentage: 0 }
+    }
+
+    // Get total character count
+    const { count: totalCharacters, error: totalError } = await supabase
+      .from('character')
+      .select('*', { count: 'exact', head: true })
+
+    if (totalError) {
+      console.error('Error fetching total characters:', totalError)
+      return { totalCharacters: 0, charactersWithBounty: 0, percentage: 0 }
+    }
+
+    // Get count of characters with bounty > 0
+    const { count: charactersWithBounty, error: bountyError } = await supabase
+      .from('character')
+      .select('*', { count: 'exact', head: true })
+      .not('bounty', 'is', null)
+      .gt('bounty', 0)
+
+    if (bountyError) {
+      console.error('Error fetching characters with bounty:', bountyError)
+      return { totalCharacters: totalCharacters || 0, charactersWithBounty: 0, percentage: 0 }
+    }
+
+    const percentage = totalCharacters 
+      ? Math.round((charactersWithBounty || 0) / totalCharacters * 100 * 10) / 10 
+      : 0
+
+    return {
+      totalCharacters: totalCharacters || 0,
+      charactersWithBounty: charactersWithBounty || 0,
+      percentage,
+    }
+  } catch (error) {
+    console.error('Error in fetchBountyStats:', error)
+    return { totalCharacters: 0, charactersWithBounty: 0, percentage: 0 }
   }
 }
 

@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import {
   BarChart,
   Bar,
@@ -6,54 +5,33 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  Legend,
   ResponsiveContainer,
-  Cell,
 } from 'recharts'
-import { BountyRange } from '../services/analyticsService'
+import { BountyRange, BountyStats } from '../services/analyticsService'
 
 interface BountyDistributionChartProps {
-  dataAll: BountyRange[]
-  dataAlive: BountyRange[]
+  data: BountyRange[]
+  stats?: BountyStats
 }
 
-function BountyDistributionChart({ dataAll, dataAlive }: BountyDistributionChartProps) {
-  const [showAliveOnly, setShowAliveOnly] = useState(false)
-  const data = showAliveOnly ? dataAlive : dataAll
-
+function BountyDistributionChart({ data, stats }: BountyDistributionChartProps) {
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">
-            Bounty Distribution by Power Tier
-          </h3>
-          <p className="text-sm text-gray-600">
-            Characters grouped by bounty ranges representing power tiers
+      <div className="mb-4">
+        <h3 className="text-xl font-semibold text-gray-800 mb-2">
+          Bounty Distribution by Power Tier
+        </h3>
+        <p className="text-sm text-gray-600">
+          Characters grouped by bounty ranges representing power tiers
+        </p>
+        {stats && (
+          <p className="text-sm text-gray-500 mt-2">
+            {stats.charactersWithBounty.toLocaleString()} of{' '}
+            {stats.totalCharacters.toLocaleString()} characters have a bounty
+            ({stats.percentage}%)
           </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Filter:</span>
-          <button
-            onClick={() => setShowAliveOnly(false)}
-            className={`px-3 py-1 text-sm rounded-md transition-colors ${
-              !showAliveOnly
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            All
-          </button>
-          <button
-            onClick={() => setShowAliveOnly(true)}
-            className={`px-3 py-1 text-sm rounded-md transition-colors ${
-              showAliveOnly
-                ? 'bg-green-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            Alive Only
-          </button>
-        </div>
+        )}
       </div>
       <ResponsiveContainer width="100%" height={400}>
         <BarChart
@@ -93,7 +71,10 @@ function BountyDistributionChart({ dataAll, dataAlive }: BountyDistributionChart
               border: '1px solid #e5e7eb',
               borderRadius: '0.375rem',
             }}
-            formatter={(value: number) => [`${value} characters`, 'Count']}
+            formatter={(value: number, name: string) => {
+              const label = name === 'alive' ? 'Alive' : 'Deceased/Unknown'
+              return [`${value} characters`, label]
+            }}
             labelFormatter={(label, payload) => {
               if (payload && payload[0]) {
                 const powerTier = (payload[0].payload as BountyRange).powerTier
@@ -102,11 +83,13 @@ function BountyDistributionChart({ dataAll, dataAlive }: BountyDistributionChart
               return label
             }}
           />
-          <Bar dataKey="count" radius={[8, 8, 0, 0]}>
-            {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
-            ))}
-          </Bar>
+          <Legend
+            verticalAlign="top"
+            height={36}
+            formatter={(value) => value === 'alive' ? 'Alive' : 'Deceased/Unknown'}
+          />
+          <Bar dataKey="alive" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} />
+          <Bar dataKey="notAlive" stackId="a" fill="#ef4444" radius={[8, 8, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>
