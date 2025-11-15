@@ -6,6 +6,7 @@ import {
   fetchTopBounties,
   fetchAppearanceDistribution,
   fetchSagaAppearanceDistribution,
+  fetchSagaAppearanceCountDistribution,
 } from '../services/analyticsService'
 import { fetchArcs } from '../services/arcService'
 import BountyDistributionChart from '../components/BountyDistributionChart'
@@ -13,6 +14,7 @@ import CharacterStatusChart from '../components/CharacterStatusChart'
 import TopBountiesChart from '../components/TopBountiesChart'
 import CharacterAppearanceChart from '../components/CharacterAppearanceChart'
 import { SagaAppearanceChart } from '../components/SagaAppearanceChart'
+import { SagaAppearanceCountChart } from '../components/SagaAppearanceCountChart'
 import ArcLengthChart from '../components/ArcLengthChart'
 
 function AnalyticsPage() {
@@ -52,6 +54,11 @@ function AnalyticsPage() {
     queryFn: fetchSagaAppearanceDistribution,
   })
 
+  const { data: sagaAppearanceCountData = [], isLoading: sagaAppearanceCountLoading } = useQuery({
+    queryKey: ['analytics', 'saga-appearance-count-distribution'],
+    queryFn: fetchSagaAppearanceCountDistribution,
+  })
+
   const { data: arcs = [], isLoading: arcsLoading } = useQuery({
     queryKey: ['arcs'],
     queryFn: fetchArcs,
@@ -65,6 +72,7 @@ function AnalyticsPage() {
     topBountiesLoadingAlive ||
     appearanceLoading ||
     sagaAppearanceLoading ||
+    sagaAppearanceCountLoading ||
     arcsLoading
 
   return (
@@ -143,12 +151,20 @@ function AnalyticsPage() {
             </div>
           )}
 
+          {/* Saga Appearance Count Distribution - Full Width */}
+          {sagaAppearanceCountData.length > 0 && (
+            <div className="w-full">
+              <SagaAppearanceCountChart data={sagaAppearanceCountData} />
+            </div>
+          )}
+
           {/* Empty State */}
           {bountyData.length === 0 &&
             statusData.length === 0 &&
             topBountiesAll.length === 0 &&
             appearanceData.length === 0 &&
             sagaAppearanceData.length === 0 &&
+            sagaAppearanceCountData.length === 0 &&
             arcs.length === 0 && (
               <div className="text-center py-20">
                 <p className="text-gray-500 text-lg">
