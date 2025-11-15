@@ -5,12 +5,14 @@ import {
   fetchStatusDistribution,
   fetchTopBounties,
   fetchAppearanceDistribution,
+  fetchSagaAppearanceDistribution,
 } from '../services/analyticsService'
 import { fetchArcs } from '../services/arcService'
 import BountyDistributionChart from '../components/BountyDistributionChart'
 import CharacterStatusChart from '../components/CharacterStatusChart'
 import TopBountiesChart from '../components/TopBountiesChart'
 import CharacterAppearanceChart from '../components/CharacterAppearanceChart'
+import { SagaAppearanceChart } from '../components/SagaAppearanceChart'
 import ArcLengthChart from '../components/ArcLengthChart'
 
 function AnalyticsPage() {
@@ -45,6 +47,11 @@ function AnalyticsPage() {
     queryFn: fetchAppearanceDistribution,
   })
 
+  const { data: sagaAppearanceData = [], isLoading: sagaAppearanceLoading } = useQuery({
+    queryKey: ['analytics', 'saga-appearance-distribution'],
+    queryFn: fetchSagaAppearanceDistribution,
+  })
+
   const { data: arcs = [], isLoading: arcsLoading } = useQuery({
     queryKey: ['arcs'],
     queryFn: fetchArcs,
@@ -57,6 +64,7 @@ function AnalyticsPage() {
     topBountiesLoadingAll ||
     topBountiesLoadingAlive ||
     appearanceLoading ||
+    sagaAppearanceLoading ||
     arcsLoading
 
   return (
@@ -106,7 +114,7 @@ function AnalyticsPage() {
 
           {/* Two Column Layout Continued */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Character Appearances */}
+            {/* Character Appearances by Chapter Range */}
             {appearanceData.length > 0 && (
               <CharacterAppearanceChart data={appearanceData} />
             )}
@@ -120,11 +128,27 @@ function AnalyticsPage() {
             )}
           </div>
 
+          {/* Saga Character Distribution - Full Width */}
+          {sagaAppearanceData.length > 0 && (
+            <div className="w-full">
+              <div className="rounded-lg bg-white p-6 shadow-md">
+                <h2 className="mb-4 text-xl font-semibold text-gray-800">
+                  Characters Introduced per Saga
+                </h2>
+                <p className="mb-4 text-sm text-gray-600">
+                  Distribution of character debuts across all 11 major sagas of One Piece
+                </p>
+                <SagaAppearanceChart data={sagaAppearanceData} />
+              </div>
+            </div>
+          )}
+
           {/* Empty State */}
           {bountyData.length === 0 &&
             statusData.length === 0 &&
             topBountiesAll.length === 0 &&
             appearanceData.length === 0 &&
+            sagaAppearanceData.length === 0 &&
             arcs.length === 0 && (
               <div className="text-center py-20">
                 <p className="text-gray-500 text-lg">

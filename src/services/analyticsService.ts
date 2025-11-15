@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { Saga } from '../types/arc'
 
 export interface BountyRange {
   range: string
@@ -44,6 +45,12 @@ export interface TopBounty {
 export interface AppearanceData {
   chapterRange: string
   characterCount: number
+}
+
+export interface SagaAppearanceData {
+  sagaName: string
+  characterCount: number
+  sagaOrder: number
 }
 
 /**
@@ -337,6 +344,61 @@ export async function fetchAppearanceDistribution(): Promise<AppearanceData[]> {
     return distribution
   } catch (error) {
     console.error('Error in fetchAppearanceDistribution:', error)
+    return []
+  }
+}
+
+/**
+ * Get character appearance distribution by saga
+ * Shows how many characters first appeared in each saga
+ */
+export async function fetchSagaAppearanceDistribution(): Promise<SagaAppearanceData[]> {
+  try {
+    if (!supabase) {
+      console.error('Supabase client not initialized')
+      return []
+    }
+
+    // Fetch all sagas
+    const { data: sagas, error: sagasError } = await supabase
+      .from('saga')
+      .select<'*', Saga>('*')
+      .order('start_chapter', { ascending: true })
+
+    if (sagasError) {
+      console.error('Error fetching sagas:', sagasError)
+      return []
+    }
+
+    // Fetch all characters with their first appearance
+    const { data: characters, error: charactersError } = await supabase
+      .from('character')
+      .select('first_appearance')
+      .not('first_appearance', 'is', null)
+
+    if (charactersError) {
+      console.error('Error fetching characters:', charactersError)
+      return []
+    }
+
+    // Count characters that first appeared in each saga
+    const distribution: SagaAppearanceData[] = sagas.map((saga, index) => {
+      const count = characters.filter(
+        (char) =>
+          char.first_appearance >= saga.start_chapter &&
+          char.first_appearance <= saga.end_chapter
+      ).length
+
+      return {
+        sagaName: saga.title,
+        characterCount: count,
+        sagaOrder: index + 1,
+      }
+    })
+
+    return distribution
+  } catch (error) {
+    console.error('Error in fetchSagaAppearanceDistribution:', error)
     return []
   }
 }
