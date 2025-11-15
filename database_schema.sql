@@ -42,14 +42,9 @@ CREATE TABLE public.character (
   volume_appearance_count integer,
   first_appearance integer,
   last_appearance integer,
+  arc_list ARRAY,
+  saga_list ARRAY,
   CONSTRAINT character_pkey PRIMARY KEY (id)
-);
-CREATE TABLE public.coc (
-  chapter integer,
-  character text,
-  note text,
-  CONSTRAINT fk_coc_chapter FOREIGN KEY (chapter) REFERENCES public.chapter(number),
-  CONSTRAINT fk_coc_character FOREIGN KEY (character) REFERENCES public.character(id)
 );
 CREATE TABLE public.cov (
   volume integer,

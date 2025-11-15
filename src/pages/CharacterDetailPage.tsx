@@ -185,11 +185,56 @@ function CharacterDetailPage() {
           </div>
 
           {/* Appearance Details */}
-          {(character.chapter_list || character.volume_list) && (
+          {(character.chapter_list ||
+            character.volume_list ||
+            character.arc_list ||
+            character.saga_list) && (
             <div className="border-t pt-8">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Appearance Details</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                Appearance Details
+              </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {character.saga_list && character.saga_list.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-700 mb-3">
+                      Sagas ({character.saga_list.length})
+                    </h3>
+                    <div className="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto">
+                      <div className="flex flex-wrap gap-2">
+                        {character.saga_list.map((saga) => (
+                          <span
+                            key={saga}
+                            className="inline-block px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium"
+                          >
+                            {saga}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {character.arc_list && character.arc_list.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-700 mb-3">
+                      Arcs ({character.arc_list.length})
+                    </h3>
+                    <div className="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto">
+                      <div className="flex flex-wrap gap-2">
+                        {character.arc_list.map((arc) => (
+                          <span
+                            key={arc}
+                            className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium"
+                          >
+                            {arc}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {character.chapter_list && character.chapter_list.length > 0 && (
                   <div>
                     <h3 className="text-lg font-semibold text-gray-700 mb-3">
@@ -225,7 +270,7 @@ function CharacterDetailPage() {
                         {character.volume_list.map((volume) => (
                           <span
                             key={volume}
-                            className="inline-block px-2 py-1 bg-purple-100 text-purple-800 rounded text-sm"
+                            className="inline-block px-2 py-1 bg-amber-100 text-amber-800 rounded text-sm"
                           >
                             Vol. {volume}
                           </span>

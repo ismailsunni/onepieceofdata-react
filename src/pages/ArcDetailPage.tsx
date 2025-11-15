@@ -31,22 +31,18 @@ async function fetchArcById(id: string): Promise<Arc | null> {
 }
 
 // Service function to fetch characters that appear in this arc
-async function fetchCharactersByArc(
-  startChapter: number,
-  endChapter: number
-): Promise<Character[]> {
+async function fetchCharactersByArc(arcId: string): Promise<Character[]> {
   try {
     if (!supabase) {
       console.error('Supabase client is not initialized')
       return []
     }
 
-    // Get characters whose first appearance is within this arc's chapter range
+    // Get characters whose arc_list contains this arc
     const { data, error } = await supabase
       .from('character')
       .select('*')
-      .gte('first_appearance', startChapter)
-      .lte('first_appearance', endChapter)
+      .contains('arc_list', [arcId])
       .order('first_appearance', { ascending: true })
 
     if (error) {
@@ -72,9 +68,8 @@ function ArcDetailPage() {
   })
 
   const { data: characters = [], isLoading: charactersLoading } = useQuery({
-    queryKey: ['arc-characters', arc?.start_chapter, arc?.end_chapter],
-    queryFn: () =>
-      fetchCharactersByArc(arc!.start_chapter, arc!.end_chapter),
+    queryKey: ['arc-characters', arc?.arc_id],
+    queryFn: () => fetchCharactersByArc(arc!.arc_id),
     enabled: !!arc,
   })
 
@@ -215,7 +210,7 @@ function ArcDetailPage() {
           {/* Characters Introduced */}
           <div className="border-t pt-8">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              Characters Introduced in This Arc
+              Characters Appearing in This Arc
               {characters.length > 0 && (
                 <span className="ml-2 text-lg text-gray-500">
                   ({characters.length})
@@ -268,13 +263,7 @@ function ArcDetailPage() {
               </div>
             ) : (
               <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-500">
-                <p>
-                  No characters found with their first appearance in this arc.
-                </p>
-                <p className="text-sm mt-2">
-                  Note: This shows characters who debuted in chapters{' '}
-                  {arc.start_chapter}-{arc.end_chapter}.
-                </p>
+                <p>No characters found appearing in this arc.</p>
               </div>
             )}
           </div>

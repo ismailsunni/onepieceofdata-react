@@ -414,51 +414,31 @@ export async function fetchSagaAppearanceDistribution(): Promise<
  * Get character saga appearance count distribution
  * Shows how many characters appear in 1 saga, 2 sagas, 3 sagas, etc.
  */
-export async function fetchSagaAppearanceCountDistribution(): Promise<SagaAppearanceCountData[]> {
+export async function fetchSagaAppearanceCountDistribution(): Promise<
+  SagaAppearanceCountData[]
+> {
   try {
     if (!supabase) {
       console.error('Supabase client not initialized')
       return []
     }
 
-    // Fetch all sagas
-    const { data: sagas, error: sagasError } = await supabase
-      .from('saga')
-      .select<'*', Saga>('*')
-      .order('start_chapter', { ascending: true })
-
-    if (sagasError) {
-      console.error('Error fetching sagas:', sagasError)
-      return []
-    }
-
-    // Fetch all characters with their chapter data
+    // Fetch all characters with their saga_list
     const { data: characters, error: charactersError } = await supabase
       .from('character')
-      .select('name, first_appearance, last_appearance')
-      .not('first_appearance', 'is', null)
+      .select('saga_list')
+      .not('saga_list', 'is', null)
 
     if (charactersError) {
       console.error('Error fetching characters:', charactersError)
       return []
     }
 
-    // For each character, count how many sagas they appear in
+    // Count how many characters appear in each saga count
     const sagaCountMap = new Map<number, number>() // saga count -> character count
 
     characters.forEach((char) => {
-      let sagaCount = 0
-      
-      sagas.forEach((saga) => {
-        // Check if character appears in this saga
-        const firstInRange = char.first_appearance <= saga.end_chapter
-        const lastInRange = !char.last_appearance || char.last_appearance >= saga.start_chapter
-        
-        if (firstInRange && lastInRange) {
-          sagaCount++
-        }
-      })
-
+      const sagaCount = char.saga_list?.length || 0
       if (sagaCount > 0) {
         sagaCountMap.set(sagaCount, (sagaCountMap.get(sagaCount) || 0) + 1)
       }
@@ -467,7 +447,7 @@ export async function fetchSagaAppearanceCountDistribution(): Promise<SagaAppear
     // Convert to array format for chart
     const distribution: SagaAppearanceCountData[] = []
     const maxSagas = Math.max(...Array.from(sagaCountMap.keys()), 11) // At least show up to 11 sagas
-    
+
     for (let i = 1; i <= maxSagas; i++) {
       distribution.push({
         sagaCount: i === 1 ? '1 saga' : `${i} sagas`,

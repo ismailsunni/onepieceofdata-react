@@ -18,4 +18,6 @@ export interface Character {
   volume_appearance_count: number | null
   first_appearance: number | null
   last_appearance: number | null
+  arc_list: string[] | null
+  saga_list: string[] | null
 }
