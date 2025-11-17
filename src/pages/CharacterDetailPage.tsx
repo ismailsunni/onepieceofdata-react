@@ -182,6 +182,31 @@ function CharacterDetailPage() {
     }
   }
 
+  // Format birth date to human-readable format
+  const formatBirthDate = (birthDate: string | null) => {
+    if (!birthDate) return null
+
+    // Common formats: "05-05", "5-5", "05/05", etc.
+    const dateMatch = birthDate.match(/(\d{1,2})[-/](\d{1,2})/)
+    if (dateMatch) {
+      const [, month, day] = dateMatch
+      const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ]
+      
+      const monthNum = parseInt(month, 10)
+      const dayNum = parseInt(day, 10)
+      
+      if (monthNum >= 1 && monthNum <= 12) {
+        return `${dayNum} ${monthNames[monthNum - 1]}`
+      }
+    }
+
+    // If we can't parse it, return the original
+    return birthDate
+  }
+
   return (
     <main className="container mx-auto px-4 py-8">
       {/* Breadcrumb Navigation */}
@@ -251,7 +276,10 @@ function CharacterDetailPage() {
               <DetailRow label="Origin" value={character.origin} />
               <DetailRow label="Status" value={character.status} />
               <DetailRow label="Age" value={character.age?.toString()} />
-              <DetailRow label="Birth Date" value={character.birth_date || character.birth} />
+              <DetailRow 
+                label="Birth Date" 
+                value={formatBirthDate(character.birth_date || character.birth)} 
+              />
               <DetailRow label="Blood Type" value={character.blood_type} />
             </div>
 
