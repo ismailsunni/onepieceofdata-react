@@ -129,6 +129,42 @@ function CharacterDetailPage() {
     return `₿${bounty.toLocaleString()}`
   }
 
+  // Format bounty history
+  const formatBountyHistory = (bountiesStr: string | null) => {
+    if (!bountiesStr) return null
+
+    // Parse bounty values from the string
+    // Common formats: "30000000 -> 100000000 -> 300000000" or "30,000,000; 100,000,000; 300,000,000"
+    const bountyNumbers = bountiesStr
+      .replace(/[₿Ƀ฿]/g, '') // Remove berry symbols
+      .split(/[;,\->]+/) // Split by common delimiters
+      .map(s => s.trim())
+      .filter(s => s.length > 0)
+      .map(s => {
+        const num = parseInt(s.replace(/,/g, ''), 10)
+        return isNaN(num) ? null : num
+      })
+      .filter(n => n !== null) as number[]
+
+    if (bountyNumbers.length === 0) {
+      // Return original string if we can't parse it
+      return bountiesStr
+    }
+
+    // Format each bounty nicely
+    return bountyNumbers.map(b => {
+      if (b >= 1000000000) {
+        return `₿${(b / 1000000000).toFixed(2)}B`
+      } else if (b >= 1000000) {
+        return `₿${(b / 1000000).toFixed(0)}M`
+      } else if (b >= 1000) {
+        return `₿${(b / 1000).toFixed(0)}K`
+      } else {
+        return `₿${b.toLocaleString()}`
+      }
+    })
+  }
+
   // Status badge color
   const getStatusColor = (status: string | null) => {
     switch (status?.toLowerCase()) {
@@ -221,8 +257,36 @@ function CharacterDetailPage() {
               <h2 className="text-2xl font-bold text-gray-800 mb-4">Statistics</h2>
 
               <DetailRow label="Current Bounty" value={formatBounty(character.bounty)} />
-              <DetailRow label="Bounty History" value={character.bounties} />
               
+              {/* Bounty History with formatted display */}
+              {character.bounties && (
+                <div className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-600 font-medium">Bounty History:</span>
+                  <div className="text-right text-gray-800 max-w-md">
+                    {(() => {
+                      const formattedBounties = formatBountyHistory(character.bounties)
+                      if (Array.isArray(formattedBounties)) {
+                        return (
+                          <div className="flex flex-wrap justify-end gap-1">
+                            {formattedBounties.map((bounty, index) => (
+                              <span key={index}>
+                                <span className="inline-block px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-sm font-medium">
+                                  {bounty}
+                                </span>
+                                {index < formattedBounties.length - 1 && (
+                                  <span className="mx-1 text-gray-400">→</span>
+                                )}
+                              </span>
+                            ))}
+                          </div>
+                        )
+                      }
+                      return formattedBounties || 'N/A'
+                    })()}
+                  </div>
+                </div>
+              )}
+
               {/* First Appearance with Arc Name */}
               <div className="flex justify-between py-2 border-b border-gray-100">
                 <span className="text-gray-600 font-medium">First Appearance:</span>
@@ -251,7 +315,7 @@ function CharacterDetailPage() {
                       <div>Chapter {character.last_appearance}</div>
                       {character.arc_list && character.arc_list.length > 0 && (
                         <div className="text-sm text-gray-500">
-                          {arcMap.get(character.arc_list[character.arc_list.length - 1])?.title || 
+                          {arcMap.get(character.arc_list[character.arc_list.length - 1])?.title ||
                            character.arc_list[character.arc_list.length - 1]}
                         </div>
                       )}
@@ -261,7 +325,7 @@ function CharacterDetailPage() {
                   )}
                 </div>
               </div>
-              
+
               <DetailRow label="Chapter Appearances" value={character.appearance_count?.toString()} />
               <DetailRow label="Volume Appearances" value={character.volume_appearance_count?.toString()} />
             </div>

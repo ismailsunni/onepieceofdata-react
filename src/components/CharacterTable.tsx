@@ -97,9 +97,9 @@ function CharacterTable({
         cell: (info) => {
           const chapter = info.getValue()
           const character = info.row.original
-          
+
           if (!chapter) return '-'
-          
+
           // Find the arc where this character first appeared
           let arcName = ''
           if (character.arc_list && character.arc_list.length > 0) {
@@ -107,7 +107,7 @@ function CharacterTable({
             const firstArcId = character.arc_list[0]
             arcName = arcMap.get(firstArcId) || ''
           }
-          
+
           return (
             <div className="flex flex-col">
               <span>Ch. {chapter}</span>
