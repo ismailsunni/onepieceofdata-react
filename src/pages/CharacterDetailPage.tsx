@@ -266,14 +266,30 @@ function CharacterDetailPage() {
                     {(() => {
                       const formattedBounties = formatBountyHistory(character.bounties)
                       if (Array.isArray(formattedBounties)) {
+                        // Show first 2, ellipsis, last 2 if more than 4
+                        const shouldTruncate = formattedBounties.length > 4
+                        const displayBounties = shouldTruncate
+                          ? [
+                              ...formattedBounties.slice(0, 2),
+                              '...',
+                              ...formattedBounties.slice(-2)
+                            ]
+                          : formattedBounties
+
                         return (
                           <div className="flex flex-wrap justify-end gap-1">
-                            {formattedBounties.map((bounty, index) => (
+                            {displayBounties.map((bounty, index) => (
                               <span key={index}>
-                                <span className="inline-block px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-sm font-medium">
-                                  {bounty}
-                                </span>
-                                {index < formattedBounties.length - 1 && (
+                                {bounty === '...' ? (
+                                  <span className="inline-block px-2 py-0.5 text-gray-400 text-sm">
+                                    ...
+                                  </span>
+                                ) : (
+                                  <span className="inline-block px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-sm font-medium">
+                                    {bounty}
+                                  </span>
+                                )}
+                                {index < displayBounties.length - 1 && (
                                   <span className="mx-1 text-gray-400">→</span>
                                 )}
                               </span>
