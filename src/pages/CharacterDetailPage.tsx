@@ -151,6 +151,9 @@ function CharacterDetailPage() {
       return bountiesStr
     }
 
+    // Sort in ascending order (lowest to highest)
+    bountyNumbers.sort((a, b) => a - b)
+
     // Format each bounty nicely
     return bountyNumbers.map(b => {
       if (b >= 1000000000) {
