@@ -194,10 +194,10 @@ function CharacterDetailPage() {
         'January', 'February', 'March', 'April', 'May', 'June',
         'July', 'August', 'September', 'October', 'November', 'December'
       ]
-      
+
       const monthNum = parseInt(month, 10)
       const dayNum = parseInt(day, 10)
-      
+
       if (monthNum >= 1 && monthNum <= 12) {
         return `${dayNum} ${monthNames[monthNum - 1]}`
       }
@@ -276,9 +276,9 @@ function CharacterDetailPage() {
               <DetailRow label="Origin" value={character.origin} />
               <DetailRow label="Status" value={character.status} />
               <DetailRow label="Age" value={character.age?.toString()} />
-              <DetailRow 
-                label="Birth Date" 
-                value={formatBirthDate(character.birth_date || character.birth)} 
+              <DetailRow
+                label="Birth Date"
+                value={formatBirthDate(character.birth_date || character.birth)}
               />
               <DetailRow label="Blood Type" value={character.blood_type} />
             </div>
@@ -288,7 +288,7 @@ function CharacterDetailPage() {
               <h2 className="text-2xl font-bold text-gray-800 mb-4">Statistics</h2>
 
               <DetailRow label="Current Bounty" value={formatBounty(character.bounty)} />
-              
+
               {/* Bounty History with formatted display */}
               {character.bounties && (
                 <div className="flex justify-between py-2 border-b border-gray-100">
@@ -307,8 +307,16 @@ function CharacterDetailPage() {
                             ]
                           : formattedBounties
 
+                        // Create tooltip text with full history
+                        const fullHistoryTooltip = shouldTruncate
+                          ? `Full bounty history:\n${formattedBounties.join(' → ')}`
+                          : ''
+
                         return (
-                          <div className="flex flex-wrap justify-end gap-1">
+                          <div 
+                            className="flex flex-wrap justify-end gap-1 cursor-help"
+                            title={fullHistoryTooltip}
+                          >
                             {displayBounties.map((bounty, index) => (
                               <span key={index}>
                                 {bounty === '...' ? (
