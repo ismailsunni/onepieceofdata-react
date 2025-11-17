@@ -2,6 +2,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../services/supabase'
 import { Character } from '../types/character'
+import { fetchArcs } from '../services/arcService'
+import { Arc, Saga } from '../types/arc'
 
 // Service function to fetch a single character by ID
 async function fetchCharacterById(id: string): Promise<Character | null> {
@@ -29,6 +31,31 @@ async function fetchCharacterById(id: string): Promise<Character | null> {
   }
 }
 
+// Service function to fetch all sagas
+async function fetchSagas(): Promise<Saga[]> {
+  try {
+    if (!supabase) {
+      console.error('Supabase client is not initialized')
+      return []
+    }
+
+    const { data, error } = await supabase
+      .from('saga')
+      .select('*')
+      .order('start_chapter', { ascending: true })
+
+    if (error) {
+      console.error('Error fetching sagas:', error)
+      return []
+    }
+
+    return data || []
+  } catch (error) {
+    console.error('Error in fetchSagas:', error)
+    return []
+  }
+}
+
 function CharacterDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -38,6 +65,24 @@ function CharacterDetailPage() {
     queryFn: () => fetchCharacterById(id!),
     enabled: !!id,
   })
+
+  // Fetch arcs and sagas for name mapping
+  const { data: arcs = [] } = useQuery({
+    queryKey: ['arcs'],
+    queryFn: fetchArcs,
+  })
+
+  const { data: sagas = [] } = useQuery({
+    queryKey: ['sagas'],
+    queryFn: fetchSagas,
+  })
+
+  // Create lookup maps
+  const arcMap = new Map<string, Arc>()
+  arcs.forEach((arc) => arcMap.set(arc.arc_id, arc))
+
+  const sagaMap = new Map<string, Saga>()
+  sagas.forEach((saga) => sagaMap.set(saga.saga_id, saga))
 
   if (isLoading) {
     return (
@@ -177,8 +222,46 @@ function CharacterDetailPage() {
 
               <DetailRow label="Current Bounty" value={formatBounty(character.bounty)} />
               <DetailRow label="Bounty History" value={character.bounties} />
-              <DetailRow label="First Appearance" value={character.first_appearance ? `Chapter ${character.first_appearance}` : null} />
-              <DetailRow label="Last Appearance" value={character.last_appearance ? `Chapter ${character.last_appearance}` : null} />
+              
+              {/* First Appearance with Arc Name */}
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-600 font-medium">First Appearance:</span>
+                <div className="text-right text-gray-800">
+                  {character.first_appearance ? (
+                    <>
+                      <div>Chapter {character.first_appearance}</div>
+                      {character.arc_list && character.arc_list.length > 0 && (
+                        <div className="text-sm text-gray-500">
+                          {arcMap.get(character.arc_list[0])?.title || character.arc_list[0]}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    'N/A'
+                  )}
+                </div>
+              </div>
+
+              {/* Last Appearance with Arc Name */}
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-600 font-medium">Last Appearance:</span>
+                <div className="text-right text-gray-800">
+                  {character.last_appearance ? (
+                    <>
+                      <div>Chapter {character.last_appearance}</div>
+                      {character.arc_list && character.arc_list.length > 0 && (
+                        <div className="text-sm text-gray-500">
+                          {arcMap.get(character.arc_list[character.arc_list.length - 1])?.title || 
+                           character.arc_list[character.arc_list.length - 1]}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    'N/A'
+                  )}
+                </div>
+              </div>
+              
               <DetailRow label="Chapter Appearances" value={character.appearance_count?.toString()} />
               <DetailRow label="Volume Appearances" value={character.volume_appearance_count?.toString()} />
             </div>
@@ -202,14 +285,20 @@ function CharacterDetailPage() {
                     </h3>
                     <div className="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto">
                       <div className="flex flex-wrap gap-2">
-                        {character.saga_list.map((saga) => (
-                          <span
-                            key={saga}
-                            className="inline-block px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium"
-                          >
-                            {saga}
-                          </span>
-                        ))}
+                        {character.saga_list.map((sagaId) => {
+                          const saga = sagaMap.get(sagaId)
+                          const sagaName = saga?.title || sagaId
+                          return (
+                            <Link
+                              key={sagaId}
+                              to={`/sagas/${sagaId}`}
+                              className="inline-block px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium hover:bg-purple-200 transition-colors cursor-pointer"
+                              title={`View ${sagaName} details`}
+                            >
+                              {sagaName}
+                            </Link>
+                          )
+                        })}
                       </div>
                     </div>
                   </div>
@@ -222,14 +311,20 @@ function CharacterDetailPage() {
                     </h3>
                     <div className="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto">
                       <div className="flex flex-wrap gap-2">
-                        {character.arc_list.map((arc) => (
-                          <span
-                            key={arc}
-                            className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium"
-                          >
-                            {arc}
-                          </span>
-                        ))}
+                        {character.arc_list.map((arcId) => {
+                          const arc = arcMap.get(arcId)
+                          const arcName = arc?.title || arcId
+                          return (
+                            <Link
+                              key={arcId}
+                              to={`/arcs/${arcId}`}
+                              className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium hover:bg-green-200 transition-colors cursor-pointer"
+                              title={`View ${arcName} details`}
+                            >
+                              {arcName}
+                            </Link>
+                          )
+                        })}
                       </div>
                     </div>
                   </div>
@@ -243,12 +338,14 @@ function CharacterDetailPage() {
                     <div className="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto">
                       <div className="flex flex-wrap gap-2">
                         {character.chapter_list.slice(0, 50).map((chapter) => (
-                          <span
+                          <Link
                             key={chapter}
-                            className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm"
+                            to={`/chapters/${chapter}`}
+                            className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm hover:bg-blue-200 transition-colors cursor-pointer"
+                            title={`View Chapter ${chapter} details`}
                           >
                             {chapter}
-                          </span>
+                          </Link>
                         ))}
                         {character.chapter_list.length > 50 && (
                           <span className="inline-block px-2 py-1 bg-gray-200 text-gray-600 rounded text-sm">
@@ -268,12 +365,14 @@ function CharacterDetailPage() {
                     <div className="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto">
                       <div className="flex flex-wrap gap-2">
                         {character.volume_list.map((volume) => (
-                          <span
+                          <Link
                             key={volume}
-                            className="inline-block px-2 py-1 bg-amber-100 text-amber-800 rounded text-sm"
+                            to={`/volumes/${volume}`}
+                            className="inline-block px-2 py-1 bg-amber-100 text-amber-800 rounded text-sm hover:bg-amber-200 transition-colors cursor-pointer"
+                            title={`View Volume ${volume} details`}
                           >
                             Vol. {volume}
-                          </span>
+                          </Link>
                         ))}
                       </div>
                     </div>
