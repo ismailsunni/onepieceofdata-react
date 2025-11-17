@@ -1,5 +1,15 @@
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts'
 import { supabase } from '../services/supabase'
 import { Character } from '../types/character'
 import { fetchArcs } from '../services/arcService'
@@ -59,6 +69,7 @@ async function fetchSagas(): Promise<Saga[]> {
 function CharacterDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [showBountyChart, setShowBountyChart] = useState(false)
 
   const { data: character, isLoading, error } = useQuery({
     queryKey: ['character', id],
@@ -166,6 +177,19 @@ function CharacterDetailPage() {
         return `₿${b.toLocaleString()}`
       }
     })
+  }
+
+  // Format bounty value for chart display
+  const formatBountyValue = (bounty: number) => {
+    if (bounty >= 1000000000) {
+      return `₿${(bounty / 1000000000).toFixed(2)}B`
+    } else if (bounty >= 1000000) {
+      return `₿${(bounty / 1000000).toFixed(0)}M`
+    } else if (bounty >= 1000) {
+      return `₿${(bounty / 1000).toFixed(0)}K`
+    } else {
+      return `₿${bounty.toLocaleString()}`
+    }
   }
 
   // Status badge color
@@ -293,46 +317,95 @@ function CharacterDetailPage() {
               {character.bounties && (
                 <div className="flex justify-between py-2 border-b border-gray-100">
                   <span className="text-gray-600 font-medium">Bounty History:</span>
-                  <div className="text-right text-gray-800 max-w-md">
+                  <div className="text-right text-gray-800 max-w-md relative">
                     {(() => {
                       const formattedBounties = formatBountyHistory(character.bounties)
                       if (Array.isArray(formattedBounties)) {
-                        // Show first 2, ellipsis, last 2 if more than 4
-                        const shouldTruncate = formattedBounties.length > 4
+                        // Show first 1, ellipsis, last 2 if more than 3
+                        const shouldTruncate = formattedBounties.length > 3
                         const displayBounties = shouldTruncate
                           ? [
-                              ...formattedBounties.slice(0, 2),
+                              formattedBounties[0],
                               '...',
                               ...formattedBounties.slice(-2)
                             ]
                           : formattedBounties
 
-                        // Create tooltip text with full history
-                        const fullHistoryTooltip = shouldTruncate
-                          ? `Full bounty history:\n${formattedBounties.join(' → ')}`
-                          : ''
-
                         return (
-                          <div 
-                            className="flex flex-wrap justify-end gap-1 cursor-help"
-                            title={fullHistoryTooltip}
-                          >
-                            {displayBounties.map((bounty, index) => (
-                              <span key={index}>
-                                {bounty === '...' ? (
-                                  <span className="inline-block px-2 py-0.5 text-gray-400 text-sm">
-                                    ...
-                                  </span>
-                                ) : (
-                                  <span className="inline-block px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-sm font-medium">
-                                    {bounty}
-                                  </span>
+                          <div className="flex items-center justify-end gap-2">
+                            <div className="flex flex-wrap justify-end gap-1">
+                              {displayBounties.map((bounty, index) => (
+                                <span key={index}>
+                                  {bounty === '...' ? (
+                                    <span className="inline-block px-2 py-0.5 text-gray-400 text-sm">
+                                      ...
+                                    </span>
+                                  ) : (
+                                    <span className="inline-block px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-sm font-medium">
+                                      {bounty}
+                                    </span>
+                                  )}
+                                  {index < displayBounties.length - 1 && (
+                                    <span className="mx-1 text-gray-400">→</span>
+                                  )}
+                                </span>
+                              ))}
+                            </div>
+                            {shouldTruncate && (
+                              <div className="relative">
+                                <button
+                                  onClick={() => setShowBountyChart(!showBountyChart)}
+                                  className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors whitespace-nowrap"
+                                >
+                                  {showBountyChart ? '📊 Hide' : '📊 Chart'}
+                                </button>
+                                {showBountyChart && (
+                                  <div className="absolute right-0 top-8 bg-white border border-gray-300 rounded-lg shadow-lg p-4 z-50 w-[500px]">
+                                    <div className="h-64">
+                                      <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart
+                                          data={(() => {
+                                            const bounties = character.bounties.split(';').map(b => b.trim())
+                                            // Parse and sort ascending
+                                            const parsed = bounties.map((bountyStr) => {
+                                              const numericBounty = parseInt(bountyStr.replace(/[^0-9]/g, ''))
+                                              return { bounty: numericBounty, str: bountyStr }
+                                            })
+                                            parsed.sort((a, b) => a.bounty - b.bounty)
+                                            
+                                            return parsed.map((item, index) => ({
+                                              step: `#${index + 1}`,
+                                              bounty: item.bounty,
+                                              label: formatBountyValue(item.bounty)
+                                            }))
+                                          })()}
+                                          margin={{ top: 10, right: 30, left: 10, bottom: 20 }}
+                                        >
+                                          <CartesianGrid strokeDasharray="3 3" />
+                                          <XAxis 
+                                            dataKey="step"
+                                            label={{ value: 'Update', position: 'insideBottom', offset: -10 }}
+                                          />
+                                          <YAxis
+                                            tickFormatter={(value) => formatBountyValue(value)}
+                                          />
+                                          <Tooltip
+                                            formatter={(value: number) => [`₿${value.toLocaleString()}`, 'Bounty']}
+                                          />
+                                          <Line
+                                            type="monotone"
+                                            dataKey="bounty"
+                                            stroke="#f59e0b"
+                                            strokeWidth={2}
+                                            dot={{ fill: '#f59e0b', r: 4 }}
+                                          />
+                                        </LineChart>
+                                      </ResponsiveContainer>
+                                    </div>
+                                  </div>
                                 )}
-                                {index < displayBounties.length - 1 && (
-                                  <span className="mx-1 text-gray-400">→</span>
-                                )}
-                              </span>
-                            ))}
+                              </div>
+                            )}
                           </div>
                         )
                       }
@@ -347,14 +420,14 @@ function CharacterDetailPage() {
                 <span className="text-gray-600 font-medium">First Appearance:</span>
                 <div className="text-right text-gray-800">
                   {character.first_appearance ? (
-                    <>
-                      <div>Chapter {character.first_appearance}</div>
+                    <span>
+                      Chapter {character.first_appearance}
                       {character.arc_list && character.arc_list.length > 0 && (
-                        <div className="text-sm text-gray-500">
-                          {arcMap.get(character.arc_list[0])?.title || character.arc_list[0]}
-                        </div>
+                        <span className="text-sm text-gray-500">
+                          {' '}({arcMap.get(character.arc_list[0])?.title || character.arc_list[0]})
+                        </span>
                       )}
-                    </>
+                    </span>
                   ) : (
                     'N/A'
                   )}
@@ -366,15 +439,15 @@ function CharacterDetailPage() {
                 <span className="text-gray-600 font-medium">Last Appearance:</span>
                 <div className="text-right text-gray-800">
                   {character.last_appearance ? (
-                    <>
-                      <div>Chapter {character.last_appearance}</div>
+                    <span>
+                      Chapter {character.last_appearance}
                       {character.arc_list && character.arc_list.length > 0 && (
-                        <div className="text-sm text-gray-500">
-                          {arcMap.get(character.arc_list[character.arc_list.length - 1])?.title ||
-                           character.arc_list[character.arc_list.length - 1]}
-                        </div>
+                        <span className="text-sm text-gray-500">
+                          {' '}({arcMap.get(character.arc_list[character.arc_list.length - 1])?.title ||
+                           character.arc_list[character.arc_list.length - 1]})
+                        </span>
                       )}
-                    </>
+                    </span>
                   ) : (
                     'N/A'
                   )}
