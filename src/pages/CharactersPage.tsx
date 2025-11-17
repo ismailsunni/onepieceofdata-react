@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { SortingState, PaginationState } from '@tanstack/react-table'
 import CharacterTable from '../components/CharacterTable'
 import { fetchCharacters } from '../services/characterService'
+import { fetchArcs } from '../services/arcService'
 
 function CharactersPage() {
   const [sorting, setSorting] = useState<SortingState>([
@@ -18,6 +19,12 @@ function CharactersPage() {
   const { data: characters = [], isLoading } = useQuery({
     queryKey: ['characters'],
     queryFn: fetchCharacters,
+  })
+
+  // Fetch arcs to map arc IDs to names
+  const { data: arcs = [], isLoading: arcsLoading } = useQuery({
+    queryKey: ['arcs'],
+    queryFn: fetchArcs,
   })
 
   return (
@@ -39,7 +46,7 @@ function CharactersPage() {
       </div>
 
       {/* Loading State */}
-      {isLoading ? (
+      {isLoading || arcsLoading ? (
         <div className="bg-white rounded-lg shadow-md p-8 text-center">
           <p className="text-gray-600">Loading characters...</p>
         </div>
@@ -48,6 +55,7 @@ function CharactersPage() {
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <CharacterTable
             characters={characters}
+            arcs={arcs}
             sorting={sorting}
             onSortingChange={setSorting}
             globalFilter={globalFilter}

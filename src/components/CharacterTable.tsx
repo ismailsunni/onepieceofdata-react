@@ -13,9 +13,11 @@ import {
   PaginationState,
 } from '@tanstack/react-table'
 import { Character } from '../types/character'
+import { Arc } from '../types/arc'
 
 interface CharacterTableProps {
   characters: Character[]
+  arcs: Arc[]
   sorting: SortingState
   onSortingChange: OnChangeFn<SortingState>
   globalFilter: string
@@ -28,6 +30,7 @@ const columnHelper = createColumnHelper<Character>()
 
 function CharacterTable({
   characters,
+  arcs,
   sorting,
   onSortingChange,
   globalFilter,
@@ -36,6 +39,15 @@ function CharacterTable({
   onPaginationChange,
 }: CharacterTableProps) {
   const navigate = useNavigate()
+
+  // Create arc lookup map
+  const arcMap = useMemo(() => {
+    const map = new Map<string, string>()
+    arcs.forEach((arc) => {
+      map.set(arc.arc_id, arc.title)
+    })
+    return map
+  }, [arcs])
 
   // Define table columns
   const columns = useMemo(
@@ -84,14 +96,28 @@ function CharacterTable({
         header: 'First Appearance',
         cell: (info) => {
           const chapter = info.getValue()
-          return chapter ? `Ch. ${chapter}` : '-'
-        },
-      }),
-      columnHelper.accessor('last_appearance', {
-        header: 'Last Appearance',
-        cell: (info) => {
-          const chapter = info.getValue()
-          return chapter ? `Ch. ${chapter}` : '-'
+          const character = info.row.original
+          
+          if (!chapter) return '-'
+          
+          // Find the arc where this character first appeared
+          let arcName = ''
+          if (character.arc_list && character.arc_list.length > 0) {
+            // Get the first arc from the arc_list
+            const firstArcId = character.arc_list[0]
+            arcName = arcMap.get(firstArcId) || ''
+          }
+          
+          return (
+            <div className="flex flex-col">
+              <span>Ch. {chapter}</span>
+              {arcName && (
+                <span className="text-xs text-gray-500 mt-0.5">
+                  {arcName}
+                </span>
+              )}
+            </div>
+          )
         },
       }),
       columnHelper.accessor('bounty', {
@@ -110,7 +136,7 @@ function CharacterTable({
         cell: (info) => info.getValue() || '-',
       }),
     ],
-    []
+    [arcMap]
   )
 
   // Create table instance
