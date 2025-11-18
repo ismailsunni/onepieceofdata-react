@@ -162,7 +162,7 @@ function ArcDetailPage() {
               )}
               {arc.saga && (
                 <div className="mt-4">
-                  <span className="inline-block px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm font-medium text-white">
+                  <span className="inline-block px-3 py-1 bg-white rounded-full text-sm font-medium text-purple-800">
                     {arc.saga.title} Saga
                   </span>
                 </div>
