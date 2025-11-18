@@ -68,7 +68,7 @@ async function fetchArcByChapter(chapterNumber: number): Promise<Arc | null> {
 
     const { data, error } = await supabase
       .from('arc')
-      .select('*')
+      .select('*, saga:saga_id(title)')
       .lte('start_chapter', chapterNumber)
       .gte('end_chapter', chapterNumber)
       .single()
@@ -170,22 +170,49 @@ function ChapterDetailPage() {
       <div className="flex items-center justify-between mb-4 md:mb-6 gap-2">
         <button
           onClick={() => navigate('/chapters')}
-          className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 text-sm md:text-base text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+          className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 text-sm md:text-base text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors cursor-pointer"
         >
           <span>←</span>
           <span className="hidden sm:inline">Back to Chapters</span>
           <span className="sm:hidden">Back</span>
         </button>
+
         <a
           href={wikiUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 text-sm md:text-base bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 text-sm md:text-base bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors cursor-pointer"
         >
           <span className="hidden sm:inline">View on Wiki</span>
           <span className="sm:hidden">Wiki</span>
           <span>↗</span>
         </a>
+      </div>
+
+      {/* Previous/Next Chapter Navigation */}
+      <div className="flex justify-center gap-3 mb-6">
+        <button
+          onClick={() => navigate(`/chapters/${chapter.number - 1}`)}
+          disabled={chapter.number <= 1}
+          className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 cursor-pointer"
+          title="Previous Chapter"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          <span className="font-medium">Previous</span>
+        </button>
+
+        <button
+          onClick={() => navigate(`/chapters/${chapter.number + 1}`)}
+          className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all cursor-pointer"
+          title="Next Chapter"
+        >
+          <span className="font-medium">Next</span>
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
       </div>
 
       {/* Main Content */}
@@ -201,13 +228,18 @@ function ChapterDetailPage() {
                 <p className="text-lg md:text-xl opacity-90">{chapter.title}</p>
               )}
               {arc && (
-                <div className="mt-4">
+                <div className="mt-4 flex flex-wrap gap-2">
                   <Link
                     to={`/arcs/${arc.arc_id}`}
-                    className="inline-block px-3 py-1 bg-white rounded-full text-sm font-medium text-green-800 hover:bg-gray-100 transition-colors"
+                    className="inline-block px-3 py-1 bg-white rounded-full text-sm font-medium text-green-800 hover:bg-gray-100 transition-colors cursor-pointer"
                   >
                     {arc.title} Arc
                   </Link>
+                  {arc.saga && (
+                    <span className="inline-block px-3 py-1 bg-white rounded-full text-sm font-medium text-green-800 cursor-default">
+                      {arc.saga.title} Saga
+                    </span>
+                  )}
                 </div>
               )}
             </div>
@@ -256,42 +288,60 @@ function ChapterDetailPage() {
               </div>
             ) : characters.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {characters.map((character) => (
-                  <Link
-                    key={character.id}
-                    to={`/characters/${character.id}`}
-                    className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all"
-                  >
-                    <div className="flex flex-col h-full">
-                      <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2">
-                        {character.name || 'Unknown'}
-                      </h3>
-                      <div className="flex-1 space-y-1 text-sm text-gray-600">
-                        {character.status && (
-                          <p>
-                            <span className="font-medium">Status:</span>{' '}
-                            {character.status}
-                          </p>
-                        )}
-                        {character.first_appearance && (
-                          <p>
-                            <span className="font-medium">Debut:</span> Ch.{' '}
-                            {character.first_appearance}
-                          </p>
-                        )}
-                        {character.bounty !== null && character.bounty > 0 && (
-                          <p>
-                            <span className="font-medium">Bounty:</span> ₿
-                            {character.bounty.toLocaleString()}
-                          </p>
-                        )}
+                {characters.map((character) => {
+                  // Check if this is the character's debut chapter
+                  const isDebut = character.chapter_list &&
+                    character.chapter_list.length > 0 &&
+                    Math.min(...character.chapter_list) === chapterNumber
+
+                  return (
+                    <Link
+                      key={character.id}
+                      to={`/characters/${character.id}`}
+                      className={`bg-white border rounded-lg p-4 hover:shadow-md transition-all cursor-pointer ${
+                        isDebut
+                          ? 'border-yellow-400 bg-yellow-50 hover:border-yellow-500'
+                          : 'border-gray-200 hover:border-blue-300'
+                      }`}
+                    >
+                      <div className="flex flex-col h-full">
+                        <div className="flex items-start justify-between mb-2">
+                          <h3 className="font-semibold text-gray-800 line-clamp-2 flex-1">
+                            {character.name || 'Unknown'}
+                          </h3>
+                          {isDebut && (
+                            <span className="ml-2 px-2 py-0.5 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full whitespace-nowrap">
+                              DEBUT
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex-1 space-y-1 text-sm text-gray-600">
+                          {character.status && (
+                            <p>
+                              <span className="font-medium">Status:</span>{' '}
+                              {character.status}
+                            </p>
+                          )}
+                          {character.first_appearance && (
+                            <p>
+                              <span className="font-medium">Debut:</span> Ch.{' '}
+                              {character.first_appearance}
+                            </p>
+                          )}
+                          {character.bounty !== null && character.bounty > 0 && (
+                            <p>
+                              <span className="font-medium">Bounty:</span> ₿
+                              {character.bounty.toLocaleString()}
+                            </p>
+                          )}
+                        </div>
+                        <div className="mt-3 text-xs text-blue-600 font-medium">
+                          View Details →
+                        </div>
                       </div>
-                      <div className="mt-3 text-xs text-blue-600 font-medium">
-                        View Details →
-                      </div>
-                    </div>
-                  </Link>
-                ))}
+                    </Link>
+                  )
+                })}
               </div>
             ) : (
               <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-500">
@@ -309,7 +359,7 @@ function ChapterDetailPage() {
             navigator.clipboard.writeText(window.location.href)
             alert('Link copied to clipboard!')
           }}
-          className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors cursor-pointer"
         >
           <span>🔗</span>
           <span>Share this chapter</span>
