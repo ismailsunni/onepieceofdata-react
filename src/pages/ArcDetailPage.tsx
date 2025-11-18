@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../services/supabase'
 import { Arc } from '../types/arc'
 import { Character } from '../types/character'
+import { fetchArcs } from '../services/arcService'
 
 // Service function to fetch a single arc by ID
 async function fetchArcById(id: string): Promise<Arc | null> {
@@ -73,6 +74,18 @@ function ArcDetailPage() {
     enabled: !!arc,
   })
 
+  // Fetch all arcs for navigation
+  const { data: allArcs = [] } = useQuery({
+    queryKey: ['arcs'],
+    queryFn: fetchArcs,
+  })
+
+  // Find previous and next arcs (sorted by start_chapter)
+  const sortedArcs = [...allArcs].sort((a, b) => a.start_chapter - b.start_chapter)
+  const currentIndex = sortedArcs.findIndex((a) => a.arc_id === arc?.arc_id)
+  const previousArc = currentIndex > 0 ? sortedArcs[currentIndex - 1] : null
+  const nextArc = currentIndex < sortedArcs.length - 1 ? sortedArcs[currentIndex + 1] : null
+
   if (arcLoading) {
     return (
       <main className="container mx-auto px-4 py-8">
@@ -131,7 +144,7 @@ function ArcDetailPage() {
       <div className="flex items-center justify-between mb-6">
         <button
           onClick={() => navigate('/arcs')}
-          className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+          className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors cursor-pointer"
         >
           <span>←</span>
           <span>Back to Arcs</span>
@@ -140,11 +153,38 @@ function ArcDetailPage() {
           href={wikiUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors cursor-pointer"
         >
           <span>View on Wiki</span>
           <span>↗</span>
         </a>
+      </div>
+
+      {/* Previous/Next Arc Navigation */}
+      <div className="flex justify-center gap-3 mb-6">
+        <button
+          onClick={() => previousArc && navigate(`/arcs/${previousArc.arc_id}`)}
+          disabled={!previousArc}
+          className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 cursor-pointer"
+          title={previousArc ? `Previous: ${previousArc.title}` : 'No previous arc'}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          <span className="font-medium">Previous Arc</span>
+        </button>
+
+        <button
+          onClick={() => nextArc && navigate(`/arcs/${nextArc.arc_id}`)}
+          disabled={!nextArc}
+          className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 cursor-pointer"
+          title={nextArc ? `Next: ${nextArc.title}` : 'No next arc'}
+        >
+          <span className="font-medium">Next Arc</span>
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
       </div>
 
       {/* Main Content */}
