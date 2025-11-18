@@ -232,36 +232,38 @@ function CharacterDetailPage() {
   }
 
   return (
-    <main className="container mx-auto px-4 py-8">
+    <main className="container mx-auto px-4 py-4 md:py-8">
       {/* Breadcrumb Navigation */}
-      <nav className="mb-6 text-sm text-gray-600">
+      <nav className="mb-4 md:mb-6 text-xs md:text-sm text-gray-600">
         <Link to="/" className="hover:text-blue-600 transition-colors">
           Home
         </Link>
-        <span className="mx-2">/</span>
+        <span className="mx-1 md:mx-2">/</span>
         <Link to="/characters" className="hover:text-blue-600 transition-colors">
           Characters
         </Link>
-        <span className="mx-2">/</span>
+        <span className="mx-1 md:mx-2">/</span>
         <span className="text-gray-800 font-medium">{character.name || 'Unknown'}</span>
       </nav>
 
       {/* Header with Back Button */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4 md:mb-6 gap-2">
         <button
           onClick={() => navigate('/characters')}
-          className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+          className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 text-sm md:text-base text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
         >
           <span>←</span>
-          <span>Back to Characters</span>
+          <span className="hidden sm:inline">Back to Characters</span>
+          <span className="sm:hidden">Back</span>
         </button>
         <a
           href={wikiUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 text-sm md:text-base bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
         >
-          <span>View on Wiki</span>
+          <span className="hidden sm:inline">View on Wiki</span>
+          <span className="sm:hidden">Wiki</span>
           <span>↗</span>
         </a>
       </div>
@@ -269,31 +271,31 @@ function CharacterDetailPage() {
       {/* Main Content */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         {/* Header Section */}
-        <div className="bg-linear-to-r from-blue-600 to-blue-800 text-white p-8">
-          <div className="flex items-start justify-between">
+        <div className="bg-linear-to-r from-blue-600 to-blue-800 text-white p-4 md:p-8">
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-bold mb-2">{character.name || 'Unknown'}</h1>
+              <h1 className="text-2xl md:text-4xl font-bold mb-2">{character.name || 'Unknown'}</h1>
               {character.status && (
-                <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(character.status)}`}>
+                <span className={`inline-block px-3 py-1 rounded-full text-xs md:text-sm font-medium ${getStatusColor(character.status)}`}>
                   {character.status}
                 </span>
               )}
             </div>
             {character.bounty !== null && (
-              <div className="text-right">
-                <div className="text-sm opacity-90">Bounty</div>
-                <div className="text-3xl font-bold">{formatBounty(character.bounty)}</div>
+              <div className="text-left sm:text-right">
+                <div className="text-xs md:text-sm opacity-90">Bounty</div>
+                <div className="text-2xl md:text-3xl font-bold">{formatBounty(character.bounty)}</div>
               </div>
             )}
           </div>
         </div>
 
         {/* Details Grid */}
-        <div className="p-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="p-4 md:p-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
             {/* Basic Information */}
-            <div className="space-y-4">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Basic Information</h2>
+            <div className="space-y-3 md:space-y-4">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 md:mb-4">Basic Information</h2>
 
               <DetailRow label="ID" value={character.id} />
               <DetailRow label="Name" value={character.name} />
@@ -308,8 +310,8 @@ function CharacterDetailPage() {
             </div>
 
             {/* Statistics */}
-            <div className="space-y-4">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Statistics</h2>
+            <div className="space-y-3 md:space-y-4">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 md:mb-4">Statistics</h2>
 
               <DetailRow label="Current Bounty" value={formatBounty(character.bounty)} />
 
@@ -464,12 +466,12 @@ function CharacterDetailPage() {
             character.volume_list ||
             character.arc_list ||
             character.saga_list) && (
-            <div className="border-t pt-8">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            <div className="border-t pt-6 md:pt-8">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 md:mb-4">
                 Appearance Details
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 {character.saga_list && character.saga_list.length > 0 && (
                   <div>
                     <h3 className="text-lg font-semibold text-gray-700 mb-3">

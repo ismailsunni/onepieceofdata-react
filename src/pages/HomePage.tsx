@@ -11,12 +11,12 @@ function HomePage() {
   })
 
   return (
-    <main className="container mx-auto px-4 py-12">
-      <div className="text-center mb-12">
-        <h2 className="text-4xl font-bold text-gray-800 mb-4">
+    <main className="container mx-auto px-4 py-6 md:py-12">
+      <div className="text-center mb-8 md:mb-12">
+        <h2 className="text-2xl md:text-4xl font-bold text-gray-800 mb-3 md:mb-4">
           Welcome to One Piece of Data
         </h2>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+        <p className="text-base md:text-xl text-gray-600 max-w-2xl mx-auto px-2">
           Your comprehensive data exploration platform for the One Piece
           universe. Dive into character stats, story arcs, and devil fruit
           abilities.
@@ -24,11 +24,11 @@ function HomePage() {
       </div>
 
       {/* Database Statistics */}
-      <div className="mb-12">
-        <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+      <div className="mb-8 md:mb-12">
+        <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6 text-center">
           Database Statistics
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 md:gap-4">
           <StatCard
             icon="📚"
             label="Chapters"
