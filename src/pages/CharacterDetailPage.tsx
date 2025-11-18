@@ -372,7 +372,7 @@ function CharacterDetailPage() {
                                               return { bounty: numericBounty, str: bountyStr }
                                             })
                                             parsed.sort((a, b) => a.bounty - b.bounty)
-                                            
+
                                             return parsed.map((item, index) => ({
                                               step: `#${index + 1}`,
                                               bounty: item.bounty,
@@ -382,7 +382,7 @@ function CharacterDetailPage() {
                                           margin={{ top: 10, right: 30, left: 10, bottom: 20 }}
                                         >
                                           <CartesianGrid strokeDasharray="3 3" />
-                                          <XAxis 
+                                          <XAxis
                                             dataKey="step"
                                             label={{ value: 'Update', position: 'insideBottom', offset: -10 }}
                                           />
