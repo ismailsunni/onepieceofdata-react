@@ -18,22 +18,26 @@ export async function fetchChapters(): Promise<Chapter[]> {
       return []
     }
 
-    // Get character counts from coc table
-    const { data: cocData, error: cocError } = await supabase
-      .from('coc')
-      .select('chapter')
+    // Get characters with their chapter lists
+    const { data: characters, error: charactersError } = await supabase
+      .from('character')
+      .select('chapter_list')
 
-    if (cocError) {
-      console.error('Error fetching character counts:', cocError)
+    if (charactersError) {
+      console.error('Error fetching characters for counts:', charactersError)
       // Continue without character counts
       return data || []
     }
 
-    // Count characters per chapter
+    // Count characters per chapter by checking chapter_list arrays
     const characterCounts = new Map<number, number>()
-    cocData?.forEach((coc: { chapter: number }) => {
-      const count = characterCounts.get(coc.chapter) || 0
-      characterCounts.set(coc.chapter, count + 1)
+    characters?.forEach((character: { chapter_list: number[] | null }) => {
+      if (character.chapter_list && Array.isArray(character.chapter_list)) {
+        character.chapter_list.forEach((chapterNum) => {
+          const count = characterCounts.get(chapterNum) || 0
+          characterCounts.set(chapterNum, count + 1)
+        })
+      }
     })
 
     // Add character counts to chapters
