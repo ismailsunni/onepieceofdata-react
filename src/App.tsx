@@ -7,8 +7,8 @@ import CharacterDetailPage from './pages/CharacterDetailPage'
 import ArcsPage from './pages/ArcsPage'
 import ArcDetailPage from './pages/ArcDetailPage'
 import ChaptersPage from './pages/ChaptersPage'
-import DevilFruitsPage from './pages/DevilFruitsPage'
 import AnalyticsPage from './pages/AnalyticsPage'
+import AboutPage from './pages/AboutPage'
 
 // Create a client with longer cache times for static data
 const queryClient = new QueryClient({
@@ -36,8 +36,8 @@ function App() {
             <Route path="/arcs" element={<ArcsPage />} />
             <Route path="/arcs/:id" element={<ArcDetailPage />} />
             <Route path="/chapters" element={<ChaptersPage />} />
-            <Route path="/devil-fruits" element={<DevilFruitsPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/about" element={<AboutPage />} />
           </Routes>
         </div>
       </HashRouter>

@@ -87,9 +87,9 @@ function HomePage() {
           description="Journey through the various story arcs and discover key events that shaped the One Piece world."
         />
         <Card
-          icon="🍎"
-          title="Devil Fruits"
-          description="Learn about the mysterious Devil Fruits and the incredible powers they grant to their users."
+          icon="📊"
+          title="Analytics"
+          description="Visualize data through interactive charts and discover insights about the One Piece universe."
         />
       </div>
 
