@@ -4,6 +4,7 @@ import { supabase } from '../services/supabase'
 import { Chapter } from '../types/chapter'
 import { Character } from '../types/character'
 import { Arc } from '../types/arc'
+import { fetchChapters } from '../services/chapterService'
 
 // Service function to fetch a single chapter by number
 async function fetchChapterByNumber(chapterNumber: number): Promise<Chapter | null> {
@@ -108,6 +109,20 @@ function ChapterDetailPage() {
     enabled: !!chapterNumber,
   })
 
+  // Fetch all chapters for random navigation
+  const { data: allChapters = [] } = useQuery({
+    queryKey: ['chapters'],
+    queryFn: fetchChapters,
+  })
+
+  // Handler for random chapter
+  const handleRandomChapter = () => {
+    if (allChapters.length > 0) {
+      const randomChapter = allChapters[Math.floor(Math.random() * allChapters.length)]
+      navigate(`/chapters/${randomChapter.number}`)
+    }
+  }
+
   if (chapterLoading) {
     return (
       <main className="container mx-auto px-4 py-8">
@@ -166,8 +181,8 @@ function ChapterDetailPage() {
         <span className="text-gray-800 font-medium">Chapter {chapter.number}</span>
       </nav>
 
-      {/* Header with Back Button */}
-      <div className="flex items-center justify-between mb-4 md:mb-6 gap-2">
+      {/* Header with Navigation */}
+      <div className="flex flex-wrap items-center justify-between mb-4 md:mb-6 gap-2">
         <button
           onClick={() => navigate('/chapters')}
           className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 text-sm md:text-base text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors cursor-pointer"
@@ -176,6 +191,42 @@ function ChapterDetailPage() {
           <span className="hidden sm:inline">Back to Chapters</span>
           <span className="sm:hidden">Back</span>
         </button>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate(`/chapters/${chapter.number - 1}`)}
+            disabled={chapter.number <= 1}
+            className="flex items-center gap-1 px-3 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 cursor-pointer"
+            title="Previous Chapter"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span className="hidden md:inline font-medium">Prev</span>
+          </button>
+
+          <button
+            onClick={handleRandomChapter}
+            className="flex items-center gap-1 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all cursor-pointer"
+            title="Random Chapter"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span className="hidden md:inline font-medium">Random</span>
+          </button>
+
+          <button
+            onClick={() => navigate(`/chapters/${chapter.number + 1}`)}
+            className="flex items-center gap-1 px-3 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all cursor-pointer"
+            title="Next Chapter"
+          >
+            <span className="hidden md:inline font-medium">Next</span>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
 
         <a
           href={wikiUrl}
@@ -187,32 +238,6 @@ function ChapterDetailPage() {
           <span className="sm:hidden">Wiki</span>
           <span>↗</span>
         </a>
-      </div>
-
-      {/* Previous/Next Chapter Navigation */}
-      <div className="flex justify-center gap-3 mb-6">
-        <button
-          onClick={() => navigate(`/chapters/${chapter.number - 1}`)}
-          disabled={chapter.number <= 1}
-          className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 cursor-pointer"
-          title="Previous Chapter"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          <span className="font-medium">Previous</span>
-        </button>
-
-        <button
-          onClick={() => navigate(`/chapters/${chapter.number + 1}`)}
-          className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all cursor-pointer"
-          title="Next Chapter"
-        >
-          <span className="font-medium">Next</span>
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
       </div>
 
       {/* Main Content */}

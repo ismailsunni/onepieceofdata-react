@@ -86,6 +86,14 @@ function ArcDetailPage() {
   const previousArc = currentIndex > 0 ? sortedArcs[currentIndex - 1] : null
   const nextArc = currentIndex < sortedArcs.length - 1 ? sortedArcs[currentIndex + 1] : null
 
+  // Handler for random arc
+  const handleRandomArc = () => {
+    if (allArcs.length > 0) {
+      const randomArc = allArcs[Math.floor(Math.random() * allArcs.length)]
+      navigate(`/arcs/${randomArc.arc_id}`)
+    }
+  }
+
   if (arcLoading) {
     return (
       <main className="container mx-auto px-4 py-8">
@@ -140,8 +148,8 @@ function ArcDetailPage() {
         <span className="text-gray-800 font-medium">{arc.title}</span>
       </nav>
 
-      {/* Header with Back Button */}
-      <div className="flex items-center justify-between mb-6">
+      {/* Header with Navigation */}
+      <div className="flex flex-wrap items-center justify-between mb-6 gap-2">
         <button
           onClick={() => navigate('/arcs')}
           className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors cursor-pointer"
@@ -149,6 +157,44 @@ function ArcDetailPage() {
           <span>←</span>
           <span>Back to Arcs</span>
         </button>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => previousArc && navigate(`/arcs/${previousArc.arc_id}`)}
+            disabled={!previousArc}
+            className="flex items-center gap-1 px-3 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 cursor-pointer"
+            title={previousArc ? `Previous: ${previousArc.title}` : 'No previous arc'}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span className="hidden md:inline font-medium">Prev</span>
+          </button>
+
+          <button
+            onClick={handleRandomArc}
+            className="flex items-center gap-1 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all cursor-pointer"
+            title="Random Arc"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span className="hidden md:inline font-medium">Random</span>
+          </button>
+
+          <button
+            onClick={() => nextArc && navigate(`/arcs/${nextArc.arc_id}`)}
+            disabled={!nextArc}
+            className="flex items-center gap-1 px-3 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 cursor-pointer"
+            title={nextArc ? `Next: ${nextArc.title}` : 'No next arc'}
+          >
+            <span className="hidden md:inline font-medium">Next</span>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+
         <a
           href={wikiUrl}
           target="_blank"
@@ -158,33 +204,6 @@ function ArcDetailPage() {
           <span>View on Wiki</span>
           <span>↗</span>
         </a>
-      </div>
-
-      {/* Previous/Next Arc Navigation */}
-      <div className="flex justify-center gap-3 mb-6">
-        <button
-          onClick={() => previousArc && navigate(`/arcs/${previousArc.arc_id}`)}
-          disabled={!previousArc}
-          className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 cursor-pointer"
-          title={previousArc ? `Previous: ${previousArc.title}` : 'No previous arc'}
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          <span className="font-medium">Previous Arc</span>
-        </button>
-
-        <button
-          onClick={() => nextArc && navigate(`/arcs/${nextArc.arc_id}`)}
-          disabled={!nextArc}
-          className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 cursor-pointer"
-          title={nextArc ? `Next: ${nextArc.title}` : 'No next arc'}
-        >
-          <span className="font-medium">Next Arc</span>
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
       </div>
 
       {/* Main Content */}
