@@ -235,10 +235,13 @@ function ChapterDetailPage() {
                   >
                     {arc.title} Arc
                   </Link>
-                  {arc.saga && (
-                    <span className="inline-block px-3 py-1 bg-white rounded-full text-sm font-medium text-green-800 cursor-default">
+                  {arc.saga && arc.saga_id && (
+                    <Link
+                      to={`/sagas/${arc.saga_id}`}
+                      className="inline-block px-3 py-1 bg-white rounded-full text-sm font-medium text-green-800 hover:bg-gray-100 transition-colors cursor-pointer"
+                    >
                       {arc.saga.title} Saga
-                    </span>
+                    </Link>
                   )}
                 </div>
               )}

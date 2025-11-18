@@ -200,11 +200,14 @@ function ArcDetailPage() {
               {arc.romanized_title && (
                 <p className="text-lg opacity-75">{arc.romanized_title}</p>
               )}
-              {arc.saga && (
+              {arc.saga && arc.saga_id && (
                 <div className="mt-4">
-                  <span className="inline-block px-3 py-1 bg-white rounded-full text-sm font-medium text-purple-800">
+                  <Link
+                    to={`/sagas/${arc.saga_id}`}
+                    className="inline-block px-3 py-1 bg-white rounded-full text-sm font-medium text-purple-800 hover:bg-gray-100 transition-colors cursor-pointer"
+                  >
                     {arc.saga.title} Saga
-                  </span>
+                  </Link>
                 </div>
               )}
             </div>
