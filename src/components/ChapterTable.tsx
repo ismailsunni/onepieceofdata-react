@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   useReactTable,
   getCoreRowModel,
@@ -34,44 +35,20 @@ function ChapterTable({
   pagination,
   onPaginationChange,
 }: ChapterTableProps) {
+  const navigate = useNavigate()
+
   // Define table columns
   const columns = useMemo(
     () => [
       columnHelper.accessor('number', {
         header: 'Chapter',
-        cell: (info) => info.getValue(),
+        cell: (info) => (
+          <span className="font-medium text-blue-600">{info.getValue()}</span>
+        ),
       }),
       columnHelper.accessor('title', {
         header: 'Title',
-        cell: (info) => {
-          const title = info.getValue()
-          const chapterNumber = info.row.original.number
-          const wikiUrl = `https://onepiece.fandom.com/wiki/Chapter_${chapterNumber}`
-
-          if (!title) {
-            return (
-              <a
-                href={wikiUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 hover:underline"
-              >
-                -
-              </a>
-            )
-          }
-
-          return (
-            <a
-              href={wikiUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 hover:underline"
-            >
-              {title}
-            </a>
-          )
-        },
+        cell: (info) => info.getValue() || '-',
       }),
       columnHelper.accessor('date', {
         header: 'Release Date',
@@ -167,7 +144,12 @@ function ChapterTable({
             </tr>
           ) : (
             table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="hover:bg-gray-50">
+              <tr
+                key={row.id}
+                className="hover:bg-gray-50 cursor-pointer transition-colors"
+                onClick={() => navigate(`/chapters/${row.original.number}`)}
+                title="Click to view details"
+              >
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}
