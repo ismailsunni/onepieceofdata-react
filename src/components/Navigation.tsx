@@ -20,7 +20,7 @@ function Navigation() {
 
   // Menu button class based on active state
   const getMenuButtonClass = (isActive: boolean) => {
-    const baseClass = 'px-3 py-2 rounded-md transition-colors duration-200 text-sm md:text-base flex items-center gap-1'
+    const baseClass = 'px-3 py-2 rounded-md transition-colors duration-200 text-sm md:text-base flex items-center gap-1 cursor-pointer'
     const activeClass = 'bg-blue-700 text-white'
     const inactiveClass = 'text-blue-100 hover:bg-blue-700 hover:text-white'
 
