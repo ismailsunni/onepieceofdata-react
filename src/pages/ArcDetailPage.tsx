@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../services/supabase'
 import { Arc } from '../types/arc'
 import { Character } from '../types/character'
+import { Chapter } from '../types/chapter'
 import { fetchArcs } from '../services/arcService'
 
 // Service function to fetch a single arc by ID
@@ -28,6 +30,33 @@ async function fetchArcById(id: string): Promise<Arc | null> {
   } catch (error) {
     console.error('Error in fetchArcById:', error)
     return null
+  }
+}
+
+// Service function to fetch chapters in this arc
+async function fetchChaptersByArc(startChapter: number, endChapter: number): Promise<Chapter[]> {
+  try {
+    if (!supabase) {
+      console.error('Supabase client is not initialized')
+      return []
+    }
+
+    const { data, error } = await supabase
+      .from('chapter')
+      .select('*')
+      .gte('number', startChapter)
+      .lte('number', endChapter)
+      .order('number', { ascending: true })
+
+    if (error) {
+      console.error('Error fetching chapters by arc:', error)
+      return []
+    }
+
+    return data || []
+  } catch (error) {
+    console.error('Error in fetchChaptersByArc:', error)
+    return []
   }
 }
 
@@ -61,11 +90,18 @@ async function fetchCharactersByArc(arcId: string): Promise<Character[]> {
 function ArcDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [isCharactersExpanded, setIsCharactersExpanded] = useState(false)
 
   const { data: arc, isLoading: arcLoading } = useQuery({
     queryKey: ['arc', id],
     queryFn: () => fetchArcById(id!),
     enabled: !!id,
+  })
+
+  const { data: chapters = [], isLoading: chaptersLoading } = useQuery({
+    queryKey: ['arc-chapters', arc?.start_chapter, arc?.end_chapter],
+    queryFn: () => fetchChaptersByArc(arc!.start_chapter, arc!.end_chapter),
+    enabled: !!arc,
   })
 
   const { data: characters = [], isLoading: charactersLoading } = useQuery({
@@ -269,60 +305,144 @@ function ArcDetailPage() {
             </div>
           )}
 
-          {/* Characters Introduced */}
-          <div className="border-t pt-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              Characters Appearing in This Arc
-              {characters.length > 0 && (
+          {/* Chapters in this Arc */}
+          {chaptersLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          ) : chapters.length > 0 ? (
+            <div className="border-t pt-8 mb-8">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                Chapters in This Arc
                 <span className="ml-2 text-lg text-gray-500">
-                  ({characters.length})
+                  ({chapters.length})
                 </span>
-              )}
-            </h2>
-
-            {charactersLoading ? (
-              <div className="flex justify-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-              </div>
-            ) : characters.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {characters.map((character) => (
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {chapters.map((chapter) => (
                   <Link
-                    key={character.id}
-                    to={`/characters/${character.id}`}
-                    className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all"
+                    key={chapter.number}
+                    to={`/chapters/${chapter.number}`}
+                    className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer"
                   >
                     <div className="flex flex-col h-full">
-                      <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2">
-                        {character.name || 'Unknown'}
-                      </h3>
-                      <div className="flex-1 space-y-1 text-sm text-gray-600">
-                        {character.status && (
-                          <p>
-                            <span className="font-medium">Status:</span>{' '}
-                            {character.status}
-                          </p>
-                        )}
-                        {character.first_appearance && (
-                          <p>
-                            <span className="font-medium">Debut:</span> Ch.{' '}
-                            {character.first_appearance}
-                          </p>
-                        )}
-                        {character.bounty !== null && character.bounty > 0 && (
-                          <p>
-                            <span className="font-medium">Bounty:</span> ₿
-                            {character.bounty.toLocaleString()}
-                          </p>
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-semibold text-gray-800">
+                          Chapter {chapter.number}
+                        </h3>
+                        {chapter.num_page && (
+                          <span className="ml-2 px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full whitespace-nowrap">
+                            {chapter.num_page} pages
+                          </span>
                         )}
                       </div>
-                      <div className="mt-3 text-xs text-blue-600 font-medium">
+                      {chapter.title && (
+                        <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                          {chapter.title}
+                        </p>
+                      )}
+                      <div className="flex-1"></div>
+                      {chapter.date && (
+                        <p className="text-xs text-gray-500 mt-2">
+                          {new Date(chapter.date).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </p>
+                      )}
+                      <div className="mt-2 text-xs text-blue-600 font-medium">
                         View Details →
                       </div>
                     </div>
                   </Link>
                 ))}
               </div>
+            </div>
+          ) : null}
+
+          {/* Characters Introduced */}
+          <div className="border-t pt-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-gray-800">
+                Characters Appearing in This Arc
+                {characters.length > 0 && (
+                  <span className="ml-2 text-lg text-gray-500">
+                    ({characters.length})
+                  </span>
+                )}
+              </h2>
+              {characters.length > 0 && (
+                <button
+                  onClick={() => setIsCharactersExpanded(!isCharactersExpanded)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
+                >
+                  <span>{isCharactersExpanded ? 'Collapse' : 'Expand'}</span>
+                  <svg
+                    className={`w-4 h-4 transition-transform ${isCharactersExpanded ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              )}
+            </div>
+
+            {charactersLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              </div>
+            ) : characters.length > 0 ? (
+              <>
+                {!isCharactersExpanded ? (
+                  <div className="bg-gray-50 rounded-lg p-6">
+                    <p className="text-gray-600 text-center">
+                      Click "Expand" to view all {characters.length} characters appearing in this arc
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {characters.map((character) => (
+                      <Link
+                        key={character.id}
+                        to={`/characters/${character.id}`}
+                        className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all"
+                      >
+                        <div className="flex flex-col h-full">
+                          <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2">
+                            {character.name || 'Unknown'}
+                          </h3>
+                          <div className="flex-1 space-y-1 text-sm text-gray-600">
+                            {character.status && (
+                              <p>
+                                <span className="font-medium">Status:</span>{' '}
+                                {character.status}
+                              </p>
+                            )}
+                            {character.first_appearance && (
+                              <p>
+                                <span className="font-medium">Debut:</span> Ch.{' '}
+                                {character.first_appearance}
+                              </p>
+                            )}
+                            {character.bounty !== null && character.bounty > 0 && (
+                              <p>
+                                <span className="font-medium">Bounty:</span> ₿
+                                {character.bounty.toLocaleString()}
+                              </p>
+                            )}
+                          </div>
+                          <div className="mt-3 text-xs text-blue-600 font-medium">
+                            View Details →
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </>
             ) : (
               <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-500">
                 <p>No characters found appearing in this arc.</p>
