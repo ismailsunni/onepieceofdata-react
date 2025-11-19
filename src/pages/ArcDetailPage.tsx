@@ -90,6 +90,7 @@ async function fetchCharactersByArc(arcId: string): Promise<Character[]> {
 function ArcDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [isChaptersExpanded, setIsChaptersExpanded] = useState(false)
   const [isCharactersExpanded, setIsCharactersExpanded] = useState(false)
 
   const { data: arc, isLoading: arcLoading } = useQuery({
@@ -312,52 +313,78 @@ function ArcDetailPage() {
             </div>
           ) : chapters.length > 0 ? (
             <div className="border-t pt-8 mb-8">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                Chapters in This Arc
-                <span className="ml-2 text-lg text-gray-500">
-                  ({chapters.length})
-                </span>
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {chapters.map((chapter) => (
-                  <Link
-                    key={chapter.number}
-                    to={`/chapters/${chapter.number}`}
-                    className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer"
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-gray-800">
+                  Chapters in This Arc
+                  <span className="ml-2 text-lg text-gray-500">
+                    ({chapters.length})
+                  </span>
+                </h2>
+                {chapters.length > 0 && (
+                  <button
+                    onClick={() => setIsChaptersExpanded(!isChaptersExpanded)}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
                   >
-                    <div className="flex flex-col h-full">
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-semibold text-gray-800">
-                          Chapter {chapter.number}
-                        </h3>
-                        {chapter.num_page && (
-                          <span className="ml-2 px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full whitespace-nowrap">
-                            {chapter.num_page} pages
-                          </span>
-                        )}
-                      </div>
-                      {chapter.title && (
-                        <p className="text-sm text-gray-600 mb-2 line-clamp-2">
-                          {chapter.title}
-                        </p>
-                      )}
-                      <div className="flex-1"></div>
-                      {chapter.date && (
-                        <p className="text-xs text-gray-500 mt-2">
-                          {new Date(chapter.date).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                          })}
-                        </p>
-                      )}
-                      <div className="mt-2 text-xs text-blue-600 font-medium">
-                        View Details →
-                      </div>
-                    </div>
-                  </Link>
-                ))}
+                    <span>{isChaptersExpanded ? 'Collapse' : 'Expand'}</span>
+                    <svg
+                      className={`w-4 h-4 transition-transform ${isChaptersExpanded ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                )}
               </div>
+              {!isChaptersExpanded ? (
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <p className="text-gray-600 text-center">
+                    Click "Expand" to view all {chapters.length} chapters in this arc
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {chapters.map((chapter) => (
+                    <Link
+                      key={chapter.number}
+                      to={`/chapters/${chapter.number}`}
+                      className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer"
+                    >
+                      <div className="flex flex-col h-full">
+                        <div className="flex items-start justify-between mb-2">
+                          <h3 className="font-semibold text-gray-800">
+                            Chapter {chapter.number}
+                          </h3>
+                          {chapter.num_page && (
+                            <span className="ml-2 px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full whitespace-nowrap">
+                              {chapter.num_page} pages
+                            </span>
+                          )}
+                        </div>
+                        {chapter.title && (
+                          <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                            {chapter.title}
+                          </p>
+                        )}
+                        <div className="flex-1"></div>
+                        {chapter.date && (
+                          <p className="text-xs text-gray-500 mt-2">
+                            {new Date(chapter.date).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                            })}
+                          </p>
+                        )}
+                        <div className="mt-2 text-xs text-blue-600 font-medium">
+                          View Details →
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
           ) : null}
 

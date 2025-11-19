@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../services/supabase'
@@ -111,6 +112,8 @@ async function fetchSagas(): Promise<Saga[]> {
 function SagaDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [isArcsExpanded, setIsArcsExpanded] = useState(true) // Arcs expanded by default
+  const [isCharactersExpanded, setIsCharactersExpanded] = useState(false)
 
   const { data: saga, isLoading: sagaLoading } = useQuery({
     queryKey: ['saga', id],
@@ -315,44 +318,72 @@ function SagaDetailPage() {
 
           {/* Arcs in this Saga */}
           <div className="border-t pt-6 md:pt-8 mb-6 md:mb-8">
-            <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 md:mb-4">
-              Story Arcs in This Saga
+            <div className="flex items-center justify-between mb-3 md:mb-4">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-800">
+                Story Arcs in This Saga
+                {arcs.length > 0 && (
+                  <span className="ml-2 text-base md:text-lg text-gray-500">
+                    ({arcs.length})
+                  </span>
+                )}
+              </h2>
               {arcs.length > 0 && (
-                <span className="ml-2 text-base md:text-lg text-gray-500">
-                  ({arcs.length})
-                </span>
+                <button
+                  onClick={() => setIsArcsExpanded(!isArcsExpanded)}
+                  className="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors"
+                >
+                  <span>{isArcsExpanded ? 'Collapse' : 'Expand'}</span>
+                  <svg
+                    className={`w-4 h-4 transition-transform ${isArcsExpanded ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
               )}
-            </h2>
+            </div>
 
             {arcsLoading ? (
               <div className="flex justify-center py-8">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
               </div>
             ) : arcs.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {arcs.map((arc) => (
-                  <Link
-                    key={arc.arc_id}
-                    to={`/arcs/${arc.arc_id}`}
-                    className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer"
-                  >
-                    <h3 className="font-semibold text-gray-800 mb-2">{arc.title}</h3>
-                    <div className="space-y-1 text-sm text-gray-600">
-                      <p>
-                        <span className="font-medium">Chapters:</span>{' '}
-                        {arc.start_chapter} - {arc.end_chapter}
-                      </p>
-                      <p>
-                        <span className="font-medium">Total:</span>{' '}
-                        {arc.end_chapter - arc.start_chapter + 1} chapters
-                      </p>
-                    </div>
-                    <div className="mt-3 text-xs text-blue-600 font-medium">
-                      View Arc Details →
-                    </div>
-                  </Link>
-                ))}
-              </div>
+              <>
+                {!isArcsExpanded ? (
+                  <div className="bg-gray-50 rounded-lg p-6">
+                    <p className="text-gray-600 text-center">
+                      Click "Expand" to view all {arcs.length} arcs in this saga
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {arcs.map((arc) => (
+                      <Link
+                        key={arc.arc_id}
+                        to={`/arcs/${arc.arc_id}`}
+                        className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer"
+                      >
+                        <h3 className="font-semibold text-gray-800 mb-2">{arc.title}</h3>
+                        <div className="space-y-1 text-sm text-gray-600">
+                          <p>
+                            <span className="font-medium">Chapters:</span>{' '}
+                            {arc.start_chapter} - {arc.end_chapter}
+                          </p>
+                          <p>
+                            <span className="font-medium">Total:</span>{' '}
+                            {arc.end_chapter - arc.start_chapter + 1} chapters
+                          </p>
+                        </div>
+                        <div className="mt-3 text-xs text-blue-600 font-medium">
+                          View Arc Details →
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </>
             ) : (
               <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-500">
                 <p>No arcs found in this saga.</p>
@@ -362,58 +393,86 @@ function SagaDetailPage() {
 
           {/* Characters Appearing in this Saga */}
           <div className="border-t pt-6 md:pt-8">
-            <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 md:mb-4">
-              Characters Appearing in This Saga
+            <div className="flex items-center justify-between mb-3 md:mb-4">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-800">
+                Characters Appearing in This Saga
+                {characters.length > 0 && (
+                  <span className="ml-2 text-base md:text-lg text-gray-500">
+                    ({characters.length})
+                  </span>
+                )}
+              </h2>
               {characters.length > 0 && (
-                <span className="ml-2 text-base md:text-lg text-gray-500">
-                  ({characters.length})
-                </span>
+                <button
+                  onClick={() => setIsCharactersExpanded(!isCharactersExpanded)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
+                >
+                  <span>{isCharactersExpanded ? 'Collapse' : 'Expand'}</span>
+                  <svg
+                    className={`w-4 h-4 transition-transform ${isCharactersExpanded ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
               )}
-            </h2>
+            </div>
 
             {charactersLoading ? (
               <div className="flex justify-center py-8">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
               </div>
             ) : characters.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {characters.map((character) => (
-                  <Link
-                    key={character.id}
-                    to={`/characters/${character.id}`}
-                    className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer"
-                  >
-                    <div className="flex flex-col h-full">
-                      <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2">
-                        {character.name || 'Unknown'}
-                      </h3>
-                      <div className="flex-1 space-y-1 text-sm text-gray-600">
-                        {character.status && (
-                          <p>
-                            <span className="font-medium">Status:</span>{' '}
-                            {character.status}
-                          </p>
-                        )}
-                        {character.first_appearance && (
-                          <p>
-                            <span className="font-medium">Debut:</span> Ch.{' '}
-                            {character.first_appearance}
-                          </p>
-                        )}
-                        {character.bounty !== null && character.bounty > 0 && (
-                          <p>
-                            <span className="font-medium">Bounty:</span> ₿
-                            {character.bounty.toLocaleString()}
-                          </p>
-                        )}
-                      </div>
-                      <div className="mt-3 text-xs text-blue-600 font-medium">
-                        View Details →
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+              <>
+                {!isCharactersExpanded ? (
+                  <div className="bg-gray-50 rounded-lg p-6">
+                    <p className="text-gray-600 text-center">
+                      Click "Expand" to view all {characters.length} characters appearing in this saga
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {characters.map((character) => (
+                      <Link
+                        key={character.id}
+                        to={`/characters/${character.id}`}
+                        className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer"
+                      >
+                        <div className="flex flex-col h-full">
+                          <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2">
+                            {character.name || 'Unknown'}
+                          </h3>
+                          <div className="flex-1 space-y-1 text-sm text-gray-600">
+                            {character.status && (
+                              <p>
+                                <span className="font-medium">Status:</span>{' '}
+                                {character.status}
+                              </p>
+                            )}
+                            {character.first_appearance && (
+                              <p>
+                                <span className="font-medium">Debut:</span> Ch.{' '}
+                                {character.first_appearance}
+                              </p>
+                            )}
+                            {character.bounty !== null && character.bounty > 0 && (
+                              <p>
+                                <span className="font-medium">Bounty:</span> ₿
+                                {character.bounty.toLocaleString()}
+                              </p>
+                            )}
+                          </div>
+                          <div className="mt-3 text-xs text-blue-600 font-medium">
+                            View Details →
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </>
             ) : (
               <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-500">
                 <p>No character data available for this saga.</p>
