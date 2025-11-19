@@ -25,6 +25,9 @@ function Navigation() {
       <NavLink to="/chapters" className={getLinkClass}>
         Chapters
       </NavLink>
+      <NavLink to="/volumes" className={getLinkClass}>
+        Volumes
+      </NavLink>
       <NavLink to="/analytics" className={getLinkClass}>
         Analytics
       </NavLink>

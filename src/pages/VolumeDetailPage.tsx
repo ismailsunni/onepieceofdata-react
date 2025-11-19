@@ -1,129 +1,128 @@
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../services/supabase'
+import { Volume } from '../types/volume'
 import { Chapter } from '../types/chapter'
 import { Character } from '../types/character'
-import { Arc } from '../types/arc'
-import { fetchChapters } from '../services/chapterService'
+import { fetchVolumes } from '../services/volumeService'
 
-// Service function to fetch a single chapter by number
-async function fetchChapterByNumber(chapterNumber: number): Promise<Chapter | null> {
+// Service function to fetch a single volume by number
+async function fetchVolumeByNumber(volumeNumber: number): Promise<Volume | null> {
   try {
     if (!supabase) {
       console.error('Supabase client is not initialized')
       return null
+    }
+
+    const { data, error } = await supabase
+      .from('volume')
+      .select('*')
+      .eq('number', volumeNumber)
+      .single()
+
+    if (error) {
+      console.error('Error fetching volume:', error)
+      return null
+    }
+
+    return data
+  } catch (error) {
+    console.error('Error in fetchVolumeByNumber:', error)
+    return null
+  }
+}
+
+// Service function to fetch chapters in this volume
+async function fetchChaptersByVolume(volumeNumber: number): Promise<Chapter[]> {
+  try {
+    if (!supabase) {
+      console.error('Supabase client is not initialized')
+      return []
     }
 
     const { data, error } = await supabase
       .from('chapter')
       .select('*')
-      .eq('number', chapterNumber)
-      .single()
+      .eq('volume', volumeNumber)
+      .order('number', { ascending: true })
 
     if (error) {
-      console.error('Error fetching chapter:', error)
-      return null
-    }
-
-    return data
-  } catch (error) {
-    console.error('Error in fetchChapterByNumber:', error)
-    return null
-  }
-}
-
-// Service function to fetch characters that appear in this chapter
-async function fetchCharactersByChapter(chapterNumber: number): Promise<Character[]> {
-  try {
-    if (!supabase) {
-      console.error('Supabase client is not initialized')
-      return []
-    }
-
-    // Get characters whose chapter_list contains this chapter
-    const { data, error } = await supabase
-      .from('character')
-      .select('*')
-      .contains('chapter_list', [chapterNumber])
-      .order('first_appearance', { ascending: true })
-
-    if (error) {
-      console.error('Error fetching characters by chapter:', error)
+      console.error('Error fetching chapters by volume:', error)
       return []
     }
 
     return data || []
   } catch (error) {
-    console.error('Error in fetchCharactersByChapter:', error)
+    console.error('Error in fetchChaptersByVolume:', error)
     return []
   }
 }
 
-// Service function to fetch arc for this chapter
-async function fetchArcByChapter(chapterNumber: number): Promise<Arc | null> {
+// Service function to fetch characters that appear in this volume
+async function fetchCharactersByVolume(volumeNumber: number): Promise<Character[]> {
   try {
     if (!supabase) {
       console.error('Supabase client is not initialized')
-      return null
+      return []
     }
 
+    // Get characters whose volume_list contains this volume
     const { data, error } = await supabase
-      .from('arc')
-      .select('*, saga:saga_id(title)')
-      .lte('start_chapter', chapterNumber)
-      .gte('end_chapter', chapterNumber)
-      .single()
+      .from('character')
+      .select('*')
+      .contains('volume_list', [volumeNumber])
+      .order('first_appearance', { ascending: true })
 
     if (error) {
-      console.error('Error fetching arc by chapter:', error)
-      return null
+      console.error('Error fetching characters by volume:', error)
+      return []
     }
 
-    return data
+    return data || []
   } catch (error) {
-    console.error('Error in fetchArcByChapter:', error)
-    return null
+    console.error('Error in fetchCharactersByVolume:', error)
+    return []
   }
 }
 
-function ChapterDetailPage() {
+function VolumeDetailPage() {
   const { number } = useParams<{ number: string }>()
   const navigate = useNavigate()
-  const chapterNumber = number ? parseInt(number, 10) : null
+  const volumeNumber = number ? parseInt(number, 10) : null
 
-  const { data: chapter, isLoading: chapterLoading } = useQuery({
-    queryKey: ['chapter', chapterNumber],
-    queryFn: () => fetchChapterByNumber(chapterNumber!),
-    enabled: !!chapterNumber,
+  const { data: volume, isLoading: volumeLoading } = useQuery({
+    queryKey: ['volume', volumeNumber],
+    queryFn: () => fetchVolumeByNumber(volumeNumber!),
+    enabled: !!volumeNumber,
+  })
+
+  const { data: chapters = [], isLoading: chaptersLoading } = useQuery({
+    queryKey: ['volume-chapters', volumeNumber],
+    queryFn: () => fetchChaptersByVolume(volumeNumber!),
+    enabled: !!volumeNumber,
   })
 
   const { data: characters = [], isLoading: charactersLoading } = useQuery({
-    queryKey: ['chapter-characters', chapterNumber],
-    queryFn: () => fetchCharactersByChapter(chapterNumber!),
-    enabled: !!chapterNumber,
+    queryKey: ['volume-characters', volumeNumber],
+    queryFn: () => fetchCharactersByVolume(volumeNumber!),
+    enabled: !!volumeNumber,
   })
 
-  const { data: arc } = useQuery({
-    queryKey: ['chapter-arc', chapterNumber],
-    queryFn: () => fetchArcByChapter(chapterNumber!),
-    enabled: !!chapterNumber,
+  // Fetch all volumes for random navigation
+  const { data: allVolumes = [] } = useQuery({
+    queryKey: ['volumes'],
+    queryFn: fetchVolumes,
   })
 
-  // Fetch all chapters for random navigation
-  const { data: allChapters = [] } = useQuery({
-    queryKey: ['chapters'],
-    queryFn: fetchChapters,
-  })
-
-  // Handler for random chapter
-  const handleRandomChapter = () => {
-    if (allChapters.length > 0) {
-      const randomChapter = allChapters[Math.floor(Math.random() * allChapters.length)]
-      navigate(`/chapters/${randomChapter.number}`)
+  // Handler for random volume
+  const handleRandomVolume = () => {
+    if (allVolumes.length > 0) {
+      const randomVolume = allVolumes[Math.floor(Math.random() * allVolumes.length)]
+      navigate(`/volumes/${randomVolume.number}`)
     }
   }
 
-  if (chapterLoading) {
+  if (volumeLoading) {
     return (
       <main className="container mx-auto px-4 py-8">
         <div className="flex justify-center items-center py-20">
@@ -133,26 +132,33 @@ function ChapterDetailPage() {
     )
   }
 
-  if (!chapter) {
+  if (!volume) {
     return (
       <main className="container mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-md p-8 text-center">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">
-            Chapter Not Found
+            Volume Not Found
           </h2>
           <p className="text-gray-600 mb-6">
-            The chapter you're looking for doesn't exist or couldn't be loaded.
+            The volume you're looking for doesn't exist or couldn't be loaded.
           </p>
           <button
-            onClick={() => navigate('/chapters')}
+            onClick={() => navigate('/')}
             className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
           >
-            Back to Chapters
+            Back to Home
           </button>
         </div>
       </main>
     )
   }
+
+  // Calculate statistics
+  const totalPages = chapters.reduce((sum, chapter) => sum + (chapter.num_page || 0), 0)
+  const chapterRange =
+    chapters.length > 0
+      ? `${chapters[0].number}-${chapters[chapters.length - 1].number}`
+      : 'N/A'
 
   // Format date
   const formatDate = (dateStr: string | null) => {
@@ -164,7 +170,7 @@ function ChapterDetailPage() {
     })
   }
 
-  const wikiUrl = `https://onepiece.fandom.com/wiki/Chapter_${chapter.number}`
+  const wikiUrl = `https://onepiece.fandom.com/wiki/Volume_${volume.number}`
 
   return (
     <main className="container mx-auto px-4 py-4 md:py-8">
@@ -174,30 +180,26 @@ function ChapterDetailPage() {
           Home
         </Link>
         <span className="mx-1 md:mx-2">/</span>
-        <Link to="/chapters" className="hover:text-blue-600 transition-colors">
-          Chapters
-        </Link>
-        <span className="mx-1 md:mx-2">/</span>
-        <span className="text-gray-800 font-medium">Chapter {chapter.number}</span>
+        <span className="text-gray-800 font-medium">Volume {volume.number}</span>
       </nav>
 
       {/* Header with Navigation */}
       <div className="flex flex-wrap items-center justify-between mb-4 md:mb-6 gap-2">
         <button
-          onClick={() => navigate('/chapters')}
+          onClick={() => navigate('/')}
           className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 text-sm md:text-base text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors cursor-pointer"
         >
           <span>←</span>
-          <span className="hidden sm:inline">Back to Chapters</span>
+          <span className="hidden sm:inline">Back to Home</span>
           <span className="sm:hidden">Back</span>
         </button>
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => navigate(`/chapters/${chapter.number - 1}`)}
-            disabled={chapter.number <= 1}
+            onClick={() => navigate(`/volumes/${volume.number - 1}`)}
+            disabled={volume.number <= 1}
             className="flex items-center gap-1 px-3 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 cursor-pointer"
-            title="Previous Chapter"
+            title="Previous Volume"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -206,9 +208,9 @@ function ChapterDetailPage() {
           </button>
 
           <button
-            onClick={handleRandomChapter}
+            onClick={handleRandomVolume}
             className="flex items-center gap-1 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all cursor-pointer"
-            title="Random Chapter"
+            title="Random Volume"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -217,9 +219,9 @@ function ChapterDetailPage() {
           </button>
 
           <button
-            onClick={() => navigate(`/chapters/${chapter.number + 1}`)}
+            onClick={() => navigate(`/volumes/${volume.number + 1}`)}
             className="flex items-center gap-1 px-3 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all cursor-pointer"
-            title="Next Chapter"
+            title="Next Volume"
           >
             <span className="hidden md:inline font-medium">Next</span>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -243,78 +245,103 @@ function ChapterDetailPage() {
       {/* Main Content */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         {/* Header Section */}
-        <div className="bg-linear-to-r from-green-600 to-green-800 text-white p-4 md:p-8">
+        <div className="bg-linear-to-r from-orange-600 to-orange-800 text-white p-4 md:p-8">
           <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
             <div className="flex-1">
               <h1 className="text-2xl md:text-4xl font-bold mb-2">
-                Chapter {chapter.number}
+                Volume {volume.number}
               </h1>
-              {chapter.title && (
-                <p className="text-lg md:text-xl opacity-90">{chapter.title}</p>
-              )}
-              {arc && (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <Link
-                    to={`/arcs/${arc.arc_id}`}
-                    className="inline-block px-3 py-1 bg-white rounded-full text-sm font-medium text-green-800 hover:bg-gray-100 transition-colors cursor-pointer"
-                  >
-                    {arc.title} Arc
-                  </Link>
-                  {arc.saga && arc.saga_id && (
-                    <Link
-                      to={`/sagas/${arc.saga_id}`}
-                      className="inline-block px-3 py-1 bg-white rounded-full text-sm font-medium text-green-800 hover:bg-gray-100 transition-colors cursor-pointer"
-                    >
-                      {arc.saga.title} Saga
-                    </Link>
-                  )}
-                </div>
+              {volume.title && (
+                <p className="text-lg md:text-xl opacity-90">{volume.title}</p>
               )}
             </div>
-            {chapter.num_page && (
-              <div className="text-left sm:text-right">
-                <div className="text-xs md:text-sm opacity-90">Pages</div>
-                <div className="text-2xl md:text-3xl font-bold">{chapter.num_page}</div>
-              </div>
-            )}
+            <div className="text-left sm:text-right">
+              <div className="text-xs md:text-sm opacity-90">Chapters</div>
+              <div className="text-2xl md:text-3xl font-bold">{chapters.length}</div>
+              {chapters.length > 0 && (
+                <div className="text-xs md:text-sm opacity-75 mt-1">{chapterRange}</div>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Details Section */}
         <div className="p-4 md:p-8">
-          {/* Chapter Information */}
+          {/* Volume Information */}
           <div className="mb-6 md:mb-8">
             <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 md:mb-4">
-              Chapter Information
+              Volume Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-              <DetailRow label="Chapter Number" value={chapter.number.toString()} />
-              <DetailRow label="Title" value={chapter.title} />
-              <div className="flex justify-between py-2 border-b border-gray-100">
-                <span className="text-gray-600 font-medium">Volume:</span>
-                {chapter.volume ? (
-                  <Link
-                    to={`/volumes/${chapter.volume}`}
-                    className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
-                  >
-                    {chapter.volume}
-                  </Link>
-                ) : (
-                  <span className="text-gray-800">N/A</span>
-                )}
-              </div>
-              <DetailRow label="Release Date" value={formatDate(chapter.date)} />
-              <DetailRow label="Number of Pages" value={chapter.num_page?.toString()} />
-              <DetailRow label="Jump Issue" value={chapter.jump} />
-              {arc && <DetailRow label="Story Arc" value={arc.title} />}
+              <DetailRow label="Volume Number" value={volume.number.toString()} />
+              <DetailRow label="Title" value={volume.title} />
+              <DetailRow label="Number of Chapters" value={chapters.length.toString()} />
+              <DetailRow label="Chapter Range" value={chapterRange} />
+              <DetailRow label="Total Pages" value={totalPages > 0 ? totalPages.toString() : 'N/A'} />
               <DetailRow label="Characters Appearing" value={characters.length.toString()} />
             </div>
           </div>
 
+          {/* Chapters in this Volume */}
+          {chaptersLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          ) : chapters.length > 0 ? (
+            <div className="border-t pt-6 md:pt-8 mb-6 md:mb-8">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 md:mb-4">
+                Chapters in This Volume
+                <span className="ml-2 text-base md:text-lg text-gray-500">
+                  ({chapters.length})
+                </span>
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {chapters.map((chapter) => (
+                  <Link
+                    key={chapter.number}
+                    to={`/chapters/${chapter.number}`}
+                    className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer"
+                  >
+                    <div className="flex flex-col h-full">
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-semibold text-gray-800">
+                          Chapter {chapter.number}
+                        </h3>
+                        {chapter.num_page && (
+                          <span className="ml-2 px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full whitespace-nowrap">
+                            {chapter.num_page} pages
+                          </span>
+                        )}
+                      </div>
+                      {chapter.title && (
+                        <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                          {chapter.title}
+                        </p>
+                      )}
+                      <div className="flex-1"></div>
+                      {chapter.date && (
+                        <p className="text-xs text-gray-500 mt-2">
+                          {formatDate(chapter.date)}
+                        </p>
+                      )}
+                      <div className="mt-2 text-xs text-blue-600 font-medium">
+                        View Details →
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-500 mb-8">
+              <p>No chapters found for this volume.</p>
+            </div>
+          )}
+
           {/* Characters Appearing */}
           <div className="border-t pt-6 md:pt-8">
             <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 md:mb-4">
-              Characters Appearing in This Chapter
+              Characters Appearing in This Volume
               {characters.length > 0 && (
                 <span className="ml-2 text-base md:text-lg text-gray-500">
                   ({characters.length})
@@ -329,10 +356,11 @@ function ChapterDetailPage() {
             ) : characters.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {characters.map((character) => {
-                  // Check if this is the character's debut chapter
-                  const isDebut = character.chapter_list &&
-                    character.chapter_list.length > 0 &&
-                    Math.min(...character.chapter_list) === chapterNumber
+                  // Check if this is the character's debut volume
+                  const isDebut =
+                    character.volume_list &&
+                    character.volume_list.length > 0 &&
+                    Math.min(...character.volume_list) === volumeNumber
 
                   return (
                     <Link
@@ -385,7 +413,7 @@ function ChapterDetailPage() {
               </div>
             ) : (
               <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-500">
-                <p>No character data available for this chapter.</p>
+                <p>No character data available for this volume.</p>
               </div>
             )}
           </div>
@@ -402,7 +430,7 @@ function ChapterDetailPage() {
           className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors cursor-pointer"
         >
           <span>🔗</span>
-          <span>Share this chapter</span>
+          <span>Share this volume</span>
         </button>
       </div>
     </main>
@@ -425,4 +453,4 @@ function DetailRow({
   )
 }
 
-export default ChapterDetailPage
+export default VolumeDetailPage
