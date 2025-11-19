@@ -9,6 +9,7 @@ import ArcDetailPage from './pages/ArcDetailPage'
 import ChaptersPage from './pages/ChaptersPage'
 import ChapterDetailPage from './pages/ChapterDetailPage'
 import SagaDetailPage from './pages/SagaDetailPage'
+import SagasPage from './pages/SagasPage'
 import VolumeDetailPage from './pages/VolumeDetailPage'
 import VolumesPage from './pages/VolumesPage'
 import AnalyticsPage from './pages/AnalyticsPage'
@@ -39,9 +40,10 @@ function App() {
             <Route path="/characters/:id" element={<CharacterDetailPage />} />
             <Route path="/arcs" element={<ArcsPage />} />
             <Route path="/arcs/:id" element={<ArcDetailPage />} />
+            <Route path="/sagas" element={<SagasPage />} />
+            <Route path="/sagas/:id" element={<SagaDetailPage />} />
             <Route path="/chapters" element={<ChaptersPage />} />
             <Route path="/chapters/:number" element={<ChapterDetailPage />} />
-            <Route path="/sagas/:id" element={<SagaDetailPage />} />
             <Route path="/volumes" element={<VolumesPage />} />
             <Route path="/volumes/:number" element={<VolumeDetailPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />

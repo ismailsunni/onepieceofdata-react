@@ -1,0 +1,206 @@
+import { useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  flexRender,
+  createColumnHelper,
+  SortingState,
+  OnChangeFn,
+  PaginationState,
+} from '@tanstack/react-table'
+import { Saga } from '../types/arc'
+
+interface SagaTableProps {
+  sagas: Saga[]
+  sorting: SortingState
+  onSortingChange: OnChangeFn<SortingState>
+  globalFilter: string
+  onGlobalFilterChange: (filter: string) => void
+  pagination: PaginationState
+  onPaginationChange: OnChangeFn<PaginationState>
+}
+
+const columnHelper = createColumnHelper<Saga>()
+
+function SagaTable({
+  sagas,
+  sorting,
+  onSortingChange,
+  globalFilter,
+  onGlobalFilterChange,
+  pagination,
+  onPaginationChange,
+}: SagaTableProps) {
+  const navigate = useNavigate()
+
+  // Define table columns
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor('title', {
+        header: 'Saga Name',
+        cell: (info) => (
+          <span className="font-medium text-purple-600">
+            {info.getValue() || '-'}
+          </span>
+        ),
+      }),
+      columnHelper.accessor('start_chapter', {
+        header: 'Start Chapter',
+        cell: (info) => info.getValue() || '-',
+      }),
+      columnHelper.accessor('end_chapter', {
+        header: 'Last Chapter',
+        cell: (info) => info.getValue() || '-',
+      }),
+      columnHelper.display({
+        id: 'chapter_count',
+        header: 'Number of Chapters',
+        cell: (info) => {
+          const row = info.row.original
+          const count = row.end_chapter - row.start_chapter + 1
+          return count
+        },
+      }),
+    ],
+    []
+  )
+
+  // Create table instance
+  const table = useReactTable({
+    data: sagas,
+    columns,
+    state: {
+      sorting,
+      globalFilter,
+      pagination,
+    },
+    onSortingChange,
+    onGlobalFilterChange,
+    onPaginationChange,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    globalFilterFn: (row, _columnId, filterValue) => {
+      const title = row.getValue('title') as string
+      return title?.toLowerCase().includes(filterValue.toLowerCase()) || false
+    },
+  })
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+        <thead className="bg-gray-50">
+          {table.getHeaderGroups().map((headerGroup) => (
+            <tr key={headerGroup.id}>
+              {headerGroup.headers.map((header) => (
+                <th
+                  key={header.id}
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 cursor-pointer hover:bg-gray-100"
+                  onClick={header.column.getToggleSortingHandler()}
+                >
+                  <div className="flex items-center gap-2">
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+                    {header.column.getIsSorted() ? (
+                      <span>
+                        {header.column.getIsSorted() === 'asc' ? '↑' : '↓'}
+                      </span>
+                    ) : (
+                      <span className="text-gray-300">↕</span>
+                    )}
+                  </div>
+                </th>
+              ))}
+            </tr>
+          ))}
+        </thead>
+        <tbody className="divide-y divide-gray-200">
+          {table.getRowModel().rows.length === 0 ? (
+            <tr>
+              <td
+                colSpan={columns.length}
+                className="px-6 py-8 text-center text-gray-500"
+              >
+                No sagas found
+              </td>
+            </tr>
+          ) : (
+            table.getRowModel().rows.map((row) => (
+              <tr
+                key={row.id}
+                className="hover:bg-gray-50 cursor-pointer transition-colors"
+                onClick={() => navigate(`/sagas/${row.original.saga_id}`)}
+                title="Click to view details"
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <td
+                    key={cell.id}
+                    className="px-6 py-4 text-sm text-gray-900"
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+
+      {/* Pagination Controls */}
+      <div className="px-4 md:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-200 bg-white">
+        <div className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
+          Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{' '}
+          {Math.min(
+            (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+            table.getFilteredRowModel().rows.length
+          )}{' '}
+          of {table.getFilteredRowModel().rows.length} sagas
+        </div>
+
+        <div className="flex items-center gap-1 sm:gap-2">
+          <button
+            onClick={() => table.setPageIndex(0)}
+            disabled={!table.getCanPreviousPage()}
+            className="px-2 sm:px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+          >
+            {'<<'}
+          </button>
+          <button
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+            className="px-2 sm:px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+          >
+            {'<'}
+          </button>
+          <span className="text-xs sm:text-sm text-gray-700 px-2">
+            Page {table.getState().pagination.pageIndex + 1} of{' '}
+            {table.getPageCount()}
+          </span>
+          <button
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+            className="px-2 sm:px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+          >
+            {'>'}
+          </button>
+          <button
+            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+            disabled={!table.getCanNextPage()}
+            className="px-2 sm:px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+          >
+            {'>>'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default SagaTable
