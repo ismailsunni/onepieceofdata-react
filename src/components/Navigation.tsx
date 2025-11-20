@@ -17,6 +17,7 @@ function Navigation() {
   // Check if any route in a group is active
   const isStoryActive = location.pathname.startsWith('/arcs') || location.pathname.startsWith('/sagas')
   const isMediaActive = location.pathname.startsWith('/chapters') || location.pathname.startsWith('/volumes')
+  const isAnalyticsActive = location.pathname.startsWith('/analytics')
 
   // Menu button class based on active state
   const getMenuButtonClass = (isActive: boolean) => {
@@ -120,9 +121,48 @@ function Navigation() {
         </MenuItems>
       </Menu>
 
-      <NavLink to="/analytics" className={getLinkClass}>
-        Analytics
-      </NavLink>
+      {/* Analytics Dropdown */}
+      <Menu as="div" className="relative">
+        <MenuButton className={getMenuButtonClass(isAnalyticsActive)}>
+          Analytics
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </MenuButton>
+        <MenuItems className="absolute left-0 mt-2 w-48 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+          <div className="py-1">
+            <MenuItem>
+              {({ focus }) => (
+                <NavLink
+                  to="/analytics"
+                  className={`${
+                    focus ? 'bg-blue-100' : ''
+                  } block px-4 py-2 text-sm text-gray-700 ${
+                    location.pathname === '/analytics' ? 'bg-blue-50 font-semibold' : ''
+                  }`}
+                >
+                  Dashboard
+                </NavLink>
+              )}
+            </MenuItem>
+            <MenuItem>
+              {({ focus }) => (
+                <NavLink
+                  to="/analytics/character-timeline"
+                  className={`${
+                    focus ? 'bg-blue-100' : ''
+                  } block px-4 py-2 text-sm text-gray-700 ${
+                    location.pathname === '/analytics/character-timeline' ? 'bg-blue-50 font-semibold' : ''
+                  }`}
+                >
+                  Character Timeline
+                </NavLink>
+              )}
+            </MenuItem>
+          </div>
+        </MenuItems>
+      </Menu>
+
       <NavLink to="/about" className={getLinkClass}>
         About
       </NavLink>

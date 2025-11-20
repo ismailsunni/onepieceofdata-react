@@ -13,6 +13,7 @@ import SagasPage from './pages/SagasPage'
 import VolumeDetailPage from './pages/VolumeDetailPage'
 import VolumesPage from './pages/VolumesPage'
 import AnalyticsPage from './pages/AnalyticsPage'
+import CharacterTimelinePage from './pages/CharacterTimelinePage'
 import AboutPage from './pages/AboutPage'
 
 // Create a client with longer cache times for static data
@@ -47,6 +48,7 @@ function App() {
             <Route path="/volumes" element={<VolumesPage />} />
             <Route path="/volumes/:number" element={<VolumeDetailPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/analytics/character-timeline" element={<CharacterTimelinePage />} />
             <Route path="/about" element={<AboutPage />} />
           </Routes>
         </div>
