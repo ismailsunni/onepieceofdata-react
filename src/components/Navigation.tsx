@@ -50,20 +50,6 @@ function Navigation() {
             <MenuItem>
               {({ focus }) => (
                 <NavLink
-                  to="/arcs"
-                  className={`${
-                    focus ? 'bg-blue-100' : ''
-                  } block px-4 py-2 text-sm text-gray-700 ${
-                    location.pathname.startsWith('/arcs') ? 'bg-blue-50 font-semibold' : ''
-                  }`}
-                >
-                  Arcs
-                </NavLink>
-              )}
-            </MenuItem>
-            <MenuItem>
-              {({ focus }) => (
-                <NavLink
                   to="/sagas"
                   className={`${
                     focus ? 'bg-blue-100' : ''
@@ -72,6 +58,20 @@ function Navigation() {
                   }`}
                 >
                   Sagas
+                </NavLink>
+              )}
+            </MenuItem>
+            <MenuItem>
+              {({ focus }) => (
+                <NavLink
+                  to="/arcs"
+                  className={`${
+                    focus ? 'bg-blue-100' : ''
+                  } block px-4 py-2 text-sm text-gray-700 ${
+                    location.pathname.startsWith('/arcs') ? 'bg-blue-50 font-semibold' : ''
+                  }`}
+                >
+                  Arcs
                 </NavLink>
               )}
             </MenuItem>
@@ -92,20 +92,6 @@ function Navigation() {
             <MenuItem>
               {({ focus }) => (
                 <NavLink
-                  to="/chapters"
-                  className={`${
-                    focus ? 'bg-blue-100' : ''
-                  } block px-4 py-2 text-sm text-gray-700 ${
-                    location.pathname.startsWith('/chapters') ? 'bg-blue-50 font-semibold' : ''
-                  }`}
-                >
-                  Chapters
-                </NavLink>
-              )}
-            </MenuItem>
-            <MenuItem>
-              {({ focus }) => (
-                <NavLink
                   to="/volumes"
                   className={`${
                     focus ? 'bg-blue-100' : ''
@@ -114,6 +100,20 @@ function Navigation() {
                   }`}
                 >
                   Volumes
+                </NavLink>
+              )}
+            </MenuItem>
+            <MenuItem>
+              {({ focus }) => (
+                <NavLink
+                  to="/chapters"
+                  className={`${
+                    focus ? 'bg-blue-100' : ''
+                  } block px-4 py-2 text-sm text-gray-700 ${
+                    location.pathname.startsWith('/chapters') ? 'bg-blue-50 font-semibold' : ''
+                  }`}
+                >
+                  Chapters
                 </NavLink>
               )}
             </MenuItem>
