@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { SortingState, PaginationState } from '@tanstack/react-table'
 import ArcTable from '../components/ArcTable'
-import ArcLengthChart from '../components/ArcLengthChart'
 import { fetchArcs } from '../services/arcService'
 
 function ArcsPage() {
@@ -33,11 +32,6 @@ function ArcsPage() {
         </div>
       ) : (
         <>
-          {/* Arc Length Chart */}
-          <div className="mb-8">
-            <ArcLengthChart arcs={arcs} />
-          </div>
-
           {/* Search Box */}
           <div className="mb-6">
             <input
