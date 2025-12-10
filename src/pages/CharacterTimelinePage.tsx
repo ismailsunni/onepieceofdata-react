@@ -1,7 +1,6 @@
 import { useState, useMemo, useCallback, useTransition } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { fetchCharacters } from '../services/characterService'
-import { Character } from '../types/character'
 import CharacterTimelineChart from '../components/CharacterTimelineChart'
 
 // Character presets
