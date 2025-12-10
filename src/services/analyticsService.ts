@@ -578,6 +578,8 @@ export interface CharacterBirthday {
   id: string
   name: string
   birth_date: string
+  age: number | null
+  status: string | null
 }
 
 export interface BirthdaysByDate {
@@ -597,7 +599,7 @@ export async function fetchCharacterBirthdays(): Promise<BirthdaysByDate> {
 
     const { data, error } = await supabase
       .from('character')
-      .select('id, name, birth_date')
+      .select('id, name, birth_date, age, status')
       .not('birth_date', 'is', null)
 
     if (error) {
@@ -623,6 +625,8 @@ export async function fetchCharacterBirthdays(): Promise<BirthdaysByDate> {
         id: char.id,
         name: char.name,
         birth_date: char.birth_date,
+        age: char.age,
+        status: char.status,
       })
     })
 

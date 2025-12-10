@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { fetchCharacterBirthdays, BirthdaysByDate } from '../services/analyticsService'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faSkull } from '@fortawesome/free-solid-svg-icons'
 
 interface CalendarDay {
   date: number
@@ -10,7 +12,7 @@ interface CalendarDay {
   dateKey: string
   isCurrentMonth: boolean
   birthdayCount: number
-  characters: { id: string; name: string; birth_date: string }[]
+  characters: { id: string; name: string; birth_date: string; age: number | null; status: string | null }[]
 }
 
 function CharacterBirthdayPage() {
@@ -305,16 +307,29 @@ function CharacterBirthdayPage() {
             </h2>
           </div>
           <div className="flex flex-wrap gap-2">
-            {todaysBirthdays.map((char) => (
-              <Link
-                key={char.id}
-                to={`/characters/${char.id}`}
-                className="inline-flex items-center gap-1 text-sm font-medium text-gray-700 px-3 py-1.5 bg-white rounded-full hover:bg-orange-50 hover:ring-2 hover:ring-orange-400 transition-all cursor-pointer shadow-sm"
-              >
-                <span>🎈</span>
-                {char.name}
-              </Link>
-            ))}
+            {todaysBirthdays.map((char) => {
+              const isDeceased = char.status === 'Deceased'
+              const hasAge = char.age !== null && char.age !== undefined
+
+              return (
+                <Link
+                  key={char.id}
+                  to={`/characters/${char.id}`}
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-700 px-3 py-1.5 bg-white rounded-full hover:bg-orange-50 hover:ring-2 hover:ring-orange-400 transition-all cursor-pointer shadow-sm"
+                >
+                  <span>🎈</span>
+                  <span>
+                    {char.name}
+                    {!isDeceased && hasAge && (
+                      <span className="text-xs text-gray-500 ml-1">({char.age})</span>
+                    )}
+                    {isDeceased && (
+                      <FontAwesomeIcon icon={faSkull} className="text-gray-600 ml-1.5" />
+                    )}
+                  </span>
+                </Link>
+              )
+            })}
           </div>
         </div>
       )}
@@ -370,15 +385,27 @@ function CharacterBirthdayPage() {
                       </div>
                     )}
                     <div className="space-y-1">
-                      {characters.map((char) => (
-                        <Link
-                          key={char.id}
-                          to={`/characters/${char.id}`}
-                          className="block text-xs text-gray-700 px-2 py-1 bg-white rounded hover:bg-purple-100 hover:ring-1 hover:ring-purple-500 transition-all cursor-pointer"
-                        >
-                          {char.name}
-                        </Link>
-                      ))}
+                      {characters.map((char) => {
+                        const hasAge = char.age !== null && char.age !== undefined
+                        const isDeceased = char.status === 'Deceased'
+                        return (
+                          <Link
+                            key={char.id}
+                            to={`/characters/${char.id}`}
+                            className="flex items-center gap-1.5 text-xs text-gray-700 px-2 py-1 bg-white rounded hover:bg-purple-100 hover:ring-1 hover:ring-purple-500 transition-all cursor-pointer"
+                          >
+                            <span>
+                              {char.name}
+                              {hasAge && (
+                                <span className="text-gray-500 ml-1">({char.age})</span>
+                              )}
+                              {isDeceased && (
+                                <FontAwesomeIcon icon={faSkull} className="text-gray-500 text-[10px] ml-1" />
+                              )}
+                            </span>
+                          </Link>
+                        )
+                      })}
                     </div>
                   </div>
                 ))}
@@ -526,16 +553,28 @@ function CharacterBirthdayPage() {
                 </div>
                 {day.birthdayCount > 0 && day.isCurrentMonth && (
                   <div className="space-y-1">
-                    {day.characters.map((char, idx) => (
-                      <Link
-                        key={idx}
-                        to={`/characters/${char.id}`}
-                        className="block text-xs text-gray-700 px-1 py-0.5 bg-white bg-opacity-80 rounded truncate hover:bg-opacity-100 hover:ring-2 hover:ring-blue-500 transition-all cursor-pointer"
-                        title={char.name}
-                      >
-                        {char.name}
-                      </Link>
-                    ))}
+                    {day.characters.map((char, idx) => {
+                      const hasAge = char.age !== null && char.age !== undefined
+                      const isDeceased = char.status === 'Deceased'
+                      return (
+                        <Link
+                          key={idx}
+                          to={`/characters/${char.id}`}
+                          className="flex items-center gap-1 text-xs text-gray-700 px-1 py-0.5 bg-white bg-opacity-80 rounded hover:bg-opacity-100 hover:ring-2 hover:ring-blue-500 transition-all cursor-pointer"
+                          title={hasAge ? `${char.name} (${char.age})` : char.name}
+                        >
+                          <span className="truncate">
+                            {char.name}
+                            {hasAge && (
+                              <span className="text-gray-500 ml-0.5">({char.age})</span>
+                            )}
+                            {isDeceased && (
+                              <FontAwesomeIcon icon={faSkull} className="text-gray-500 text-[10px] ml-0.5" />
+                            )}
+                          </span>
+                        </Link>
+                      )
+                    })}
                   </div>
                 )}
                 </div>
