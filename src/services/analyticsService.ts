@@ -546,8 +546,12 @@ export async function fetchTimeSkipDistribution(): Promise<TimeSkipData> {
       const chapters = char.chapter_list || []
       if (chapters.length === 0) return
 
-      const hasPreTimeSkip = chapters.some((ch: number) => ch < TIME_SKIP_CHAPTER)
-      const hasPostTimeSkip = chapters.some((ch: number) => ch >= TIME_SKIP_CHAPTER)
+      const hasPreTimeSkip = chapters.some(
+        (ch: number) => ch < TIME_SKIP_CHAPTER
+      )
+      const hasPostTimeSkip = chapters.some(
+        (ch: number) => ch >= TIME_SKIP_CHAPTER
+      )
 
       if (hasPreTimeSkip && hasPostTimeSkip) {
         both++

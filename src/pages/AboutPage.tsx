@@ -253,16 +253,6 @@ function AboutPage() {
         <div className="mt-8 text-center text-gray-500 text-sm">
           <p>Made with ❤️ and passion for the One Piece community</p>
           <p className="mt-2">Set sail and explore the data! 🏴‍☠️</p>
-          <p className="mt-4 text-xs">
-            <a
-              href="https://github.com/ismailsunni/onepieceofdata-react"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-gray-700 hover:underline"
-            >
-              View source code on GitHub
-            </a>
-          </p>
         </div>
       </div>
     </main>

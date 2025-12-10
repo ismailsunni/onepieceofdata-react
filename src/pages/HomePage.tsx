@@ -101,10 +101,10 @@ function HomePage() {
         />
       </div>
 
-      <div className="mt-16 text-center">
-        <p className="text-gray-500">
-          Built with React, TypeScript, and TailwindCSS
-        </p>
+      {/* Footer note */}
+      <div className="mt-16 text-center text-gray-500 text-sm">
+        <p>Made with ❤️ and passion for the One Piece community</p>
+        <p className="mt-2">Set sail and explore the data! 🏴‍☠️</p>
       </div>
     </main>
   )
