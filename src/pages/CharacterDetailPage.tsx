@@ -256,16 +256,39 @@ function CharacterDetailPage() {
           <span className="hidden sm:inline">Back to Characters</span>
           <span className="sm:hidden">Back</span>
         </button>
-        <a
-          href={wikiUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 text-sm md:text-base bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-        >
-          <span className="hidden sm:inline">View on Wiki</span>
-          <span className="sm:hidden">Wiki</span>
-          <span>↗</span>
-        </a>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(window.location.href)
+              alert('Link copied to clipboard!')
+            }}
+            className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 text-sm md:text-base bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors cursor-pointer"
+            title="Copy link to clipboard"
+          >
+            <span>🔗</span>
+          </button>
+          <a
+            href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out ${character.name || 'this character'} from One Piece!`)}&url=${encodeURIComponent(window.location.href)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 text-sm md:text-base bg-gray-800 text-white rounded-md hover:bg-gray-900 transition-colors"
+            title="Share on X (Twitter)"
+          >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+          </a>
+          <a
+            href={wikiUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 text-sm md:text-base bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            <span className="hidden sm:inline">View on Wiki</span>
+            <span className="sm:hidden">Wiki</span>
+            <span>↗</span>
+          </a>
+        </div>
       </div>
 
       {/* Main Content */}
@@ -575,38 +598,7 @@ function CharacterDetailPage() {
               </div>
             </div>
           )}
-
-          {/* Data Quality Note */}
-          {character.scraping_status && (
-            <div className="border-t pt-8 mt-8">
-              <h3 className="text-lg font-semibold text-gray-700 mb-3">Data Information</h3>
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <p className="text-sm text-gray-700">
-                  <span className="font-medium">Scraping Status:</span> {character.scraping_status}
-                </p>
-                {character.scraping_note && (
-                  <p className="text-sm text-gray-600 mt-2">
-                    <span className="font-medium">Note:</span> {character.scraping_note}
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
         </div>
-      </div>
-
-      {/* Share Section */}
-      <div className="mt-8 text-center">
-        <button
-          onClick={() => {
-            navigator.clipboard.writeText(window.location.href)
-            alert('Link copied to clipboard!')
-          }}
-          className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
-        >
-          <span>🔗</span>
-          <span>Share this character</span>
-        </button>
       </div>
     </main>
   )

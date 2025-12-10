@@ -230,6 +230,29 @@ function ArcDetailPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
+
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(window.location.href)
+              alert('Link copied to clipboard!')
+            }}
+            className="flex items-center gap-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer"
+            title="Copy link to clipboard"
+          >
+            <span>🔗</span>
+          </button>
+
+          <a
+            href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out ${arc.title} arc from One Piece!`)}&url=${encodeURIComponent(window.location.href)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 px-3 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
+            title="Share on X (Twitter)"
+          >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+          </a>
         </div>
 
         <a
