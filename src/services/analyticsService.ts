@@ -575,6 +575,7 @@ export async function fetchTimeSkipDistribution(): Promise<TimeSkipData> {
 }
 
 export interface CharacterBirthday {
+  id: string
   name: string
   birth_date: string
 }
@@ -596,7 +597,7 @@ export async function fetchCharacterBirthdays(): Promise<BirthdaysByDate> {
 
     const { data, error } = await supabase
       .from('character')
-      .select('name, birth_date')
+      .select('id, name, birth_date')
       .not('birth_date', 'is', null)
 
     if (error) {
@@ -608,7 +609,7 @@ export async function fetchCharacterBirthdays(): Promise<BirthdaysByDate> {
     const birthdayMap: BirthdaysByDate = {}
 
     data.forEach((char) => {
-      if (!char.birth_date || !char.name) return
+      if (!char.birth_date || !char.name || !char.id) return
 
       // Parse the birth_date (assuming format like "May 5" or "05-05")
       const dateKey = parseBirthDate(char.birth_date)
@@ -619,6 +620,7 @@ export async function fetchCharacterBirthdays(): Promise<BirthdaysByDate> {
       }
 
       birthdayMap[dateKey].push({
+        id: char.id,
         name: char.name,
         birth_date: char.birth_date,
       })

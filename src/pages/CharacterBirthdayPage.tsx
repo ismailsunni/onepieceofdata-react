@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { fetchCharacterBirthdays, BirthdaysByDate } from '../services/analyticsService'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 
 interface CalendarDay {
   date: number
@@ -9,7 +10,7 @@ interface CalendarDay {
   dateKey: string
   isCurrentMonth: boolean
   birthdayCount: number
-  characters: { name: string; birth_date: string }[]
+  characters: { id: string; name: string; birth_date: string }[]
 }
 
 function CharacterBirthdayPage() {
@@ -38,6 +39,12 @@ function CharacterBirthdayPage() {
     if (count === 2) return 'bg-blue-400'
     if (count === 3) return 'bg-blue-600'
     return 'bg-blue-800'
+  }
+
+  // Get text color for date number based on background intensity
+  const getDateTextColor = (count: number): string => {
+    if (count >= 3) return 'text-white' // Dark backgrounds need white text
+    return 'text-gray-800' // Light backgrounds use dark text
   }
 
   // Generate calendar days for a specific month
@@ -354,7 +361,9 @@ function CharacterBirthdayPage() {
               >
                 <div
                   className={`text-sm font-medium mb-1 ${
-                    day.isCurrentMonth ? 'text-gray-800' : 'text-gray-400'
+                    day.isCurrentMonth
+                      ? getDateTextColor(day.birthdayCount)
+                      : 'text-gray-400'
                   }`}
                 >
                   {day.date}
@@ -362,13 +371,14 @@ function CharacterBirthdayPage() {
                 {day.birthdayCount > 0 && day.isCurrentMonth && (
                   <div className="space-y-1">
                     {day.characters.map((char, idx) => (
-                      <div
+                      <Link
                         key={idx}
-                        className="text-xs text-gray-700 px-1 py-0.5 bg-white bg-opacity-80 rounded truncate"
+                        to={`/characters/${char.id}`}
+                        className="block text-xs text-gray-700 px-1 py-0.5 bg-white bg-opacity-80 rounded truncate hover:bg-opacity-100 hover:ring-2 hover:ring-blue-500 transition-all cursor-pointer"
                         title={char.name}
                       >
                         {char.name}
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 )}
@@ -410,7 +420,7 @@ function CharacterBirthdayPage() {
                         className={`
                           aspect-square flex items-center justify-center text-xs rounded
                           ${day.date === 0 ? '' : getIntensityColor(day.birthdayCount)}
-                          ${day.date === 0 ? 'text-transparent' : 'text-gray-700'}
+                          ${day.date === 0 ? 'text-transparent' : getDateTextColor(day.birthdayCount)}
                         `}
                         onMouseEnter={() => day.birthdayCount > 0 && setHoveredDay(day)}
                         onMouseLeave={() => setHoveredDay(null)}
