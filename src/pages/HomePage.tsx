@@ -34,30 +34,35 @@ function HomePage() {
             label="Chapters"
             value={stats?.chapters || 0}
             loading={isLoading}
+            link="/chapters"
           />
           <StatCard
             icon="📖"
             label="Volumes"
             value={stats?.volumes || 0}
             loading={isLoading}
+            link="/volumes"
           />
           <StatCard
             icon="🎭"
             label="Arcs"
             value={stats?.arcs || 0}
             loading={isLoading}
+            link="/arcs"
           />
           <StatCard
             icon="🌊"
             label="Sagas"
             value={stats?.sagas || 0}
             loading={isLoading}
+            link="/sagas"
           />
           <StatCard
             icon="👥"
             label="Characters"
             value={stats?.characters || 0}
             loading={isLoading}
+            link="/characters"
           />
           <StatCard
             icon="📄"
@@ -80,16 +85,19 @@ function HomePage() {
           icon="👤"
           title="Characters"
           description="Explore detailed information about your favorite One Piece characters, their abilities, and bounties."
+          link="/characters"
         />
         <Card
           icon="📖"
           title="Story Arcs"
           description="Journey through the various story arcs and discover key events that shaped the One Piece world."
+          link="/arcs"
         />
         <Card
           icon="📊"
           title="Analytics"
           description="Visualize data through interactive charts and discover insights about the One Piece universe."
+          link="/analytics"
         />
       </div>
 
