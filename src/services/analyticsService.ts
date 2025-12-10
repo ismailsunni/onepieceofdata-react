@@ -58,6 +58,13 @@ export interface SagaAppearanceCountData {
   characterCount: number
 }
 
+export interface TimeSkipData {
+  preTimeSkipOnly: number
+  postTimeSkipOnly: number
+  both: number
+  total: number
+}
+
 /**
  * Get distribution of character bounties by ranges with power tier groupings
  * Returns stacked data with alive vs not alive counts
@@ -500,5 +507,65 @@ export async function fetchBloodTypeDistribution(): Promise<
   } catch (error) {
     console.error('Error in fetchBloodTypeDistribution:', error)
     return []
+  }
+}
+
+/**
+ * Get time skip character distribution
+ * The time skip occurs at chapter 597 (end of Marineford) to 598 (Return to Sabaody)
+ * Categories:
+ * - Pre-time skip only: Characters who appeared only before chapter 598
+ * - Post-time skip only: Characters who appeared only from chapter 598 onwards
+ * - Both: Characters who appeared in both periods
+ */
+export async function fetchTimeSkipDistribution(): Promise<TimeSkipData> {
+  try {
+    if (!supabase) {
+      console.error('Supabase client not initialized')
+      return { preTimeSkipOnly: 0, postTimeSkipOnly: 0, both: 0, total: 0 }
+    }
+
+    const TIME_SKIP_CHAPTER = 598
+
+    // Fetch all characters with their chapter_list
+    const { data: characters, error } = await supabase
+      .from('character')
+      .select('chapter_list')
+      .not('chapter_list', 'is', null)
+
+    if (error) {
+      console.error('Error fetching time skip data:', error)
+      return { preTimeSkipOnly: 0, postTimeSkipOnly: 0, both: 0, total: 0 }
+    }
+
+    let preTimeSkipOnly = 0
+    let postTimeSkipOnly = 0
+    let both = 0
+
+    characters.forEach((char) => {
+      const chapters = char.chapter_list || []
+      if (chapters.length === 0) return
+
+      const hasPreTimeSkip = chapters.some((ch) => ch < TIME_SKIP_CHAPTER)
+      const hasPostTimeSkip = chapters.some((ch) => ch >= TIME_SKIP_CHAPTER)
+
+      if (hasPreTimeSkip && hasPostTimeSkip) {
+        both++
+      } else if (hasPreTimeSkip) {
+        preTimeSkipOnly++
+      } else if (hasPostTimeSkip) {
+        postTimeSkipOnly++
+      }
+    })
+
+    return {
+      preTimeSkipOnly,
+      postTimeSkipOnly,
+      both,
+      total: preTimeSkipOnly + postTimeSkipOnly + both,
+    }
+  } catch (error) {
+    console.error('Error in fetchTimeSkipDistribution:', error)
+    return { preTimeSkipOnly: 0, postTimeSkipOnly: 0, both: 0, total: 0 }
   }
 }

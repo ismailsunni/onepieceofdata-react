@@ -3,10 +3,12 @@ import {
   fetchAppearanceDistribution,
   fetchSagaAppearanceDistribution,
   fetchSagaAppearanceCountDistribution,
+  fetchTimeSkipDistribution,
 } from '../services/analyticsService'
 import CharacterAppearanceChart from '../components/CharacterAppearanceChart'
 import { SagaAppearanceChart } from '../components/SagaAppearanceChart'
 import { SagaAppearanceCountChart } from '../components/SagaAppearanceCountChart'
+import TimeSkipVennDiagram from '../components/TimeSkipVennDiagram'
 
 function CharacterAppearancesPage() {
   // Fetch appearance analytics data
@@ -25,10 +27,16 @@ function CharacterAppearancesPage() {
     queryFn: fetchSagaAppearanceCountDistribution,
   })
 
+  const { data: timeSkipData, isLoading: timeSkipLoading } = useQuery({
+    queryKey: ['analytics', 'time-skip-distribution'],
+    queryFn: fetchTimeSkipDistribution,
+  })
+
   const isLoading =
     appearanceLoading ||
     sagaAppearanceLoading ||
-    sagaAppearanceCountLoading
+    sagaAppearanceCountLoading ||
+    timeSkipLoading
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -52,6 +60,13 @@ function CharacterAppearancesPage() {
       {/* Charts Grid */}
       {!isLoading && (
         <div className="space-y-8">
+          {/* Time Skip Venn Diagram - Full Width */}
+          {timeSkipData && timeSkipData.total > 0 && (
+            <div className="w-full">
+              <TimeSkipVennDiagram data={timeSkipData} />
+            </div>
+          )}
+
           {/* Character Appearances by Chapter Range */}
           {appearanceData.length > 0 && (
             <div className="w-full">
@@ -84,7 +99,8 @@ function CharacterAppearancesPage() {
           {/* Empty State */}
           {appearanceData.length === 0 &&
             sagaAppearanceData.length === 0 &&
-            sagaAppearanceCountData.length === 0 && (
+            sagaAppearanceCountData.length === 0 &&
+            (!timeSkipData || timeSkipData.total === 0) && (
               <div className="text-center py-20">
                 <p className="text-gray-500 text-lg">
                   No character appearance data available at the moment.
