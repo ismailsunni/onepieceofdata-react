@@ -689,3 +689,126 @@ function parseBirthDate(birthDate: string): string | null {
     return null
   }
 }
+
+/**
+ * Chapter release data for calendar view
+ */
+export interface ChapterRelease {
+  number: number
+  jump: string | null
+  date: string | null
+  year: number | null
+  issue: number | null
+  issueEnd: number | null // For double issues like "37-38"
+}
+
+/**
+ * Parse Jump issue number from various formats
+ * Examples: "1997 Issue 34", "1997 Issue 37-38" (double issue), "2024 Issue 1"
+ */
+function parseJumpIssue(jump: string | null, date: string | null): { year: number; issue: number; issueEnd: number | null } | null {
+  if (!jump) return null
+
+  // Try to parse issue number from jump field
+  const jumpStr = jump.trim()
+
+  // Check for format "YYYY Issue NN-NN" (double issue)
+  const doubleIssueMatch = jumpStr.match(/^(\d{4})\s+Issue\s+(\d+)-(\d+)/)
+  if (doubleIssueMatch) {
+    return {
+      year: parseInt(doubleIssueMatch[1]),
+      issue: parseInt(doubleIssueMatch[2]),
+      issueEnd: parseInt(doubleIssueMatch[3]),
+    }
+  }
+
+  // Check for format "YYYY Issue NN" (single issue)
+  const issueMatch = jumpStr.match(/^(\d{4})\s+Issue\s+(\d+)/)
+  if (issueMatch) {
+    return {
+      year: parseInt(issueMatch[1]),
+      issue: parseInt(issueMatch[2]),
+      issueEnd: null,
+    }
+  }
+
+  // Fallback: Extract year from date if available
+  let year: number | null = null
+  if (date) {
+    try {
+      year = new Date(date).getFullYear()
+    } catch (e) {
+      console.warn('Error parsing date:', date)
+    }
+  }
+
+  // Check if it has year prefix (e.g., "1997-34" or "2024-01")
+  const yearIssueMatch = jumpStr.match(/^(\d{4})[-\/](\d+)/)
+  if (yearIssueMatch) {
+    return {
+      year: parseInt(yearIssueMatch[1]),
+      issue: parseInt(yearIssueMatch[2]),
+      issueEnd: null,
+    }
+  }
+
+  // Check for double issues like "34-35" or "1&2" - take the first number
+  const oldDoubleIssueMatch = jumpStr.match(/^(\d+)[-&](\d+)/)
+  if (oldDoubleIssueMatch) {
+    return year ? {
+      year,
+      issue: parseInt(oldDoubleIssueMatch[1]),
+      issueEnd: parseInt(oldDoubleIssueMatch[2]),
+    } : null
+  }
+
+  // Check for simple number like "34"
+  const simpleMatch = jumpStr.match(/^(\d+)$/)
+  if (simpleMatch) {
+    return year ? { year, issue: parseInt(simpleMatch[1]), issueEnd: null } : null
+  }
+
+  console.warn('Could not parse Jump issue:', jump, 'with date:', date)
+  return null
+}
+
+/**
+ * Fetch chapter releases grouped by year and Jump issue
+ */
+export async function fetchChapterReleases(): Promise<ChapterRelease[]> {
+  try {
+    if (!supabase) {
+      console.error('Supabase client not initialized')
+      return []
+    }
+
+    const { data, error } = await supabase
+      .from('chapter')
+      .select('number, jump, date')
+      .order('number', { ascending: true })
+
+    if (error) {
+      console.error('Error fetching chapter releases:', error)
+      return []
+    }
+
+    // Parse and extract year and issue from jump field
+    const releases: ChapterRelease[] = (data || []).map((chapter) => {
+      const parsed = parseJumpIssue(chapter.jump, chapter.date)
+
+      return {
+        number: chapter.number,
+        jump: chapter.jump,
+        date: chapter.date,
+        year: parsed?.year || null,
+        issue: parsed?.issue || null,
+        issueEnd: parsed?.issueEnd || null,
+      }
+    })
+
+    return releases
+  } catch (error) {
+    console.error('Error in fetchChapterReleases:', error)
+    return []
+  }
+}

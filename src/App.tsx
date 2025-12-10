@@ -18,6 +18,7 @@ import CharacterAppearancesPage from './pages/CharacterAppearancesPage'
 import StoryArcsAnalyticsPage from './pages/StoryArcsAnalyticsPage'
 import CharacterTimelinePage from './pages/CharacterTimelinePage'
 import CharacterBirthdayPage from './pages/CharacterBirthdayPage'
+import ChapterReleaseCalendarPage from './pages/ChapterReleaseCalendarPage'
 import AboutPage from './pages/AboutPage'
 
 // Create a client with longer cache times for static data
@@ -57,6 +58,7 @@ function App() {
             <Route path="/analytics/story-arcs" element={<StoryArcsAnalyticsPage />} />
             <Route path="/analytics/character-timeline" element={<CharacterTimelinePage />} />
             <Route path="/analytics/birthdays" element={<CharacterBirthdayPage />} />
+            <Route path="/analytics/chapter-releases" element={<ChapterReleaseCalendarPage />} />
             <Route path="/about" element={<AboutPage />} />
           </Routes>
         </div>

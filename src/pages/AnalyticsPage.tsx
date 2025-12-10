@@ -30,6 +30,13 @@ function AnalyticsPage() {
       icon: '🎂',
       color: 'bg-pink-50 border-pink-200 hover:border-pink-400',
     },
+    {
+      title: 'Chapter Release Calendar',
+      description: 'View chapter release schedule by year and Weekly Shonen Jump issue',
+      path: '/analytics/chapter-releases',
+      icon: '📅',
+      color: 'bg-yellow-50 border-yellow-200 hover:border-yellow-400',
+    },
   ]
 
   return (

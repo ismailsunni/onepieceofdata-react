@@ -201,6 +201,20 @@ function Navigation() {
                 </NavLink>
               )}
             </MenuItem>
+            <MenuItem>
+              {({ focus }) => (
+                <NavLink
+                  to="/analytics/chapter-releases"
+                  className={`${
+                    focus ? 'bg-blue-100' : ''
+                  } block px-4 py-2 text-sm text-gray-700 ${
+                    location.pathname === '/analytics/chapter-releases' ? 'bg-blue-50 font-semibold' : ''
+                  }`}
+                >
+                  Chapter Releases
+                </NavLink>
+              )}
+            </MenuItem>
           </div>
         </MenuItems>
       </Menu>
