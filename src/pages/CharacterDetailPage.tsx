@@ -70,6 +70,7 @@ function CharacterDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [showBountyChart, setShowBountyChart] = useState(false)
+  const [copyLinkFeedback, setCopyLinkFeedback] = useState(false)
 
   const { data: character, isLoading, error } = useQuery({
     queryKey: ['character', id],
@@ -132,6 +133,23 @@ function CharacterDetailPage() {
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join('_')
   const wikiUrl = `https://onepiece.fandom.com/wiki/${wikiName}`
+
+  // Copy link handler
+  const handleCopyLink = () => {
+    const url = window.location.href
+    navigator.clipboard.writeText(url).then(() => {
+      setCopyLinkFeedback(true)
+      setTimeout(() => setCopyLinkFeedback(false), 2000)
+    })
+  }
+
+  // Share to Twitter handler
+  const handleShareToTwitter = () => {
+    const text = `Check out ${character.name || 'this character'} from One Piece!`
+    const url = window.location.href
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`
+    window.open(twitterUrl, '_blank', 'noopener,noreferrer')
+  }
 
   // Format bounty
   const formatBounty = (bounty: number | null) => {
@@ -258,34 +276,34 @@ function CharacterDetailPage() {
         </button>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => {
-              navigator.clipboard.writeText(window.location.href)
-              alert('Link copied to clipboard!')
-            }}
-            className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 text-sm md:text-base bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors cursor-pointer"
-            title="Copy link to clipboard"
+            onClick={handleCopyLink}
+            className="flex items-center justify-center w-10 h-10 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            title={copyLinkFeedback ? 'Copied!' : 'Copy link to clipboard'}
           >
-            <span>🔗</span>
+            {copyLinkFeedback ? (
+              <span>✓</span>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            )}
           </button>
-          <a
-            href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out ${character.name || 'this character'} from One Piece!`)}&url=${encodeURIComponent(window.location.href)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 text-sm md:text-base bg-gray-800 text-white rounded-md hover:bg-gray-900 transition-colors"
-            title="Share on X (Twitter)"
+          <button
+            onClick={handleShareToTwitter}
+            className="flex items-center justify-center w-10 h-10 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors"
+            title="Share on Twitter"
           >
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
             </svg>
-          </a>
+          </button>
           <a
             href={wikiUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 text-sm md:text-base bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            title="View on Wiki"
           >
-            <span className="hidden sm:inline">View on Wiki</span>
-            <span className="sm:hidden">Wiki</span>
             <span>↗</span>
           </a>
         </div>
