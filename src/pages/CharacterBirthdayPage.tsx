@@ -218,6 +218,29 @@ function CharacterBirthdayPage() {
     return `${monthNames[monthIndex]} ${parseInt(day)}`
   }
 
+  // Calculate distribution of dates by birthday count
+  const getDateCountByBirthdays = () => {
+    if (!birthdaysData) return { 0: 366, 1: 0, 2: 0, 3: 0, '4+': 0 }
+
+    const counts = { 0: 0, 1: 0, 2: 0, 3: 0, '4+': 0 }
+
+    // Count dates with birthdays
+    Object.values(birthdaysData).forEach((chars) => {
+      const count = chars.length
+      if (count === 1) counts[1]++
+      else if (count === 2) counts[2]++
+      else if (count === 3) counts[3]++
+      else if (count >= 4) counts['4+']++
+    })
+
+    // Dates without birthdays
+    counts[0] = datesWithoutBirthdays.length
+
+    return counts
+  }
+
+  const dateCountsByBirthdays = getDateCountByBirthdays()
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -398,23 +421,23 @@ function CharacterBirthdayPage() {
         <div className="flex flex-wrap gap-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gray-100 border border-gray-300 rounded"></div>
-            <span className="text-sm text-gray-600">No birthdays</span>
+            <span className="text-sm text-gray-600">No birthdays ({dateCountsByBirthdays[0]})</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-blue-200 border border-gray-300 rounded"></div>
-            <span className="text-sm text-gray-600">1 character</span>
+            <span className="text-sm text-gray-600">1 character ({dateCountsByBirthdays[1]})</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-blue-400 border border-gray-300 rounded"></div>
-            <span className="text-sm text-gray-600">2 characters</span>
+            <span className="text-sm text-gray-600">2 characters ({dateCountsByBirthdays[2]})</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-blue-600 border border-gray-300 rounded"></div>
-            <span className="text-sm text-gray-600">3 characters</span>
+            <span className="text-sm text-gray-600">3 characters ({dateCountsByBirthdays[3]})</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-blue-800 border border-gray-300 rounded"></div>
-            <span className="text-sm text-gray-600">4+ characters</span>
+            <span className="text-sm text-gray-600">4+ characters ({dateCountsByBirthdays['4+']})</span>
           </div>
         </div>
       </div>
