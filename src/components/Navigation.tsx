@@ -129,7 +129,7 @@ function Navigation() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </MenuButton>
-        <MenuItems className="absolute left-0 mt-2 w-48 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+        <MenuItems className="absolute left-0 mt-2 w-56 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
           <div className="py-1">
             <MenuItem>
               {({ focus }) => (
@@ -148,14 +148,42 @@ function Navigation() {
             <MenuItem>
               {({ focus }) => (
                 <NavLink
-                  to="/analytics/character-timeline"
+                  to="/analytics/character-stats"
                   className={`${
                     focus ? 'bg-blue-100' : ''
                   } block px-4 py-2 text-sm text-gray-700 ${
-                    location.pathname === '/analytics/character-timeline' ? 'bg-blue-50 font-semibold' : ''
+                    location.pathname === '/analytics/character-stats' ? 'bg-blue-50 font-semibold' : ''
                   }`}
                 >
-                  Character Timeline
+                  Character Stats
+                </NavLink>
+              )}
+            </MenuItem>
+            <MenuItem>
+              {({ focus }) => (
+                <NavLink
+                  to="/analytics/character-appearances"
+                  className={`${
+                    focus ? 'bg-blue-100' : ''
+                  } block px-4 py-2 text-sm text-gray-700 ${
+                    location.pathname === '/analytics/character-appearances' ? 'bg-blue-50 font-semibold' : ''
+                  }`}
+                >
+                  Character Appearances
+                </NavLink>
+              )}
+            </MenuItem>
+            <MenuItem>
+              {({ focus }) => (
+                <NavLink
+                  to="/analytics/story-arcs"
+                  className={`${
+                    focus ? 'bg-blue-100' : ''
+                  } block px-4 py-2 text-sm text-gray-700 ${
+                    location.pathname === '/analytics/story-arcs' ? 'bg-blue-50 font-semibold' : ''
+                  }`}
+                >
+                  Story & Arcs
                 </NavLink>
               )}
             </MenuItem>

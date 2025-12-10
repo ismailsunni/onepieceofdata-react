@@ -1,79 +1,29 @@
-import { useQuery } from '@tanstack/react-query'
-import {
-  fetchBountyDistribution,
-  fetchBountyStats,
-  fetchStatusDistribution,
-  fetchTopBounties,
-  fetchAppearanceDistribution,
-  fetchSagaAppearanceDistribution,
-  fetchSagaAppearanceCountDistribution,
-} from '../services/analyticsService'
-import { fetchArcs } from '../services/arcService'
-import BountyDistributionChart from '../components/BountyDistributionChart'
-import CharacterStatusChart from '../components/CharacterStatusChart'
-import TopBountiesChart from '../components/TopBountiesChart'
-import CharacterAppearanceChart from '../components/CharacterAppearanceChart'
-import { SagaAppearanceChart } from '../components/SagaAppearanceChart'
-import { SagaAppearanceCountChart } from '../components/SagaAppearanceCountChart'
-import ArcLengthChart from '../components/ArcLengthChart'
+import { Link } from 'react-router-dom'
 
 function AnalyticsPage() {
-  // Fetch all analytics data using React Query
-  const { data: bountyData = [], isLoading: bountyLoading } = useQuery({
-    queryKey: ['analytics', 'bounty-distribution'],
-    queryFn: fetchBountyDistribution,
-  })
-
-  const { data: bountyStats, isLoading: bountyStatsLoading } = useQuery({
-    queryKey: ['analytics', 'bounty-stats'],
-    queryFn: fetchBountyStats,
-  })
-
-  const { data: statusData = [], isLoading: statusLoading } = useQuery({
-    queryKey: ['analytics', 'status-distribution'],
-    queryFn: fetchStatusDistribution,
-  })
-
-  const { data: topBountiesAll = [], isLoading: topBountiesLoadingAll } = useQuery({
-    queryKey: ['analytics', 'top-bounties', 'all'],
-    queryFn: () => fetchTopBounties(10, false),
-  })
-
-  const { data: topBountiesAlive = [], isLoading: topBountiesLoadingAlive } = useQuery({
-    queryKey: ['analytics', 'top-bounties', 'alive'],
-    queryFn: () => fetchTopBounties(10, true),
-  })
-
-  const { data: appearanceData = [], isLoading: appearanceLoading } = useQuery({
-    queryKey: ['analytics', 'appearance-distribution'],
-    queryFn: fetchAppearanceDistribution,
-  })
-
-  const { data: sagaAppearanceData = [], isLoading: sagaAppearanceLoading } = useQuery({
-    queryKey: ['analytics', 'saga-appearance-distribution'],
-    queryFn: fetchSagaAppearanceDistribution,
-  })
-
-  const { data: sagaAppearanceCountData = [], isLoading: sagaAppearanceCountLoading } = useQuery({
-    queryKey: ['analytics', 'saga-appearance-count-distribution'],
-    queryFn: fetchSagaAppearanceCountDistribution,
-  })
-
-  const { data: arcs = [], isLoading: arcsLoading } = useQuery({
-    queryKey: ['arcs'],
-    queryFn: fetchArcs,
-  })
-
-  const isLoading =
-    bountyLoading ||
-    bountyStatsLoading ||
-    statusLoading ||
-    topBountiesLoadingAll ||
-    topBountiesLoadingAlive ||
-    appearanceLoading ||
-    sagaAppearanceLoading ||
-    sagaAppearanceCountLoading ||
-    arcsLoading
+  const analyticsCategories = [
+    {
+      title: 'Character Statistics',
+      description: 'Analyze character bounties, status distribution, and rankings',
+      path: '/analytics/character-stats',
+      icon: '👥',
+      color: 'bg-blue-50 border-blue-200 hover:border-blue-400',
+    },
+    {
+      title: 'Character Appearances',
+      description: 'Explore character introductions and appearance patterns across sagas',
+      path: '/analytics/character-appearances',
+      icon: '📊',
+      color: 'bg-green-50 border-green-200 hover:border-green-400',
+    },
+    {
+      title: 'Story & Arc Analytics',
+      description: 'Visualize arc lengths and story progression',
+      path: '/analytics/story-arcs',
+      icon: '📖',
+      color: 'bg-purple-50 border-purple-200 hover:border-purple-400',
+    },
+  ]
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -87,93 +37,33 @@ function AnalyticsPage() {
         </p>
       </div>
 
-      {/* Loading State */}
-      {isLoading && (
-        <div className="flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
-        </div>
-      )}
-
-      {/* Charts Grid */}
-      {!isLoading && (
-        <div className="space-y-8">
-          {/* Arc Length Chart - Full Width */}
-          {arcs.length > 0 && (
-            <div className="w-full">
-              <ArcLengthChart arcs={arcs} />
-            </div>
-          )}
-
-          {/* Two Column Layout for Medium Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Bounty Distribution */}
-            {bountyData.length > 0 && (
-              <BountyDistributionChart
-                data={bountyData}
-                stats={bountyStats}
-              />
-            )}
-
-            {/* Character Status */}
-            {statusData.length > 0 && (
-              <CharacterStatusChart data={statusData} />
-            )}
-          </div>
-
-          {/* Two Column Layout Continued */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Character Appearances by Chapter Range */}
-            {appearanceData.length > 0 && (
-              <CharacterAppearanceChart data={appearanceData} />
-            )}
-
-            {/* Top Bounties - Takes remaining space or full column */}
-            {topBountiesAll.length > 0 && (
-              <TopBountiesChart
-                dataAll={topBountiesAll}
-                dataAlive={topBountiesAlive}
-              />
-            )}
-          </div>
-
-          {/* Saga Character Distribution - Full Width */}
-          {sagaAppearanceData.length > 0 && (
-            <div className="w-full">
-              <div className="rounded-lg bg-white p-6 shadow-md">
-                <h2 className="mb-4 text-xl font-semibold text-gray-800">
-                  Characters Introduced per Saga
+      {/* Analytics Categories Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+        {analyticsCategories.map((category) => (
+          <Link
+            key={category.path}
+            to={category.path}
+            className={`${category.color} border-2 rounded-lg p-6 transition-all hover:shadow-lg`}
+          >
+            <div className="flex items-start gap-4">
+              <div className="text-4xl">{category.icon}</div>
+              <div className="flex-1">
+                <h2 className="text-xl font-bold text-gray-800 mb-2">
+                  {category.title}
                 </h2>
-                <p className="mb-4 text-sm text-gray-600">
-                  Distribution of character debuts across all 11 major sagas of One Piece
-                </p>
-                <SagaAppearanceChart data={sagaAppearanceData} />
-              </div>
-            </div>
-          )}
-
-          {/* Saga Appearance Count Distribution - Full Width */}
-          {sagaAppearanceCountData.length > 0 && (
-            <div className="w-full">
-              <SagaAppearanceCountChart data={sagaAppearanceCountData} />
-            </div>
-          )}
-
-          {/* Empty State */}
-          {bountyData.length === 0 &&
-            statusData.length === 0 &&
-            topBountiesAll.length === 0 &&
-            appearanceData.length === 0 &&
-            sagaAppearanceData.length === 0 &&
-            sagaAppearanceCountData.length === 0 &&
-            arcs.length === 0 && (
-              <div className="text-center py-20">
-                <p className="text-gray-500 text-lg">
-                  No analytics data available at the moment.
+                <p className="text-gray-600">
+                  {category.description}
                 </p>
               </div>
-            )}
-        </div>
-      )}
+              <div className="text-gray-400">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
 
       {/* Footer Info */}
       <div className="mt-12 text-center text-sm text-gray-500">

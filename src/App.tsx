@@ -13,6 +13,9 @@ import SagasPage from './pages/SagasPage'
 import VolumeDetailPage from './pages/VolumeDetailPage'
 import VolumesPage from './pages/VolumesPage'
 import AnalyticsPage from './pages/AnalyticsPage'
+import CharacterStatsPage from './pages/CharacterStatsPage'
+import CharacterAppearancesPage from './pages/CharacterAppearancesPage'
+import StoryArcsAnalyticsPage from './pages/StoryArcsAnalyticsPage'
 import CharacterTimelinePage from './pages/CharacterTimelinePage'
 import AboutPage from './pages/AboutPage'
 
@@ -48,6 +51,9 @@ function App() {
             <Route path="/volumes" element={<VolumesPage />} />
             <Route path="/volumes/:number" element={<VolumeDetailPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/analytics/character-stats" element={<CharacterStatsPage />} />
+            <Route path="/analytics/character-appearances" element={<CharacterAppearancesPage />} />
+            <Route path="/analytics/story-arcs" element={<StoryArcsAnalyticsPage />} />
             <Route path="/analytics/character-timeline" element={<CharacterTimelinePage />} />
             <Route path="/about" element={<AboutPage />} />
           </Routes>
