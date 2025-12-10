@@ -241,6 +241,27 @@ function CharacterBirthdayPage() {
 
   const dateCountsByBirthdays = getDateCountByBirthdays()
 
+  // Get today's date in MM-DD format
+  const getTodayKey = (): string => {
+    const today = new Date()
+    const month = String(today.getMonth() + 1).padStart(2, '0')
+    const day = String(today.getDate()).padStart(2, '0')
+    return `${month}-${day}`
+  }
+
+  const todayKey = getTodayKey()
+  const todaysBirthdays = birthdaysData?.[todayKey] || []
+
+  // Check if a date is today
+  const isToday = (year: number, month: number, date: number): boolean => {
+    const today = new Date()
+    return (
+      year === today.getFullYear() &&
+      month === today.getMonth() &&
+      date === today.getDate()
+    )
+  }
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -273,6 +294,30 @@ function CharacterBirthdayPage() {
           Explore when One Piece characters were born throughout the year
         </p>
       </div>
+
+      {/* Today's Birthdays */}
+      {todaysBirthdays.length > 0 && (
+        <div className="mb-6 bg-gradient-to-r from-yellow-50 via-orange-50 to-pink-50 border-2 border-orange-300 rounded-lg p-4 shadow-md">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-2xl">🎂</span>
+            <h2 className="text-lg font-bold text-orange-700">
+              Happy Birthday Today! 🎉
+            </h2>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {todaysBirthdays.map((char) => (
+              <Link
+                key={char.id}
+                to={`/characters/${char.id}`}
+                className="inline-flex items-center gap-1 text-sm font-medium text-gray-700 px-3 py-1.5 bg-white rounded-full hover:bg-orange-50 hover:ring-2 hover:ring-orange-400 transition-all cursor-pointer shadow-sm"
+              >
+                <span>🎈</span>
+                {char.name}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -457,15 +502,19 @@ function CharacterBirthdayPage() {
 
           {/* Calendar days */}
           <div className="grid grid-cols-7 gap-2">
-            {calendarDays.map((day, index) => (
-              <div
-                key={index}
-                className={`
-                  border-2 rounded-lg p-2 transition-all min-h-24
-                  ${day.isCurrentMonth ? 'border-gray-300' : 'border-gray-200'}
-                  ${day.isCurrentMonth ? getIntensityColor(day.birthdayCount) : 'bg-gray-50'}
-                `}
-              >
+            {calendarDays.map((day, index) => {
+              const isTodayDate = isToday(day.year, day.month, day.date)
+              return (
+                <div
+                  key={index}
+                  className={`
+                    rounded-lg p-2 transition-all min-h-24
+                    ${isTodayDate ? 'border-4 border-orange-500 shadow-lg ring-2 ring-orange-300' : 'border-2'}
+                    ${!isTodayDate && day.isCurrentMonth ? 'border-gray-300' : ''}
+                    ${!isTodayDate && !day.isCurrentMonth ? 'border-gray-200' : ''}
+                    ${day.isCurrentMonth ? getIntensityColor(day.birthdayCount) : 'bg-gray-50'}
+                  `}
+                >
                 <div
                   className={`text-sm font-medium mb-1 ${
                     day.isCurrentMonth
@@ -489,8 +538,9 @@ function CharacterBirthdayPage() {
                     ))}
                   </div>
                 )}
-              </div>
-            ))}
+                </div>
+              )
+            })}
           </div>
         </div>
       ) : (
@@ -521,20 +571,24 @@ function CharacterBirthdayPage() {
                   </div>
                   {/* Mini calendar days */}
                   <div className="grid grid-cols-7 gap-1">
-                    {miniDays.map((day, dayIndex) => (
-                      <div
-                        key={dayIndex}
-                        className={`
-                          aspect-square flex items-center justify-center text-xs rounded
-                          ${day.date === 0 ? '' : getIntensityColor(day.birthdayCount)}
-                          ${day.date === 0 ? 'text-transparent' : getDateTextColor(day.birthdayCount)}
-                        `}
-                        onMouseEnter={() => day.birthdayCount > 0 && setHoveredDay(day)}
-                        onMouseLeave={() => setHoveredDay(null)}
-                      >
-                        {day.date || ''}
-                      </div>
-                    ))}
+                    {miniDays.map((day, dayIndex) => {
+                      const isTodayDate = day.date > 0 && isToday(day.year, day.month, day.date)
+                      return (
+                        <div
+                          key={dayIndex}
+                          className={`
+                            aspect-square flex items-center justify-center text-xs rounded
+                            ${isTodayDate ? 'ring-2 ring-orange-500 border-2 border-orange-500 font-bold' : ''}
+                            ${day.date === 0 ? '' : getIntensityColor(day.birthdayCount)}
+                            ${day.date === 0 ? 'text-transparent' : getDateTextColor(day.birthdayCount)}
+                          `}
+                          onMouseEnter={() => day.birthdayCount > 0 && setHoveredDay(day)}
+                          onMouseLeave={() => setHoveredDay(null)}
+                        >
+                          {day.date || ''}
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               )
