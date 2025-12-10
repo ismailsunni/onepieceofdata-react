@@ -23,6 +23,13 @@ function AnalyticsPage() {
       icon: '📖',
       color: 'bg-purple-50 border-purple-200 hover:border-purple-400',
     },
+    {
+      title: 'Birthday Calendar',
+      description: 'Explore character birthdays throughout the year with an interactive calendar',
+      path: '/analytics/birthdays',
+      icon: '🎂',
+      color: 'bg-pink-50 border-pink-200 hover:border-pink-400',
+    },
   ]
 
   return (
@@ -38,7 +45,7 @@ function AnalyticsPage() {
       </div>
 
       {/* Analytics Categories Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-12">
         {analyticsCategories.map((category) => (
           <Link
             key={category.path}

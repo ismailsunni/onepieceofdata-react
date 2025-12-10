@@ -573,3 +573,113 @@ export async function fetchTimeSkipDistribution(): Promise<TimeSkipData> {
     return { preTimeSkipOnly: 0, postTimeSkipOnly: 0, both: 0, total: 0 }
   }
 }
+
+export interface CharacterBirthday {
+  name: string
+  birth_date: string
+}
+
+export interface BirthdaysByDate {
+  [date: string]: CharacterBirthday[] // date format: 'MM-DD'
+}
+
+/**
+ * Get all character birthdays organized by date
+ * Returns a map of date (MM-DD) to array of characters born on that date
+ */
+export async function fetchCharacterBirthdays(): Promise<BirthdaysByDate> {
+  try {
+    if (!supabase) {
+      console.error('Supabase client not initialized')
+      return {}
+    }
+
+    const { data, error } = await supabase
+      .from('character')
+      .select('name, birth_date')
+      .not('birth_date', 'is', null)
+
+    if (error) {
+      console.error('Error fetching birthday data:', error)
+      return {}
+    }
+
+    // Organize birthdays by date (MM-DD format)
+    const birthdayMap: BirthdaysByDate = {}
+
+    data.forEach((char) => {
+      if (!char.birth_date || !char.name) return
+
+      // Parse the birth_date (assuming format like "May 5" or "05-05")
+      const dateKey = parseBirthDate(char.birth_date)
+      if (!dateKey) return
+
+      if (!birthdayMap[dateKey]) {
+        birthdayMap[dateKey] = []
+      }
+
+      birthdayMap[dateKey].push({
+        name: char.name,
+        birth_date: char.birth_date,
+      })
+    })
+
+    return birthdayMap
+  } catch (error) {
+    console.error('Error in fetchCharacterBirthdays:', error)
+    return {}
+  }
+}
+
+/**
+ * Parse birth date string to MM-DD format
+ * Handles various formats like "May 5", "05-05", "5/5", etc.
+ */
+function parseBirthDate(birthDate: string): string | null {
+  try {
+    // Remove any leading/trailing whitespace
+    const cleaned = birthDate.trim()
+
+    // Try to match month name format (e.g., "May 5", "January 1")
+    const monthNames = [
+      'january',
+      'february',
+      'march',
+      'april',
+      'may',
+      'june',
+      'july',
+      'august',
+      'september',
+      'october',
+      'november',
+      'december',
+    ]
+
+    const lowerCleaned = cleaned.toLowerCase()
+    for (let i = 0; i < monthNames.length; i++) {
+      if (lowerCleaned.startsWith(monthNames[i])) {
+        // Extract day number
+        const dayMatch = cleaned.match(/\d+/)
+        if (dayMatch) {
+          const month = String(i + 1).padStart(2, '0')
+          const day = dayMatch[0].padStart(2, '0')
+          return `${month}-${day}`
+        }
+      }
+    }
+
+    // Try numeric formats (MM-DD, M/D, etc.)
+    const numericMatch = cleaned.match(/(\d{1,2})[-\/](\d{1,2})/)
+    if (numericMatch) {
+      const month = numericMatch[1].padStart(2, '0')
+      const day = numericMatch[2].padStart(2, '0')
+      return `${month}-${day}`
+    }
+
+    return null
+  } catch (error) {
+    console.error('Error parsing birth date:', birthDate, error)
+    return null
+  }
+}
