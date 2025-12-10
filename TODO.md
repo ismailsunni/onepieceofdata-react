@@ -33,11 +33,16 @@
   - Feedback section linking to GitHub Issues
   - Professional disclaimer and footer
 - [x] Character birthday calendar
-  - Interactive full-year calendar showing character birthdays
+  - Interactive calendar with month/year view toggle
   - Color-coded dates based on birthday count (1-4+ characters)
-  - Hover tooltips displaying character names
-  - Month navigation for exploring different months
-  - Statistics cards showing total birthdays, unique dates, and busiest day
+  - Month/year navigation with "Today" quick jump button
+  - Birthday greeting section for today's birthdays
+  - Character ages and deceased status (skull icon) displayed
+  - All character names clickable to detail pages
+  - Context menu-style popup in year view for easy access
+  - Today's date highlighted with orange border
+  - Statistics cards with collapsible details (busiest day, empty dates)
+  - Legend showing distribution counts for each birthday category
   - Added to Analytics dashboard with cake emoji icon
 
 ## 🔄 High Priority
@@ -49,7 +54,6 @@
 - [ ] Calendar view of chapter release vs Jump issue
 - [ ] Chapter release prediction feature
 - [ ] Character timeline comparison
-- [x] Character birthday calendar
 - [ ] Character comparison tool
 - [ ] Fix Character Timeline bugs (currently hidden from navigation)
 
@@ -80,4 +84,4 @@
 - Time skip Venn diagram in Character Appearances page
 - Interactive Home page with clickable stat cards and feature cards
 - Enhanced About page with credits, data sources, support, and feedback sections
-- Character birthday calendar with interactive monthly view and hover tooltips
+- Character birthday calendar with month/year views, clickable character links, age display, and context menu-style popups

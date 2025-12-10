@@ -591,66 +591,97 @@ function CharacterBirthdayPage() {
               return (
                 <div
                   key={monthIndex}
-                  className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => {
-                    setSelectedMonth(monthIndex)
-                    setViewMode('month')
-                  }}
+                  className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow relative"
                 >
-                  <h3 className="text-center font-bold text-gray-800 mb-2 text-sm">
-                    {monthName}
-                  </h3>
-                  {/* Mini day headers */}
-                  <div className="grid grid-cols-7 gap-1 mb-1">
-                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
-                      <div key={idx} className="text-center text-xs text-gray-500">
-                        {day}
-                      </div>
-                    ))}
-                  </div>
-                  {/* Mini calendar days */}
-                  <div className="grid grid-cols-7 gap-1">
-                    {miniDays.map((day, dayIndex) => {
-                      const isTodayDate = day.date > 0 && isToday(day.year, day.month, day.date)
-                      return (
-                        <div
-                          key={dayIndex}
-                          className={`
-                            aspect-square flex items-center justify-center text-xs rounded
-                            ${isTodayDate ? 'ring-2 ring-orange-500 border-2 border-orange-500 font-bold' : ''}
-                            ${day.date === 0 ? '' : getIntensityColor(day.birthdayCount)}
-                            ${day.date === 0 ? 'text-transparent' : getDateTextColor(day.birthdayCount)}
-                          `}
-                          onMouseEnter={() => day.birthdayCount > 0 && setHoveredDay(day)}
-                          onMouseLeave={() => setHoveredDay(null)}
-                        >
-                          {day.date || ''}
+                  <div
+                    className="cursor-pointer"
+                    onClick={() => {
+                      setSelectedMonth(monthIndex)
+                      setViewMode('month')
+                    }}
+                  >
+                    <h3 className="text-center font-bold text-gray-800 mb-2 text-sm">
+                      {monthName}
+                    </h3>
+                    {/* Mini day headers */}
+                    <div className="grid grid-cols-7 gap-1 mb-1">
+                      {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
+                        <div key={idx} className="text-center text-xs text-gray-500">
+                          {day}
                         </div>
-                      )
-                    })}
+                      ))}
+                    </div>
+                    {/* Mini calendar days */}
+                    <div className="grid grid-cols-7 gap-1">
+                      {miniDays.map((day, dayIndex) => {
+                        const isTodayDate = day.date > 0 && isToday(day.year, day.month, day.date)
+                        const isHovered = hoveredDay?.month === monthIndex && hoveredDay?.date === day.date && day.birthdayCount > 0
+                        return (
+                          <div
+                            key={dayIndex}
+                            className="relative"
+                            onMouseLeave={(e) => {
+                              e.stopPropagation()
+                              setHoveredDay(null)
+                            }}
+                          >
+                            <div
+                              className={`
+                                aspect-square flex items-center justify-center text-xs rounded
+                                ${isTodayDate ? 'ring-2 ring-orange-500 border-2 border-orange-500 font-bold' : ''}
+                                ${day.date === 0 ? '' : getIntensityColor(day.birthdayCount)}
+                                ${day.date === 0 ? 'text-transparent' : getDateTextColor(day.birthdayCount)}
+                              `}
+                              onMouseEnter={(e) => {
+                                e.stopPropagation()
+                                if (day.birthdayCount > 0) setHoveredDay(day)
+                              }}
+                            >
+                              {day.date || ''}
+                            </div>
+
+                            {/* Popup tooltip for this specific date */}
+                            {isHovered && (
+                              <div
+                                className="absolute left-full top-0 ml-2 bg-white border-2 border-blue-600 rounded-lg shadow-2xl p-3 z-50 min-w-[200px]"
+                              >
+                                <h4 className="text-sm font-bold text-gray-800 mb-2 whitespace-nowrap">
+                                  {monthNames[day.month]} {day.date}
+                                </h4>
+                                <div className="space-y-1 max-h-48 overflow-y-auto">
+                                  {day.characters.map((char) => {
+                                    const hasAge = char.age !== null && char.age !== undefined
+                                    const isDeceased = char.status === 'Deceased'
+                                    return (
+                                      <Link
+                                        key={char.id}
+                                        to={`/characters/${char.id}`}
+                                        className="flex items-center gap-1 text-xs text-gray-700 px-2 py-1.5 bg-blue-50 rounded hover:bg-blue-100 hover:ring-2 hover:ring-blue-500 transition-all cursor-pointer whitespace-nowrap"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <span className="truncate">
+                                          {char.name}
+                                          {hasAge && (
+                                            <span className="text-gray-500 ml-1">({char.age})</span>
+                                          )}
+                                          {isDeceased && (
+                                            <FontAwesomeIcon icon={faSkull} className="text-gray-500 text-[10px] ml-1" />
+                                          )}
+                                        </span>
+                                      </Link>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
                   </div>
                 </div>
               )
             })}
-          </div>
-        </div>
-      )}
-
-      {/* Hover tooltip - Only for Year View */}
-      {viewMode === 'year' && hoveredDay && hoveredDay.birthdayCount > 0 && (
-        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white border-2 border-blue-600 rounded-lg shadow-2xl p-4 max-w-md z-50">
-          <h3 className="text-lg font-bold text-gray-800 mb-2">
-            {monthNames[hoveredDay.month]} {hoveredDay.date}
-          </h3>
-          <p className="text-sm text-gray-600 mb-3">
-            {hoveredDay.birthdayCount} character{hoveredDay.birthdayCount > 1 ? 's' : ''} born on this day:
-          </p>
-          <div className="space-y-1 max-h-48 overflow-y-auto">
-            {hoveredDay.characters.map((char, idx) => (
-              <div key={idx} className="text-sm text-gray-700 py-1 px-2 bg-blue-50 rounded">
-                {char.name}
-              </div>
-            ))}
           </div>
         </div>
       )}
