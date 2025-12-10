@@ -184,6 +184,40 @@ function CharacterBirthdayPage() {
     ? Math.max(...Object.values(birthdaysData).map((chars) => chars.length), 0)
     : 0
 
+  // Find the busiest day(s)
+  const busiestDays = birthdaysData
+    ? Object.entries(birthdaysData)
+        .filter(([_, chars]) => chars.length === maxBirthdaysOnOneDay)
+        .map(([date, chars]) => ({ date, characters: chars }))
+    : []
+
+  // Calculate dates without birthdays
+  const getDatesWithoutBirthdays = () => {
+    if (!birthdaysData) return []
+
+    const allDates: string[] = []
+    // Generate all possible dates (MM-DD format)
+    for (let month = 1; month <= 12; month++) {
+      const daysInMonth = new Date(2024, month, 0).getDate() // Using 2024 (leap year) to get all possible days
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateKey = `${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+        allDates.push(dateKey)
+      }
+    }
+
+    // Filter dates that don't have birthdays
+    return allDates.filter(date => !birthdaysData[date])
+  }
+
+  const datesWithoutBirthdays = getDatesWithoutBirthdays()
+
+  // Format date for display (MM-DD to "Month Day")
+  const formatDate = (dateKey: string): string => {
+    const [month, day] = dateKey.split('-')
+    const monthIndex = parseInt(month) - 1
+    return `${monthNames[monthIndex]} ${parseInt(day)}`
+  }
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -224,15 +258,65 @@ function CharacterBirthdayPage() {
           <p className="text-3xl font-bold text-blue-600">{totalBirthdays}</p>
           <p className="text-sm text-gray-500 mt-1">with known birthdays</p>
         </div>
+
         <div className="bg-white border-2 border-green-200 rounded-lg p-6">
           <h3 className="text-sm font-medium text-gray-600 mb-2">Unique Dates</h3>
           <p className="text-3xl font-bold text-green-600">{datesWithBirthdays}</p>
           <p className="text-sm text-gray-500 mt-1">days with birthdays</p>
+          {datesWithoutBirthdays.length > 0 && (
+            <details className="mt-3 cursor-pointer">
+              <summary className="text-xs font-medium text-gray-600 hover:text-green-700 cursor-pointer select-none">
+                {datesWithoutBirthdays.length} dates without birthdays
+              </summary>
+              <div className="mt-2 max-h-48 overflow-y-auto bg-gray-50 rounded p-2">
+                <div className="grid grid-cols-2 gap-1">
+                  {datesWithoutBirthdays.map((date) => (
+                    <div
+                      key={date}
+                      className="text-xs text-gray-600 px-1 py-0.5"
+                    >
+                      {formatDate(date)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </details>
+          )}
         </div>
+
         <div className="bg-white border-2 border-purple-200 rounded-lg p-6">
           <h3 className="text-sm font-medium text-gray-600 mb-2">Busiest Day</h3>
           <p className="text-3xl font-bold text-purple-600">{maxBirthdaysOnOneDay}</p>
           <p className="text-sm text-gray-500 mt-1">characters in one day</p>
+          {busiestDays.length > 0 && (
+            <details className="mt-3 cursor-pointer">
+              <summary className="text-xs font-medium text-gray-600 hover:text-purple-700 cursor-pointer select-none">
+                {busiestDays.length > 1 ? `${busiestDays.length} dates` : formatDate(busiestDays[0].date)}
+              </summary>
+              <div className="mt-2 max-h-48 overflow-y-auto space-y-2">
+                {busiestDays.map(({ date, characters }) => (
+                  <div key={date} className="bg-purple-50 rounded p-2">
+                    {busiestDays.length > 1 && (
+                      <div className="text-xs font-bold text-purple-700 mb-1">
+                        {formatDate(date)}
+                      </div>
+                    )}
+                    <div className="space-y-1">
+                      {characters.map((char) => (
+                        <Link
+                          key={char.id}
+                          to={`/characters/${char.id}`}
+                          className="block text-xs text-gray-700 px-2 py-1 bg-white rounded hover:bg-purple-100 hover:ring-1 hover:ring-purple-500 transition-all cursor-pointer"
+                        >
+                          {char.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
         </div>
       </div>
 
