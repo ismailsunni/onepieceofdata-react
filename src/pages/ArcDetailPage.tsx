@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowLeft, faLink, faCheck, faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons'
+import { faArrowLeft, faLink, faCheck, faExternalLinkAlt, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons'
 import { faXTwitter } from '@fortawesome/free-brands-svg-icons'
 import { supabase } from '../services/supabase'
 import { Arc } from '../types/arc'
@@ -10,7 +10,7 @@ import { Character } from '../types/character'
 import { Chapter } from '../types/chapter'
 import { fetchArcs } from '../services/arcService'
 
-// Service function to fetch a single arc by ID
+// Service functions
 async function fetchArcById(id: string): Promise<Arc | null> {
   try {
     if (!supabase) {
@@ -36,7 +36,6 @@ async function fetchArcById(id: string): Promise<Arc | null> {
   }
 }
 
-// Service function to fetch chapters in this arc
 async function fetchChaptersByArc(startChapter: number, endChapter: number): Promise<Chapter[]> {
   try {
     if (!supabase) {
@@ -63,7 +62,6 @@ async function fetchChaptersByArc(startChapter: number, endChapter: number): Pro
   }
 }
 
-// Service function to fetch characters that appear in this arc
 async function fetchCharactersByArc(arcId: string): Promise<Character[]> {
   try {
     if (!supabase) {
@@ -71,7 +69,6 @@ async function fetchCharactersByArc(arcId: string): Promise<Character[]> {
       return []
     }
 
-    // Get characters whose arc_list contains this arc
     const { data, error } = await supabase
       .from('character')
       .select('*')
@@ -90,11 +87,49 @@ async function fetchCharactersByArc(arcId: string): Promise<Character[]> {
   }
 }
 
+// ===== REUSABLE COMPONENTS =====
+
+function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={`bg-white rounded-xl shadow-sm border border-gray-200 p-6 ${className}`}>
+      {children}
+    </div>
+  )
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="text-xl font-semibold text-gray-900 mb-4">
+      {children}
+    </h2>
+  )
+}
+
+function Tag({
+  children,
+  to
+}: {
+  children: React.ReactNode
+  to?: string
+}) {
+  const className = 'inline-block px-3 py-1 rounded-full text-sm font-medium transition-colors bg-purple-50 text-purple-700 hover:bg-purple-100'
+
+  if (to) {
+    return (
+      <Link to={to} className={className}>
+        {children}
+      </Link>
+    )
+  }
+
+  return <span className={className}>{children}</span>
+}
+
 function ArcDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [isChaptersExpanded, setIsChaptersExpanded] = useState(false)
-  const [isCharactersExpanded, setIsCharactersExpanded] = useState(false)
+  const [showAllChapters, setShowAllChapters] = useState(false)
+  const [showAllCharacters, setShowAllCharacters] = useState(false)
   const [copyLinkFeedback, setCopyLinkFeedback] = useState(false)
 
   const { data: arc, isLoading: arcLoading } = useQuery({
@@ -115,19 +150,16 @@ function ArcDetailPage() {
     enabled: !!arc,
   })
 
-  // Fetch all arcs for navigation
   const { data: allArcs = [] } = useQuery({
     queryKey: ['arcs'],
     queryFn: fetchArcs,
   })
 
-  // Find previous and next arcs (sorted by start_chapter)
   const sortedArcs = [...allArcs].sort((a, b) => a.start_chapter - b.start_chapter)
   const currentIndex = sortedArcs.findIndex((a) => a.arc_id === arc?.arc_id)
   const previousArc = currentIndex > 0 ? sortedArcs[currentIndex - 1] : null
   const nextArc = currentIndex < sortedArcs.length - 1 ? sortedArcs[currentIndex + 1] : null
 
-  // Handler for random arc
   const handleRandomArc = () => {
     if (allArcs.length > 0) {
       const randomArc = allArcs[Math.floor(Math.random() * allArcs.length)]
@@ -137,9 +169,11 @@ function ArcDetailPage() {
 
   if (arcLoading) {
     return (
-      <main className="container mx-auto px-4 py-8">
-        <div className="flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+      <main className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+          </div>
         </div>
       </main>
     )
@@ -147,30 +181,30 @@ function ArcDetailPage() {
 
   if (!arc) {
     return (
-      <main className="container mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-8 text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">
-            Arc Not Found
-          </h2>
-          <p className="text-gray-600 mb-6">
-            The arc you're looking for doesn't exist or couldn't be loaded.
-          </p>
-          <button
-            onClick={() => navigate('/arcs')}
-            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Back to Arcs
-          </button>
+      <main className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <Card className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              Arc Not Found
+            </h2>
+            <p className="text-gray-600 mb-6">
+              The arc you're looking for doesn't exist or couldn't be loaded.
+            </p>
+            <button
+              onClick={() => navigate('/arcs')}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Back to Arcs
+            </button>
+          </Card>
         </div>
       </main>
     )
   }
 
-  // Calculate arc statistics
   const chapterCount = arc.end_chapter - arc.start_chapter + 1
   const chapterRange = `${arc.start_chapter}-${arc.end_chapter}`
 
-  // Copy link handler
   const handleCopyLink = () => {
     const url = window.location.href
     navigator.clipboard.writeText(url).then(() => {
@@ -179,7 +213,6 @@ function ArcDetailPage() {
     })
   }
 
-  // Share to Twitter handler
   const handleShareToTwitter = () => {
     const text = `Check out the ${arc.title} arc from One Piece!`
     const url = window.location.href
@@ -187,365 +220,322 @@ function ArcDetailPage() {
     window.open(twitterUrl, '_blank', 'noopener,noreferrer')
   }
 
-  // Convert arc ID to wiki URL format
   const wikiName = arc.title.replace(/ /g, '_')
   const wikiUrl = `https://onepiece.fandom.com/wiki/${wikiName}`
 
+  const displayedChapters = showAllChapters ? chapters : chapters.slice(0, 12)
+  const displayedCharacters = showAllCharacters ? characters : characters.slice(0, 12)
+
   return (
-    <main className="container mx-auto px-4 py-8">
-      {/* Breadcrumb Navigation */}
-      <nav className="mb-6 text-sm text-gray-600">
-        <Link to="/" className="hover:text-blue-600 transition-colors">
-          Home
-        </Link>
-        <span className="mx-2">/</span>
-        <Link to="/arcs" className="hover:text-blue-600 transition-colors">
-          Arcs
-        </Link>
-        <span className="mx-2">/</span>
-        <span className="text-gray-800 font-medium">{arc.title}</span>
-      </nav>
+    <main className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
+          <Link to="/" className="hover:text-gray-900 transition-colors">
+            Home
+          </Link>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+          <Link to="/arcs" className="hover:text-gray-900 transition-colors">
+            Arcs
+          </Link>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+          <span className="text-gray-900 font-medium">{arc.title}</span>
+        </nav>
 
-      {/* Header with Navigation */}
-      <div className="flex flex-wrap items-center justify-between mb-6 gap-2">
-        <button
-          onClick={() => navigate('/arcs')}
-          className="flex items-center justify-center w-10 h-10 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors cursor-pointer"
-          title="Back to Arcs"
-        >
-          <FontAwesomeIcon icon={faArrowLeft} className="text-lg" />
-        </button>
-
-        <div className="flex items-center gap-2">
+        {/* Action Buttons Row */}
+        <div className="flex items-center justify-between mb-6">
           <button
-            onClick={() => previousArc && navigate(`/arcs/${previousArc.arc_id}`)}
-            disabled={!previousArc}
-            className="flex items-center gap-1 px-3 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 cursor-pointer"
-            title={previousArc ? `Previous: ${previousArc.title}` : 'No previous arc'}
+            onClick={() => navigate('/arcs')}
+            className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg transition-colors shadow-sm"
+            title="Back to Arcs"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            <span className="hidden md:inline font-medium">Prev</span>
+            <FontAwesomeIcon icon={faArrowLeft} className="w-4 h-4" />
+            <span className="text-sm font-medium">Back</span>
           </button>
 
-          <button
-            onClick={handleRandomArc}
-            className="flex items-center gap-1 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all cursor-pointer"
-            title="Random Arc"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            <span className="hidden md:inline font-medium">Random</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => previousArc && navigate(`/arcs/${previousArc.arc_id}`)}
+              disabled={!previousArc}
+              className="px-3 py-2 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+              title={previousArc ? `Previous: ${previousArc.title}` : 'No previous arc'}
+            >
+              <span className="hidden md:inline text-sm font-medium">Prev</span>
+              <span className="md:hidden text-sm font-medium">‹</span>
+            </button>
 
-          <button
-            onClick={() => nextArc && navigate(`/arcs/${nextArc.arc_id}`)}
-            disabled={!nextArc}
-            className="flex items-center gap-1 px-3 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 cursor-pointer"
-            title={nextArc ? `Next: ${nextArc.title}` : 'No next arc'}
-          >
-            <span className="hidden md:inline font-medium">Next</span>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+            <button
+              onClick={handleRandomArc}
+              className="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all shadow-sm"
+              title="Random Arc"
+            >
+              <span className="text-sm font-medium">Random</span>
+            </button>
+
+            <button
+              onClick={() => nextArc && navigate(`/arcs/${nextArc.arc_id}`)}
+              disabled={!nextArc}
+              className="px-3 py-2 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+              title={nextArc ? `Next: ${nextArc.title}` : 'No next arc'}
+            >
+              <span className="hidden md:inline text-sm font-medium">Next</span>
+              <span className="md:hidden text-sm font-medium">›</span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleCopyLink}
+              className="p-2 bg-white/90 hover:bg-white border border-gray-200 rounded-lg transition-colors shadow-sm"
+              title={copyLinkFeedback ? 'Copied!' : 'Copy link'}
+            >
+              <FontAwesomeIcon icon={copyLinkFeedback ? faCheck : faLink} className="w-4 h-4 text-gray-700" />
+            </button>
+            <button
+              onClick={handleShareToTwitter}
+              className="p-2 bg-white/90 hover:bg-white border border-gray-200 rounded-lg transition-colors shadow-sm"
+              title="Share on Twitter"
+            >
+              <FontAwesomeIcon icon={faXTwitter} className="w-4 h-4 text-gray-700" />
+            </button>
+            <a
+              href={wikiUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 bg-white/90 hover:bg-white border border-gray-200 rounded-lg transition-colors shadow-sm"
+              title="View on Wiki"
+            >
+              <FontAwesomeIcon icon={faExternalLinkAlt} className="w-4 h-4 text-gray-700" />
+            </a>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleCopyLink}
-            className="flex items-center justify-center w-10 h-10 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors cursor-pointer"
-            title={copyLinkFeedback ? 'Copied!' : 'Copy link to clipboard'}
-          >
-            <FontAwesomeIcon icon={copyLinkFeedback ? faCheck : faLink} className="text-lg" />
-          </button>
-          <button
-            onClick={handleShareToTwitter}
-            className="flex items-center justify-center w-10 h-10 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors cursor-pointer"
-            title="Share on Twitter"
-          >
-            <FontAwesomeIcon icon={faXTwitter} className="text-lg" />
-          </button>
-          <a
-            href={wikiUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
-            title="View on Wiki"
-          >
-            <FontAwesomeIcon icon={faExternalLinkAlt} className="text-lg" />
-          </a>
-        </div>
-      </div>
+        {/* Hero Section */}
+        <div className="relative mb-8 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-teal-50 to-green-50 opacity-60"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-white/80 to-transparent"></div>
 
-      {/* Main Content */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        {/* Header Section */}
-        <div className="bg-linear-to-r from-purple-600 to-purple-800 text-white p-8">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h1 className="text-4xl font-bold mb-2">{arc.title}</h1>
-              {arc.japanese_title && (
-                <p className="text-xl opacity-90 mb-1">{arc.japanese_title}</p>
-              )}
-              {arc.romanized_title && (
-                <p className="text-lg opacity-75">{arc.romanized_title}</p>
-              )}
-              {arc.saga && arc.saga_id && (
-                <div className="mt-4">
-                  <Link
-                    to={`/sagas/${arc.saga_id}`}
-                    className="inline-block px-3 py-1 bg-white rounded-full text-sm font-medium text-purple-800 hover:bg-gray-100 transition-colors cursor-pointer"
-                  >
-                    {arc.saga.title} Saga
-                  </Link>
+          <Card className="relative border-2 border-emerald-100">
+            <div className="flex flex-col lg:flex-row items-start justify-between gap-6">
+              <div className="flex-1">
+                <div className="inline-block mb-3">
+                  <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600 mb-2">
+                    {arc.title}
+                  </h1>
+                  <div className="h-1 w-32 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-full"></div>
                 </div>
-              )}
+                {arc.japanese_title && (
+                  <p className="text-lg text-gray-600 mb-1">{arc.japanese_title}</p>
+                )}
+                {arc.romanized_title && (
+                  <p className="text-base text-gray-500 mb-4">{arc.romanized_title}</p>
+                )}
+                {arc.saga && arc.saga_id && (
+                  <div className="flex flex-wrap gap-2">
+                    <Tag to={`/sagas/${arc.saga_id}`}>
+                      {arc.saga.title} Saga
+                    </Tag>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-shrink-0 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-6 border-2 border-emerald-200 shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <div className="text-sm font-semibold text-emerald-800 uppercase tracking-wide">Chapters</div>
+                </div>
+                <div className="text-4xl font-bold text-emerald-900">{chapterCount}</div>
+                <div className="text-xs text-emerald-700 mt-1">{chapterRange}</div>
+              </div>
             </div>
-            <div className="text-right ml-4">
-              <div className="text-sm opacity-90">Chapters</div>
-              <div className="text-3xl font-bold">{chapterCount}</div>
-              <div className="text-sm opacity-75 mt-1">{chapterRange}</div>
-            </div>
-          </div>
+          </Card>
         </div>
 
-        {/* Details Section */}
-        <div className="p-8">
-          {/* Arc Information */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              Arc Information
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <DetailRow label="Arc ID" value={arc.arc_id} />
-              <DetailRow label="Saga" value={arc.saga?.title} />
-              <DetailRow label="Start Chapter" value={arc.start_chapter.toString()} />
-              <DetailRow label="End Chapter" value={arc.end_chapter.toString()} />
-              <DetailRow label="Total Chapters" value={chapterCount.toString()} />
-              <DetailRow label="Chapter Range" value={chapterRange} />
+        {/* Arc Information */}
+        <Card className="mb-8 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-2 mb-5">
+            <div className="p-2 bg-emerald-100 rounded-lg">
+              <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </div>
+            <SectionTitle>Arc Information</SectionTitle>
           </div>
+          <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex justify-between items-start py-2 border-b border-gray-100">
+              <dt className="text-sm font-medium text-gray-500">Arc ID</dt>
+              <dd className="text-sm font-semibold text-gray-900 text-right ml-4">{arc.arc_id}</dd>
+            </div>
+            {arc.saga && (
+              <div className="flex justify-between items-start py-2 border-b border-gray-100">
+                <dt className="text-sm font-medium text-gray-500">Saga</dt>
+                <dd className="text-sm text-right ml-4">
+                  <Link to={`/sagas/${arc.saga_id}`} className="font-semibold text-blue-600 hover:text-blue-800 hover:underline">
+                    {arc.saga.title}
+                  </Link>
+                </dd>
+              </div>
+            )}
+            <div className="flex justify-between items-start py-2 border-b border-gray-100">
+              <dt className="text-sm font-medium text-gray-500">Start Chapter</dt>
+              <dd className="text-sm font-semibold text-gray-900 text-right ml-4">{arc.start_chapter}</dd>
+            </div>
+            <div className="flex justify-between items-start py-2 border-b border-gray-100">
+              <dt className="text-sm font-medium text-gray-500">End Chapter</dt>
+              <dd className="text-sm font-semibold text-gray-900 text-right ml-4">{arc.end_chapter}</dd>
+            </div>
+            <div className="flex justify-between items-start py-2 border-b border-gray-100">
+              <dt className="text-sm font-medium text-gray-500">Total Chapters</dt>
+              <dd className="text-sm font-semibold text-gray-900 text-right ml-4">{chapterCount}</dd>
+            </div>
+            <div className="flex justify-between items-start py-2 border-b border-gray-100">
+              <dt className="text-sm font-medium text-gray-500">Chapter Range</dt>
+              <dd className="text-sm font-semibold text-gray-900 text-right ml-4">{chapterRange}</dd>
+            </div>
+          </dl>
 
-          {/* Description */}
           {arc.description && (
-            <div className="border-t pt-8 mb-8">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                Description
-              </h2>
-              <div className="bg-gray-50 rounded-lg p-6">
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <h3 className="text-base font-semibold text-gray-900 mb-3">Description</h3>
+              <div className="bg-gray-50 rounded-lg p-4">
                 <p className="text-gray-700 leading-relaxed whitespace-pre-line">
                   {arc.description}
                 </p>
               </div>
             </div>
           )}
+        </Card>
 
-          {/* Chapters in this Arc */}
-          {chaptersLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
-          ) : chapters.length > 0 ? (
-            <div className="border-t pt-8 mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-gray-800">
-                  Chapters in This Arc
-                  <span className="ml-2 text-lg text-gray-500">
-                    ({chapters.length})
-                  </span>
-                </h2>
-                {chapters.length > 0 && (
-                  <button
-                    onClick={() => setIsChaptersExpanded(!isChaptersExpanded)}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
-                  >
-                    <span>{isChaptersExpanded ? 'Collapse' : 'Expand'}</span>
-                    <svg
-                      className={`w-4 h-4 transition-transform ${isChaptersExpanded ? 'rotate-180' : ''}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-              {!isChaptersExpanded ? (
-                <div className="bg-gray-50 rounded-lg p-6">
-                  <p className="text-gray-600 text-center">
-                    Click "Expand" to view all {chapters.length} chapters in this arc
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {chapters.map((chapter) => (
-                    <Link
-                      key={chapter.number}
-                      to={`/chapters/${chapter.number}`}
-                      className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer"
-                    >
-                      <div className="flex flex-col h-full">
-                        <div className="flex items-start justify-between mb-2">
-                          <h3 className="font-semibold text-gray-800">
-                            Chapter {chapter.number}
-                          </h3>
-                          {chapter.num_page && (
-                            <span className="ml-2 px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full whitespace-nowrap">
-                              {chapter.num_page} pages
-                            </span>
-                          )}
-                        </div>
-                        {chapter.title && (
-                          <p className="text-sm text-gray-600 mb-2 line-clamp-2">
-                            {chapter.title}
-                          </p>
-                        )}
-                        <div className="flex-1"></div>
-                        {chapter.date && (
-                          <p className="text-xs text-gray-500 mt-2">
-                            {new Date(chapter.date).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric',
-                            })}
-                          </p>
-                        )}
-                        <div className="mt-2 text-xs text-blue-600 font-medium">
-                          View Details →
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : null}
-
-          {/* Characters Introduced */}
-          <div className="border-t pt-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-gray-800">
-                Characters Appearing in This Arc
-                {characters.length > 0 && (
-                  <span className="ml-2 text-lg text-gray-500">
-                    ({characters.length})
-                  </span>
-                )}
-              </h2>
-              {characters.length > 0 && (
-                <button
-                  onClick={() => setIsCharactersExpanded(!isCharactersExpanded)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
-                >
-                  <span>{isCharactersExpanded ? 'Collapse' : 'Expand'}</span>
-                  <svg
-                    className={`w-4 h-4 transition-transform ${isCharactersExpanded ? 'rotate-180' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        {/* Chapters */}
+        {chapters.length > 0 && (
+          <Card className="mb-8 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                   </svg>
-                </button>
-              )}
+                </div>
+                <SectionTitle>
+                  Chapters in This Arc
+                  <span className="ml-2 text-base text-gray-500">({chapters.length})</span>
+                </SectionTitle>
+              </div>
             </div>
 
-            {charactersLoading ? (
-              <div className="flex justify-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-              </div>
-            ) : characters.length > 0 ? (
-              <>
-                {!isCharactersExpanded ? (
-                  <div className="bg-gray-50 rounded-lg p-6">
-                    <p className="text-gray-600 text-center">
-                      Click "Expand" to view all {characters.length} characters appearing in this arc
-                    </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {displayedChapters.map((chapter) => (
+                <Link
+                  key={chapter.number}
+                  to={`/chapters/${chapter.number}`}
+                  className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all"
+                >
+                  <div className="flex flex-col h-full">
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="font-semibold text-gray-800">
+                        Chapter {chapter.number}
+                      </h3>
+                      {chapter.num_page && (
+                        <span className="ml-2 px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full whitespace-nowrap">
+                          {chapter.num_page} pages
+                        </span>
+                      )}
+                    </div>
+                    {chapter.title && (
+                      <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                        {chapter.title}
+                      </p>
+                    )}
+                    <div className="mt-auto text-xs text-blue-600 font-medium">
+                      View Details →
+                    </div>
                   </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {characters.map((character) => (
-                      <Link
-                        key={character.id}
-                        to={`/characters/${character.id}`}
-                        className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all"
-                      >
-                        <div className="flex flex-col h-full">
-                          <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2">
-                            {character.name || 'Unknown'}
-                          </h3>
-                          <div className="flex-1 space-y-1 text-sm text-gray-600">
-                            {character.status && (
-                              <p>
-                                <span className="font-medium">Status:</span>{' '}
-                                {character.status}
-                              </p>
-                            )}
-                            {character.first_appearance && (
-                              <p>
-                                <span className="font-medium">Debut:</span> Ch.{' '}
-                                {character.first_appearance}
-                              </p>
-                            )}
-                            {character.bounty !== null && character.bounty > 0 && (
-                              <p>
-                                <span className="font-medium">Bounty:</span> ₿
-                                {character.bounty.toLocaleString()}
-                              </p>
-                            )}
-                          </div>
-                          <div className="mt-3 text-xs text-blue-600 font-medium">
-                            View Details →
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-500">
-                <p>No characters found appearing in this arc.</p>
-              </div>
+                </Link>
+              ))}
+            </div>
+            {chapters.length > 12 && (
+              <button
+                onClick={() => setShowAllChapters(!showAllChapters)}
+                className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg font-medium transition-colors border border-green-200"
+              >
+                <span>{showAllChapters ? 'Show Less' : `Show ${chapters.length - 12} More Chapters`}</span>
+                <FontAwesomeIcon icon={showAllChapters ? faChevronUp : faChevronDown} className="w-3 h-3" />
+              </button>
             )}
-          </div>
-        </div>
-      </div>
+          </Card>
+        )}
 
-      {/* Share Section */}
-      <div className="mt-8 text-center">
-        <button
-          onClick={() => {
-            navigator.clipboard.writeText(window.location.href)
-            alert('Link copied to clipboard!')
-          }}
-          className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
-        >
-          <span>🔗</span>
-          <span>Share this arc</span>
-        </button>
+        {/* Characters */}
+        {characters.length > 0 && (
+          <Card className="hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <SectionTitle>
+                  Characters Appearing
+                  <span className="ml-2 text-base text-gray-500">({characters.length})</span>
+                </SectionTitle>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {displayedCharacters.map((character) => (
+                <Link
+                  key={character.id}
+                  to={`/characters/${character.id}`}
+                  className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all"
+                >
+                  <div className="flex flex-col h-full">
+                    <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2">
+                      {character.name || 'Unknown'}
+                    </h3>
+                    <div className="flex-1 space-y-1 text-sm text-gray-600">
+                      {character.status && (
+                        <p>
+                          <span className="font-medium">Status:</span> {character.status}
+                        </p>
+                      )}
+                      {character.first_appearance && (
+                        <p>
+                          <span className="font-medium">Debut:</span> Ch. {character.first_appearance}
+                        </p>
+                      )}
+                      {character.bounty !== null && character.bounty > 0 && (
+                        <p>
+                          <span className="font-medium">Bounty:</span> ₿{character.bounty.toLocaleString()}
+                        </p>
+                      )}
+                    </div>
+                    <div className="mt-3 text-xs text-blue-600 font-medium">
+                      View Details →
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            {characters.length > 12 && (
+              <button
+                onClick={() => setShowAllCharacters(!showAllCharacters)}
+                className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg font-medium transition-colors border border-blue-200"
+              >
+                <span>{showAllCharacters ? 'Show Less' : `Show ${characters.length - 12} More Characters`}</span>
+                <FontAwesomeIcon icon={showAllCharacters ? faChevronUp : faChevronDown} className="w-3 h-3" />
+              </button>
+            )}
+          </Card>
+        )}
       </div>
     </main>
-  )
-}
-
-// Helper component for detail rows
-function DetailRow({
-  label,
-  value,
-}: {
-  label: string
-  value: string | null | undefined
-}) {
-  return (
-    <div className="flex justify-between py-2 border-b border-gray-100">
-      <span className="text-gray-600 font-medium">{label}:</span>
-      <span className="text-gray-800">{value || 'N/A'}</span>
-    </div>
   )
 }
 
