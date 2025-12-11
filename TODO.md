@@ -51,17 +51,67 @@
 
 ## 📊 Medium Priority (Data Visualization)
 
-- [ ] Calendar view of chapter release vs Jump issue
+- [x] Calendar view of chapter release vs Jump issue
+  - Compact table layout with narrow columns
+  - 4 visualization themes (Jump Issue, Saga, Arc, Luffy Appears)
+  - Copy/download as image functionality with full table capture
+  - Dynamic legend based on selected theme
 - [ ] Chapter release prediction feature
 - [ ] Character timeline comparison
 - [ ] Character comparison tool
 - [ ] Fix Character Timeline bugs (currently hidden from navigation)
+
+## 🎨 UI/UX Improvements
+
+### 🚀 Priority Quick Wins
+- [ ] Replace alert() with toast notifications library (react-hot-toast or sonner)
+- [ ] Add dark mode toggle with localStorage persistence
+- [ ] Make navigation header sticky on scroll
+- [ ] Add breadcrumb navigation for detail pages
+- [ ] Implement skeleton loaders to replace loading spinners
+- [ ] Add zebra striping to calendar table for better readability
+
+### 📅 Chapter Release Calendar Enhancements
+- [ ] Add year range selector/slider to focus on specific years
+- [ ] Highlight current year column and current week row
+- [ ] Make table headers sticky when scrolling
+- [ ] Add calendar stats summary panel (total breaks, consecutive weeks, etc.)
+- [ ] Add zoom controls for calendar cell size adjustment
+- [ ] Add tooltips on red cells showing break reasons
+- [ ] Add filter to show only breaks/holidays
+
+### 🎨 Design & Components
+- [ ] Create standardized Button component with variants (primary, secondary, outline, ghost)
+- [ ] Add mobile hamburger menu for navigation
+- [ ] Add scroll to top button for long pages
+- [ ] Improve color contrast for text-gray-500 elements (accessibility)
+- [ ] Add tooltips to icons and abbreviations
+- [ ] Add One Piece-inspired color palette (treasure gold accents, pirate red)
+- [ ] Implement consistent heading hierarchy across all pages
+
+### ✨ Advanced Features
+- [ ] Add CSV/JSON export options for tables
+- [ ] Implement smooth page transitions between routes
+- [ ] Add hero section with One Piece themed background to homepage
+- [ ] Add animated number counters for homepage statistics
+- [ ] Add interactive legends (click to toggle visibility)
+- [ ] Implement ripple effects on button clicks
+- [ ] Add card lift animation on hover
+- [ ] Add empty states with helpful messages and actions
+
+### ♿ Accessibility
+- [ ] Ensure all interactive elements are keyboard accessible
+- [ ] Add visible focus indicators for keyboard users
+- [ ] Add proper ARIA labels to icon buttons and dropdowns
+- [ ] Make visualizations color-blind friendly (add patterns/icons)
 
 ## 🎨 Lower Priority (UX Polish)
 
 - [ ] Smoother overall layout
   - Improve transitions and animations
   - Polish responsive design
+- [ ] Add print stylesheet for calendar
+- [ ] Implement offline mode with service worker
 
 ## 📝 Notes
 
@@ -85,3 +135,4 @@
 - Interactive Home page with clickable stat cards and feature cards
 - Enhanced About page with credits, data sources, support, and feedback sections
 - Character birthday calendar with month/year views, clickable character links, age display, and context menu-style popups
+- Chapter Release Calendar with compact layout, 4 visualization themes, and copy-as-image functionality
