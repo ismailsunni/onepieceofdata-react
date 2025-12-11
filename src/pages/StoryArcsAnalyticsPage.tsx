@@ -249,61 +249,6 @@ function StoryArcsAnalyticsPage() {
               </ChartCard>
             )}
 
-            {/* Arc Details Table */}
-            {filteredArcs.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">Arc Details</h3>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead>
-                      <tr className="bg-gray-50">
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Arc Name
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Saga
-                        </th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Start Chapter
-                        </th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          End Chapter
-                        </th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Total Chapters
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredArcs
-                        .sort((a, b) => a.start_chapter - b.start_chapter)
-                        .map((arc) => {
-                          const chapters = arc.end_chapter - arc.start_chapter + 1
-                          return (
-                            <tr key={arc.arc_id} className="hover:bg-gray-50 transition-colors">
-                              <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                                {arc.title}
-                              </td>
-                              <td className="px-4 py-3 text-sm text-gray-600">
-                                {arc.saga?.title || 'Unknown'}
-                              </td>
-                              <td className="px-4 py-3 text-sm text-gray-600 text-right">
-                                {arc.start_chapter}
-                              </td>
-                              <td className="px-4 py-3 text-sm text-gray-600 text-right">
-                                {arc.end_chapter}
-                              </td>
-                              <td className="px-4 py-3 text-sm font-semibold text-purple-600 text-right">
-                                {chapters}
-                              </td>
-                            </tr>
-                          )
-                        })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
           </>
         )}
       </div>
