@@ -229,8 +229,8 @@ function ChapterReleaseCalendarPage() {
       }
       calendarRef.current.style.maxWidth = 'none'
 
-      // Wait for layout to update
-      await new Promise(resolve => setTimeout(resolve, 100))
+      // Wait for layout and UI re-render (controls hide, branding shows)
+      await new Promise(resolve => setTimeout(resolve, 200))
 
       // Capture the calendar element as a canvas with better options
       const canvas = await html2canvas(calendarRef.current, {
@@ -345,67 +345,68 @@ function ChapterReleaseCalendarPage() {
           </p>
         </div>
 
-        {/* Controls Section - Below Chart Title, Above Legend */}
-        <div className="mb-6 flex flex-wrap gap-4 items-end justify-center">
-          <div className="flex flex-col gap-2">
-            <label htmlFor="theme-select" className="text-sm font-semibold" style={{ color: '#374151' }}>
-              Visualization Theme:
-            </label>
-            <select
-              id="theme-select"
-              value={theme}
-              onChange={(e) => setTheme(e.target.value as VisualizationTheme)}
-              className="px-4 py-2 rounded-lg text-sm font-medium focus:outline-none"
-              style={{
-                border: '1px solid #d1d5db',
-                backgroundColor: '#ffffff',
-                color: '#374151',
-              }}
-            >
-              <option value="jump">Jump Issue</option>
-              <option value="saga">Saga</option>
-              <option value="arc">Arc</option>
-              <option value="luffy">Luffy Appears</option>
-            </select>
-          </div>
-
-          {/* Display Mode Toggle */}
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold" style={{ color: '#374151' }}>
-              Display Mode:
-            </label>
-            <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid #d1d5db' }}>
-              <button
-                onClick={() => setIsCompact(false)}
-                className="px-4 py-2 text-sm font-medium transition-colors"
+        {/* Controls Section - Below Chart Title, Above Legend (hidden during image capture) */}
+        {!isCopying && (
+          <div className="mb-6 flex flex-wrap gap-4 items-end justify-center">
+            <div className="flex flex-col gap-2">
+              <label htmlFor="theme-select" className="text-sm font-semibold" style={{ color: '#374151' }}>
+                Visualization Theme:
+              </label>
+              <select
+                id="theme-select"
+                value={theme}
+                onChange={(e) => setTheme(e.target.value as VisualizationTheme)}
+                className="px-4 py-2 rounded-lg text-sm font-medium focus:outline-none"
                 style={{
-                  backgroundColor: !isCompact ? '#2563eb' : '#ffffff',
-                  color: !isCompact ? '#ffffff' : '#374151',
+                  border: '1px solid #d1d5db',
+                  backgroundColor: '#ffffff',
+                  color: '#374151',
                 }}
               >
-                Detail
-              </button>
-              <button
-                onClick={() => setIsCompact(true)}
-                className="px-4 py-2 text-sm font-medium transition-colors"
-                style={{
-                  backgroundColor: isCompact ? '#2563eb' : '#ffffff',
-                  color: isCompact ? '#ffffff' : '#374151',
-                }}
-              >
-                Compact
-              </button>
+                <option value="jump">Jump Issue</option>
+                <option value="saga">Saga</option>
+                <option value="arc">Arc</option>
+                <option value="luffy">Luffy Appears</option>
+              </select>
             </div>
-          </div>
 
-          {/* Copy as Image Button */}
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold" style={{ color: '#374151' }}>
-              Share:
-            </label>
-            <button
-              onClick={handleCopyAsImage}
-              disabled={isCopying}
+            {/* Display Mode Toggle */}
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-semibold" style={{ color: '#374151' }}>
+                Display Mode:
+              </label>
+              <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid #d1d5db' }}>
+                <button
+                  onClick={() => setIsCompact(false)}
+                  className="px-4 py-2 text-sm font-medium transition-colors"
+                  style={{
+                    backgroundColor: !isCompact ? '#2563eb' : '#ffffff',
+                    color: !isCompact ? '#ffffff' : '#374151',
+                  }}
+                >
+                  Detail
+                </button>
+                <button
+                  onClick={() => setIsCompact(true)}
+                  className="px-4 py-2 text-sm font-medium transition-colors"
+                  style={{
+                    backgroundColor: isCompact ? '#2563eb' : '#ffffff',
+                    color: isCompact ? '#ffffff' : '#374151',
+                  }}
+                >
+                  Compact
+                </button>
+              </div>
+            </div>
+
+            {/* Copy as Image Button */}
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-semibold" style={{ color: '#374151' }}>
+                Share:
+              </label>
+              <button
+                onClick={handleCopyAsImage}
+                disabled={isCopying}
               className="px-4 py-2 text-sm font-medium rounded-lg focus:outline-none transition-colors"
               style={{
                 backgroundColor: isCopying ? '#93c5fd' : '#2563eb',
@@ -419,6 +420,16 @@ function ChapterReleaseCalendarPage() {
             </button>
           </div>
         </div>
+        )}
+
+        {/* Branding (shown during image capture) */}
+        {isCopying && (
+          <div className="mb-6 text-center py-3">
+            <p className="text-lg font-semibold" style={{ color: '#2563eb' }}>
+              onepieceofdata.com
+            </p>
+          </div>
+        )}
 
         {/* Legend */}
         <div
