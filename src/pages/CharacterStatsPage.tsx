@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   fetchBountyDistribution,
@@ -9,13 +9,10 @@ import {
 import BountyDistributionChart from '../components/BountyDistributionChart'
 import CharacterStatusChart from '../components/CharacterStatusChart'
 import TopBountiesChart from '../components/TopBountiesChart'
-import { StatCard, ChartCard, FilterButton, SectionHeader } from '../components/analytics'
+import { StatCard, ChartCard } from '../components/analytics'
 import { toPng } from 'html-to-image'
 
-type FilterType = 'all' | 'alive' | 'bounty' | 'fruit-users'
-
 function CharacterStatsPage() {
-  const [activeFilter, setActiveFilter] = useState<FilterType>('all')
   const bountyChartRef = useRef<HTMLDivElement>(null)
   const statusChartRef = useRef<HTMLDivElement>(null)
   const topBountiesChartRef = useRef<HTMLDivElement>(null)
@@ -193,8 +190,8 @@ function CharacterStatsPage() {
               />
             </div>
 
-            {/* Filter Section */}
-            <SectionHeader
+            {/* Filter Section - Temporarily disabled to avoid conflicts with chart controls */}
+            {/* <SectionHeader
               title="Filter by Character Type"
               description="Select a category to focus on specific character groups"
               icon={
@@ -231,7 +228,7 @@ function CharacterStatsPage() {
               >
                 Has Bounty
               </FilterButton>
-            </div>
+            </div> */}
 
             {/* Charts Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
