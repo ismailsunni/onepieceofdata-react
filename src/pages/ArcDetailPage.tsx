@@ -138,13 +138,13 @@ function ArcDetailPage() {
     enabled: !!id,
   })
 
-  const { data: chapters = [], isLoading: chaptersLoading } = useQuery({
+  const { data: chapters = [] } = useQuery({
     queryKey: ['arc-chapters', arc?.start_chapter, arc?.end_chapter],
     queryFn: () => fetchChaptersByArc(arc!.start_chapter, arc!.end_chapter),
     enabled: !!arc,
   })
 
-  const { data: characters = [], isLoading: charactersLoading } = useQuery({
+  const { data: characters = [] } = useQuery({
     queryKey: ['arc-characters', arc?.arc_id],
     queryFn: () => fetchCharactersByArc(arc!.arc_id),
     enabled: !!arc,

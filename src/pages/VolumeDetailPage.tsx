@@ -118,13 +118,13 @@ function VolumeDetailPage() {
     enabled: !!volumeNumber,
   })
 
-  const { data: chapters = [], isLoading: chaptersLoading } = useQuery({
+  const { data: chapters = [] } = useQuery({
     queryKey: ['volume-chapters', volumeNumber],
     queryFn: () => fetchChaptersByVolume(volumeNumber!),
     enabled: !!volumeNumber,
   })
 
-  const { data: characters = [], isLoading: charactersLoading } = useQuery({
+  const { data: characters = [] } = useQuery({
     queryKey: ['volume-characters', volumeNumber],
     queryFn: () => fetchCharactersByVolume(volumeNumber!),
     enabled: !!volumeNumber,

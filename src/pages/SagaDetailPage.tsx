@@ -139,13 +139,13 @@ function SagaDetailPage() {
     enabled: !!id,
   })
 
-  const { data: arcs = [], isLoading: arcsLoading } = useQuery({
+  const { data: arcs = [] } = useQuery({
     queryKey: ['saga-arcs', saga?.saga_id],
     queryFn: () => fetchArcsBySaga(saga!.saga_id),
     enabled: !!saga,
   })
 
-  const { data: characters = [], isLoading: charactersLoading } = useQuery({
+  const { data: characters = [] } = useQuery({
     queryKey: ['saga-characters', saga?.saga_id],
     queryFn: () => fetchCharactersBySaga(saga!.saga_id),
     enabled: !!saga,

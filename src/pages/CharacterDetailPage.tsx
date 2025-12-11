@@ -71,15 +71,15 @@ async function fetchSagas(): Promise<Saga[]> {
 
 // ===== REUSABLE COMPONENTS =====
 
-// InfoRow component for label-value pairs
-function InfoRow({ label, value }: { label: string; value: string | null | undefined | React.ReactNode }) {
-  return (
-    <div className="flex justify-between items-start py-2">
-      <dt className="text-sm text-gray-500 flex-shrink-0">{label}</dt>
-      <dd className="text-sm font-medium text-gray-900 text-right ml-4">{value || 'N/A'}</dd>
-    </div>
-  )
-}
+// InfoRow component for label-value pairs (kept for future use)
+// function InfoRow({ label, value }: { label: string; value: string | null | undefined | React.ReactNode }) {
+//   return (
+//     <div className="flex justify-between items-start py-2">
+//       <dt className="text-sm text-gray-500 flex-shrink-0">{label}</dt>
+//       <dd className="text-sm font-medium text-gray-900 text-right ml-4">{value || 'N/A'}</dd>
+//     </div>
+//   )
+// }
 
 // Tag component for appearance tags
 function Tag({
