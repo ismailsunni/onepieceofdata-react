@@ -1,15 +1,16 @@
 import { Link } from 'react-router-dom'
 import Navigation from './Navigation'
+import Search from './Search'
 
 function Header() {
   return (
     <header className="bg-white border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-16 gap-6">
           {/* Logo/Brand */}
           <Link
             to="/"
-            className="flex items-center gap-3 group"
+            className="flex items-center gap-3 group flex-shrink-0"
           >
             <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-sm">
               <span className="text-white font-bold text-lg">O</span>
@@ -23,6 +24,11 @@ function Header() {
               </span>
             </div>
           </Link>
+
+          {/* Search */}
+          <div className="hidden md:block flex-1 max-w-md">
+            <Search />
+          </div>
 
           {/* Navigation */}
           <div className="flex items-center gap-6">

@@ -71,10 +71,10 @@ function Search() {
             }
           }}
           placeholder="Search..."
-          className="w-full px-4 py-2 pl-10 pr-10 rounded-lg bg-blue-500 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm"
+          className="w-full px-4 py-2 pl-10 pr-10 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
         />
         <svg
-          className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-blue-200"
+          className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -92,7 +92,7 @@ function Search() {
               setQuery('')
               setIsOpen(false)
             }}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-200 hover:text-white transition-colors"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
             aria-label="Clear search"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -126,7 +126,7 @@ function Search() {
                 <button
                   key={character.name}
                   onClick={() => handleNavigate(`/characters/${character.id}`)}
-                  className="w-full px-4 py-2 text-left hover:bg-blue-50 text-sm text-gray-700 flex items-center gap-2 cursor-pointer"
+                  className="w-full px-4 py-2 text-left hover:bg-gray-50 text-sm text-gray-700 flex items-center gap-2 cursor-pointer transition-colors"
                 >
                   <span className="text-lg">👤</span>
                   <span>{character.name}</span>
@@ -145,7 +145,7 @@ function Search() {
                 <button
                   key={saga.saga_id}
                   onClick={() => handleNavigate(`/sagas/${saga.saga_id}`)}
-                  className="w-full px-4 py-2 text-left hover:bg-blue-50 text-sm text-gray-700 flex items-center gap-2 cursor-pointer"
+                  className="w-full px-4 py-2 text-left hover:bg-gray-50 text-sm text-gray-700 flex items-center gap-2 cursor-pointer transition-colors"
                 >
                   <span className="text-lg">🌊</span>
                   <span>{saga.title}</span>
@@ -164,7 +164,7 @@ function Search() {
                 <button
                   key={arc.arc_id}
                   onClick={() => handleNavigate(`/arcs/${arc.arc_id}`)}
-                  className="w-full px-4 py-2 text-left hover:bg-blue-50 text-sm text-gray-700 flex items-center gap-2 cursor-pointer"
+                  className="w-full px-4 py-2 text-left hover:bg-gray-50 text-sm text-gray-700 flex items-center gap-2 cursor-pointer transition-colors"
                 >
                   <span className="text-lg">🎭</span>
                   <span>{arc.title}</span>
@@ -183,7 +183,7 @@ function Search() {
                 <button
                   key={volume.number}
                   onClick={() => handleNavigate(`/volumes/${volume.number}`)}
-                  className="w-full px-4 py-2 text-left hover:bg-blue-50 text-sm text-gray-700 flex items-center gap-2 cursor-pointer"
+                  className="w-full px-4 py-2 text-left hover:bg-gray-50 text-sm text-gray-700 flex items-center gap-2 cursor-pointer transition-colors"
                 >
                   <span className="text-lg">📖</span>
                   <div>
@@ -205,7 +205,7 @@ function Search() {
                 <button
                   key={chapter.number}
                   onClick={() => handleNavigate(`/chapters/${chapter.number}`)}
-                  className="w-full px-4 py-2 text-left hover:bg-blue-50 text-sm text-gray-700 flex items-center gap-2 cursor-pointer"
+                  className="w-full px-4 py-2 text-left hover:bg-gray-50 text-sm text-gray-700 flex items-center gap-2 cursor-pointer transition-colors"
                 >
                   <span className="text-lg">📚</span>
                   <div>
