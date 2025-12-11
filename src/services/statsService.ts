@@ -18,8 +18,6 @@ export async function fetchDatabaseStats(): Promise<DatabaseStats> {
       throw new Error('Supabase not configured')
     }
 
-    console.log('Fetching database stats...')
-
     // Fetch counts from different tables (note: table names are singular)
     const [chaptersResult, volumesResult, arcsResult, sagasResult, charactersResult] =
       await Promise.all([
@@ -31,14 +29,6 @@ export async function fetchDatabaseStats(): Promise<DatabaseStats> {
       ])
 
     // Check for errors in any of the queries
-    console.log('Raw results:', {
-      chapters: chaptersResult,
-      volumes: volumesResult,
-      arcs: arcsResult,
-      sagas: sagasResult,
-      characters: charactersResult,
-    })
-
     if (chaptersResult.error) {
       console.error('Chapter query error:', {
         message: chaptersResult.error.message,

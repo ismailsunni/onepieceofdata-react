@@ -102,11 +102,6 @@ function ChapterReleaseCalendarPage() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 
-  // Debug: Log the first few releases to see the data format
-  if (releases && releases.length > 0) {
-    console.log('Sample releases:', releases.slice(0, 5))
-  }
-
   // Group chapters by year and Jump issue
   const yearData = useMemo(() => {
     if (!releases) return []
@@ -220,7 +215,6 @@ function ChapterReleaseCalendarPage() {
 
     try {
       setIsCopying(true)
-      console.log('Starting image capture...')
 
       // Find the overflow container
       const overflowContainer = calendarRef.current.querySelector('.overflow-x-auto') as HTMLElement
@@ -259,8 +253,6 @@ function ChapterReleaseCalendarPage() {
       }
       calendarRef.current.style.maxWidth = originalMaxWidth || ''
 
-      console.log('Canvas created:', canvas.width, 'x', canvas.height)
-
       // Convert canvas to blob
       const blob = await new Promise<Blob | null>((resolve) => {
         canvas.toBlob((blob) => {
@@ -272,8 +264,6 @@ function ChapterReleaseCalendarPage() {
         throw new Error('Failed to create image blob')
       }
 
-      console.log('Blob created, size:', blob.size)
-
       // Try to copy to clipboard (modern browsers)
       if (navigator.clipboard && ClipboardItem) {
         try {
@@ -282,7 +272,6 @@ function ChapterReleaseCalendarPage() {
               'image/png': blob,
             }),
           ])
-          console.log('Successfully copied to clipboard')
           alert('✅ Calendar copied to clipboard! You can now paste it anywhere.')
           return
         } catch (clipboardError) {
@@ -292,7 +281,6 @@ function ChapterReleaseCalendarPage() {
       }
 
       // Fallback: download as file
-      console.log('Using download fallback')
       const url = canvas.toDataURL('image/png')
       const link = document.createElement('a')
       link.download = `one-piece-calendar-${theme}-${new Date().toISOString().split('T')[0]}.png`
@@ -300,7 +288,6 @@ function ChapterReleaseCalendarPage() {
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-      console.log('Download triggered')
       alert('📥 Calendar downloaded as an image!')
     } catch (error) {
       console.error('Error capturing calendar as image:', error)
