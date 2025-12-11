@@ -57,33 +57,15 @@ function CharacterStatsPage() {
   const stats = useMemo(() => {
     const total = bountyStats?.totalCharacters || 0
     const aliveCount = statusData.find(s => s.status === 'Alive')?.count || 0
-    // For now, set fruit users to 0 - will be calculated from devil_fruit table later
-    const fruitUsers = 0
-
-    // Calculate average bounty (only for characters with bounties)
-    const totalBounty = bountyData.reduce((sum, range) => {
-      // Estimate average bounty for the range
-      return sum + (range.count * (range.alive + range.notAlive))
-    }, 0)
-    const avgBounty = bountyStats?.charactersWithBounty
-      ? Math.round(totalBounty / bountyStats.charactersWithBounty)
-      : 0
+    const charactersWithBounty = bountyStats?.charactersWithBounty || 0
 
     return {
       totalCharacters: total,
-      avgBounty,
+      charactersWithBounty,
       aliveCount,
-      fruitUsers,
     }
-  }, [bountyStats, statusData, bountyData])
+  }, [bountyStats, statusData])
 
-  // Format bounty for display
-  const formatBounty = (bounty: number): string => {
-    if (bounty >= 1000000000) return `₿${(bounty / 1000000000).toFixed(1)}B`
-    if (bounty >= 1000000) return `₿${(bounty / 1000000).toFixed(0)}M`
-    if (bounty >= 1000) return `₿${(bounty / 1000).toFixed(0)}K`
-    return `₿${bounty}`
-  }
 
   // Export chart as PNG
   const handleExportChart = async (chartRef: React.RefObject<HTMLDivElement | null>, chartName: string) => {
@@ -162,8 +144,8 @@ function CharacterStatsPage() {
                 loading={isLoading}
               />
               <StatCard
-                label="Average Bounty"
-                value={formatBounty(stats.avgBounty)}
+                label="Characters with Bounty"
+                value={stats.charactersWithBounty}
                 icon={
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -195,7 +177,7 @@ function CharacterStatsPage() {
               />
               <StatCard
                 label="Devil Fruit Users"
-                value={stats.fruitUsers}
+                value="Coming Soon"
                 icon={
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -248,13 +230,6 @@ function CharacterStatsPage() {
                 count={bountyStats?.charactersWithBounty}
               >
                 Has Bounty
-              </FilterButton>
-              <FilterButton
-                active={activeFilter === 'fruit-users'}
-                onClick={() => setActiveFilter('fruit-users')}
-                count={stats.fruitUsers}
-              >
-                Devil Fruit Users
               </FilterButton>
             </div>
 
@@ -321,7 +296,7 @@ function CharacterStatsPage() {
                   </svg>
                   <h3 className="text-xl font-semibold text-gray-900">Key Insights</h3>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4">
                     <p className="text-sm text-gray-600 mb-1">Bounty Coverage</p>
                     <p className="text-2xl font-bold text-blue-600">{bountyStats.percentage}%</p>
@@ -336,15 +311,6 @@ function CharacterStatsPage() {
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
                       {stats.aliveCount} characters are confirmed alive
-                    </p>
-                  </div>
-                  <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4">
-                    <p className="text-sm text-gray-600 mb-1">Devil Fruit Usage</p>
-                    <p className="text-2xl font-bold text-purple-600">
-                      {bountyStats.totalCharacters ? Math.round((stats.fruitUsers / bountyStats.totalCharacters) * 100) : 0}%
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {stats.fruitUsers} characters have Devil Fruit powers
                     </p>
                   </div>
                 </div>
