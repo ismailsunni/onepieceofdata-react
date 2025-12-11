@@ -93,6 +93,7 @@ function getCellColor(
 function ChapterReleaseCalendarPage() {
   const [theme, setTheme] = useState<VisualizationTheme>('jump')
   const [isCopying, setIsCopying] = useState(false)
+  const [isCompact, setIsCompact] = useState(false)
   const calendarRef = useRef<HTMLDivElement>(null)
 
   const { data: releases, isLoading, error } = useQuery<ChapterRelease[]>({
@@ -353,21 +354,26 @@ function ChapterReleaseCalendarPage() {
             One Piece Chapter Release Calendar
           </h2>
           <p className="text-sm mt-1" style={{ color: '#4b5563' }}>
-            Theme: {theme.charAt(0).toUpperCase() + theme.slice(1)}
+            Theme: {theme.charAt(0).toUpperCase() + theme.slice(1)} | Mode: {isCompact ? 'Compact' : 'Detail'}
           </p>
         </div>
 
         {/* Controls Section - Below Chart Title, Above Legend */}
         <div className="mb-6 flex flex-wrap gap-4 items-end justify-center">
           <div className="flex flex-col gap-2">
-            <label htmlFor="theme-select" className="text-sm font-semibold text-gray-700">
+            <label htmlFor="theme-select" className="text-sm font-semibold" style={{ color: '#374151' }}>
               Visualization Theme:
             </label>
             <select
               id="theme-select"
               value={theme}
               onChange={(e) => setTheme(e.target.value as VisualizationTheme)}
-              className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 rounded-lg text-sm font-medium focus:outline-none"
+              style={{
+                border: '1px solid #d1d5db',
+                backgroundColor: '#ffffff',
+                color: '#374151',
+              }}
             >
               <option value="jump">Jump Issue</option>
               <option value="saga">Saga</option>
@@ -376,15 +382,50 @@ function ChapterReleaseCalendarPage() {
             </select>
           </div>
 
+          {/* Display Mode Toggle */}
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-semibold" style={{ color: '#374151' }}>
+              Display Mode:
+            </label>
+            <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid #d1d5db' }}>
+              <button
+                onClick={() => setIsCompact(false)}
+                className="px-4 py-2 text-sm font-medium transition-colors"
+                style={{
+                  backgroundColor: !isCompact ? '#2563eb' : '#ffffff',
+                  color: !isCompact ? '#ffffff' : '#374151',
+                }}
+              >
+                Detail
+              </button>
+              <button
+                onClick={() => setIsCompact(true)}
+                className="px-4 py-2 text-sm font-medium transition-colors"
+                style={{
+                  backgroundColor: isCompact ? '#2563eb' : '#ffffff',
+                  color: isCompact ? '#ffffff' : '#374151',
+                }}
+              >
+                Compact
+              </button>
+            </div>
+          </div>
+
           {/* Copy as Image Button */}
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-gray-700">
+            <label className="text-sm font-semibold" style={{ color: '#374151' }}>
               Share:
             </label>
             <button
               onClick={handleCopyAsImage}
               disabled={isCopying}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 text-sm font-medium rounded-lg focus:outline-none transition-colors"
+              style={{
+                backgroundColor: isCopying ? '#93c5fd' : '#2563eb',
+                color: '#ffffff',
+                cursor: isCopying ? 'not-allowed' : 'pointer',
+                opacity: isCopying ? 0.5 : 1,
+              }}
               title="Copy calendar as image to clipboard or download"
             >
               {isCopying ? 'Copying...' : '📸 Copy as Image'}
@@ -518,8 +559,8 @@ function ChapterReleaseCalendarPage() {
         )}
 
           <p className="text-xs mt-2" style={{ color: '#6b7280' }}>
-            * Double issues show multiple chapter numbers in the same cell. Click on chapter numbers to view
-            details.
+            * Double issues show multiple chapter numbers in the same cell. {!isCompact && 'Click on chapter numbers to view details.'}
+            {isCompact && 'Compact mode shows only the pattern of releases without chapter numbers.'}
           </p>
         </div>
 
@@ -545,10 +586,10 @@ function ChapterReleaseCalendarPage() {
                   style={{
                     border: '2px solid #d1d5db',
                     backgroundColor: '#dbeafe',
-                    minWidth: '60px',
+                    minWidth: isCompact ? '40px' : '60px',
                   }}
                 >
-                  {yearData.year}
+                  {isCompact ? String(yearData.year).slice(-2) : yearData.year}
                 </th>
               ))}
             </tr>
@@ -583,7 +624,7 @@ function ChapterReleaseCalendarPage() {
                           backgroundColor: '#fca5a5',
                         }}
                       >
-                        <span style={{ fontSize: '0.75rem', color: '#4b5563' }}>-</span>
+                        {!isCompact && <span style={{ fontSize: '0.75rem', color: '#4b5563' }}>-</span>}
                       </td>
                     )
                   }
@@ -604,20 +645,21 @@ function ChapterReleaseCalendarPage() {
                         backgroundColor: cellColor,
                       }}
                     >
-                      {issue.chapters.map((chapter, idx) => (
-                        <span key={chapter.number}>
-                          <Link
-                            to={`/chapters/${chapter.number}`}
-                            className="text-xs font-bold hover:underline cursor-pointer"
-                            style={{ color: '#2563eb' }}
-                          >
-                            {chapter.number}
-                          </Link>
-                          {idx < issue.chapters.length - 1 && (
-                            <span style={{ color: '#4b5563', fontSize: '0.75rem' }}>, </span>
-                          )}
-                        </span>
-                      ))}
+                      {!isCompact &&
+                        issue.chapters.map((chapter, idx) => (
+                          <span key={chapter.number}>
+                            <Link
+                              to={`/chapters/${chapter.number}`}
+                              className="text-xs font-bold hover:underline cursor-pointer"
+                              style={{ color: '#2563eb' }}
+                            >
+                              {chapter.number}
+                            </Link>
+                            {idx < issue.chapters.length - 1 && (
+                              <span style={{ color: '#4b5563', fontSize: '0.75rem' }}>, </span>
+                            )}
+                          </span>
+                        ))}
                     </td>
                   )
                 })}
