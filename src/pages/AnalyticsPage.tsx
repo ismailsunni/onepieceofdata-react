@@ -13,10 +13,10 @@ function AnalyticsPage() {
       }
 
       const [characters, arcs, chapters, sagas] = await Promise.all([
-        supabase.from('characters').select('id', { count: 'exact', head: true }),
-        supabase.from('arcs').select('id', { count: 'exact', head: true }),
-        supabase.from('chapters').select('id', { count: 'exact', head: true }),
-        supabase.from('sagas').select('id', { count: 'exact', head: true }),
+        supabase.from('character').select('id', { count: 'exact', head: true }),
+        supabase.from('arc').select('arc_id', { count: 'exact', head: true }),
+        supabase.from('chapter').select('number', { count: 'exact', head: true }),
+        supabase.from('saga').select('saga_id', { count: 'exact', head: true }),
       ])
 
       return {
