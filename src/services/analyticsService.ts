@@ -700,6 +700,11 @@ export interface ChapterRelease {
   year: number | null
   issue: number | null
   issueEnd: number | null // For double issues like "37-38"
+  arcId: string | null
+  arcTitle: string | null
+  sagaId: string | null
+  sagaTitle: string | null
+  luffyAppears: boolean
 }
 
 /**
@@ -782,19 +787,56 @@ export async function fetchChapterReleases(): Promise<ChapterRelease[]> {
       return []
     }
 
-    const { data, error } = await supabase
-      .from('chapter')
-      .select('number, jump, date')
-      .order('number', { ascending: true })
+    // Fetch chapters, arcs, sagas, and Luffy's data in parallel
+    const [chaptersRes, arcsRes, sagasRes, luffyRes] = await Promise.all([
+      supabase
+        .from('chapter')
+        .select('number, jump, date')
+        .order('number', { ascending: true }),
+      supabase
+        .from('arc')
+        .select('arc_id, title, start_chapter, end_chapter, saga_id'),
+      supabase
+        .from('saga')
+        .select('saga_id, title, start_chapter, end_chapter'),
+      supabase
+        .from('character')
+        .select('chapter_list')
+        .eq('name', 'Monkey D. Luffy')
+        .single(),
+    ])
 
-    if (error) {
-      console.error('Error fetching chapter releases:', error)
+    if (chaptersRes.error) {
+      console.error('Error fetching chapters:', chaptersRes.error)
       return []
     }
 
+    const chapters = chaptersRes.data || []
+    const arcs = arcsRes.data || []
+    const sagas = sagasRes.data || []
+    const luffyChapters = new Set(luffyRes.data?.chapter_list || [])
+
     // Parse and extract year and issue from jump field
-    const releases: ChapterRelease[] = (data || []).map((chapter) => {
+    const releases: ChapterRelease[] = chapters.map((chapter) => {
       const parsed = parseJumpIssue(chapter.jump, chapter.date)
+
+      // Find which arc this chapter belongs to
+      const arc = arcs.find(
+        (a) =>
+          a.start_chapter !== null &&
+          a.end_chapter !== null &&
+          chapter.number >= a.start_chapter &&
+          chapter.number <= a.end_chapter
+      )
+
+      // Find which saga this chapter belongs to
+      const saga = sagas.find(
+        (s) =>
+          s.start_chapter !== null &&
+          s.end_chapter !== null &&
+          chapter.number >= s.start_chapter &&
+          chapter.number <= s.end_chapter
+      )
 
       return {
         number: chapter.number,
@@ -803,6 +845,11 @@ export async function fetchChapterReleases(): Promise<ChapterRelease[]> {
         year: parsed?.year || null,
         issue: parsed?.issue || null,
         issueEnd: parsed?.issueEnd || null,
+        arcId: arc?.arc_id || null,
+        arcTitle: arc?.title || null,
+        sagaId: saga?.saga_id || null,
+        sagaTitle: saga?.title || null,
+        luffyAppears: luffyChapters.has(chapter.number),
       }
     })
 
