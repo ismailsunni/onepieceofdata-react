@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { fetchChapterReleases, ChapterRelease } from '../services/analyticsService'
 import { Link } from 'react-router-dom'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef } from 'react'
+import html2canvas from 'html2canvas'
 
 // Color palette for sagas (matching SagaAppearanceChart)
 const SAGA_COLORS = [
@@ -52,44 +53,47 @@ interface YearData {
 }
 
 // Helper function to get cell background color based on theme
+// Returns hex color for html2canvas compatibility
 function getCellColor(
   chapters: ChapterRelease[],
   theme: VisualizationTheme,
   sagaColorMap: Map<string, string>,
   arcColorMap: Map<string, string>
 ): string {
-  if (chapters.length === 0) return 'bg-red-300'
+  if (chapters.length === 0) return '#fca5a5' // red-300
 
   const firstChapter = chapters[0]
 
   switch (theme) {
     case 'jump':
-      return 'bg-green-500'
+      return '#22c55e' // green-500
 
     case 'saga':
       if (firstChapter.sagaId && sagaColorMap.has(firstChapter.sagaId)) {
         return sagaColorMap.get(firstChapter.sagaId)!
       }
-      return 'bg-gray-400'
+      return '#9ca3af' // gray-400
 
     case 'arc':
       if (firstChapter.arcId && arcColorMap.has(firstChapter.arcId)) {
         return arcColorMap.get(firstChapter.arcId)!
       }
-      return 'bg-gray-400'
+      return '#9ca3af' // gray-400
 
     case 'luffy':
       // Check if Luffy appears in any of the chapters
       const luffyAppears = chapters.some((ch) => ch.luffyAppears)
-      return luffyAppears ? 'bg-yellow-400' : 'bg-gray-300'
+      return luffyAppears ? '#fbbf24' : '#d1d5db' // yellow-400 : gray-300
 
     default:
-      return 'bg-green-500'
+      return '#22c55e' // green-500
   }
 }
 
 function ChapterReleaseCalendarPage() {
   const [theme, setTheme] = useState<VisualizationTheme>('jump')
+  const [isCopying, setIsCopying] = useState(false)
+  const calendarRef = useRef<HTMLDivElement>(null)
 
   const { data: releases, isLoading, error } = useQuery<ChapterRelease[]>({
     queryKey: ['analytics', 'chapter-releases'],
@@ -205,6 +209,106 @@ function ChapterReleaseCalendarPage() {
     return Array.from(issues).sort((a, b) => a - b)
   }, [yearData])
 
+  // Handle copying table as image
+  const handleCopyAsImage = async () => {
+    if (!calendarRef.current) {
+      console.error('Calendar ref is not available')
+      alert('Calendar not ready. Please try again.')
+      return
+    }
+
+    try {
+      setIsCopying(true)
+      console.log('Starting image capture...')
+
+      // Find the overflow container
+      const overflowContainer = calendarRef.current.querySelector('.overflow-x-auto') as HTMLElement
+
+      // Store original styles
+      const originalOverflow = overflowContainer?.style.overflow
+      const originalMaxWidth = calendarRef.current.style.maxWidth
+
+      // Temporarily remove scroll restrictions to capture full width
+      if (overflowContainer) {
+        overflowContainer.style.overflow = 'visible'
+      }
+      calendarRef.current.style.maxWidth = 'none'
+
+      // Wait for layout to update
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      // Capture the calendar element as a canvas with better options
+      const canvas = await html2canvas(calendarRef.current, {
+        backgroundColor: '#ffffff',
+        scale: 2, // Higher quality
+        logging: true, // Enable logging for debugging
+        useCORS: true,
+        allowTaint: true,
+        removeContainer: true,
+        imageTimeout: 0,
+        scrollX: 0,
+        scrollY: 0,
+        width: calendarRef.current.scrollWidth,
+        height: calendarRef.current.scrollHeight,
+      })
+
+      // Restore original styles
+      if (overflowContainer) {
+        overflowContainer.style.overflow = originalOverflow || ''
+      }
+      calendarRef.current.style.maxWidth = originalMaxWidth || ''
+
+      console.log('Canvas created:', canvas.width, 'x', canvas.height)
+
+      // Convert canvas to blob
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob((blob) => {
+          resolve(blob)
+        }, 'image/png')
+      })
+
+      if (!blob) {
+        throw new Error('Failed to create image blob')
+      }
+
+      console.log('Blob created, size:', blob.size)
+
+      // Try to copy to clipboard (modern browsers)
+      if (navigator.clipboard && ClipboardItem) {
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              'image/png': blob,
+            }),
+          ])
+          console.log('Successfully copied to clipboard')
+          alert('✅ Calendar copied to clipboard! You can now paste it anywhere.')
+          return
+        } catch (clipboardError) {
+          console.warn('Clipboard API failed:', clipboardError)
+          // Continue to download fallback
+        }
+      }
+
+      // Fallback: download as file
+      console.log('Using download fallback')
+      const url = canvas.toDataURL('image/png')
+      const link = document.createElement('a')
+      link.download = `one-piece-calendar-${theme}-${new Date().toISOString().split('T')[0]}.png`
+      link.href = url
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      console.log('Download triggered')
+      alert('📥 Calendar downloaded as an image!')
+    } catch (error) {
+      console.error('Error capturing calendar as image:', error)
+      alert(`❌ Failed to copy calendar: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setIsCopying(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -243,39 +347,81 @@ function ChapterReleaseCalendarPage() {
             )}
           </div>
 
-          {/* Theme Selector */}
-          <div className="flex flex-col gap-2">
-            <label htmlFor="theme-select" className="text-sm font-semibold text-gray-700">
-              Visualization Theme:
-            </label>
-            <select
-              id="theme-select"
-              value={theme}
-              onChange={(e) => setTheme(e.target.value as VisualizationTheme)}
-              className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="jump">Jump Issue</option>
-              <option value="saga">Saga</option>
-              <option value="arc">Arc</option>
-              <option value="luffy">Luffy Appears</option>
-            </select>
+          {/* Theme Selector and Copy Button */}
+          <div className="flex gap-4 items-end">
+            <div className="flex flex-col gap-2">
+              <label htmlFor="theme-select" className="text-sm font-semibold text-gray-700">
+                Visualization Theme:
+              </label>
+              <select
+                id="theme-select"
+                value={theme}
+                onChange={(e) => setTheme(e.target.value as VisualizationTheme)}
+                className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="jump">Jump Issue</option>
+                <option value="saga">Saga</option>
+                <option value="arc">Arc</option>
+                <option value="luffy">Luffy Appears</option>
+              </select>
+            </div>
+
+            {/* Copy as Image Button */}
+            <div className="flex flex-col gap-1">
+              <button
+                onClick={handleCopyAsImage}
+                disabled={isCopying}
+                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                title="Copy calendar as image to clipboard or download"
+              >
+                {isCopying ? 'Copying...' : '📸 Copy as Image'}
+              </button>
+              <span className="text-xs text-gray-500 text-center">Share on social media</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Legend:</h3>
+      {/* Calendar Container (for image export) */}
+      <div ref={calendarRef} className="p-6 rounded-lg" style={{ backgroundColor: '#ffffff' }}>
+        {/* Title for exported image */}
+        <div className="mb-4 text-center">
+          <h2 className="text-2xl font-bold" style={{ color: '#1f2937' }}>
+            One Piece Chapter Release Calendar
+          </h2>
+          <p className="text-sm mt-1" style={{ color: '#4b5563' }}>
+            Theme: {theme.charAt(0).toUpperCase() + theme.slice(1)}
+          </p>
+        </div>
+
+        {/* Legend */}
+        <div
+          className="mb-6 p-4 rounded-lg"
+          style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb' }}
+        >
+          <h3 className="text-sm font-semibold mb-3" style={{ color: '#374151' }}>
+            Legend:
+          </h3>
 
         {theme === 'jump' && (
           <div className="flex flex-wrap gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-green-500 border border-gray-300 rounded"></div>
-              <span className="text-sm text-gray-600">Chapter Released</span>
+              <div
+                className="w-8 h-8 rounded"
+                style={{ backgroundColor: '#22c55e', border: '1px solid #d1d5db' }}
+              ></div>
+              <span className="text-sm" style={{ color: '#4b5563' }}>
+                Chapter Released
+              </span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-red-300 border border-gray-300 rounded"></div>
-              <span className="text-sm text-gray-600">No Chapter (Planned Break/Holiday)</span>
+              <div
+                className="w-8 h-8 rounded"
+                style={{ backgroundColor: '#fca5a5', border: '1px solid #d1d5db' }}
+              ></div>
+              <span className="text-sm" style={{ color: '#4b5563' }}>
+                No Chapter (Planned Break/Holiday)
+              </span>
             </div>
           </div>
         )}
@@ -287,16 +433,23 @@ function ChapterReleaseCalendarPage() {
               return (
                 <div key={sagaId} className="flex items-center gap-2">
                   <div
-                    className="w-8 h-8 border border-gray-300 rounded"
-                    style={{ backgroundColor: color }}
+                    className="w-8 h-8 rounded"
+                    style={{ backgroundColor: color, border: '1px solid #d1d5db' }}
                   ></div>
-                  <span className="text-sm text-gray-600">{sagaTitle}</span>
+                  <span className="text-sm" style={{ color: '#4b5563' }}>
+                    {sagaTitle}
+                  </span>
                 </div>
               )
             })}
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-red-300 border border-gray-300 rounded"></div>
-              <span className="text-sm text-gray-600">No Chapter</span>
+              <div
+                className="w-8 h-8 rounded"
+                style={{ backgroundColor: '#fca5a5', border: '1px solid #d1d5db' }}
+              ></div>
+              <span className="text-sm" style={{ color: '#4b5563' }}>
+                No Chapter
+              </span>
             </div>
           </div>
         )}
@@ -308,19 +461,28 @@ function ChapterReleaseCalendarPage() {
               return (
                 <div key={arcId} className="flex items-center gap-2">
                   <div
-                    className="w-8 h-8 border border-gray-300 rounded"
-                    style={{ backgroundColor: color }}
+                    className="w-8 h-8 rounded"
+                    style={{ backgroundColor: color, border: '1px solid #d1d5db' }}
                   ></div>
-                  <span className="text-sm text-gray-600">{arcTitle}</span>
+                  <span className="text-sm" style={{ color: '#4b5563' }}>
+                    {arcTitle}
+                  </span>
                 </div>
               )
             })}
             {arcColorMap.size > 10 && (
-              <span className="text-xs text-gray-500 italic">... and {arcColorMap.size - 10} more arcs</span>
+              <span className="text-xs italic" style={{ color: '#6b7280' }}>
+                ... and {arcColorMap.size - 10} more arcs
+              </span>
             )}
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-red-300 border border-gray-300 rounded"></div>
-              <span className="text-sm text-gray-600">No Chapter</span>
+              <div
+                className="w-8 h-8 rounded"
+                style={{ backgroundColor: '#fca5a5', border: '1px solid #d1d5db' }}
+              ></div>
+              <span className="text-sm" style={{ color: '#4b5563' }}>
+                No Chapter
+              </span>
             </div>
           </div>
         )}
@@ -328,37 +490,65 @@ function ChapterReleaseCalendarPage() {
         {theme === 'luffy' && (
           <div className="flex flex-wrap gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-yellow-400 border border-gray-300 rounded"></div>
-              <span className="text-sm text-gray-600">Luffy Appears</span>
+              <div
+                className="w-8 h-8 rounded"
+                style={{ backgroundColor: '#fbbf24', border: '1px solid #d1d5db' }}
+              ></div>
+              <span className="text-sm" style={{ color: '#4b5563' }}>
+                Luffy Appears
+              </span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gray-300 border border-gray-300 rounded"></div>
-              <span className="text-sm text-gray-600">Luffy Does Not Appear</span>
+              <div
+                className="w-8 h-8 rounded"
+                style={{ backgroundColor: '#d1d5db', border: '1px solid #d1d5db' }}
+              ></div>
+              <span className="text-sm" style={{ color: '#4b5563' }}>
+                Luffy Does Not Appear
+              </span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-red-300 border border-gray-300 rounded"></div>
-              <span className="text-sm text-gray-600">No Chapter</span>
+              <div
+                className="w-8 h-8 rounded"
+                style={{ backgroundColor: '#fca5a5', border: '1px solid #d1d5db' }}
+              ></div>
+              <span className="text-sm" style={{ color: '#4b5563' }}>
+                No Chapter
+              </span>
             </div>
           </div>
         )}
 
-        <p className="text-xs text-gray-500 mt-2">
-          * Double issues show multiple chapter numbers in the same cell. Click on chapter numbers to view details.
-        </p>
-      </div>
+          <p className="text-xs mt-2" style={{ color: '#6b7280' }}>
+            * Double issues show multiple chapter numbers in the same cell. Click on chapter numbers to view
+            details.
+          </p>
+        </div>
 
       {/* Calendar Grid */}
-      <div className="bg-white rounded-lg shadow-lg p-6 overflow-x-auto">
+      <div className="rounded-lg shadow-lg overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
             <tr>
-              <th className="border-2 border-gray-300 bg-gray-100 px-2 py-1 text-xs font-bold sticky left-0 z-10">
+              <th
+                className="px-2 py-1 text-xs font-bold sticky left-0 z-10"
+                style={{
+                  border: '2px solid #d1d5db',
+                  backgroundColor: '#f3f4f6',
+                  minWidth: '60px',
+                }}
+              >
                 Issue
               </th>
               {yearData.map((yearData) => (
                 <th
                   key={yearData.year}
-                  className="border-2 border-gray-300 bg-blue-100 px-2 py-1 text-xs font-bold min-w-[60px]"
+                  className="px-2 py-1 text-xs font-bold"
+                  style={{
+                    border: '2px solid #d1d5db',
+                    backgroundColor: '#dbeafe',
+                    minWidth: '60px',
+                  }}
                 >
                   {yearData.year}
                 </th>
@@ -368,7 +558,13 @@ function ChapterReleaseCalendarPage() {
           <tbody>
             {allIssues.map((issueNum) => (
               <tr key={issueNum}>
-                <td className="border-2 border-gray-300 bg-gray-100 px-2 py-1 text-xs font-semibold text-center sticky left-0 z-10">
+                <td
+                  className="px-2 py-1 text-xs font-semibold text-center sticky left-0 z-10"
+                  style={{
+                    border: '2px solid #d1d5db',
+                    backgroundColor: '#f3f4f6',
+                  }}
+                >
                   {issueNum}
                 </td>
                 {yearData.map((yearData) => {
@@ -383,9 +579,13 @@ function ChapterReleaseCalendarPage() {
                     return (
                       <td
                         key={`${yearData.year}-${issueNum}`}
-                        className="border-2 border-gray-300 bg-red-300 px-1 py-1 text-center"
+                        className="px-1 py-1 text-center"
+                        style={{
+                          border: '2px solid #d1d5db',
+                          backgroundColor: '#fca5a5',
+                        }}
                       >
-                        <span className="text-xs text-gray-600">-</span>
+                        <span style={{ fontSize: '0.75rem', color: '#4b5563' }}>-</span>
                       </td>
                     )
                   }
@@ -395,26 +595,29 @@ function ChapterReleaseCalendarPage() {
 
                   // Get cell color based on theme
                   const cellColor = getCellColor(issue.chapters, theme, sagaColorMap, arcColorMap)
-                  const useTailwindClass = cellColor.startsWith('bg-')
 
                   return (
                     <td
                       key={`${yearData.year}-${issueNum}`}
                       rowSpan={rowSpan}
-                      className={`border-2 border-gray-300 px-1 py-1 text-center align-middle ${
-                        useTailwindClass ? cellColor : ''
-                      }`}
-                      style={!useTailwindClass ? { backgroundColor: cellColor } : undefined}
+                      className="px-1 py-1 text-center align-middle"
+                      style={{
+                        border: '2px solid #d1d5db',
+                        backgroundColor: cellColor,
+                      }}
                     >
                       {issue.chapters.map((chapter, idx) => (
                         <span key={chapter.number}>
                           <Link
                             to={`/chapters/${chapter.number}`}
-                            className="text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                            className="text-xs font-bold hover:underline cursor-pointer"
+                            style={{ color: '#2563eb' }}
                           >
                             {chapter.number}
                           </Link>
-                          {idx < issue.chapters.length - 1 && <span className="text-gray-600 text-xs">, </span>}
+                          {idx < issue.chapters.length - 1 && (
+                            <span style={{ color: '#4b5563', fontSize: '0.75rem' }}>, </span>
+                          )}
                         </span>
                       ))}
                     </td>
@@ -424,6 +627,7 @@ function ChapterReleaseCalendarPage() {
             ))}
           </tbody>
         </table>
+      </div>
       </div>
 
       {/* Footer */}
