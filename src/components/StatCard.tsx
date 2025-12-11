@@ -11,13 +11,13 @@ interface StatCardProps {
 function StatCard({ label, value, icon, loading = false, link }: StatCardProps) {
   const content = (
     <>
-      <div className="text-4xl mb-3">{icon}</div>
+      <div className="text-2xl mb-2">{icon}</div>
       {loading ? (
-        <div className="text-3xl font-bold text-gray-400 mb-2">...</div>
+        <div className="text-2xl font-bold text-gray-400 mb-1">...</div>
       ) : (
-        <div className="text-3xl font-bold text-blue-600 mb-2">{value}</div>
+        <div className="text-2xl font-bold text-gray-900 mb-1">{value}</div>
       )}
-      <div className="text-gray-600 text-sm font-medium">{label}</div>
+      <div className="text-gray-600 text-sm">{label}</div>
     </>
   )
 
@@ -25,18 +25,15 @@ function StatCard({ label, value, icon, loading = false, link }: StatCardProps) 
     return (
       <Link
         to={link}
-        className="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer block"
+        className="bg-white border border-gray-200 rounded-xl p-5 text-center hover:border-gray-300 hover:shadow-sm transition-all duration-200 block group"
       >
         {content}
-        <div className="mt-2 text-xs text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
-          View Details →
-        </div>
       </Link>
     )
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition-shadow duration-300">
+    <div className="bg-white border border-gray-200 rounded-xl p-5 text-center">
       {content}
     </div>
   )

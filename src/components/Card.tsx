@@ -9,29 +9,34 @@ interface CardProps {
 
 function Card({ title, description, icon, link }: CardProps) {
   const content = (
-    <>
-      <div className="text-4xl mb-4">{icon}</div>
-      <h3 className="text-xl font-semibold text-gray-800 mb-2">{title}</h3>
-      <p className="text-gray-600">{description}</p>
-    </>
+    <div className="flex flex-col h-full">
+      <div className="text-3xl mb-4">{icon}</div>
+      <h3 className="text-xl font-semibold text-gray-900 mb-3">{title}</h3>
+      <p className="text-gray-600 leading-relaxed flex-grow">{description}</p>
+      {link && (
+        <div className="mt-6 flex items-center text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+          <span>Explore</span>
+          <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      )}
+    </div>
   )
 
   if (link) {
     return (
       <Link
         to={link}
-        className="bg-white rounded-lg shadow-md p-6 hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer block group"
+        className="bg-white border border-gray-200 rounded-xl p-8 hover:border-gray-300 hover:shadow-md transition-all duration-200 block group"
       >
         {content}
-        <div className="mt-4 text-sm text-blue-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-          Explore →
-        </div>
       </Link>
     )
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-xl transition-shadow duration-300">
+    <div className="bg-white border border-gray-200 rounded-xl p-8">
       {content}
     </div>
   )
