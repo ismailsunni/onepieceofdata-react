@@ -560,7 +560,7 @@ function ChapterReleaseCalendarPage() {
 
           <p className="text-xs mt-2" style={{ color: '#6b7280' }}>
             * Double issues show multiple chapter numbers in the same cell. {!isCompact && 'Click on chapter numbers to view details.'}
-            {isCompact && 'Compact mode shows only the pattern of releases without chapter numbers.'}
+            {isCompact && 'Compact mode shows only the pattern of releases. Hover over cells to see chapter numbers and details.'}
           </p>
         </div>
 
@@ -635,6 +635,26 @@ function ChapterReleaseCalendarPage() {
                   // Get cell color based on theme
                   const cellColor = getCellColor(issue.chapters, theme, sagaColorMap, arcColorMap)
 
+                  // Create tooltip for compact mode
+                  const getTooltipText = () => {
+                    if (!isCompact) return undefined
+
+                    const chapterNumbers = issue.chapters.map((ch) => ch.number).join(', ')
+                    const firstChapter = issue.chapters[0]
+
+                    let additionalInfo = ''
+                    if (theme === 'saga' && firstChapter.sagaTitle) {
+                      additionalInfo = `\nSaga: ${firstChapter.sagaTitle}`
+                    } else if (theme === 'arc' && firstChapter.arcTitle) {
+                      additionalInfo = `\nArc: ${firstChapter.arcTitle}`
+                    } else if (theme === 'luffy') {
+                      const luffyAppears = issue.chapters.some((ch) => ch.luffyAppears)
+                      additionalInfo = `\n${luffyAppears ? 'Luffy appears' : 'Luffy does not appear'}`
+                    }
+
+                    return `Chapter${issue.chapters.length > 1 ? 's' : ''}: ${chapterNumbers}${additionalInfo}`
+                  }
+
                   return (
                     <td
                       key={`${yearData.year}-${issueNum}`}
@@ -643,7 +663,9 @@ function ChapterReleaseCalendarPage() {
                       style={{
                         border: '2px solid #d1d5db',
                         backgroundColor: cellColor,
+                        cursor: isCompact ? 'help' : 'default',
                       }}
+                      title={getTooltipText()}
                     >
                       {!isCompact &&
                         issue.chapters.map((chapter, idx) => (
