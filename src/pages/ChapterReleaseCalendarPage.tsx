@@ -334,52 +334,15 @@ function ChapterReleaseCalendarPage() {
     <main className="container mx-auto px-4 py-8">
       {/* Page Header */}
       <div className="mb-8">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">Chapter Release Calendar</h1>
-            <p className="text-lg text-gray-600">
-              Visualize chapter releases by year and Weekly Shonen Jump issue
-            </p>
-            {releases && (
-              <p className="text-sm text-gray-500 mt-2">
-                Total chapters: {releases.length} | Years: {yearData.length} | Issues: {allIssues.length}
-              </p>
-            )}
-          </div>
-
-          {/* Theme Selector and Copy Button */}
-          <div className="flex gap-4 items-end">
-            <div className="flex flex-col gap-2">
-              <label htmlFor="theme-select" className="text-sm font-semibold text-gray-700">
-                Visualization Theme:
-              </label>
-              <select
-                id="theme-select"
-                value={theme}
-                onChange={(e) => setTheme(e.target.value as VisualizationTheme)}
-                className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="jump">Jump Issue</option>
-                <option value="saga">Saga</option>
-                <option value="arc">Arc</option>
-                <option value="luffy">Luffy Appears</option>
-              </select>
-            </div>
-
-            {/* Copy as Image Button */}
-            <div className="flex flex-col gap-1">
-              <button
-                onClick={handleCopyAsImage}
-                disabled={isCopying}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                title="Copy calendar as image to clipboard or download"
-              >
-                {isCopying ? 'Copying...' : '📸 Copy as Image'}
-              </button>
-              <span className="text-xs text-gray-500 text-center">Share on social media</span>
-            </div>
-          </div>
-        </div>
+        <h1 className="text-4xl font-bold text-gray-800 mb-2">Chapter Release Calendar</h1>
+        <p className="text-lg text-gray-600">
+          Visualize chapter releases by year and Weekly Shonen Jump issue
+        </p>
+        {releases && (
+          <p className="text-sm text-gray-500 mt-2">
+            Total chapters: {releases.length} | Years: {yearData.length} | Issues: {allIssues.length}
+          </p>
+        )}
       </div>
 
       {/* Calendar Container (for image export) */}
@@ -392,6 +355,41 @@ function ChapterReleaseCalendarPage() {
           <p className="text-sm mt-1" style={{ color: '#4b5563' }}>
             Theme: {theme.charAt(0).toUpperCase() + theme.slice(1)}
           </p>
+        </div>
+
+        {/* Controls Section - Below Chart Title, Above Legend */}
+        <div className="mb-6 flex flex-wrap gap-4 items-end justify-center">
+          <div className="flex flex-col gap-2">
+            <label htmlFor="theme-select" className="text-sm font-semibold text-gray-700">
+              Visualization Theme:
+            </label>
+            <select
+              id="theme-select"
+              value={theme}
+              onChange={(e) => setTheme(e.target.value as VisualizationTheme)}
+              className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="jump">Jump Issue</option>
+              <option value="saga">Saga</option>
+              <option value="arc">Arc</option>
+              <option value="luffy">Luffy Appears</option>
+            </select>
+          </div>
+
+          {/* Copy as Image Button */}
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-semibold text-gray-700">
+              Share:
+            </label>
+            <button
+              onClick={handleCopyAsImage}
+              disabled={isCopying}
+              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              title="Copy calendar as image to clipboard or download"
+            >
+              {isCopying ? 'Copying...' : '📸 Copy as Image'}
+            </button>
+          </div>
         </div>
 
         {/* Legend */}
