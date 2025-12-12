@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   fetchBountyDistribution,
@@ -13,6 +13,7 @@ import { StatCard, ChartCard } from '../components/analytics'
 import { toPng } from 'html-to-image'
 
 function CharacterStatsPage() {
+  const [isExporting, setIsExporting] = useState<string | null>(null)
   const bountyChartRef = useRef<HTMLDivElement>(null)
   const statusChartRef = useRef<HTMLDivElement>(null)
   const topBountiesChartRef = useRef<HTMLDivElement>(null)
@@ -68,6 +69,7 @@ function CharacterStatsPage() {
   const handleExportChart = async (chartRef: React.RefObject<HTMLDivElement | null>, chartName: string) => {
     if (chartRef.current) {
       try {
+        setIsExporting(chartName)
         const dataUrl = await toPng(chartRef.current, {
           quality: 0.95,
           pixelRatio: 2,
@@ -78,6 +80,8 @@ function CharacterStatsPage() {
         link.click()
       } catch (error) {
         console.error('Error exporting chart:', error)
+      } finally {
+        setIsExporting(null)
       }
     }
   }
@@ -238,6 +242,7 @@ function CharacterStatsPage() {
                   title="Bounty Distribution by Power Tier"
                   description="Character distribution across bounty ranges showing power tiers"
                   onExport={() => handleExportChart(bountyChartRef, 'bounty-distribution')}
+                  isExporting={isExporting === 'bounty-distribution'}
                 >
                   <div ref={bountyChartRef}>
                     <BountyDistributionChart
@@ -254,6 +259,7 @@ function CharacterStatsPage() {
                   title="Character Status Distribution"
                   description="Distribution of character statuses (Alive, Deceased, Unknown)"
                   onExport={() => handleExportChart(statusChartRef, 'status-distribution')}
+                  isExporting={isExporting === 'status-distribution'}
                 >
                   <div ref={statusChartRef}>
                     <CharacterStatusChart data={statusData} />
@@ -268,6 +274,7 @@ function CharacterStatsPage() {
                 title="Top 10 Highest Bounties"
                 description="Ranking of characters by bounty amount (All vs Living characters)"
                 onExport={() => handleExportChart(topBountiesChartRef, 'top-bounties')}
+                isExporting={isExporting === 'top-bounties'}
                 className="mb-6"
               >
                 <div ref={topBountiesChartRef}>

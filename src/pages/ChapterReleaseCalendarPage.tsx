@@ -382,7 +382,8 @@ function ChapterReleaseCalendarPage() {
           title="Calendar Visualization"
           description="View chapter releases across years and issues"
           onExport={handleExportCalendar}
-          loading={isLoading || isCopying}
+          loading={isLoading}
+          isExporting={isCopying}
           filters={
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Theme Selection */}

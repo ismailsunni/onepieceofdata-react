@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   fetchAppearanceDistribution,
@@ -14,6 +14,7 @@ import { StatCard, ChartCard, SectionHeader } from '../components/analytics'
 import { toPng } from 'html-to-image'
 
 function CharacterAppearancesPage() {
+  const [isExporting, setIsExporting] = useState<string | null>(null)
   const timeSkipChartRef = useRef<HTMLDivElement>(null)
   const appearanceChartRef = useRef<HTMLDivElement>(null)
   const sagaAppearanceChartRef = useRef<HTMLDivElement>(null)
@@ -102,6 +103,7 @@ function CharacterAppearancesPage() {
   const handleExportChart = async (chartRef: React.RefObject<HTMLDivElement | null>, chartName: string) => {
     if (chartRef.current) {
       try {
+        setIsExporting(chartName)
         const dataUrl = await toPng(chartRef.current, {
           quality: 0.95,
           pixelRatio: 2,
@@ -112,6 +114,8 @@ function CharacterAppearancesPage() {
         link.click()
       } catch (error) {
         console.error('Error exporting chart:', error)
+      } finally {
+        setIsExporting(null)
       }
     }
   }
@@ -245,6 +249,7 @@ function CharacterAppearancesPage() {
                   title="Pre-Time Skip vs Post-Time Skip Characters"
                   description="Distribution of characters appearing only pre-time skip, only post-time skip, or in both eras"
                   onExport={() => handleExportChart(timeSkipChartRef, 'time-skip-distribution')}
+                  isExporting={isExporting === 'time-skip-distribution'}
                   className="mb-8"
                 >
                   <div ref={timeSkipChartRef}>
@@ -260,6 +265,7 @@ function CharacterAppearancesPage() {
                 title="Character Appearances by Chapter Count"
                 description="Distribution of how many chapters characters appear in"
                 onExport={() => handleExportChart(appearanceChartRef, 'character-appearances')}
+                isExporting={isExporting === 'character-appearances'}
                 className="mb-8"
               >
                 <div ref={appearanceChartRef}>
@@ -274,6 +280,7 @@ function CharacterAppearancesPage() {
                 title="Characters Introduced per Saga"
                 description="Distribution of character debuts across all major sagas of One Piece"
                 onExport={() => handleExportChart(sagaAppearanceChartRef, 'saga-character-debuts')}
+                isExporting={isExporting === 'saga-character-debuts'}
                 className="mb-8"
               >
                 <div ref={sagaAppearanceChartRef}>
@@ -288,6 +295,7 @@ function CharacterAppearancesPage() {
                 title="Character Saga Participation"
                 description="How many characters appear in 1 saga, 2 sagas, 3 sagas, etc."
                 onExport={() => handleExportChart(sagaCountChartRef, 'saga-participation')}
+                isExporting={isExporting === 'saga-participation'}
                 className="mb-8"
               >
                 <div ref={sagaCountChartRef}>

@@ -7,6 +7,7 @@ import { StatCard, ChartCard, FilterButton, SectionHeader } from '../components/
 import { toPng } from 'html-to-image'
 
 function StoryArcsAnalyticsPage() {
+  const [isExporting, setIsExporting] = useState(false)
   const [selectedSaga, setSelectedSaga] = useState<string | null>(null)
   const chartRef = useRef<HTMLDivElement>(null)
 
@@ -63,6 +64,7 @@ function StoryArcsAnalyticsPage() {
   const handleExportChart = async () => {
     if (chartRef.current) {
       try {
+        setIsExporting(true)
         const dataUrl = await toPng(chartRef.current, {
           quality: 0.95,
           pixelRatio: 2,
@@ -73,6 +75,8 @@ function StoryArcsAnalyticsPage() {
         link.click()
       } catch (error) {
         console.error('Error exporting chart:', error)
+      } finally {
+        setIsExporting(false)
       }
     }
   }
@@ -233,6 +237,7 @@ function StoryArcsAnalyticsPage() {
                 title="Arc and Saga Lengths"
                 description={`Showing ${filteredArcs.length} arc${filteredArcs.length !== 1 ? 's' : ''} ${selectedSaga ? `from ${selectedSaga}` : 'across all sagas'}`}
                 onExport={handleExportChart}
+                isExporting={isExporting}
                 className="mb-8"
               >
                 <div ref={chartRef}>
