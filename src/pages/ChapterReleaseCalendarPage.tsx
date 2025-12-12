@@ -3,6 +3,7 @@ import { fetchChapterReleases, ChapterRelease } from '../services/analyticsServi
 import { Link } from 'react-router-dom'
 import { useMemo, useState, useRef } from 'react'
 import html2canvas from 'html2canvas'
+import { StatCard, FilterButton, SectionHeader } from '../components/analytics'
 
 // Color palette for sagas (matching SagaAppearanceChart)
 const SAGA_COLORS = [
@@ -297,41 +298,139 @@ function ChapterReleaseCalendarPage() {
     }
   }
 
+  // Calculate quick stats
+  const stats = useMemo(() => {
+    if (!releases) return { totalChapters: 0, yearsCount: 0, issuesCount: 0, latestChapter: 0 }
+
+    return {
+      totalChapters: releases.length,
+      yearsCount: yearData.length,
+      issuesCount: allIssues.length,
+      latestChapter: releases.length > 0 ? Math.max(...releases.map(r => r.number)) : 0
+    }
+  }, [releases, yearData.length, allIssues.length])
+
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading chapter release calendar...</p>
+      <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-amber-600"></div>
+          </div>
         </div>
-      </div>
+      </main>
     )
   }
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center text-red-600">
-          <p>Error loading chapter release data. Please try again later.</p>
+      <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center text-red-600">
+            <p>Error loading chapter release data. Please try again later.</p>
+          </div>
         </div>
-      </div>
+      </main>
     )
   }
 
   return (
-    <main className="container mx-auto px-4 py-8">
-      {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-800 mb-2">Chapter Release Calendar</h1>
-        <p className="text-lg text-gray-600">
-          Visualize chapter releases by year and Weekly Shonen Jump issue
-        </p>
-        {releases && (
-          <p className="text-sm text-gray-500 mt-2">
-            Total chapters: {releases.length} | Years: {yearData.length} | Issues: {allIssues.length}
-          </p>
-        )}
-      </div>
+    <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Hero Section */}
+        <div className="relative mb-12 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-50 opacity-60 rounded-2xl"></div>
+          <div className="relative bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-2xl p-8 shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-amber-600 to-yellow-600 rounded-xl flex items-center justify-center shadow-lg">
+                <svg className="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-yellow-600">
+                  Chapter Release Calendar
+                </h1>
+                <p className="text-gray-600 text-lg mt-2">
+                  Visualize chapter releases by year and Weekly Shonen Jump issue
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Stats Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <StatCard
+            label="Total Chapters"
+            value={stats.totalChapters}
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            }
+            color="amber"
+            loading={isLoading}
+          />
+          <StatCard
+            label="Years Covered"
+            value={stats.yearsCount}
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            }
+            color="blue"
+            loading={isLoading}
+          />
+          <StatCard
+            label="Jump Issues"
+            value={stats.issuesCount}
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                />
+              </svg>
+            }
+            color="purple"
+            loading={isLoading}
+          />
+          <StatCard
+            label="Latest Chapter"
+            value={stats.latestChapter}
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                />
+              </svg>
+            }
+            color="green"
+            loading={isLoading}
+          />
+        </div>
 
       {/* Calendar Container (for image export) */}
       <div ref={calendarRef} className="p-6 rounded-lg" style={{ backgroundColor: '#ffffff' }}>
@@ -345,81 +444,94 @@ function ChapterReleaseCalendarPage() {
           </p>
         </div>
 
-        {/* Controls Section - Below Chart Title, Above Legend (hidden during image capture) */}
+        {/* Controls Section */}
         {!isCopying && (
-          <div className="mb-6 flex flex-wrap gap-4 items-end justify-center">
-            <div className="flex flex-col gap-2">
-              <label htmlFor="theme-select" className="text-sm font-semibold" style={{ color: '#374151' }}>
-                Visualization Theme:
-              </label>
-              <select
-                id="theme-select"
-                value={theme}
-                onChange={(e) => setTheme(e.target.value as VisualizationTheme)}
-                className="px-4 py-2 rounded-lg text-sm font-medium focus:outline-none"
-                style={{
-                  border: '1px solid #d1d5db',
-                  backgroundColor: '#ffffff',
-                  color: '#374151',
-                }}
-              >
-                <option value="jump">Jump Issue</option>
-                <option value="saga">Saga</option>
-                <option value="arc">Arc</option>
-                <option value="luffy">Luffy Appears</option>
-              </select>
-            </div>
+          <>
+            <SectionHeader
+              title="Visualization Controls"
+              description="Customize how you view the chapter release calendar"
+              icon={
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+                  />
+                </svg>
+              }
+            />
 
-            {/* Display Mode Toggle */}
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-semibold" style={{ color: '#374151' }}>
-                Display Mode:
-              </label>
-              <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid #d1d5db' }}>
-                <button
-                  onClick={() => setIsCompact(false)}
-                  className="px-4 py-2 text-sm font-medium transition-colors"
-                  style={{
-                    backgroundColor: !isCompact ? '#2563eb' : '#ffffff',
-                    color: !isCompact ? '#ffffff' : '#374151',
-                  }}
-                >
-                  Detail
-                </button>
-                <button
-                  onClick={() => setIsCompact(true)}
-                  className="px-4 py-2 text-sm font-medium transition-colors"
-                  style={{
-                    backgroundColor: isCompact ? '#2563eb' : '#ffffff',
-                    color: isCompact ? '#ffffff' : '#374151',
-                  }}
-                >
-                  Compact
-                </button>
+            <div className="mb-8 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Theme Selection */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Visualization Theme:</label>
+                  <div className="flex flex-wrap gap-2">
+                    <FilterButton
+                      active={theme === 'jump'}
+                      onClick={() => setTheme('jump')}
+                    >
+                      Jump Issue
+                    </FilterButton>
+                    <FilterButton
+                      active={theme === 'saga'}
+                      onClick={() => setTheme('saga')}
+                    >
+                      Saga
+                    </FilterButton>
+                    <FilterButton
+                      active={theme === 'arc'}
+                      onClick={() => setTheme('arc')}
+                    >
+                      Arc
+                    </FilterButton>
+                    <FilterButton
+                      active={theme === 'luffy'}
+                      onClick={() => setTheme('luffy')}
+                    >
+                      Luffy
+                    </FilterButton>
+                  </div>
+                </div>
+
+                {/* Display Mode */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Display Mode:</label>
+                  <div className="flex gap-2">
+                    <FilterButton
+                      active={!isCompact}
+                      onClick={() => setIsCompact(false)}
+                    >
+                      Detail
+                    </FilterButton>
+                    <FilterButton
+                      active={isCompact}
+                      onClick={() => setIsCompact(true)}
+                    >
+                      Compact
+                    </FilterButton>
+                  </div>
+                </div>
+
+                {/* Export */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Export:</label>
+                  <button
+                    onClick={handleCopyAsImage}
+                    disabled={isCopying}
+                    className={`px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm ${
+                      isCopying
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white'
+                    }`}
+                  >
+                    {isCopying ? 'Copying...' : '📸 Copy as Image'}
+                  </button>
+                </div>
               </div>
             </div>
-
-            {/* Copy as Image Button */}
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-semibold" style={{ color: '#374151' }}>
-                Share:
-              </label>
-              <button
-                onClick={handleCopyAsImage}
-                disabled={isCopying}
-              className="px-4 py-2 text-sm font-medium rounded-lg focus:outline-none transition-colors"
-              style={{
-                backgroundColor: isCopying ? '#93c5fd' : '#2563eb',
-                color: '#ffffff',
-                cursor: isCopying ? 'not-allowed' : 'pointer',
-                opacity: isCopying ? 0.5 : 1,
-              }}
-              title="Copy calendar as image to clipboard or download"
-            >
-              {isCopying ? 'Copying...' : '📸 Copy as Image'}
-            </button>
-          </div>
-        </div>
+          </>
         )}
 
         {/* Branding (shown during image capture) */}
@@ -432,13 +544,8 @@ function ChapterReleaseCalendarPage() {
         )}
 
         {/* Legend */}
-        <div
-          className="mb-6 p-4 rounded-lg"
-          style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb' }}
-        >
-          <h3 className="text-sm font-semibold mb-3" style={{ color: '#374151' }}>
-            Legend:
-          </h3>
+        <div className="mb-8 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Legend:</h3>
 
         {theme === 'jump' && (
           <div className="flex flex-wrap gap-4">
@@ -690,12 +797,13 @@ function ChapterReleaseCalendarPage() {
       </div>
       </div>
 
-      {/* Footer */}
-      <div className="mt-8 text-center text-sm text-gray-500">
-        <p>
-          This calendar shows the release schedule of One Piece chapters in Weekly Shonen Jump.
-          Green cells indicate weeks with chapter releases, while red cells show weeks without releases.
-        </p>
+        {/* Footer */}
+        <div className="mt-8 text-center text-sm text-gray-500">
+          <p>
+            This calendar shows the release schedule of One Piece chapters in Weekly Shonen Jump.
+            Green cells indicate weeks with chapter releases, while red cells show weeks without releases.
+          </p>
+        </div>
       </div>
     </main>
   )
