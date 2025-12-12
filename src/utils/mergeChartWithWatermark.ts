@@ -29,7 +29,62 @@ export async function mergeChartWithWatermark(
     // 1. Convert chart HTML to PNG base64
     // We use html-to-image to capture the rendered chart
     // backgroundColor: 'white' ensures we don't have transparent backgrounds if not intended
-    const chartBase64 = await toPng(chartElement, { backgroundColor: 'white' })
+
+    // Find all scrollable elements and temporarily remove overflow constraints
+    const scrollableElements: Array<{ element: HTMLElement; originalOverflow: string; originalMaxWidth: string; originalMaxHeight: string }> = []
+
+    const findAndModifyScrollableElements = (element: HTMLElement) => {
+        const computedStyle = window.getComputedStyle(element)
+        const hasOverflow = element.scrollWidth > element.clientWidth || element.scrollHeight > element.clientHeight
+
+        if (hasOverflow && (computedStyle.overflow === 'auto' || computedStyle.overflow === 'scroll' ||
+            computedStyle.overflowX === 'auto' || computedStyle.overflowX === 'scroll' ||
+            computedStyle.overflowY === 'auto' || computedStyle.overflowY === 'scroll')) {
+            scrollableElements.push({
+                element,
+                originalOverflow: element.style.overflow,
+                originalMaxWidth: element.style.maxWidth,
+                originalMaxHeight: element.style.maxHeight,
+            })
+            // Temporarily remove overflow constraints
+            element.style.overflow = 'visible'
+            element.style.maxWidth = 'none'
+            element.style.maxHeight = 'none'
+        }
+
+        // Recursively check children
+        Array.from(element.children).forEach((child) => {
+            if (child instanceof HTMLElement) {
+                findAndModifyScrollableElements(child)
+            }
+        })
+    }
+
+    findAndModifyScrollableElements(chartElement)
+
+    // Capture options
+    const captureOptions: any = {
+        backgroundColor: 'white',
+        pixelRatio: 2,
+    }
+
+    // If we found scrollable elements, we need to capture with full dimensions
+    if (scrollableElements.length > 0) {
+        // Wait a bit for layout to update
+        await new Promise(resolve => setTimeout(resolve, 100))
+
+        captureOptions.width = chartElement.scrollWidth
+        captureOptions.height = chartElement.scrollHeight
+    }
+
+    const chartBase64 = await toPng(chartElement, captureOptions)
+
+    // Restore original styles
+    scrollableElements.forEach(({ element, originalOverflow, originalMaxWidth, originalMaxHeight }) => {
+        element.style.overflow = originalOverflow
+        element.style.maxWidth = originalMaxWidth
+        element.style.maxHeight = originalMaxHeight
+    })
 
     return new Promise((resolve, reject) => {
         // 2. Create a hidden canvas
