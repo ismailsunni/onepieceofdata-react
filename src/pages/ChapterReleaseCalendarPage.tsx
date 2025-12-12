@@ -2,8 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { fetchChapterReleases, ChapterRelease } from '../services/analyticsService'
 import { Link } from 'react-router-dom'
 import { useMemo, useState, useRef } from 'react'
-import html2canvas from 'html2canvas'
-import { StatCard, FilterButton, SectionHeader } from '../components/analytics'
+import { toPng } from 'html-to-image'
+import { StatCard, FilterButton, ChartCard } from '../components/analytics'
 
 // Color palette for sagas (matching SagaAppearanceChart)
 const SAGA_COLORS = [
@@ -206,93 +206,28 @@ function ChapterReleaseCalendarPage() {
     return Array.from(issues).sort((a, b) => a - b)
   }, [yearData])
 
-  // Handle copying table as image
-  const handleCopyAsImage = async () => {
+  // Handle exporting calendar as image (similar to other charts)
+  const handleExportCalendar = async () => {
     if (!calendarRef.current) {
       console.error('Calendar ref is not available')
-      alert('Calendar not ready. Please try again.')
       return
     }
 
     try {
       setIsCopying(true)
 
-      // Find the overflow container
-      const overflowContainer = calendarRef.current.querySelector('.overflow-x-auto') as HTMLElement
-
-      // Store original styles
-      const originalOverflow = overflowContainer?.style.overflow
-      const originalMaxWidth = calendarRef.current.style.maxWidth
-
-      // Temporarily remove scroll restrictions to capture full width
-      if (overflowContainer) {
-        overflowContainer.style.overflow = 'visible'
-      }
-      calendarRef.current.style.maxWidth = 'none'
-
-      // Wait for layout and UI re-render (controls hide, branding shows)
-      await new Promise(resolve => setTimeout(resolve, 200))
-
-      // Capture the calendar element as a canvas with better options
-      const canvas = await html2canvas(calendarRef.current, {
-        backgroundColor: '#ffffff',
-        scale: 2, // Higher quality
-        logging: true, // Enable logging for debugging
-        useCORS: true,
-        allowTaint: true,
-        removeContainer: true,
-        imageTimeout: 0,
-        scrollX: 0,
-        scrollY: 0,
-        width: calendarRef.current.scrollWidth,
-        height: calendarRef.current.scrollHeight,
+      const dataUrl = await toPng(calendarRef.current, {
+        quality: 0.95,
+        pixelRatio: 2,
       })
 
-      // Restore original styles
-      if (overflowContainer) {
-        overflowContainer.style.overflow = originalOverflow || ''
-      }
-      calendarRef.current.style.maxWidth = originalMaxWidth || ''
-
-      // Convert canvas to blob
-      const blob = await new Promise<Blob | null>((resolve) => {
-        canvas.toBlob((blob) => {
-          resolve(blob)
-        }, 'image/png')
-      })
-
-      if (!blob) {
-        throw new Error('Failed to create image blob')
-      }
-
-      // Try to copy to clipboard (modern browsers)
-      if (navigator.clipboard && ClipboardItem) {
-        try {
-          await navigator.clipboard.write([
-            new ClipboardItem({
-              'image/png': blob,
-            }),
-          ])
-          alert('✅ Calendar copied to clipboard! You can now paste it anywhere.')
-          return
-        } catch (clipboardError) {
-          console.warn('Clipboard API failed:', clipboardError)
-          // Continue to download fallback
-        }
-      }
-
-      // Fallback: download as file
-      const url = canvas.toDataURL('image/png')
       const link = document.createElement('a')
-      link.download = `one-piece-calendar-${theme}-${new Date().toISOString().split('T')[0]}.png`
-      link.href = url
-      document.body.appendChild(link)
+      link.download = `one-piece-calendar-${theme}-${Date.now()}.png`
+      link.href = dataUrl
       link.click()
-      document.body.removeChild(link)
-      alert('📥 Calendar downloaded as an image!')
     } catch (error) {
-      console.error('Error capturing calendar as image:', error)
-      alert(`❌ Failed to copy calendar: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      console.error('Error exporting calendar:', error)
+      alert(`❌ Failed to export calendar: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsCopying(false)
     }
@@ -432,370 +367,321 @@ function ChapterReleaseCalendarPage() {
           />
         </div>
 
-      {/* Calendar Container (for image export) */}
-      <div ref={calendarRef} className="p-6 rounded-lg" style={{ backgroundColor: '#ffffff' }}>
-        {/* Title for exported image */}
-        <div className="mb-4 text-center">
-          <h2 className="text-2xl font-bold" style={{ color: '#1f2937' }}>
-            One Piece Chapter Release Calendar
-          </h2>
-          <p className="text-sm mt-1" style={{ color: '#4b5563' }}>
-            Theme: {theme.charAt(0).toUpperCase() + theme.slice(1)} | Mode: {isCompact ? 'Compact' : 'Detail'}
-          </p>
-        </div>
-
-        {/* Controls Section */}
-        {!isCopying && (
-          <>
-            <SectionHeader
-              title="Visualization Controls"
-              description="Customize how you view the chapter release calendar"
-              icon={
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
-                  />
-                </svg>
-              }
-            />
-
-            <div className="mb-8 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Theme Selection */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Visualization Theme:</label>
-                  <div className="flex flex-wrap gap-2">
-                    <FilterButton
-                      active={theme === 'jump'}
-                      onClick={() => setTheme('jump')}
-                    >
-                      Jump Issue
-                    </FilterButton>
-                    <FilterButton
-                      active={theme === 'saga'}
-                      onClick={() => setTheme('saga')}
-                    >
-                      Saga
-                    </FilterButton>
-                    <FilterButton
-                      active={theme === 'arc'}
-                      onClick={() => setTheme('arc')}
-                    >
-                      Arc
-                    </FilterButton>
-                    <FilterButton
-                      active={theme === 'luffy'}
-                      onClick={() => setTheme('luffy')}
-                    >
-                      Luffy
-                    </FilterButton>
-                  </div>
-                </div>
-
-                {/* Display Mode */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Display Mode:</label>
-                  <div className="flex gap-2">
-                    <FilterButton
-                      active={!isCompact}
-                      onClick={() => setIsCompact(false)}
-                    >
-                      Detail
-                    </FilterButton>
-                    <FilterButton
-                      active={isCompact}
-                      onClick={() => setIsCompact(true)}
-                    >
-                      Compact
-                    </FilterButton>
-                  </div>
-                </div>
-
-                {/* Export */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Export:</label>
-                  <button
-                    onClick={handleCopyAsImage}
-                    disabled={isCopying}
-                    className={`px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm ${
-                      isCopying
-                        ? 'bg-gray-400 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white'
-                    }`}
+        {/* Chart Card */}
+        <ChartCard
+          title="Calendar Visualization"
+          description="View chapter releases across years and issues"
+          onExport={handleExportCalendar}
+          loading={isLoading || isCopying}
+          filters={
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Theme Selection */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Color Theme:</label>
+                <div className="flex flex-wrap gap-2">
+                  <FilterButton
+                    active={theme === 'jump'}
+                    onClick={() => setTheme('jump')}
                   >
-                    {isCopying ? 'Copying...' : '📸 Copy as Image'}
-                  </button>
+                    Jump Issue
+                  </FilterButton>
+                  <FilterButton
+                    active={theme === 'saga'}
+                    onClick={() => setTheme('saga')}
+                  >
+                    Saga
+                  </FilterButton>
+                  <FilterButton
+                    active={theme === 'arc'}
+                    onClick={() => setTheme('arc')}
+                  >
+                    Arc
+                  </FilterButton>
+                  <FilterButton
+                    active={theme === 'luffy'}
+                    onClick={() => setTheme('luffy')}
+                  >
+                    Luffy
+                  </FilterButton>
+                </div>
+              </div>
+
+              {/* Display Mode */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Display Mode:</label>
+                <div className="flex gap-2">
+                  <FilterButton
+                    active={!isCompact}
+                    onClick={() => setIsCompact(false)}
+                  >
+                    Detail
+                  </FilterButton>
+                  <FilterButton
+                    active={isCompact}
+                    onClick={() => setIsCompact(true)}
+                  >
+                    Compact
+                  </FilterButton>
                 </div>
               </div>
             </div>
-          </>
-        )}
+          }
+        >
+          <div ref={calendarRef} className="p-4 bg-white">
+            {/* Legend */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Legend:</h3>
 
-        {/* Branding (shown during image capture) */}
-        {isCopying && (
-          <div className="mb-6 text-center py-3">
-            <p className="text-lg font-semibold" style={{ color: '#2563eb' }}>
-              onepieceofdata.com
-            </p>
-          </div>
-        )}
-
-        {/* Legend */}
-        <div className="mb-8 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Legend:</h3>
-
-        {theme === 'jump' && (
-          <div className="flex flex-wrap gap-4">
-            <div className="flex items-center gap-2">
-              <div
-                className="w-8 h-8 rounded"
-                style={{ backgroundColor: '#22c55e', border: '1px solid #d1d5db' }}
-              ></div>
-              <span className="text-sm" style={{ color: '#4b5563' }}>
-                Chapter Released
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div
-                className="w-8 h-8 rounded"
-                style={{ backgroundColor: '#fca5a5', border: '1px solid #d1d5db' }}
-              ></div>
-              <span className="text-sm" style={{ color: '#4b5563' }}>
-                No Chapter (Planned Break/Holiday)
-              </span>
-            </div>
-          </div>
-        )}
-
-        {theme === 'saga' && (
-          <div className="flex flex-wrap gap-4">
-            {Array.from(sagaColorMap.entries()).map(([sagaId, color]) => {
-              const sagaTitle = releases?.find((r) => r.sagaId === sagaId)?.sagaTitle
-              return (
-                <div key={sagaId} className="flex items-center gap-2">
-                  <div
-                    className="w-8 h-8 rounded"
-                    style={{ backgroundColor: color, border: '1px solid #d1d5db' }}
-                  ></div>
-                  <span className="text-sm" style={{ color: '#4b5563' }}>
-                    {sagaTitle}
-                  </span>
+              {theme === 'jump' && (
+                <div className="flex flex-wrap gap-4">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-8 h-8 rounded"
+                      style={{ backgroundColor: '#22c55e', border: '1px solid #d1d5db' }}
+                    ></div>
+                    <span className="text-sm" style={{ color: '#4b5563' }}>
+                      Chapter Released
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-8 h-8 rounded"
+                      style={{ backgroundColor: '#fca5a5', border: '1px solid #d1d5db' }}
+                    ></div>
+                    <span className="text-sm" style={{ color: '#4b5563' }}>
+                      No Chapter (Planned Break/Holiday)
+                    </span>
+                  </div>
                 </div>
-              )
-            })}
-            <div className="flex items-center gap-2">
-              <div
-                className="w-8 h-8 rounded"
-                style={{ backgroundColor: '#fca5a5', border: '1px solid #d1d5db' }}
-              ></div>
-              <span className="text-sm" style={{ color: '#4b5563' }}>
-                No Chapter
-              </span>
-            </div>
-          </div>
-        )}
+              )}
 
-        {theme === 'arc' && (
-          <div className="flex flex-wrap gap-4">
-            {Array.from(arcColorMap.entries()).slice(0, 10).map(([arcId, color]) => {
-              const arcTitle = releases?.find((r) => r.arcId === arcId)?.arcTitle
-              return (
-                <div key={arcId} className="flex items-center gap-2">
-                  <div
-                    className="w-8 h-8 rounded"
-                    style={{ backgroundColor: color, border: '1px solid #d1d5db' }}
-                  ></div>
-                  <span className="text-sm" style={{ color: '#4b5563' }}>
-                    {arcTitle}
-                  </span>
-                </div>
-              )
-            })}
-            {arcColorMap.size > 10 && (
-              <span className="text-xs italic" style={{ color: '#6b7280' }}>
-                ... and {arcColorMap.size - 10} more arcs
-              </span>
-            )}
-            <div className="flex items-center gap-2">
-              <div
-                className="w-8 h-8 rounded"
-                style={{ backgroundColor: '#fca5a5', border: '1px solid #d1d5db' }}
-              ></div>
-              <span className="text-sm" style={{ color: '#4b5563' }}>
-                No Chapter
-              </span>
-            </div>
-          </div>
-        )}
-
-        {theme === 'luffy' && (
-          <div className="flex flex-wrap gap-4">
-            <div className="flex items-center gap-2">
-              <div
-                className="w-8 h-8 rounded"
-                style={{ backgroundColor: '#fbbf24', border: '1px solid #d1d5db' }}
-              ></div>
-              <span className="text-sm" style={{ color: '#4b5563' }}>
-                Luffy Appears
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div
-                className="w-8 h-8 rounded"
-                style={{ backgroundColor: '#d1d5db', border: '1px solid #d1d5db' }}
-              ></div>
-              <span className="text-sm" style={{ color: '#4b5563' }}>
-                Luffy Does Not Appear
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div
-                className="w-8 h-8 rounded"
-                style={{ backgroundColor: '#fca5a5', border: '1px solid #d1d5db' }}
-              ></div>
-              <span className="text-sm" style={{ color: '#4b5563' }}>
-                No Chapter
-              </span>
-            </div>
-          </div>
-        )}
-
-          <p className="text-xs mt-2" style={{ color: '#6b7280' }}>
-            * Double issues show multiple chapter numbers in the same cell. {!isCompact && 'Click on chapter numbers to view details.'}
-            {isCompact && 'Compact mode shows only the pattern of releases. Hover over cells to see chapter numbers and details.'}
-          </p>
-        </div>
-
-      {/* Calendar Grid */}
-      <div className="rounded-lg shadow-lg overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr>
-              <th
-                className="px-2 py-1 text-xs font-bold sticky left-0 z-10"
-                style={{
-                  border: '2px solid #d1d5db',
-                  backgroundColor: '#f3f4f6',
-                  minWidth: '60px',
-                }}
-              >
-                Issue
-              </th>
-              {yearData.map((yearData) => (
-                <th
-                  key={yearData.year}
-                  className="px-2 py-1 text-xs font-bold"
-                  style={{
-                    border: '2px solid #d1d5db',
-                    backgroundColor: '#dbeafe',
-                    minWidth: isCompact ? '40px' : '60px',
-                  }}
-                >
-                  {isCompact ? String(yearData.year).slice(-2) : yearData.year}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {allIssues.map((issueNum) => (
-              <tr key={issueNum}>
-                <td
-                  className="px-2 py-1 text-xs font-semibold text-center sticky left-0 z-10"
-                  style={{
-                    border: '2px solid #d1d5db',
-                    backgroundColor: '#f3f4f6',
-                  }}
-                >
-                  {issueNum}
-                </td>
-                {yearData.map((yearData) => {
-                  // Skip rendering if this issue is part of a double issue span
-                  if (yearData.doubleIssueSpans.has(issueNum)) {
-                    return null
-                  }
-
-                  const issue = yearData.issues.get(issueNum)
-                  if (!issue) {
-                    // No chapter this issue
+              {theme === 'saga' && (
+                <div className="flex flex-wrap gap-4">
+                  {Array.from(sagaColorMap.entries()).map(([sagaId, color]) => {
+                    const sagaTitle = releases?.find((r) => r.sagaId === sagaId)?.sagaTitle
                     return (
-                      <td
-                        key={`${yearData.year}-${issueNum}`}
-                        className="px-1 py-1 text-center"
-                        style={{
-                          border: '2px solid #d1d5db',
-                          backgroundColor: '#fca5a5',
-                        }}
-                      >
-                        {!isCompact && <span style={{ fontSize: '0.75rem', color: '#4b5563' }}>-</span>}
-                      </td>
+                      <div key={sagaId} className="flex items-center gap-2">
+                        <div
+                          className="w-8 h-8 rounded"
+                          style={{ backgroundColor: color, border: '1px solid #d1d5db' }}
+                        ></div>
+                        <span className="text-sm" style={{ color: '#4b5563' }}>
+                          {sagaTitle}
+                        </span>
+                      </div>
                     )
-                  }
+                  })}
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-8 h-8 rounded"
+                      style={{ backgroundColor: '#fca5a5', border: '1px solid #d1d5db' }}
+                    ></div>
+                    <span className="text-sm" style={{ color: '#4b5563' }}>
+                      No Chapter
+                    </span>
+                  </div>
+                </div>
+              )}
 
-                  // Calculate rowspan for double issues
-                  const rowSpan = issue.issueEnd ? issue.issueEnd - issueNum + 1 : 1
+              {theme === 'arc' && (
+                <div className="flex flex-wrap gap-4">
+                  {Array.from(arcColorMap.entries()).slice(0, 10).map(([arcId, color]) => {
+                    const arcTitle = releases?.find((r) => r.arcId === arcId)?.arcTitle
+                    return (
+                      <div key={arcId} className="flex items-center gap-2">
+                        <div
+                          className="w-8 h-8 rounded"
+                          style={{ backgroundColor: color, border: '1px solid #d1d5db' }}
+                        ></div>
+                        <span className="text-sm" style={{ color: '#4b5563' }}>
+                          {arcTitle}
+                        </span>
+                      </div>
+                    )
+                  })}
+                  {arcColorMap.size > 10 && (
+                    <span className="text-xs italic" style={{ color: '#6b7280' }}>
+                      ... and {arcColorMap.size - 10} more arcs
+                    </span>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-8 h-8 rounded"
+                      style={{ backgroundColor: '#fca5a5', border: '1px solid #d1d5db' }}
+                    ></div>
+                    <span className="text-sm" style={{ color: '#4b5563' }}>
+                      No Chapter
+                    </span>
+                  </div>
+                </div>
+              )}
 
-                  // Get cell color based on theme
-                  const cellColor = getCellColor(issue.chapters, theme, sagaColorMap, arcColorMap)
+              {theme === 'luffy' && (
+                <div className="flex flex-wrap gap-4">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-8 h-8 rounded"
+                      style={{ backgroundColor: '#fbbf24', border: '1px solid #d1d5db' }}
+                    ></div>
+                    <span className="text-sm" style={{ color: '#4b5563' }}>
+                      Luffy Appears
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-8 h-8 rounded"
+                      style={{ backgroundColor: '#d1d5db', border: '1px solid #d1d5db' }}
+                    ></div>
+                    <span className="text-sm" style={{ color: '#4b5563' }}>
+                      Luffy Does Not Appear
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-8 h-8 rounded"
+                      style={{ backgroundColor: '#fca5a5', border: '1px solid #d1d5db' }}
+                    ></div>
+                    <span className="text-sm" style={{ color: '#4b5563' }}>
+                      No Chapter
+                    </span>
+                  </div>
+                </div>
+              )}
 
-                  // Create tooltip for compact mode
-                  const getTooltipText = () => {
-                    if (!isCompact) return undefined
+              <p className="text-xs mt-2" style={{ color: '#6b7280' }}>
+                * Double issues show multiple chapter numbers in the same cell. {!isCompact && 'Click on chapter numbers to view details.'}
+                {isCompact && 'Compact mode shows only the pattern of releases. Hover over cells to see chapter numbers and details.'}
+              </p>
+            </div>
 
-                    const chapterNumbers = issue.chapters.map((ch) => ch.number).join(', ')
-                    const firstChapter = issue.chapters[0]
-
-                    let additionalInfo = ''
-                    if (theme === 'saga' && firstChapter.sagaTitle) {
-                      additionalInfo = `\nSaga: ${firstChapter.sagaTitle}`
-                    } else if (theme === 'arc' && firstChapter.arcTitle) {
-                      additionalInfo = `\nArc: ${firstChapter.arcTitle}`
-                    } else if (theme === 'luffy') {
-                      const luffyAppears = issue.chapters.some((ch) => ch.luffyAppears)
-                      additionalInfo = `\n${luffyAppears ? 'Luffy appears' : 'Luffy does not appear'}`
-                    }
-
-                    return `Chapter${issue.chapters.length > 1 ? 's' : ''}: ${chapterNumbers}${additionalInfo}`
-                  }
-
-                  return (
-                    <td
-                      key={`${yearData.year}-${issueNum}`}
-                      rowSpan={rowSpan}
-                      className="px-1 py-1 text-center align-middle"
+            {/* Calendar Grid */}
+            <div className="rounded-lg shadow-lg overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr>
+                    <th
+                      className="px-2 py-1 text-xs font-bold sticky left-0 z-10"
                       style={{
                         border: '2px solid #d1d5db',
-                        backgroundColor: cellColor,
-                        cursor: isCompact ? 'help' : 'default',
+                        backgroundColor: '#f3f4f6',
+                        minWidth: '60px',
                       }}
-                      title={getTooltipText()}
                     >
-                      {!isCompact &&
-                        issue.chapters.map((chapter, idx) => (
-                          <span key={chapter.number}>
-                            <Link
-                              to={`/chapters/${chapter.number}`}
-                              className="text-xs font-bold hover:underline cursor-pointer"
-                              style={{ color: '#2563eb' }}
+                      Issue
+                    </th>
+                    {yearData.map((yearData) => (
+                      <th
+                        key={yearData.year}
+                        className="px-2 py-1 text-xs font-bold"
+                        style={{
+                          border: '2px solid #d1d5db',
+                          backgroundColor: '#dbeafe',
+                          minWidth: isCompact ? '40px' : '60px',
+                        }}
+                      >
+                        {isCompact ? String(yearData.year).slice(-2) : yearData.year}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {allIssues.map((issueNum) => (
+                    <tr key={issueNum}>
+                      <td
+                        className="px-2 py-1 text-xs font-semibold text-center sticky left-0 z-10"
+                        style={{
+                          border: '2px solid #d1d5db',
+                          backgroundColor: '#f3f4f6',
+                        }}
+                      >
+                        {issueNum}
+                      </td>
+                      {yearData.map((yearData) => {
+                        // Skip rendering if this issue is part of a double issue span
+                        if (yearData.doubleIssueSpans.has(issueNum)) {
+                          return null
+                        }
+
+                        const issue = yearData.issues.get(issueNum)
+                        if (!issue) {
+                          // No chapter this issue
+                          return (
+                            <td
+                              key={`${yearData.year}-${issueNum}`}
+                              className="px-1 py-1 text-center"
+                              style={{
+                                border: '2px solid #d1d5db',
+                                backgroundColor: '#fca5a5',
+                              }}
                             >
-                              {chapter.number}
-                            </Link>
-                            {idx < issue.chapters.length - 1 && (
-                              <span style={{ color: '#4b5563', fontSize: '0.75rem' }}>, </span>
-                            )}
-                          </span>
-                        ))}
-                    </td>
-                  )
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      </div>
+                              {!isCompact && <span style={{ fontSize: '0.75rem', color: '#4b5563' }}>-</span>}
+                            </td>
+                          )
+                        }
+
+                        // Calculate rowspan for double issues
+                        const rowSpan = issue.issueEnd ? issue.issueEnd - issueNum + 1 : 1
+
+                        // Get cell color based on theme
+                        const cellColor = getCellColor(issue.chapters, theme, sagaColorMap, arcColorMap)
+
+                        // Create tooltip for compact mode
+                        const getTooltipText = () => {
+                          if (!isCompact) return undefined
+
+                          const chapterNumbers = issue.chapters.map((ch) => ch.number).join(', ')
+                          const firstChapter = issue.chapters[0]
+
+                          let additionalInfo = ''
+                          if (theme === 'saga' && firstChapter.sagaTitle) {
+                            additionalInfo = `\nSaga: ${firstChapter.sagaTitle}`
+                          } else if (theme === 'arc' && firstChapter.arcTitle) {
+                            additionalInfo = `\nArc: ${firstChapter.arcTitle}`
+                          } else if (theme === 'luffy') {
+                            const luffyAppears = issue.chapters.some((ch) => ch.luffyAppears)
+                            additionalInfo = `\n${luffyAppears ? 'Luffy appears' : 'Luffy does not appear'}`
+                          }
+
+                          return `Chapter${issue.chapters.length > 1 ? 's' : ''}: ${chapterNumbers}${additionalInfo}`
+                        }
+
+                        return (
+                          <td
+                            key={`${yearData.year}-${issueNum}`}
+                            rowSpan={rowSpan}
+                            className="px-1 py-1 text-center align-middle"
+                            style={{
+                              border: '2px solid #d1d5db',
+                              backgroundColor: cellColor,
+                              cursor: isCompact ? 'help' : 'default',
+                            }}
+                            title={getTooltipText()}
+                          >
+                            {!isCompact &&
+                              issue.chapters.map((chapter, idx) => (
+                                <span key={chapter.number}>
+                                  <Link
+                                    to={`/chapters/${chapter.number}`}
+                                    className="text-xs font-bold hover:underline cursor-pointer"
+                                    style={{ color: '#2563eb' }}
+                                  >
+                                    {chapter.number}
+                                  </Link>
+                                  {idx < issue.chapters.length - 1 && (
+                                    <span style={{ color: '#4b5563', fontSize: '0.75rem' }}>, </span>
+                                  )}
+                                </span>
+                              ))}
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </ChartCard>
 
         {/* Footer */}
         <div className="mt-8 text-center text-sm text-gray-500">
