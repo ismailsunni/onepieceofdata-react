@@ -8,6 +8,7 @@ import {
   PieLabelRenderProps,
 } from 'recharts'
 import { StatusDistribution } from '../services/analyticsService'
+import { ChartCard } from './common/ChartCard'
 
 interface CharacterStatusChartProps {
   data: StatusDistribution[]
@@ -50,10 +51,10 @@ const renderCustomizedLabel = (props: PieLabelRenderProps) => {
 
 function CharacterStatusChart({ data }: CharacterStatusChartProps) {
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h3 className="text-xl font-semibold text-gray-800 mb-4">
-        Character Status Distribution
-      </h3>
+    <ChartCard
+      title="Character Status Distribution"
+      downloadFileName="character-status"
+    >
       <p className="text-sm text-gray-600 mb-4">
         Breakdown of character statuses in the series
       </p>
@@ -95,7 +96,7 @@ function CharacterStatusChart({ data }: CharacterStatusChartProps) {
           />
         </PieChart>
       </ResponsiveContainer>
-    </div>
+    </ChartCard>
   )
 }
 

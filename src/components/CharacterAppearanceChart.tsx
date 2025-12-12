@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { AppearanceData } from '../services/analyticsService'
+import { ChartCard } from './common/ChartCard'
 
 interface CharacterAppearanceChartProps {
   data: AppearanceData[]
@@ -15,10 +16,10 @@ interface CharacterAppearanceChartProps {
 
 function CharacterAppearanceChart({ data }: CharacterAppearanceChartProps) {
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h3 className="text-xl font-semibold text-gray-800 mb-4">
-        Character Appearances Distribution
-      </h3>
+    <ChartCard
+      title="Character Appearances Distribution"
+      downloadFileName="character-appearances"
+    >
       <p className="text-sm text-gray-600 mb-4">
         Number of characters by their chapter appearance count
       </p>
@@ -67,7 +68,7 @@ function CharacterAppearanceChart({ data }: CharacterAppearanceChartProps) {
           />
         </BarChart>
       </ResponsiveContainer>
-    </div>
+    </ChartCard>
   )
 }
 

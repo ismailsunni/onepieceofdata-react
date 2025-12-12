@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { Character } from '../types/character'
+import { ChartCard } from './common/ChartCard'
 
 interface CharacterTimelineChartProps {
   characters: Character[]
@@ -132,7 +133,11 @@ const CharacterTimelineChart = memo(({ characters }: CharacterTimelineChartProps
   }
 
   return (
-    <div className="w-full">
+    <ChartCard
+      title="Character Appearance Timeline"
+      downloadFileName="character-timeline"
+      className="w-full"
+    >
       <ResponsiveContainer width="100%" height={Math.max(400, characters.length * 50)}>
         <ScatterChart
           margin={{
@@ -215,7 +220,7 @@ const CharacterTimelineChart = memo(({ characters }: CharacterTimelineChartProps
           )
         })}
       </div>
-    </div>
+    </ChartCard>
   )
 })
 

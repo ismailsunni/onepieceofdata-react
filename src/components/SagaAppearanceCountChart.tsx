@@ -13,6 +13,8 @@ interface SagaAppearanceCountChartProps {
   data: SagaAppearanceCountData[]
 }
 
+import { ChartCard } from './common/ChartCard'
+
 export function SagaAppearanceCountChart({
   data,
 }: SagaAppearanceCountChartProps) {
@@ -20,10 +22,10 @@ export function SagaAppearanceCountChart({
   const filteredData = data.filter((item) => item.characterCount > 0)
 
   return (
-    <div className="rounded-lg bg-white p-6 shadow-md">
-      <h2 className="mb-4 text-xl font-semibold text-gray-800">
-        Character Saga Appearance Distribution
-      </h2>
+    <ChartCard
+      title="Character Saga Appearance Distribution"
+      downloadFileName="saga-appearance-count"
+    >
       <p className="mb-4 text-sm text-gray-600">
         Shows how many characters appear across different numbers of sagas (e.g.,
         Doflamingo in 4 sagas, Mihawk in 7 sagas)
@@ -77,6 +79,6 @@ export function SagaAppearanceCountChart({
           <Bar dataKey="characterCount" fill="#06b6d4" radius={[8, 8, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
-    </div>
+    </ChartCard>
   )
 }

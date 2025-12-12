@@ -10,6 +10,7 @@ import {
   Cell,
 } from 'recharts'
 import { TopBounty } from '../services/analyticsService'
+import { ChartCard } from './common/ChartCard'
 
 interface TopBountiesChartProps {
   dataAll: TopBounty[]
@@ -26,8 +27,8 @@ const generateGradientColors = (count: number): string[] => {
       ratio < 0.33
         ? '#dc2626' // Red for top 3
         : ratio < 0.66
-        ? '#ea580c' // Orange-red for middle
-        : '#f59e0b' // Orange for rest
+          ? '#ea580c' // Orange-red for middle
+          : '#f59e0b' // Orange for rest
     )
   }
   return colors
@@ -50,12 +51,12 @@ function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <ChartCard
+      title="Top 10 Highest Bounties"
+      downloadFileName="top-bounties"
+    >
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">
-            Top 10 Highest Bounties
-          </h3>
           <p className="text-sm text-gray-600">
             Characters with the highest bounties (in Berries)
           </p>
@@ -64,21 +65,19 @@ function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
           <span className="text-sm text-gray-600">Filter:</span>
           <button
             onClick={() => setShowAliveOnly(false)}
-            className={`px-3 py-1 text-sm rounded-md transition-colors ${
-              !showAliveOnly
+            className={`px-3 py-1 text-sm rounded-md transition-colors ${!showAliveOnly
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
+              }`}
           >
             All
           </button>
           <button
             onClick={() => setShowAliveOnly(true)}
-            className={`px-3 py-1 text-sm rounded-md transition-colors ${
-              showAliveOnly
+            className={`px-3 py-1 text-sm rounded-md transition-colors ${showAliveOnly
                 ? 'bg-green-600 text-white'
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
+              }`}
           >
             Alive Only
           </button>
@@ -128,7 +127,7 @@ function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
           </Bar>
         </BarChart>
       </ResponsiveContainer>
-    </div>
+    </ChartCard>
   )
 }
 

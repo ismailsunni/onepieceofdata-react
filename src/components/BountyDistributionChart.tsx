@@ -15,13 +15,15 @@ interface BountyDistributionChartProps {
   stats?: BountyStats
 }
 
+import { ChartCard } from './common/ChartCard'
+
 function BountyDistributionChart({ data, stats }: BountyDistributionChartProps) {
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <ChartCard
+      title="Bounty Distribution by Power Tier"
+      downloadFileName="bounty-distribution"
+    >
       <div className="mb-4">
-        <h3 className="text-xl font-semibold text-gray-800 mb-2">
-          Bounty Distribution by Power Tier
-        </h3>
         <p className="text-sm text-gray-600">
           Characters grouped by bounty ranges representing power tiers
         </p>
@@ -92,7 +94,7 @@ function BountyDistributionChart({ data, stats }: BountyDistributionChartProps) 
           <Bar dataKey="notAlive" stackId="a" fill="#ef4444" radius={[8, 8, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
-    </div>
+    </ChartCard>
   )
 }
 
