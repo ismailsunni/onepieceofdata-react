@@ -8,7 +8,9 @@ import {
   ResponsiveContainer,
   ReferenceArea,
 } from 'recharts'
+import { useRef } from 'react'
 import { Arc } from '../types/arc'
+import { DownloadChartButton } from './common/DownloadChartButton'
 
 interface ArcLengthChartProps {
   arcs: Arc[]
@@ -149,90 +151,97 @@ function ArcLengthChart({ arcs }: ArcLengthChartProps) {
     '#0e7490', '#be123c', '#15803d', '#a16207', '#7e22ce',
   ]
 
+  const chartRef = useRef<HTMLDivElement>(null)
+
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h3 className="text-xl font-semibold text-gray-800 mb-4">
-        Arc and Saga Lengths in Chapters
-      </h3>
-      <ResponsiveContainer width="100%" height={500}>
-        <BarChart
-          data={chartData}
-          margin={{ top: 20, right: 30, left: 60, bottom: 60 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          {/* Background for Paradise (first half) */}
-          {splitIndex > 0 && (
-            <ReferenceArea
-              x1={chartData[0].saga}
-              x2={chartData[splitIndex - 1].saga}
-              fill="#dbeafe"
-              fillOpacity={0.5}
+    <div className="bg-white rounded-lg shadow-md p-6 relative">
+      <div className="absolute right-6 top-6 z-10">
+        <DownloadChartButton chartRef={chartRef} fileName="arc-saga-lengths" />
+      </div>
+      <div ref={chartRef} className="bg-white p-2">
+        <h3 className="text-xl font-semibold text-gray-800 mb-4">
+          Arc and Saga Lengths in Chapters
+        </h3>
+        <ResponsiveContainer width="100%" height={500}>
+          <BarChart
+            data={chartData}
+            margin={{ top: 20, right: 30, left: 60, bottom: 60 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            {/* Background for Paradise (first half) */}
+            {splitIndex > 0 && (
+              <ReferenceArea
+                x1={chartData[0].saga}
+                x2={chartData[splitIndex - 1].saga}
+                fill="#dbeafe"
+                fillOpacity={0.5}
+                label={{
+                  value: `Paradise (${paradiseChapters})`,
+                  position: 'insideTop',
+                  fill: '#1e40af',
+                  fontSize: 14,
+                  fontWeight: 'bold',
+                  offset: 10,
+                }}
+              />
+            )}
+            {/* Background for New World (second half) */}
+            {splitIndex > 0 && splitIndex < chartData.length && (
+              <ReferenceArea
+                x1={chartData[splitIndex].saga}
+                x2={chartData[chartData.length - 1].saga}
+                fill="#fef2f2"
+                fillOpacity={0.5}
+                label={{
+                  value: `New World (${newWorldChapters})`,
+                  position: 'insideTop',
+                  fill: '#dc2626',
+                  fontSize: 14,
+                  fontWeight: 'bold',
+                  offset: 10,
+                }}
+              />
+            )}
+            <XAxis
+              dataKey="saga"
+              angle={-45}
+              textAnchor="end"
+              height={100}
+              interval={0}
+              tick={{ fontSize: 12 }}
+              stroke="#6b7280"
               label={{
-                value: `Paradise (${paradiseChapters})`,
-                position: 'insideTop',
-                fill: '#1e40af',
-                fontSize: 14,
-                fontWeight: 'bold',
-                offset: 10,
+                value: 'Saga',
+                position: 'insideBottom',
+                offset: -10,
+                style: { fontSize: 14, fill: '#6b7280', textAnchor: 'middle' },
               }}
             />
-          )}
-          {/* Background for New World (second half) */}
-          {splitIndex > 0 && splitIndex < chartData.length && (
-            <ReferenceArea
-              x1={chartData[splitIndex].saga}
-              x2={chartData[chartData.length - 1].saga}
-              fill="#fef2f2"
-              fillOpacity={0.5}
+            <YAxis
               label={{
-                value: `New World (${newWorldChapters})`,
-                position: 'insideTop',
-                fill: '#dc2626',
-                fontSize: 14,
-                fontWeight: 'bold',
+                value: 'Number of Chapters',
+                angle: -90,
+                position: 'insideLeft',
                 offset: 10,
+                style: { fontSize: 14, fill: '#6b7280', textAnchor: 'middle' },
               }}
+              tick={{ fontSize: 12 }}
+              stroke="#6b7280"
+              domain={[0, 200]}
             />
-          )}
-          <XAxis
-            dataKey="saga"
-            angle={-45}
-            textAnchor="end"
-            height={100}
-            interval={0}
-            tick={{ fontSize: 12 }}
-            stroke="#6b7280"
-            label={{
-              value: 'Saga',
-              position: 'insideBottom',
-              offset: -10,
-              style: { fontSize: 14, fill: '#6b7280', textAnchor: 'middle' },
-            }}
-          />
-          <YAxis
-            label={{
-              value: 'Number of Chapters',
-              angle: -90,
-              position: 'insideLeft',
-              offset: 10,
-              style: { fontSize: 14, fill: '#6b7280', textAnchor: 'middle' },
-            }}
-            tick={{ fontSize: 12 }}
-            stroke="#6b7280"
-            domain={[0, 200]}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          {Array.from(arcNames).map((arcName, index) => (
-            <Bar
-              key={arcName}
-              dataKey={arcName}
-              stackId="saga"
-              fill={colors[index % colors.length]}
-              radius={index === arcNames.size - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
-            />
-          ))}
-        </BarChart>
-      </ResponsiveContainer>
+            <Tooltip content={<CustomTooltip />} />
+            {Array.from(arcNames).map((arcName, index) => (
+              <Bar
+                key={arcName}
+                dataKey={arcName}
+                stackId="saga"
+                fill={colors[index % colors.length]}
+                radius={index === arcNames.size - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+              />
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   )
 }
