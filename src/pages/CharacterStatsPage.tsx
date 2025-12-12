@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   fetchBountyDistribution,
@@ -9,14 +9,9 @@ import {
 import BountyDistributionChart from '../components/BountyDistributionChart'
 import CharacterStatusChart from '../components/CharacterStatusChart'
 import TopBountiesChart from '../components/TopBountiesChart'
-import { StatCard, ChartCard } from '../components/analytics'
-import { toPng } from 'html-to-image'
+import { StatCard } from '../components/analytics'
 
 function CharacterStatsPage() {
-  const [isExporting, setIsExporting] = useState<string | null>(null)
-  const bountyChartRef = useRef<HTMLDivElement>(null)
-  const statusChartRef = useRef<HTMLDivElement>(null)
-  const topBountiesChartRef = useRef<HTMLDivElement>(null)
 
   // Fetch bounty analytics data
   const { data: bountyData = [], isLoading: bountyLoading } = useQuery({
@@ -65,26 +60,7 @@ function CharacterStatsPage() {
   }, [bountyStats, statusData])
 
 
-  // Export chart as PNG
-  const handleExportChart = async (chartRef: React.RefObject<HTMLDivElement | null>, chartName: string) => {
-    if (chartRef.current) {
-      try {
-        setIsExporting(chartName)
-        const dataUrl = await toPng(chartRef.current, {
-          quality: 0.95,
-          pixelRatio: 2,
-        })
-        const link = document.createElement('a')
-        link.download = `${chartName}-${Date.now()}.png`
-        link.href = dataUrl
-        link.click()
-      } catch (error) {
-        console.error('Error exporting chart:', error)
-      } finally {
-        setIsExporting(null)
-      }
-    }
-  }
+
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
@@ -238,52 +214,26 @@ function CharacterStatsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               {/* Bounty Distribution */}
               {bountyData.length > 0 && (
-                <ChartCard
-                  title="Bounty Distribution by Power Tier"
-                  description="Character distribution across bounty ranges showing power tiers"
-                  onExport={() => handleExportChart(bountyChartRef, 'bounty-distribution')}
-                  isExporting={isExporting === 'bounty-distribution'}
-                >
-                  <div ref={bountyChartRef}>
-                    <BountyDistributionChart
-                      data={bountyData}
-                      stats={bountyStats}
-                    />
-                  </div>
-                </ChartCard>
+                <BountyDistributionChart
+                  data={bountyData}
+                  stats={bountyStats}
+                />
               )}
 
               {/* Character Status */}
               {statusData.length > 0 && (
-                <ChartCard
-                  title="Character Status Distribution"
-                  description="Distribution of character statuses (Alive, Deceased, Unknown)"
-                  onExport={() => handleExportChart(statusChartRef, 'status-distribution')}
-                  isExporting={isExporting === 'status-distribution'}
-                >
-                  <div ref={statusChartRef}>
-                    <CharacterStatusChart data={statusData} />
-                  </div>
-                </ChartCard>
+                <CharacterStatusChart data={statusData} />
               )}
             </div>
 
             {/* Top Bounties - Full Width */}
             {topBountiesAll.length > 0 && (
-              <ChartCard
-                title="Top 10 Highest Bounties"
-                description="Ranking of characters by bounty amount (All vs Living characters)"
-                onExport={() => handleExportChart(topBountiesChartRef, 'top-bounties')}
-                isExporting={isExporting === 'top-bounties'}
-                className="mb-6"
-              >
-                <div ref={topBountiesChartRef}>
-                  <TopBountiesChart
-                    dataAll={topBountiesAll}
-                    dataAlive={topBountiesAlive}
-                  />
-                </div>
-              </ChartCard>
+              <div className="mb-6">
+                <TopBountiesChart
+                  dataAll={topBountiesAll}
+                  dataAlive={topBountiesAlive}
+                />
+              </div>
             )}
 
             {/* Insights Panel */}
