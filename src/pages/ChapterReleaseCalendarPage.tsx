@@ -215,10 +215,20 @@ function ChapterReleaseCalendarPage() {
 
     try {
       setIsCopying(true)
+      // Wait for state to update and layout to change (expanding the scroll view)
+      await new Promise(resolve => setTimeout(resolve, 100))
 
-      const dataUrl = await toPng(calendarRef.current, {
+      const element = calendarRef.current
+      const dataUrl = await toPng(element, {
         quality: 0.95,
         pixelRatio: 2,
+        width: element.scrollWidth,
+        height: element.scrollHeight,
+        style: {
+          overflow: 'visible',
+          maxWidth: 'none',
+          maxHeight: 'none',
+        },
       })
 
       const link = document.createElement('a')
@@ -555,7 +565,7 @@ function ChapterReleaseCalendarPage() {
             </div>
 
             {/* Calendar Grid */}
-            <div className="rounded-lg shadow-lg overflow-x-auto">
+            <div className={`rounded-lg shadow-lg ${isCopying ? 'overflow-visible' : 'overflow-x-auto'}`}>
               <table className="w-full border-collapse">
                 <thead>
                   <tr>
