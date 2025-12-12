@@ -1,15 +1,12 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { fetchArcs } from '../services/arcService'
 import { fetchSagas } from '../services/sagaService'
 import ArcLengthChart from '../components/ArcLengthChart'
-import { StatCard, ChartCard, FilterButton, SectionHeader } from '../components/analytics'
-import { toPng } from 'html-to-image'
+import { StatCard, FilterButton, SectionHeader } from '../components/analytics'
 
 function StoryArcsAnalyticsPage() {
-  const [isExporting, setIsExporting] = useState(false)
   const [selectedSaga, setSelectedSaga] = useState<string | null>(null)
-  const chartRef = useRef<HTMLDivElement>(null)
 
   // Fetch arcs and sagas data
   const { data: arcs = [], isLoading: arcsLoading } = useQuery({
@@ -60,26 +57,7 @@ function StoryArcsAnalyticsPage() {
     }
   }, [filteredArcs])
 
-  // Export chart as PNG
-  const handleExportChart = async () => {
-    if (chartRef.current) {
-      try {
-        setIsExporting(true)
-        const dataUrl = await toPng(chartRef.current, {
-          quality: 0.95,
-          pixelRatio: 2,
-        })
-        const link = document.createElement('a')
-        link.download = `story-arcs-${selectedSaga || 'all'}-${Date.now()}.png`
-        link.href = dataUrl
-        link.click()
-      } catch (error) {
-        console.error('Error exporting chart:', error)
-      } finally {
-        setIsExporting(false)
-      }
-    }
-  }
+
 
   const isLoading = arcsLoading || sagasLoading
 
@@ -233,25 +211,23 @@ function StoryArcsAnalyticsPage() {
 
             {/* Arc Length Chart */}
             {filteredArcs.length > 0 ? (
-              <ChartCard
-                title="Arc and Saga Lengths"
-                description={`Showing ${filteredArcs.length} arc${filteredArcs.length !== 1 ? 's' : ''} ${selectedSaga ? `from ${selectedSaga}` : 'across all sagas'}`}
-                onExport={handleExportChart}
-                isExporting={isExporting}
-                className="mb-8"
-              >
-                <div ref={chartRef}>
-                  <ArcLengthChart arcs={filteredArcs} />
-                </div>
-              </ChartCard>
+              <div className="mb-8">
+                <ArcLengthChart arcs={filteredArcs} />
+              </div>
             ) : (
-              <ChartCard
-                title="Arc and Saga Lengths"
-                isEmpty={true}
-                emptyMessage="No story arc data available for the selected filter"
-              >
-                <div />
-              </ChartCard>
+              <div className="text-center py-20">
+                <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  />
+                </svg>
+                <p className="text-gray-500 text-lg">
+                  No story arc data available for the selected filter
+                </p>
+              </div>
             )}
 
           </>
