@@ -40,6 +40,7 @@ export interface TopBounty {
   name: string
   bounty: number
   origin: string | null
+  status: string | null
 }
 
 export interface AppearanceData {
@@ -203,7 +204,7 @@ export async function fetchBountyStats(): Promise<BountyStats> {
 
     const percentage = totalCharacters
       ? Math.round(((charactersWithBounty || 0) / totalCharacters) * 100 * 10) /
-        10
+      10
       : 0
 
     return {
@@ -302,6 +303,7 @@ export async function fetchTopBounties(
       name: char.name || 'Unknown',
       bounty: char.bounty || 0,
       origin: char.origin,
+      status: char.status,
     }))
   } catch (error) {
     console.error('Error in fetchTopBounties:', error)

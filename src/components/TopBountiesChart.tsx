@@ -17,27 +17,17 @@ interface TopBountiesChartProps {
   dataAlive: TopBounty[]
 }
 
-// Generate gradient colors from red (highest) to orange (lowest)
-const generateGradientColors = (count: number): string[] => {
-  const colors = []
-  for (let i = 0; i < count; i++) {
-    // Interpolate between red (#dc2626) and orange (#f59e0b)
-    const ratio = i / (count - 1)
-    colors.push(
-      ratio < 0.33
-        ? '#dc2626' // Red for top 3
-        : ratio < 0.66
-          ? '#ea580c' // Orange-red for middle
-          : '#f59e0b' // Orange for rest
-    )
+// Get color based on character status
+const getStatusColor = (status: string | null): string => {
+  if (status === 'Alive') {
+    return '#10b981' // green-500
   }
-  return colors
+  return '#ef4444' // red-500 for Deceased or Unknown
 }
 
 function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
   const [showAliveOnly, setShowAliveOnly] = useState(false)
   const data = showAliveOnly ? dataAlive : dataAll
-  const colors = generateGradientColors(data.length)
 
   // Format bounty for display
   const formatBounty = (value: number) => {
@@ -60,14 +50,24 @@ function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
           <p className="text-sm text-gray-600">
             Characters with the highest bounties (in Berries)
           </p>
+          <div className="flex items-center gap-4 mt-2">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded" style={{ backgroundColor: '#10b981' }}></div>
+              <span className="text-xs text-gray-600">Alive</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded" style={{ backgroundColor: '#ef4444' }}></div>
+              <span className="text-xs text-gray-600">Deceased/Unknown</span>
+            </div>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-600">Filter:</span>
           <button
             onClick={() => setShowAliveOnly(false)}
             className={`px-3 py-1 text-sm rounded-md transition-colors ${!showAliveOnly
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
           >
             All
@@ -75,8 +75,8 @@ function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
           <button
             onClick={() => setShowAliveOnly(true)}
             className={`px-3 py-1 text-sm rounded-md transition-colors ${showAliveOnly
-                ? 'bg-green-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              ? 'bg-green-600 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
           >
             Alive Only
@@ -115,14 +115,15 @@ function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
             ]}
             labelFormatter={(label: string) => {
               const character = data.find(d => d.name === label)
+              const statusText = character?.status ? ` - ${character.status}` : ''
               return character?.origin
-                ? `${label} (${character.origin})`
-                : label
+                ? `${label} (${character.origin})${statusText}`
+                : `${label}${statusText}`
             }}
           />
           <Bar dataKey="bounty" radius={[0, 8, 8, 0]}>
-            {data.map((_entry, index) => (
-              <Cell key={`cell-${index}`} fill={colors[index]} />
+            {data.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={getStatusColor(entry.status)} />
             ))}
           </Bar>
         </BarChart>
