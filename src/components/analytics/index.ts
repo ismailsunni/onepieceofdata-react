@@ -9,6 +9,5 @@ export { default as ChartCard } from './ChartCard'
 export { default as StatCard } from './StatCard'
 export { default as SectionHeader } from './SectionHeader'
 export { default as FilterButton } from './FilterButton'
-export { default as ExportButton } from './ExportButton'
 
 export * from './constants'
