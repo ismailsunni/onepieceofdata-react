@@ -45,7 +45,8 @@ function CharacterAppearancesPage() {
   const stats = useMemo(() => {
     if (!sagaAppearanceData.length) {
       return {
-        avgPerSaga: 0,
+        highestDensitySaga: '-',
+        highestDensityRate: '0',
         mostActiveSaga: '-',
         mostActiveSagaCount: 0,
         totalSagas: 0,
@@ -54,14 +55,25 @@ function CharacterAppearancesPage() {
     }
 
     const totalCharacters = sagaAppearanceData.reduce((sum, saga) => sum + saga.characterCount, 0)
-    const avgPerSaga = Math.round(totalCharacters / sagaAppearanceData.length)
+    const avgPerSaga = totalCharacters / sagaAppearanceData.length
 
     const mostActive = sagaAppearanceData.reduce((max, saga) =>
       saga.characterCount > max.characterCount ? saga : max
     )
 
+    // Find saga with highest character density (characters per chapter)
+    const sagaWithDensity = sagaAppearanceData.map(saga => ({
+      ...saga,
+      density: saga.chapterCount > 0 ? saga.characterCount / saga.chapterCount : 0
+    }))
+
+    const highestDensity = sagaWithDensity.reduce((max, saga) =>
+      saga.density > max.density ? saga : max
+    )
+
     return {
-      avgPerSaga,
+      highestDensitySaga: highestDensity.sagaName,
+      highestDensityRate: highestDensity.density.toFixed(2),
       mostActiveSaga: mostActive.sagaName,
       mostActiveSagaCount: mostActive.characterCount,
       totalSagas: sagaAppearanceData.length,
@@ -138,20 +150,21 @@ function CharacterAppearancesPage() {
             {/* Stats Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <StatCard
-                label="Avg Characters per Saga"
-                value={stats.avgPerSaga}
+                label={`Highest Density (${stats.highestDensityRate}/ch)`}
+                value={stats.highestDensitySaga}
                 icon={
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
                     />
                   </svg>
                 }
                 color="emerald"
                 loading={isLoading}
+                tooltip="The saga with the highest rate of character introductions per chapter"
               />
               <StatCard
                 label="Debut Rate"
@@ -168,6 +181,7 @@ function CharacterAppearancesPage() {
                 }
                 color="blue"
                 loading={isLoading}
+                tooltip="Average number of new characters introduced per saga"
               />
               <StatCard
                 label="Most Active Saga"
@@ -184,6 +198,7 @@ function CharacterAppearancesPage() {
                 }
                 color="green"
                 loading={isLoading}
+                tooltip="The saga that introduced the most new characters"
               />
               <StatCard
                 label="Character Debuts"
@@ -200,6 +215,7 @@ function CharacterAppearancesPage() {
                 }
                 color="blue"
                 loading={isLoading}
+                tooltip="Number of characters introduced in the most active saga"
               />
             </div>
 

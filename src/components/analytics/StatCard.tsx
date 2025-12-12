@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import React from 'react'
+import React, { useState } from 'react'
 
 interface StatCardProps {
   label: string
@@ -11,6 +11,7 @@ interface StatCardProps {
   loading?: boolean
   link?: string
   className?: string
+  tooltip?: string
 }
 
 const colorStyles = {
@@ -72,8 +73,10 @@ function StatCard({
   loading = false,
   link,
   className = '',
+  tooltip,
 }: StatCardProps) {
   const styles = colorStyles[color]
+  const [showTooltip, setShowTooltip] = useState(false)
 
   const content = (
     <div className="flex items-start justify-between">
@@ -94,8 +97,25 @@ function StatCard({
           </div>
         )}
 
-        {/* Label */}
-        <div className="text-sm font-medium text-gray-600">{label}</div>
+        {/* Label with info icon */}
+        <div className="flex items-center gap-1">
+          <div className="text-sm font-medium text-gray-600">{label}</div>
+          {tooltip && (
+            <svg
+              className="w-4 h-4 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          )}
+        </div>
 
         {/* Trend */}
         {trend && trendValue && !loading && (
@@ -116,13 +136,12 @@ function StatCard({
               </svg>
             )}
             <span
-              className={`text-xs font-medium ${
-                trend === 'up'
+              className={`text-xs font-medium ${trend === 'up'
                   ? 'text-green-600'
                   : trend === 'down'
-                  ? 'text-red-600'
-                  : 'text-gray-600'
-              }`}
+                    ? 'text-red-600'
+                    : 'text-gray-600'
+                }`}
             >
               {trendValue}
             </span>
@@ -137,6 +156,7 @@ function StatCard({
     border rounded-xl p-6
     transition-all duration-200
     ${className}
+    relative
   `
 
   if (link && !loading) {
@@ -144,8 +164,18 @@ function StatCard({
       <Link
         to={link}
         className={`${cardClasses} hover:shadow-md hover:border-opacity-80 block group`}
+        onMouseEnter={() => tooltip && setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
       >
         {content}
+        {tooltip && showTooltip && (
+          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg whitespace-normal max-w-xs z-50">
+            {tooltip}
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+              <div className="border-4 border-transparent border-t-gray-900"></div>
+            </div>
+          </div>
+        )}
         <div className="mt-3 flex items-center text-xs font-medium text-gray-600 group-hover:text-gray-900">
           View details
           <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -156,7 +186,23 @@ function StatCard({
     )
   }
 
-  return <div className={cardClasses}>{content}</div>
+  return (
+    <div
+      className={cardClasses}
+      onMouseEnter={() => tooltip && setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
+    >
+      {content}
+      {tooltip && showTooltip && (
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg whitespace-normal max-w-xs z-50">
+          {tooltip}
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+            <div className="border-4 border-transparent border-t-gray-900"></div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default StatCard

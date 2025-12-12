@@ -52,6 +52,7 @@ export interface SagaAppearanceData {
   sagaName: string
   characterCount: number
   sagaOrder: number
+  chapterCount: number
 }
 
 export interface SagaAppearanceCountData {
@@ -405,10 +406,13 @@ export async function fetchSagaAppearanceDistribution(): Promise<
           char.first_appearance <= saga.end_chapter
       ).length
 
+      const chapterCount = saga.end_chapter - saga.start_chapter + 1
+
       return {
         sagaName: saga.title,
         characterCount: count,
         sagaOrder: index + 1,
+        chapterCount,
       }
     })
 
