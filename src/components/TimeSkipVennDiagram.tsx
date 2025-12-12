@@ -1,4 +1,5 @@
 import { TimeSkipData } from '../services/analyticsService'
+import { ChartCard } from './common/ChartCard'
 
 interface TimeSkipVennDiagramProps {
   data: TimeSkipData
@@ -13,10 +14,10 @@ function TimeSkipVennDiagram({ data }: TimeSkipVennDiagramProps) {
   const bothPercentage = total > 0 ? ((both / total) * 100).toFixed(1) : '0'
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-semibold text-gray-800 mb-2">
-        Pre/Post Time Skip Characters
-      </h2>
+    <ChartCard
+      title="Pre/Post Time Skip Characters"
+      downloadFileName="time-skip-venn-diagram"
+    >
       <p className="text-sm text-gray-600 mb-6">
         Distribution of characters before and after the 2-year time skip (Chapter 598)
       </p>
@@ -169,7 +170,7 @@ function TimeSkipVennDiagram({ data }: TimeSkipVennDiagramProps) {
           after the Summit War of Marineford. The Straw Hat Pirates train separately for 2 years before reuniting at Sabaody Archipelago.
         </p>
       </div>
-    </div>
+    </ChartCard>
   )
 }
 
