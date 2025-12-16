@@ -208,7 +208,14 @@ function ChapterReleaseCalendarPage() {
 
   // Calculate quick stats
   const stats = useMemo(() => {
-    if (!releases) return { totalChapters: 0, yearsCount: 0, issuesCount: 0, uninterruptedBreaks: 0, breakChapters: [] }
+    if (!releases) return {
+      totalChapters: 0,
+      yearsCount: 0,
+      longestStreak: 0,
+      longestStreakInfo: null,
+      uninterruptedBreaks: 0,
+      breakChapters: []
+    }
 
     // Calculate uninterrupted breaks (3+ consecutive weeks without One Piece)
     // - Ignore issue 53 (no One Piece published)
@@ -221,7 +228,24 @@ function ChapterReleaseCalendarPage() {
       toJump: string,
       weeksBreak: number
     }> = []
+
+    // Track longest streak without break (3+ weeks)
+    let currentStreak = 0
+    let currentStreakStart = 0
+    let longestStreak = 0
+    let longestStreakStart = 0
+    let longestStreakEnd = 0
+
     const sortedReleases = [...releases].sort((a, b) => a.number - b.number)
+
+    // Initialize streak with first chapter
+    if (sortedReleases.length > 0) {
+      currentStreak = 1
+      currentStreakStart = 0
+      longestStreak = 1
+      longestStreakStart = 0
+      longestStreakEnd = 0
+    }
 
     for (let i = 1; i < sortedReleases.length; i++) {
       const current = sortedReleases[i]
@@ -263,6 +287,21 @@ function ChapterReleaseCalendarPage() {
           weeksBetween -= 1
         }
 
+        // Track streaks (any break of 1+ week resets the streak)
+        if (weeksBetween < 1) {
+          // No break, continue streak
+          currentStreak++
+          if (currentStreak > longestStreak) {
+            longestStreak = currentStreak
+            longestStreakStart = currentStreakStart
+            longestStreakEnd = i
+          }
+        } else {
+          // Break detected (1+ weeks), reset streak
+          currentStreak = 1
+          currentStreakStart = i
+        }
+
         // Count if there were 3 or more weeks without a chapter
         if (weeksBetween >= 3) {
           uninterruptedBreaksCount++
@@ -277,10 +316,17 @@ function ChapterReleaseCalendarPage() {
       }
     }
 
+    const longestStreakInfo = longestStreak > 0 ? {
+      chapters: longestStreak,
+      fromChapter: sortedReleases[longestStreakStart].number,
+      toChapter: sortedReleases[longestStreakEnd].number
+    } : null
+
     return {
       totalChapters: releases.length,
       yearsCount: yearData.length,
-      issuesCount: allIssues.length,
+      longestStreak,
+      longestStreakInfo,
       uninterruptedBreaks: uninterruptedBreaksCount,
       breakChapters
     }
@@ -375,15 +421,16 @@ function ChapterReleaseCalendarPage() {
             loading={isLoading}
           />
           <StatCard
-            label="Jump Issues"
-            value={stats.issuesCount}
+            label="Longest Streak Without Break"
+            value={`${stats.longestStreak} ch`}
+            subtitle={stats.longestStreakInfo ? `Ch. ${stats.longestStreakInfo.fromChapter}-${stats.longestStreakInfo.toChapter}` : undefined}
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
                 />
               </svg>
             }
