@@ -209,7 +209,7 @@ function ChapterReleaseCalendarPage() {
   // Calculate quick stats
   const stats = useMemo(() => {
     if (!releases) return {
-      totalChapters: 0,
+      totalBreaks: 0,
       yearsCount: 0,
       longestStreak: 0,
       longestStreakInfo: null,
@@ -217,9 +217,11 @@ function ChapterReleaseCalendarPage() {
       breakChapters: []
     }
 
+    // Calculate total breaks (any week without One Piece, excluding issue 53)
     // Calculate uninterrupted breaks (3+ consecutive weeks without One Piece)
     // - Ignore issue 53 (no One Piece published)
     // - Double issues count as covering 2 weeks, so no break
+    let totalBreaksCount = 0
     let uninterruptedBreaksCount = 0
     const breakChapters: Array<{
       fromChapter: number,
@@ -229,7 +231,7 @@ function ChapterReleaseCalendarPage() {
       weeksBreak: number
     }> = []
 
-    // Track longest streak without break (3+ weeks)
+    // Track longest streak without break
     let currentStreak = 0
     let currentStreakStart = 0
     let longestStreak = 0
@@ -287,6 +289,11 @@ function ChapterReleaseCalendarPage() {
           weeksBetween -= 1
         }
 
+        // Count total breaks (any gap)
+        if (weeksBetween > 0) {
+          totalBreaksCount += weeksBetween
+        }
+
         // Track streaks (any break of 1+ week resets the streak)
         if (weeksBetween < 1) {
           // No break, continue streak
@@ -323,7 +330,7 @@ function ChapterReleaseCalendarPage() {
     } : null
 
     return {
-      totalChapters: releases.length,
+      totalBreaks: totalBreaksCount,
       yearsCount: yearData.length,
       longestStreak,
       longestStreakInfo,
@@ -389,15 +396,15 @@ function ChapterReleaseCalendarPage() {
         {/* Quick Stats Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           <StatCard
-            label="Total Chapters"
-            value={stats.totalChapters}
+            label="Total Breaks (weeks)"
+            value={stats.totalBreaks}
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
             }
