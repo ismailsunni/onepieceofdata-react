@@ -5,6 +5,9 @@ import { useState } from 'react'
 function Navigation() {
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [storyExpanded, setStoryExpanded] = useState(false)
+  const [mediaExpanded, setMediaExpanded] = useState(false)
+  const [analyticsExpanded, setAnalyticsExpanded] = useState(false)
 
   // This function returns the CSS classes for nav links
   // isActive comes from React Router and tells us if this link matches the current page
@@ -17,9 +20,17 @@ function Navigation() {
   }
 
   const getMobileLinkClass = ({ isActive }: { isActive: boolean }) => {
-    const baseClass = 'block px-4 py-3 rounded-lg transition-colors text-base font-medium'
-    const activeClass = 'text-gray-900 bg-gray-100'
-    const inactiveClass = 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+    const baseClass = 'block px-4 py-3 rounded-lg transition-colors text-base'
+    const activeClass = 'text-gray-900 bg-gray-100 font-semibold'
+    const inactiveClass = 'text-gray-700 hover:text-gray-900 hover:bg-gray-50 font-medium'
+
+    return `${baseClass} ${isActive ? activeClass : inactiveClass}`
+  }
+
+  const getMobileSubLinkClass = ({ isActive }: { isActive: boolean }) => {
+    const baseClass = 'block pl-8 pr-4 py-2.5 rounded-lg transition-colors text-sm'
+    const activeClass = 'text-gray-900 bg-gray-100 font-medium'
+    const inactiveClass = 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
 
     return `${baseClass} ${isActive ? activeClass : inactiveClass}`
   }
@@ -268,7 +279,7 @@ function Navigation() {
             </div>
 
             {/* Mobile Menu Content */}
-            <nav className="p-4 space-y-2 overflow-y-auto max-h-full">
+            <nav className="p-4 space-y-1 overflow-y-auto max-h-full">
               <NavLink to="/" className={getMobileLinkClass} onClick={closeMobileMenu}>
                 Home
               </NavLink>
@@ -277,48 +288,99 @@ function Navigation() {
               </NavLink>
 
               {/* Story Section */}
-              <div className="space-y-1">
-                <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Story</div>
-                <NavLink to="/sagas" className={getMobileLinkClass} onClick={closeMobileMenu}>
-                  Sagas
-                </NavLink>
-                <NavLink to="/arcs" className={getMobileLinkClass} onClick={closeMobileMenu}>
-                  Arcs
-                </NavLink>
+              <div>
+                <button
+                  onClick={() => setStoryExpanded(!storyExpanded)}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                >
+                  <span>Story</span>
+                  <svg
+                    className={`w-5 h-5 transition-transform ${storyExpanded ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {storyExpanded && (
+                  <div className="space-y-1 mt-1">
+                    <NavLink to="/sagas" className={getMobileSubLinkClass} onClick={closeMobileMenu}>
+                      Sagas
+                    </NavLink>
+                    <NavLink to="/arcs" className={getMobileSubLinkClass} onClick={closeMobileMenu}>
+                      Arcs
+                    </NavLink>
+                  </div>
+                )}
               </div>
 
               {/* Media Section */}
-              <div className="space-y-1">
-                <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Media</div>
-                <NavLink to="/volumes" className={getMobileLinkClass} onClick={closeMobileMenu}>
-                  Volumes
-                </NavLink>
-                <NavLink to="/chapters" className={getMobileLinkClass} onClick={closeMobileMenu}>
-                  Chapters
-                </NavLink>
+              <div>
+                <button
+                  onClick={() => setMediaExpanded(!mediaExpanded)}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                >
+                  <span>Media</span>
+                  <svg
+                    className={`w-5 h-5 transition-transform ${mediaExpanded ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {mediaExpanded && (
+                  <div className="space-y-1 mt-1">
+                    <NavLink to="/volumes" className={getMobileSubLinkClass} onClick={closeMobileMenu}>
+                      Volumes
+                    </NavLink>
+                    <NavLink to="/chapters" className={getMobileSubLinkClass} onClick={closeMobileMenu}>
+                      Chapters
+                    </NavLink>
+                  </div>
+                )}
               </div>
 
               {/* Analytics Section */}
-              <div className="space-y-1">
-                <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Analytics</div>
-                <NavLink to="/analytics" className={getMobileLinkClass} onClick={closeMobileMenu}>
-                  Dashboard
-                </NavLink>
-                <NavLink to="/analytics/character-stats" className={getMobileLinkClass} onClick={closeMobileMenu}>
-                  Character Stats
-                </NavLink>
-                <NavLink to="/analytics/character-appearances" className={getMobileLinkClass} onClick={closeMobileMenu}>
-                  Character Appearances
-                </NavLink>
-                <NavLink to="/analytics/story-arcs" className={getMobileLinkClass} onClick={closeMobileMenu}>
-                  Story & Arcs
-                </NavLink>
-                <NavLink to="/analytics/birthdays" className={getMobileLinkClass} onClick={closeMobileMenu}>
-                  Birthdays
-                </NavLink>
-                <NavLink to="/analytics/chapter-releases" className={getMobileLinkClass} onClick={closeMobileMenu}>
-                  Chapter Releases
-                </NavLink>
+              <div>
+                <button
+                  onClick={() => setAnalyticsExpanded(!analyticsExpanded)}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                >
+                  <span>Analytics</span>
+                  <svg
+                    className={`w-5 h-5 transition-transform ${analyticsExpanded ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {analyticsExpanded && (
+                  <div className="space-y-1 mt-1">
+                    <NavLink to="/analytics" className={getMobileSubLinkClass} onClick={closeMobileMenu}>
+                      Dashboard
+                    </NavLink>
+                    <NavLink to="/analytics/character-stats" className={getMobileSubLinkClass} onClick={closeMobileMenu}>
+                      Character Stats
+                    </NavLink>
+                    <NavLink to="/analytics/character-appearances" className={getMobileSubLinkClass} onClick={closeMobileMenu}>
+                      Character Appearances
+                    </NavLink>
+                    <NavLink to="/analytics/story-arcs" className={getMobileSubLinkClass} onClick={closeMobileMenu}>
+                      Story & Arcs
+                    </NavLink>
+                    <NavLink to="/analytics/birthdays" className={getMobileSubLinkClass} onClick={closeMobileMenu}>
+                      Birthdays
+                    </NavLink>
+                    <NavLink to="/analytics/chapter-releases" className={getMobileSubLinkClass} onClick={closeMobileMenu}>
+                      Chapter Releases
+                    </NavLink>
+                  </div>
+                )}
               </div>
 
               <NavLink to="/about" className={getMobileLinkClass} onClick={closeMobileMenu}>
