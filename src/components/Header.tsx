@@ -7,7 +7,7 @@ function Header() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
 
   return (
-    <header className="bg-white border-b border-gray-200">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-6">
           {/* Logo/Brand */}
@@ -72,7 +72,7 @@ function Header() {
 
       {/* Mobile Search Modal */}
       {mobileSearchOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-[70] md:hidden">
           <div className="bg-white h-full flex flex-col">
             {/* Modal Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200">

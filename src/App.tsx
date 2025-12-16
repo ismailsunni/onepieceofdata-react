@@ -38,9 +38,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <HashRouter>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 overflow-x-hidden">
           <Header />
-          <Routes>
+          <div className="pt-16">
+            <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/characters" element={<CharactersPage />} />
             <Route path="/characters/:id" element={<CharacterDetailPage />} />
@@ -61,6 +62,7 @@ function App() {
             <Route path="/analytics/chapter-releases" element={<ChapterReleaseCalendarPage />} />
             <Route path="/about" element={<AboutPage />} />
           </Routes>
+          </div>
         </div>
       </HashRouter>
     </QueryClientProvider>
