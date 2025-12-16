@@ -7,12 +7,15 @@ import {
   Tooltip,
   ResponsiveContainer,
   ReferenceArea,
+  Cell,
 } from 'recharts'
 import { Arc } from '../types/arc'
 import { ChartCard } from './common/ChartCard'
 
 interface ArcLengthChartProps {
   arcs: Arc[]
+  showSeparateBars?: boolean // When true, show each arc as a separate bar instead of stacked
+  allArcs?: Arc[] // All arcs for consistent color mapping across filtered views
 }
 
 interface ChartDataPoint {
@@ -82,7 +85,100 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   return null
 }
 
-function ArcLengthChart({ arcs }: ArcLengthChartProps) {
+function ArcLengthChart({ arcs, showSeparateBars = false, allArcs }: ArcLengthChartProps) {
+  // Define color palette at the top level so it's consistent across both views
+  const colors = [
+    '#1e40af', '#dc2626', '#059669', '#d97706', '#7c3aed',
+    '#db2777', '#0891b2', '#ea580c', '#4f46e5', '#65a30d',
+    '#0284c7', '#e11d48', '#16a34a', '#ca8a04', '#9333ea',
+    '#c026d3', '#0369a1', '#f97316', '#6366f1', '#84cc16',
+    '#0e7490', '#be123c', '#15803d', '#a16207', '#7e22ce',
+  ]
+
+  // First, build a consistent mapping of arc names to colors
+  // Use allArcs if provided (for filtered views), otherwise use arcs
+  // This ensures the same arc always has the same color in both views
+  const arcsForColorMapping = allArcs || arcs
+  const sortedArcs = [...arcsForColorMapping].sort((a, b) => a.start_chapter - b.start_chapter)
+  const arcColorMap = new Map<string, string>()
+  sortedArcs.forEach((arc, index) => {
+    arcColorMap.set(arc.title, colors[index % colors.length])
+  })
+
+  // When showing separate bars, create one data point per arc
+  if (showSeparateBars) {
+    // Sort arcs chronologically for display
+    const sortedFilteredArcs = [...arcs].sort((a, b) => a.start_chapter - b.start_chapter)
+
+    const chartData: ChartDataPoint[] = sortedFilteredArcs.map((arc) => {
+      const chapters = arc.end_chapter - arc.start_chapter + 1
+      return {
+        saga: arc.title, // Use arc title as the x-axis label
+        totalChapters: chapters,
+        arcOrder: [{
+          name: arc.title,
+          chapters: chapters,
+          startChapter: arc.start_chapter,
+        }],
+        [arc.title]: chapters,
+        color: arcColorMap.get(arc.title) || colors[0], // Store color for this arc
+      }
+    })
+
+    return (
+      <ChartCard
+        title="Arc Lengths in Chapters"
+        downloadFileName="arc-lengths"
+      >
+        <ResponsiveContainer width="100%" height={500}>
+          <BarChart
+            data={chartData}
+            margin={{ top: 20, right: 30, left: 60, bottom: 100 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis
+              dataKey="saga"
+              angle={-45}
+              textAnchor="end"
+              height={120}
+              interval={0}
+              tick={{ fontSize: 11 }}
+              stroke="#6b7280"
+              label={{
+                value: 'Arc',
+                position: 'insideBottom',
+                offset: -10,
+                style: { fontSize: 14, fill: '#6b7280', textAnchor: 'middle' },
+              }}
+            />
+            <YAxis
+              label={{
+                value: 'Number of Chapters',
+                angle: -90,
+                position: 'insideLeft',
+                offset: 10,
+                style: { fontSize: 14, fill: '#6b7280', textAnchor: 'middle' },
+              }}
+              tick={{ fontSize: 12 }}
+              stroke="#6b7280"
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Bar
+              dataKey="totalChapters"
+              fill="#059669"
+              radius={[4, 4, 0, 0]}
+            >
+              {chartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color as string} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </ChartCard>
+    )
+  }
+
+  // Original stacked bar chart logic for showing all sagas
   // Group arcs by saga
   const sagaMap = new Map<string, { title: string; arcs: Arc[] }>()
 
@@ -96,7 +192,7 @@ function ArcLengthChart({ arcs }: ArcLengthChartProps) {
 
   // Transform data for stacked bar chart
   const chartData: ChartDataPoint[] = []
-  const arcNames = new Set<string>()
+  const arcNamesSet = new Set<string>()
 
   sagaMap.forEach((saga) => {
     const arcOrder: Array<{ name: string; chapters: number; startChapter: number }> = []
@@ -109,7 +205,7 @@ function ArcLengthChart({ arcs }: ArcLengthChartProps) {
     saga.arcs.forEach((arc) => {
       const chapters = arc.end_chapter - arc.start_chapter + 1
       dataPoint[arc.title] = chapters
-      arcNames.add(arc.title)
+      arcNamesSet.add(arc.title)
       arcOrder.push({
         name: arc.title,
         chapters: chapters,
@@ -119,6 +215,11 @@ function ArcLengthChart({ arcs }: ArcLengthChartProps) {
 
     chartData.push(dataPoint)
   })
+
+  // Sort arc names by their chronological order (matching the color map)
+  const arcNames = sortedArcs
+    .map(arc => arc.title)
+    .filter(title => arcNamesSet.has(title))
 
   // Find the index to split Paradise and New World
   // Summit War is the last saga in Paradise, Fish-Man Island is first in New World
@@ -140,15 +241,6 @@ function ArcLengthChart({ arcs }: ArcLengthChartProps) {
   const newWorldChapters = splitIndex > 0 && splitIndex < chartData.length
     ? chartData.slice(splitIndex).reduce((sum, d) => sum + d.totalChapters, 0)
     : 0
-
-  // Generate a better color palette (using a more harmonious scheme)
-  const colors = [
-    '#1e40af', '#dc2626', '#059669', '#d97706', '#7c3aed',
-    '#db2777', '#0891b2', '#ea580c', '#4f46e5', '#65a30d',
-    '#0284c7', '#e11d48', '#16a34a', '#ca8a04', '#9333ea',
-    '#c026d3', '#0369a1', '#f97316', '#6366f1', '#84cc16',
-    '#0e7490', '#be123c', '#15803d', '#a16207', '#7e22ce',
-  ]
 
   return (
     <ChartCard
@@ -223,13 +315,13 @@ function ArcLengthChart({ arcs }: ArcLengthChartProps) {
             domain={[0, 200]}
           />
           <Tooltip content={<CustomTooltip />} />
-          {Array.from(arcNames).map((arcName, index) => (
+          {arcNames.map((arcName, index) => (
             <Bar
               key={arcName}
               dataKey={arcName}
               stackId="saga"
-              fill={colors[index % colors.length]}
-              radius={index === arcNames.size - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+              fill={arcColorMap.get(arcName) || colors[index % colors.length]}
+              radius={index === arcNames.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
             />
           ))}
         </BarChart>

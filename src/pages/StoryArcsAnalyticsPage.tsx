@@ -212,7 +212,11 @@ function StoryArcsAnalyticsPage() {
             {/* Arc Length Chart */}
             {filteredArcs.length > 0 ? (
               <div className="mb-8">
-                <ArcLengthChart arcs={filteredArcs} />
+                <ArcLengthChart
+                  arcs={filteredArcs}
+                  showSeparateBars={selectedSaga !== null}
+                  allArcs={arcs}
+                />
               </div>
             ) : (
               <div className="text-center py-20">

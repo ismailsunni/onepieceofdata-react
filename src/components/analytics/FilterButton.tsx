@@ -66,6 +66,7 @@ function FilterButton({
         border rounded-lg
         font-medium
         transition-all duration-200
+        cursor-pointer
         disabled:opacity-50 disabled:cursor-not-allowed
         ${className}
       `}
@@ -78,7 +79,7 @@ function FilterButton({
             inline-flex items-center justify-center
             min-w-[20px] h-5 px-1.5
             text-xs font-semibold rounded-full
-            ${active ? 'bg-white bg-opacity-20' : 'bg-gray-200 text-gray-700'}
+            ${active ? 'bg-white/30 text-white' : 'bg-gray-200 text-gray-700'}
           `}
         >
           {count}
