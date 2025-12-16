@@ -7,6 +7,37 @@ function AboutPage() {
         </h2>
 
         <div className="bg-white rounded-lg shadow-md p-6 md:p-8 space-y-6">
+          {/* Beta Notice */}
+          <section className="bg-orange-50 border-l-4 border-orange-500 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 mt-1">
+                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div>
+                <h4 className="text-lg font-bold text-orange-800 mb-2">Beta Version Notice</h4>
+                <p className="text-orange-700 text-sm leading-relaxed mb-2">
+                  This website is currently in <strong>beta</strong>. Features are actively being developed and improved.
+                  You may encounter bugs or incomplete features.
+                </p>
+                <p className="text-orange-700 text-sm leading-relaxed">
+                  <strong>Data Accuracy:</strong> Due to the ongoing nature of the One Piece manga and the complexity
+                  of tracking all details across 1000+ chapters, the data may not be 100% accurate or complete.
+                  We are continuously working to improve data quality and welcome corrections via{' '}
+                  <a
+                    href="https://github.com/ismailsunni/onepieceofdata-react/issues"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-orange-800 hover:text-orange-900 underline font-medium"
+                  >
+                    GitHub Issues
+                  </a>.
+                </p>
+              </div>
+            </div>
+          </section>
+
           {/* Introduction */}
           <section>
             <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-3">
@@ -164,13 +195,22 @@ function AboutPage() {
             <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-3">
               Disclaimer
             </h3>
-            <p className="text-gray-600 text-sm leading-relaxed">
-              One Piece of Data is a fan-made project and is not affiliated with, endorsed by,
-              or connected to Eiichiro Oda, Shueisha, Toei Animation, or any official One Piece
-              entities. All One Piece characters, stories, and related content are the property
-              of their respective owners. This website is created purely for educational and
-              informational purposes for fans of the series.
-            </p>
+            <div className="space-y-3 text-gray-600 text-sm leading-relaxed">
+              <p>
+                <strong>Fan Project:</strong> One Piece of Data is a fan-made project and is not affiliated with, endorsed by,
+                or connected to Eiichiro Oda, Shueisha, Toei Animation, or any official One Piece
+                entities. All One Piece characters, stories, and related content are the property
+                of their respective owners. This website is created purely for educational and
+                informational purposes for fans of the series.
+              </p>
+              <p>
+                <strong>Data Accuracy:</strong> While we strive for accuracy, the data presented on this website
+                may contain errors or omissions. One Piece is an ongoing manga series with over 1000 chapters,
+                and keeping track of all character appearances, story arcs, and details is challenging.
+                The data should be used for reference and entertainment purposes only. Please verify
+                critical information with official sources.
+              </p>
+            </div>
           </section>
         </div>
 
