@@ -208,16 +208,18 @@ function ChapterReleaseCalendarPage() {
 
   // Calculate quick stats
   const stats = useMemo(() => {
-    if (!releases) return { totalChapters: 0, yearsCount: 0, issuesCount: 0, longBreaks: 0, longBreakChapters: [] }
+    if (!releases) return { totalChapters: 0, yearsCount: 0, issuesCount: 0, uninterruptedBreaks: 0, breakChapters: [] }
 
-    // Calculate number of breaks that are 4+ Jump issues
-    let longBreaksCount = 0
-    const longBreakChapters: Array<{
+    // Calculate uninterrupted breaks (3+ consecutive weeks without One Piece)
+    // - Ignore issue 53 (no One Piece published)
+    // - Double issues count as covering 2 weeks, so no break
+    let uninterruptedBreaksCount = 0
+    const breakChapters: Array<{
       fromChapter: number,
       toChapter: number,
       fromJump: string,
       toJump: string,
-      gap: number
+      weeksBreak: number
     }> = []
     const sortedReleases = [...releases].sort((a, b) => a.number - b.number)
 
@@ -225,26 +227,51 @@ function ChapterReleaseCalendarPage() {
       const current = sortedReleases[i]
       const previous = sortedReleases[i - 1]
 
-      // Only count if same year or consecutive years
       if (current.year && previous.year && current.issue !== null && previous.issue !== null) {
-        let issueDiff = 0
+        let weeksBetween = 0
 
         if (current.year === previous.year) {
-          issueDiff = current.issue - previous.issue
+          // Calculate weeks in same year
+          weeksBetween = current.issue - previous.issue
+
+          // Adjust for double issues
+          if (previous.issueEnd !== null && previous.issueEnd > previous.issue) {
+            // Previous was a double issue, it already covered extra weeks
+            weeksBetween -= (previous.issueEnd - previous.issue)
+          }
+
+          // Subtract 1 for the expected next issue
+          weeksBetween -= 1
+
+          // Check if there's an issue 53 in between and subtract it
+          if (previous.issue < 53 && current.issue > 53) {
+            weeksBetween -= 1
+          }
         } else if (current.year === previous.year + 1) {
-          // Approximate: assume ~52 issues per year
-          issueDiff = (52 - previous.issue) + current.issue
+          // Year transition
+          weeksBetween = (52 - previous.issue) + current.issue
+
+          // Adjust for double issues
+          if (previous.issueEnd !== null && previous.issueEnd > previous.issue) {
+            weeksBetween -= (previous.issueEnd - previous.issue)
+          }
+
+          // Subtract 1 for expected next issue
+          weeksBetween -= 1
+
+          // Issue 53 is always excluded
+          weeksBetween -= 1
         }
 
-        // Count if gap is 4 or more issues (meaning 3 or more breaks)
-        if (issueDiff >= 4) {
-          longBreaksCount++
-          longBreakChapters.push({
+        // Count if there were 3 or more weeks without a chapter
+        if (weeksBetween >= 3) {
+          uninterruptedBreaksCount++
+          breakChapters.push({
             fromChapter: previous.number,
             toChapter: current.number,
             fromJump: previous.jump || `${previous.year}-${previous.issue}`,
             toJump: current.jump || `${current.year}-${current.issue}`,
-            gap: issueDiff
+            weeksBreak: weeksBetween
           })
         }
       }
@@ -254,8 +281,8 @@ function ChapterReleaseCalendarPage() {
       totalChapters: releases.length,
       yearsCount: yearData.length,
       issuesCount: allIssues.length,
-      longBreaks: longBreaksCount,
-      longBreakChapters
+      uninterruptedBreaks: uninterruptedBreaksCount,
+      breakChapters
     }
   }, [releases, yearData.length, allIssues.length])
 
@@ -364,8 +391,8 @@ function ChapterReleaseCalendarPage() {
             loading={isLoading}
           />
           <StatCard
-            label="Long Breaks (4+ issues)"
-            value={stats.longBreaks}
+            label="Uninterrupted Breaks (3+ weeks)"
+            value={stats.uninterruptedBreaks}
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -378,8 +405,8 @@ function ChapterReleaseCalendarPage() {
             }
             color="green"
             loading={isLoading}
-            details={stats.longBreakChapters.map(
-              b => `Chapter ${b.fromChapter} (${b.fromJump}) to Chapter ${b.toChapter} (${b.toJump})`
+            details={stats.breakChapters.map(
+              b => `Chapter ${b.fromChapter} to ${b.toChapter} (${b.weeksBreak} weeks break)`
             )}
           />
         </div>
