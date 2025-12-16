@@ -3,7 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { searchAll } from '../services/searchService'
 
-function Search() {
+interface SearchProps {
+  onNavigate?: () => void
+}
+
+function Search({ onNavigate }: SearchProps = {}) {
   const [query, setQuery] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const [debouncedQuery, setDebouncedQuery] = useState('')
@@ -48,6 +52,7 @@ function Search() {
     navigate(path)
     setQuery('')
     setIsOpen(false)
+    onNavigate?.()
   }
 
   const hasResults = results && (
