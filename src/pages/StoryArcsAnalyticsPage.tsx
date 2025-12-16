@@ -122,6 +122,7 @@ function StoryArcsAnalyticsPage() {
               <StatCard
                 label="Longest Arc"
                 value={`${stats.longestArc.chapters} ch`}
+                subtitle={stats.longestArc.title}
                 icon={
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -138,6 +139,7 @@ function StoryArcsAnalyticsPage() {
               <StatCard
                 label="Shortest Arc"
                 value={`${stats.shortestArc.chapters} ch`}
+                subtitle={stats.shortestArc.title}
                 icon={
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path

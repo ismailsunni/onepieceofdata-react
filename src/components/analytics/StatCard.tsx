@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 interface StatCardProps {
   label: string
   value: string | number
+  subtitle?: string // Optional subtitle displayed below the value
   icon?: React.ReactNode
   trend?: 'up' | 'down' | 'neutral'
   trendValue?: string
@@ -66,6 +67,7 @@ const colorStyles = {
 function StatCard({
   label,
   value,
+  subtitle,
   icon,
   trend,
   trendValue,
@@ -92,9 +94,17 @@ function StatCard({
         {loading ? (
           <div className="h-8 w-24 bg-gray-200 rounded animate-pulse mb-2"></div>
         ) : (
-          <div className={`text-3xl font-bold ${styles.text} mb-1`}>
-            {value}
-          </div>
+          <>
+            <div className={`text-3xl font-bold ${styles.text} mb-1`}>
+              {value}
+            </div>
+            {/* Subtitle */}
+            {subtitle && (
+              <div className="text-xs text-gray-500 mb-1">
+                {subtitle}
+              </div>
+            )}
+          </>
         )}
 
         {/* Label with info icon */}
