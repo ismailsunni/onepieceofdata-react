@@ -14,9 +14,9 @@ function HomePage() {
     <main className="min-h-screen bg-gray-50">
       {/* Hero Section */}
       <section className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-6 py-16 md:py-24">
+        <div className="max-w-6xl mx-auto px-6 py-6 md:py-10">
           <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               Explore the One Piece Universe Through Data
             </h1>
             <p className="text-lg text-gray-600 leading-relaxed">
@@ -29,7 +29,7 @@ function HomePage() {
 
       {/* Database Statistics */}
       <section className="bg-gray-50">
-        <div className="max-w-6xl mx-auto px-6 py-16">
+        <div className="max-w-6xl mx-auto px-6 py-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <StatCard
               icon="📚"
@@ -90,9 +90,9 @@ function HomePage() {
 
       {/* Feature Cards */}
       <section className="bg-white border-t border-gray-200">
-        <div className="max-w-6xl mx-auto px-6 py-16">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+        <div className="max-w-6xl mx-auto px-6 py-6">
+          <div className="text-center mb-6">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">
               Start Exploring
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -125,7 +125,7 @@ function HomePage() {
 
       {/* Footer */}
       <section className="bg-gray-50 border-t border-gray-200">
-        <div className="max-w-6xl mx-auto px-6 py-12">
+        <div className="max-w-6xl mx-auto px-6 py-6">
           <div className="text-center text-sm text-gray-500">
             <p>Built with passion for the One Piece community</p>
           </div>

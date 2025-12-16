@@ -128,11 +128,11 @@ function AnalyticsPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Hero Section */}
-        <div className="relative mb-12 overflow-hidden">
+        <div className="relative mb-6 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 opacity-60 rounded-2xl"></div>
-          <div className="relative bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-2xl p-8 shadow-sm">
+          <div className="relative bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center gap-4 mb-4">
               <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
                 <svg className="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -157,7 +157,7 @@ function AnalyticsPage() {
         </div>
 
         {/* Quick Stats Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           <StatCard
             label="Total Characters"
             value={stats?.characters || 0}
@@ -235,7 +235,7 @@ function AnalyticsPage() {
         </div>
 
         {/* Analytics Categories Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {analyticsCategories.map((category) => (
             <Link
               key={category.path}
@@ -270,7 +270,7 @@ function AnalyticsPage() {
         </div>
 
         {/* Getting Started Section */}
-        <div className="bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-100 rounded-xl p-8">
+        <div className="bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-100 rounded-xl p-6">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

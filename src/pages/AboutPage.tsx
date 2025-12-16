@@ -1,6 +1,6 @@
 function AboutPage() {
   return (
-    <main className="container mx-auto px-4 py-6 md:py-12">
+    <main className="container mx-auto px-4 py-6 md:py-10">
       <div className="max-w-4xl mx-auto">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6">
           About One Piece of Data

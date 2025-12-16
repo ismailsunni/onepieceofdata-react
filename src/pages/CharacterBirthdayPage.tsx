@@ -267,7 +267,7 @@ function CharacterBirthdayPage() {
   if (isLoading) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex justify-center items-center py-20">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-pink-600"></div>
           </div>
@@ -279,7 +279,7 @@ function CharacterBirthdayPage() {
   if (error) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="text-center text-red-600">
             <p>Error loading birthday data. Please try again later.</p>
           </div>
@@ -290,11 +290,11 @@ function CharacterBirthdayPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Hero Section */}
-        <div className="relative mb-12 overflow-hidden">
+        <div className="relative mb-6 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-pink-50 via-rose-50 to-pink-50 opacity-60 rounded-2xl"></div>
-          <div className="relative bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-2xl p-8 shadow-sm">
+          <div className="relative bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-gradient-to-br from-pink-600 to-rose-600 rounded-xl flex items-center justify-center shadow-lg">
                 <svg className="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
