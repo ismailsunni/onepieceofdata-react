@@ -13,6 +13,7 @@ interface StatCardProps {
   link?: string
   className?: string
   tooltip?: string
+  details?: string[] // Optional list of detail items that can be expanded/collapsed
 }
 
 const colorStyles = {
@@ -76,9 +77,11 @@ function StatCard({
   link,
   className = '',
   tooltip,
+  details,
 }: StatCardProps) {
   const styles = colorStyles[color]
   const [showTooltip, setShowTooltip] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
 
   const content = (
     <div className="flex items-start justify-between">
@@ -157,6 +160,35 @@ function StatCard({
             </span>
           </div>
         )}
+
+        {/* Expandable Details */}
+        {details && details.length > 0 && !loading && (
+          <div className="mt-3">
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="flex items-center gap-1 text-xs font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+            >
+              <svg
+                className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              {isExpanded ? 'Hide details' : 'Show details'}
+            </button>
+            {isExpanded && (
+              <div className="mt-2 pl-4 space-y-1 text-xs text-gray-600 max-h-48 overflow-y-auto border-l-2 border-gray-200">
+                {details.map((detail, index) => (
+                  <div key={index} className="py-0.5">
+                    {detail}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -179,7 +211,7 @@ function StatCard({
       >
         {content}
         {tooltip && showTooltip && (
-          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg whitespace-normal max-w-xs z-50">
+          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-gray-900 text-white text-sm rounded-lg shadow-lg whitespace-pre-wrap max-w-md z-50">
             {tooltip}
             <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
               <div className="border-4 border-transparent border-t-gray-900"></div>
@@ -204,7 +236,7 @@ function StatCard({
     >
       {content}
       {tooltip && showTooltip && (
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg whitespace-normal max-w-xs z-50">
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-gray-900 text-white text-sm rounded-lg shadow-lg whitespace-pre-wrap max-w-md z-50">
           {tooltip}
           <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
             <div className="border-4 border-transparent border-t-gray-900"></div>

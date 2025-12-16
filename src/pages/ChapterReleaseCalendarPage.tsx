@@ -208,13 +208,54 @@ function ChapterReleaseCalendarPage() {
 
   // Calculate quick stats
   const stats = useMemo(() => {
-    if (!releases) return { totalChapters: 0, yearsCount: 0, issuesCount: 0, latestChapter: 0 }
+    if (!releases) return { totalChapters: 0, yearsCount: 0, issuesCount: 0, longBreaks: 0, longBreakChapters: [] }
+
+    // Calculate number of breaks that are 4+ Jump issues
+    let longBreaksCount = 0
+    const longBreakChapters: Array<{
+      fromChapter: number,
+      toChapter: number,
+      fromJump: string,
+      toJump: string,
+      gap: number
+    }> = []
+    const sortedReleases = [...releases].sort((a, b) => a.number - b.number)
+
+    for (let i = 1; i < sortedReleases.length; i++) {
+      const current = sortedReleases[i]
+      const previous = sortedReleases[i - 1]
+
+      // Only count if same year or consecutive years
+      if (current.year && previous.year && current.issue !== null && previous.issue !== null) {
+        let issueDiff = 0
+
+        if (current.year === previous.year) {
+          issueDiff = current.issue - previous.issue
+        } else if (current.year === previous.year + 1) {
+          // Approximate: assume ~52 issues per year
+          issueDiff = (52 - previous.issue) + current.issue
+        }
+
+        // Count if gap is 4 or more issues (meaning 3 or more breaks)
+        if (issueDiff >= 4) {
+          longBreaksCount++
+          longBreakChapters.push({
+            fromChapter: previous.number,
+            toChapter: current.number,
+            fromJump: previous.jump || `${previous.year}-${previous.issue}`,
+            toJump: current.jump || `${current.year}-${current.issue}`,
+            gap: issueDiff
+          })
+        }
+      }
+    }
 
     return {
       totalChapters: releases.length,
       yearsCount: yearData.length,
       issuesCount: allIssues.length,
-      latestChapter: releases.length > 0 ? Math.max(...releases.map(r => r.number)) : 0
+      longBreaks: longBreaksCount,
+      longBreakChapters
     }
   }, [releases, yearData.length, allIssues.length])
 
@@ -323,20 +364,23 @@ function ChapterReleaseCalendarPage() {
             loading={isLoading}
           />
           <StatCard
-            label="Latest Chapter"
-            value={stats.latestChapter}
+            label="Long Breaks (4+ issues)"
+            value={stats.longBreaks}
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                  d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
             }
             color="green"
             loading={isLoading}
+            details={stats.longBreakChapters.map(
+              b => `Chapter ${b.fromChapter} (${b.fromJump}) to Chapter ${b.toChapter} (${b.toJump})`
+            )}
           />
         </div>
 
