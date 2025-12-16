@@ -242,10 +242,10 @@ function CharacterAppearancesPage() {
               </>
             )}
 
-            {/* Character Appearances by Chapter Range */}
-            {appearanceData.length > 0 && (
+            {/* Saga Appearance Count Distribution */}
+            {sagaAppearanceCountData.length > 0 && (
               <div className="mb-8">
-                <CharacterAppearanceChart data={appearanceData} />
+                <SagaAppearanceCountChart data={sagaAppearanceCountData} />
               </div>
             )}
 
@@ -256,10 +256,10 @@ function CharacterAppearancesPage() {
               </div>
             )}
 
-            {/* Saga Appearance Count Distribution */}
-            {sagaAppearanceCountData.length > 0 && (
+            {/* Character Appearances by Chapter Range */}
+            {appearanceData.length > 0 && (
               <div className="mb-8">
-                <SagaAppearanceCountChart data={sagaAppearanceCountData} />
+                <CharacterAppearanceChart data={appearanceData} />
               </div>
             )}
 
