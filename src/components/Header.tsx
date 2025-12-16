@@ -20,7 +20,7 @@ function Header() {
             </div>
             <div className="flex flex-col">
               <span className="text-gray-900 font-semibold text-base leading-tight group-hover:text-blue-600 transition-colors">
-                One Piece of Data
+                One Piece of Data<sup className="text-xs text-orange-500 ml-1">beta</sup>
               </span>
               <span className="text-gray-500 text-xs leading-tight hidden sm:block">
                 Data exploration for One Piece

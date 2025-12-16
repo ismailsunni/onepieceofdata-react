@@ -16,7 +16,7 @@ function HomePage() {
       <section className="bg-white border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-6 py-6 md:py-10">
           <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
               Explore the One Piece Universe Through Data
             </h1>
             <p className="text-lg text-gray-600 leading-relaxed">
