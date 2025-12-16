@@ -34,7 +34,7 @@ function Header() {
           </div>
 
           {/* Navigation */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 relative z-[60]">
             {/* Mobile Search Button */}
             <button
               onClick={() => setMobileSearchOpen(true)}
