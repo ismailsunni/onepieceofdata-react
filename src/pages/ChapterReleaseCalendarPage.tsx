@@ -396,22 +396,6 @@ function ChapterReleaseCalendarPage() {
         {/* Quick Stats Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           <StatCard
-            label="Total Breaks (weeks)"
-            value={stats.totalBreaks}
-            icon={
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            }
-            color="amber"
-            loading={isLoading}
-          />
-          <StatCard
             label="Years Covered"
             value={stats.yearsCount}
             icon={
@@ -445,7 +429,23 @@ function ChapterReleaseCalendarPage() {
             loading={isLoading}
           />
           <StatCard
-            label="Uninterrupted Breaks (3+ weeks)"
+            label="Total Breaks (weeks)"
+            value={stats.totalBreaks}
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            }
+            color="amber"
+            loading={isLoading}
+          />
+          <StatCard
+            label="Long Breaks (3+ weeks)"
             value={stats.uninterruptedBreaks}
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
