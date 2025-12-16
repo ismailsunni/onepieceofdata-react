@@ -15,6 +15,27 @@ interface CharacterTimelineChartProps {
   characters: Character[]
 }
 
+// Recharts tooltip props type
+interface TooltipProps {
+  active?: boolean
+  payload?: Array<{
+    payload: {
+      character: string
+      chapter: number
+      characterIndex: number
+    }
+  }>
+}
+
+// Recharts axis tick props type
+interface AxisTickProps {
+  x?: number
+  y?: number
+  payload?: {
+    value: number
+  }
+}
+
 // Generate a consistent color for each character
 const COLORS = [
   '#3B82F6', // blue
@@ -33,6 +54,42 @@ const COLORS = [
   '#22D3EE', // sky
   '#FB923C', // orange-400
 ]
+
+// Custom tooltip component (must be defined outside to avoid recreating on each render)
+const CustomTooltip = ({ active, payload }: TooltipProps) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload
+    return (
+      <div className="bg-white p-3 border border-gray-300 rounded shadow-lg">
+        <p className="font-semibold text-gray-800">{data.character}</p>
+        <p className="text-sm text-gray-600">Chapter: {data.chapter}</p>
+      </div>
+    )
+  }
+  return null
+}
+
+// Custom Y-axis tick component (must be defined outside to avoid recreating on each render)
+const CustomYAxisTick = (characterNames: string[]) => {
+  return ({ x, y, payload }: AxisTickProps) => {
+    if (!payload) return null
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <text
+          x={0}
+          y={0}
+          dy={4}
+          textAnchor="end"
+          fill="#666"
+          fontSize={12}
+          className="truncate"
+        >
+          {characterNames[payload.value]}
+        </text>
+      </g>
+    )
+  }
+}
 
 const CharacterTimelineChart = memo(({ characters }: CharacterTimelineChartProps) => {
   // Transform character data into scatter plot format
@@ -99,38 +156,8 @@ const CharacterTimelineChart = memo(({ characters }: CharacterTimelineChartProps
     return { min: min === Infinity ? 0 : min, max: max === -Infinity ? 1000 : max }
   }, [characters])
 
-  // Custom tooltip
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload
-      return (
-        <div className="bg-white p-3 border border-gray-300 rounded shadow-lg">
-          <p className="font-semibold text-gray-800">{data.character}</p>
-          <p className="text-sm text-gray-600">Chapter: {data.chapter}</p>
-        </div>
-      )
-    }
-    return null
-  }
-
-  // Custom Y-axis tick
-  const CustomYAxisTick = ({ x, y, payload }: any) => {
-    return (
-      <g transform={`translate(${x},${y})`}>
-        <text
-          x={0}
-          y={0}
-          dy={4}
-          textAnchor="end"
-          fill="#666"
-          fontSize={12}
-          className="truncate"
-        >
-          {characterNames[payload.value]}
-        </text>
-      </g>
-    )
-  }
+  // Create the Y-axis tick renderer with character names
+  const yAxisTick = useMemo(() => CustomYAxisTick(characterNames), [characterNames])
 
   return (
     <ChartCard
@@ -165,7 +192,7 @@ const CharacterTimelineChart = memo(({ characters }: CharacterTimelineChartProps
             dataKey="characterIndex"
             name="Character"
             domain={[0, characters.length - 1]}
-            tick={<CustomYAxisTick />}
+            tick={yAxisTick}
             ticks={characters.map((_, index) => index)}
             label={{
               value: 'Character',

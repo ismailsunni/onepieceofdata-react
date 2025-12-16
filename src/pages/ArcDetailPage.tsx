@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { logger } from '../utils/logger'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -14,7 +15,7 @@ import { fetchArcs } from '../services/arcService'
 async function fetchArcById(id: string): Promise<Arc | null> {
   try {
     if (!supabase) {
-      console.error('Supabase client is not initialized')
+      logger.error('Supabase client is not initialized')
       return null
     }
 
@@ -25,13 +26,13 @@ async function fetchArcById(id: string): Promise<Arc | null> {
       .single()
 
     if (error) {
-      console.error('Error fetching arc:', error)
+      logger.error('Error fetching arc:', error)
       return null
     }
 
     return data
   } catch (error) {
-    console.error('Error in fetchArcById:', error)
+    logger.error('Error in fetchArcById:', error)
     return null
   }
 }
@@ -39,7 +40,7 @@ async function fetchArcById(id: string): Promise<Arc | null> {
 async function fetchChaptersByArc(startChapter: number, endChapter: number): Promise<Chapter[]> {
   try {
     if (!supabase) {
-      console.error('Supabase client is not initialized')
+      logger.error('Supabase client is not initialized')
       return []
     }
 
@@ -51,13 +52,13 @@ async function fetchChaptersByArc(startChapter: number, endChapter: number): Pro
       .order('number', { ascending: true })
 
     if (error) {
-      console.error('Error fetching chapters by arc:', error)
+      logger.error('Error fetching chapters by arc:', error)
       return []
     }
 
     return data || []
   } catch (error) {
-    console.error('Error in fetchChaptersByArc:', error)
+    logger.error('Error in fetchChaptersByArc:', error)
     return []
   }
 }
@@ -65,7 +66,7 @@ async function fetchChaptersByArc(startChapter: number, endChapter: number): Pro
 async function fetchCharactersByArc(arcId: string): Promise<Character[]> {
   try {
     if (!supabase) {
-      console.error('Supabase client is not initialized')
+      logger.error('Supabase client is not initialized')
       return []
     }
 
@@ -76,13 +77,13 @@ async function fetchCharactersByArc(arcId: string): Promise<Character[]> {
       .order('first_appearance', { ascending: true })
 
     if (error) {
-      console.error('Error fetching characters by arc:', error)
+      logger.error('Error fetching characters by arc:', error)
       return []
     }
 
     return data || []
   } catch (error) {
-    console.error('Error in fetchCharactersByArc:', error)
+    logger.error('Error in fetchCharactersByArc:', error)
     return []
   }
 }

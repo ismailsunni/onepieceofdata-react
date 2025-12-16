@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { logger } from '../utils/logger'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -14,7 +15,7 @@ import { fetchVolumes } from '../services/volumeService'
 async function fetchVolumeByNumber(volumeNumber: number): Promise<Volume | null> {
   try {
     if (!supabase) {
-      console.error('Supabase client is not initialized')
+      logger.error('Supabase client is not initialized')
       return null
     }
 
@@ -25,13 +26,13 @@ async function fetchVolumeByNumber(volumeNumber: number): Promise<Volume | null>
       .single()
 
     if (error) {
-      console.error('Error fetching volume:', error)
+      logger.error('Error fetching volume:', error)
       return null
     }
 
     return data
   } catch (error) {
-    console.error('Error in fetchVolumeByNumber:', error)
+    logger.error('Error in fetchVolumeByNumber:', error)
     return null
   }
 }
@@ -39,7 +40,7 @@ async function fetchVolumeByNumber(volumeNumber: number): Promise<Volume | null>
 async function fetchChaptersByVolume(volumeNumber: number): Promise<Chapter[]> {
   try {
     if (!supabase) {
-      console.error('Supabase client is not initialized')
+      logger.error('Supabase client is not initialized')
       return []
     }
 
@@ -50,13 +51,13 @@ async function fetchChaptersByVolume(volumeNumber: number): Promise<Chapter[]> {
       .order('number', { ascending: true })
 
     if (error) {
-      console.error('Error fetching chapters by volume:', error)
+      logger.error('Error fetching chapters by volume:', error)
       return []
     }
 
     return data || []
   } catch (error) {
-    console.error('Error in fetchChaptersByVolume:', error)
+    logger.error('Error in fetchChaptersByVolume:', error)
     return []
   }
 }
@@ -64,7 +65,7 @@ async function fetchChaptersByVolume(volumeNumber: number): Promise<Chapter[]> {
 async function fetchCharactersByVolume(volumeNumber: number): Promise<Character[]> {
   try {
     if (!supabase) {
-      console.error('Supabase client is not initialized')
+      logger.error('Supabase client is not initialized')
       return []
     }
 
@@ -75,13 +76,13 @@ async function fetchCharactersByVolume(volumeNumber: number): Promise<Character[
       .order('first_appearance', { ascending: true })
 
     if (error) {
-      console.error('Error fetching characters by volume:', error)
+      logger.error('Error fetching characters by volume:', error)
       return []
     }
 
     return data || []
   } catch (error) {
-    console.error('Error in fetchCharactersByVolume:', error)
+    logger.error('Error in fetchCharactersByVolume:', error)
     return []
   }
 }

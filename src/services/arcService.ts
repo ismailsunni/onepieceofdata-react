@@ -1,10 +1,11 @@
 import { supabase } from './supabase'
+import { logger } from '../utils/logger'
 import { Arc } from '../types/arc'
 
 export async function fetchArcs(): Promise<Arc[]> {
   try {
     if (!supabase) {
-      console.error('Supabase client is not initialized')
+      logger.error('Supabase client is not initialized')
       return []
     }
 
@@ -21,12 +22,12 @@ export async function fetchArcs(): Promise<Arc[]> {
     ])
 
     if (arcsResponse.error) {
-      console.error('Error fetching arcs:', arcsResponse.error)
+      logger.error('Error fetching arcs:', arcsResponse.error)
       return []
     }
 
     if (sagasResponse.error) {
-      console.error('Error fetching sagas:', sagasResponse.error)
+      logger.error('Error fetching sagas:', sagasResponse.error)
       // Continue without saga data
     }
 
@@ -67,7 +68,7 @@ export async function fetchArcs(): Promise<Arc[]> {
 
     return transformedData
   } catch (error) {
-    console.error('Error in fetchArcs:', error)
+    logger.error('Error in fetchArcs:', error)
     return []
   }
 }

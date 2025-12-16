@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { logger } from '../../utils/logger'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import { mergeChartWithWatermark } from '../../utils/mergeChartWithWatermark'
@@ -30,7 +31,7 @@ export function DownloadChartButton({
             link.href = dataUrl
             link.click()
         } catch (error) {
-            console.error('Failed to download chart:', error)
+            logger.error('Failed to download chart:', error)
             alert('Failed to download chart. Please try again.')
         } finally {
             setIsDownloading(false)

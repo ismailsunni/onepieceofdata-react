@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { Saga } from '../types/arc'
+import { logger } from '../utils/logger'
 
 export interface BountyRange {
   range: string
@@ -74,7 +75,7 @@ export interface TimeSkipData {
 export async function fetchBountyDistribution(): Promise<BountyRange[]> {
   try {
     if (!supabase) {
-      console.error('Supabase client not initialized')
+      logger.error('Supabase client not initialized')
       return []
     }
 
@@ -85,7 +86,7 @@ export async function fetchBountyDistribution(): Promise<BountyRange[]> {
       .gt('bounty', 0)
 
     if (error) {
-      console.error('Error fetching bounty data:', error)
+      logger.error('Error fetching bounty data:', error)
       return []
     }
 
@@ -162,7 +163,7 @@ export async function fetchBountyDistribution(): Promise<BountyRange[]> {
     // Return all ranges to show complete power tier hierarchy
     return distribution
   } catch (error) {
-    console.error('Error in fetchBountyDistribution:', error)
+    logger.error('Error in fetchBountyDistribution:', error)
     return []
   }
 }
@@ -173,7 +174,7 @@ export async function fetchBountyDistribution(): Promise<BountyRange[]> {
 export async function fetchBountyStats(): Promise<BountyStats> {
   try {
     if (!supabase) {
-      console.error('Supabase client not initialized')
+      logger.error('Supabase client not initialized')
       return { totalCharacters: 0, charactersWithBounty: 0, percentage: 0 }
     }
 
@@ -183,7 +184,7 @@ export async function fetchBountyStats(): Promise<BountyStats> {
       .select('*', { count: 'exact', head: true })
 
     if (totalError) {
-      console.error('Error fetching total characters:', totalError)
+      logger.error('Error fetching total characters:', totalError)
       return { totalCharacters: 0, charactersWithBounty: 0, percentage: 0 }
     }
 
@@ -195,7 +196,7 @@ export async function fetchBountyStats(): Promise<BountyStats> {
       .gt('bounty', 0)
 
     if (bountyError) {
-      console.error('Error fetching characters with bounty:', bountyError)
+      logger.error('Error fetching characters with bounty:', bountyError)
       return {
         totalCharacters: totalCharacters || 0,
         charactersWithBounty: 0,
@@ -214,7 +215,7 @@ export async function fetchBountyStats(): Promise<BountyStats> {
       percentage,
     }
   } catch (error) {
-    console.error('Error in fetchBountyStats:', error)
+    logger.error('Error in fetchBountyStats:', error)
     return { totalCharacters: 0, charactersWithBounty: 0, percentage: 0 }
   }
 }
@@ -225,14 +226,14 @@ export async function fetchBountyStats(): Promise<BountyStats> {
 export async function fetchStatusDistribution(): Promise<StatusDistribution[]> {
   try {
     if (!supabase) {
-      console.error('Supabase client not initialized')
+      logger.error('Supabase client not initialized')
       return []
     }
 
     const { data, error } = await supabase.from('character').select('status')
 
     if (error) {
-      console.error('Error fetching status data:', error)
+      logger.error('Error fetching status data:', error)
       return []
     }
 
@@ -261,7 +262,7 @@ export async function fetchStatusDistribution(): Promise<StatusDistribution[]> {
 
     return distribution.sort((a, b) => b.count - a.count)
   } catch (error) {
-    console.error('Error in fetchStatusDistribution:', error)
+    logger.error('Error in fetchStatusDistribution:', error)
     return []
   }
 }
@@ -277,7 +278,7 @@ export async function fetchTopBounties(
 ): Promise<TopBounty[]> {
   try {
     if (!supabase) {
-      console.error('Supabase client not initialized')
+      logger.error('Supabase client not initialized')
       return []
     }
 
@@ -296,7 +297,7 @@ export async function fetchTopBounties(
       .limit(limit)
 
     if (error) {
-      console.error('Error fetching top bounties:', error)
+      logger.error('Error fetching top bounties:', error)
       return []
     }
 
@@ -307,7 +308,7 @@ export async function fetchTopBounties(
       status: char.status,
     }))
   } catch (error) {
-    console.error('Error in fetchTopBounties:', error)
+    logger.error('Error in fetchTopBounties:', error)
     return []
   }
 }
@@ -318,7 +319,7 @@ export async function fetchTopBounties(
 export async function fetchAppearanceDistribution(): Promise<AppearanceData[]> {
   try {
     if (!supabase) {
-      console.error('Supabase client not initialized')
+      logger.error('Supabase client not initialized')
       return []
     }
 
@@ -329,7 +330,7 @@ export async function fetchAppearanceDistribution(): Promise<AppearanceData[]> {
       .gt('appearance_count', 0)
 
     if (error) {
-      console.error('Error fetching appearance data:', error)
+      logger.error('Error fetching appearance data:', error)
       return []
     }
 
@@ -358,7 +359,7 @@ export async function fetchAppearanceDistribution(): Promise<AppearanceData[]> {
 
     return distribution
   } catch (error) {
-    console.error('Error in fetchAppearanceDistribution:', error)
+    logger.error('Error in fetchAppearanceDistribution:', error)
     return []
   }
 }
@@ -372,7 +373,7 @@ export async function fetchSagaAppearanceDistribution(): Promise<
 > {
   try {
     if (!supabase) {
-      console.error('Supabase client not initialized')
+      logger.error('Supabase client not initialized')
       return []
     }
 
@@ -383,7 +384,7 @@ export async function fetchSagaAppearanceDistribution(): Promise<
       .order('start_chapter', { ascending: true })
 
     if (sagasError) {
-      console.error('Error fetching sagas:', sagasError)
+      logger.error('Error fetching sagas:', sagasError)
       return []
     }
 
@@ -394,7 +395,7 @@ export async function fetchSagaAppearanceDistribution(): Promise<
       .not('first_appearance', 'is', null)
 
     if (charactersError) {
-      console.error('Error fetching characters:', charactersError)
+      logger.error('Error fetching characters:', charactersError)
       return []
     }
 
@@ -418,7 +419,7 @@ export async function fetchSagaAppearanceDistribution(): Promise<
 
     return distribution
   } catch (error) {
-    console.error('Error in fetchSagaAppearanceDistribution:', error)
+    logger.error('Error in fetchSagaAppearanceDistribution:', error)
     return []
   }
 }
@@ -432,7 +433,7 @@ export async function fetchSagaAppearanceCountDistribution(): Promise<
 > {
   try {
     if (!supabase) {
-      console.error('Supabase client not initialized')
+      logger.error('Supabase client not initialized')
       return []
     }
 
@@ -443,7 +444,7 @@ export async function fetchSagaAppearanceCountDistribution(): Promise<
       .not('saga_list', 'is', null)
 
     if (charactersError) {
-      console.error('Error fetching characters:', charactersError)
+      logger.error('Error fetching characters:', charactersError)
       return []
     }
 
@@ -470,7 +471,7 @@ export async function fetchSagaAppearanceCountDistribution(): Promise<
 
     return distribution
   } catch (error) {
-    console.error('Error in fetchSagaAppearanceCountDistribution:', error)
+    logger.error('Error in fetchSagaAppearanceCountDistribution:', error)
     return []
   }
 }
@@ -483,7 +484,7 @@ export async function fetchBloodTypeDistribution(): Promise<
 > {
   try {
     if (!supabase) {
-      console.error('Supabase client not initialized')
+      logger.error('Supabase client not initialized')
       return []
     }
 
@@ -493,7 +494,7 @@ export async function fetchBloodTypeDistribution(): Promise<
       .not('blood_type_group', 'is', null)
 
     if (error) {
-      console.error('Error fetching blood type data:', error)
+      logger.error('Error fetching blood type data:', error)
       return []
     }
 
@@ -511,7 +512,7 @@ export async function fetchBloodTypeDistribution(): Promise<
       .map(([bloodType, count]) => ({ bloodType, count }))
       .sort((a, b) => b.count - a.count)
   } catch (error) {
-    console.error('Error in fetchBloodTypeDistribution:', error)
+    logger.error('Error in fetchBloodTypeDistribution:', error)
     return []
   }
 }
@@ -527,7 +528,7 @@ export async function fetchBloodTypeDistribution(): Promise<
 export async function fetchTimeSkipDistribution(): Promise<TimeSkipData> {
   try {
     if (!supabase) {
-      console.error('Supabase client not initialized')
+      logger.error('Supabase client not initialized')
       return { preTimeSkipOnly: 0, postTimeSkipOnly: 0, both: 0, total: 0 }
     }
 
@@ -540,7 +541,7 @@ export async function fetchTimeSkipDistribution(): Promise<TimeSkipData> {
       .not('chapter_list', 'is', null)
 
     if (error) {
-      console.error('Error fetching time skip data:', error)
+      logger.error('Error fetching time skip data:', error)
       return { preTimeSkipOnly: 0, postTimeSkipOnly: 0, both: 0, total: 0 }
     }
 
@@ -575,7 +576,7 @@ export async function fetchTimeSkipDistribution(): Promise<TimeSkipData> {
       total: preTimeSkipOnly + postTimeSkipOnly + both,
     }
   } catch (error) {
-    console.error('Error in fetchTimeSkipDistribution:', error)
+    logger.error('Error in fetchTimeSkipDistribution:', error)
     return { preTimeSkipOnly: 0, postTimeSkipOnly: 0, both: 0, total: 0 }
   }
 }
@@ -599,7 +600,7 @@ export interface BirthdaysByDate {
 export async function fetchCharacterBirthdays(): Promise<BirthdaysByDate> {
   try {
     if (!supabase) {
-      console.error('Supabase client not initialized')
+      logger.error('Supabase client not initialized')
       return {}
     }
 
@@ -609,7 +610,7 @@ export async function fetchCharacterBirthdays(): Promise<BirthdaysByDate> {
       .not('birth_date', 'is', null)
 
     if (error) {
-      console.error('Error fetching birthday data:', error)
+      logger.error('Error fetching birthday data:', error)
       return {}
     }
 
@@ -638,7 +639,7 @@ export async function fetchCharacterBirthdays(): Promise<BirthdaysByDate> {
 
     return birthdayMap
   } catch (error) {
-    console.error('Error in fetchCharacterBirthdays:', error)
+    logger.error('Error in fetchCharacterBirthdays:', error)
     return {}
   }
 }
@@ -691,7 +692,7 @@ function parseBirthDate(birthDate: string): string | null {
 
     return null
   } catch (error) {
-    console.error('Error parsing birth date:', birthDate, error)
+    logger.error('Error parsing birth date:', birthDate, error)
     return null
   }
 }
@@ -749,7 +750,7 @@ function parseJumpIssue(jump: string | null, date: string | null): { year: numbe
     try {
       year = new Date(date).getFullYear()
     } catch (e) {
-      console.warn('Error parsing date:', date)
+      logger.warn('Error parsing date:', date)
     }
   }
 
@@ -779,7 +780,7 @@ function parseJumpIssue(jump: string | null, date: string | null): { year: numbe
     return year ? { year, issue: parseInt(simpleMatch[1]), issueEnd: null } : null
   }
 
-  console.warn('Could not parse Jump issue:', jump, 'with date:', date)
+  logger.warn('Could not parse Jump issue:', jump, 'with date:', date)
   return null
 }
 
@@ -789,7 +790,7 @@ function parseJumpIssue(jump: string | null, date: string | null): { year: numbe
 export async function fetchChapterReleases(): Promise<ChapterRelease[]> {
   try {
     if (!supabase) {
-      console.error('Supabase client not initialized')
+      logger.error('Supabase client not initialized')
       return []
     }
 
@@ -813,7 +814,7 @@ export async function fetchChapterReleases(): Promise<ChapterRelease[]> {
     ])
 
     if (chaptersRes.error) {
-      console.error('Error fetching chapters:', chaptersRes.error)
+      logger.error('Error fetching chapters:', chaptersRes.error)
       return []
     }
 
@@ -861,7 +862,7 @@ export async function fetchChapterReleases(): Promise<ChapterRelease[]> {
 
     return releases
   } catch (error) {
-    console.error('Error in fetchChapterReleases:', error)
+    logger.error('Error in fetchChapterReleases:', error)
     return []
   }
 }

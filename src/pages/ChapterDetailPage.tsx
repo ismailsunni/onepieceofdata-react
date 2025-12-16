@@ -1,4 +1,5 @@
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { logger } from '../utils/logger'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -14,7 +15,7 @@ import { fetchChapters } from '../services/chapterService'
 async function fetchChapterByNumber(chapterNumber: number): Promise<Chapter | null> {
   try {
     if (!supabase) {
-      console.error('Supabase client is not initialized')
+      logger.error('Supabase client is not initialized')
       return null
     }
 
@@ -25,13 +26,13 @@ async function fetchChapterByNumber(chapterNumber: number): Promise<Chapter | nu
       .single()
 
     if (error) {
-      console.error('Error fetching chapter:', error)
+      logger.error('Error fetching chapter:', error)
       return null
     }
 
     return data
   } catch (error) {
-    console.error('Error in fetchChapterByNumber:', error)
+    logger.error('Error in fetchChapterByNumber:', error)
     return null
   }
 }
@@ -40,7 +41,7 @@ async function fetchChapterByNumber(chapterNumber: number): Promise<Chapter | nu
 async function fetchCharactersByChapter(chapterNumber: number): Promise<Character[]> {
   try {
     if (!supabase) {
-      console.error('Supabase client is not initialized')
+      logger.error('Supabase client is not initialized')
       return []
     }
 
@@ -51,13 +52,13 @@ async function fetchCharactersByChapter(chapterNumber: number): Promise<Characte
       .order('first_appearance', { ascending: true })
 
     if (error) {
-      console.error('Error fetching characters by chapter:', error)
+      logger.error('Error fetching characters by chapter:', error)
       return []
     }
 
     return data || []
   } catch (error) {
-    console.error('Error in fetchCharactersByChapter:', error)
+    logger.error('Error in fetchCharactersByChapter:', error)
     return []
   }
 }
@@ -66,7 +67,7 @@ async function fetchCharactersByChapter(chapterNumber: number): Promise<Characte
 async function fetchArcByChapter(chapterNumber: number): Promise<Arc | null> {
   try {
     if (!supabase) {
-      console.error('Supabase client is not initialized')
+      logger.error('Supabase client is not initialized')
       return null
     }
 
@@ -78,13 +79,13 @@ async function fetchArcByChapter(chapterNumber: number): Promise<Arc | null> {
       .single()
 
     if (error) {
-      console.error('Error fetching arc by chapter:', error)
+      logger.error('Error fetching arc by chapter:', error)
       return null
     }
 
     return data
   } catch (error) {
-    console.error('Error in fetchArcByChapter:', error)
+    logger.error('Error in fetchArcByChapter:', error)
     return null
   }
 }

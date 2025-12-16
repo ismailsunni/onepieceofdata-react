@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { logger } from '../utils/logger'
 import { Character } from '../types/character'
 import { Arc, Saga } from '../types/arc'
 import { Chapter } from '../types/chapter'
@@ -78,7 +79,7 @@ export async function searchAll(query: string): Promise<SearchResult> {
       volumes: volumesRes.data || [],
     }
   } catch (error) {
-    console.error('Error in searchAll:', error)
+    logger.error('Error in searchAll:', error)
     return {
       characters: [],
       arcs: [],

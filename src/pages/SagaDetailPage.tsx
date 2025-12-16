@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { logger } from '../utils/logger'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -12,7 +13,7 @@ import { Character } from '../types/character'
 async function fetchSagaById(id: string): Promise<Saga | null> {
   try {
     if (!supabase) {
-      console.error('Supabase client is not initialized')
+      logger.error('Supabase client is not initialized')
       return null
     }
 
@@ -23,13 +24,13 @@ async function fetchSagaById(id: string): Promise<Saga | null> {
       .single()
 
     if (error) {
-      console.error('Error fetching saga:', error)
+      logger.error('Error fetching saga:', error)
       return null
     }
 
     return data
   } catch (error) {
-    console.error('Error in fetchSagaById:', error)
+    logger.error('Error in fetchSagaById:', error)
     return null
   }
 }
@@ -37,7 +38,7 @@ async function fetchSagaById(id: string): Promise<Saga | null> {
 async function fetchArcsBySaga(sagaId: string): Promise<Arc[]> {
   try {
     if (!supabase) {
-      console.error('Supabase client is not initialized')
+      logger.error('Supabase client is not initialized')
       return []
     }
 
@@ -48,13 +49,13 @@ async function fetchArcsBySaga(sagaId: string): Promise<Arc[]> {
       .order('start_chapter', { ascending: true })
 
     if (error) {
-      console.error('Error fetching arcs by saga:', error)
+      logger.error('Error fetching arcs by saga:', error)
       return []
     }
 
     return data || []
   } catch (error) {
-    console.error('Error in fetchArcsBySaga:', error)
+    logger.error('Error in fetchArcsBySaga:', error)
     return []
   }
 }
@@ -62,7 +63,7 @@ async function fetchArcsBySaga(sagaId: string): Promise<Arc[]> {
 async function fetchCharactersBySaga(sagaId: string): Promise<Character[]> {
   try {
     if (!supabase) {
-      console.error('Supabase client is not initialized')
+      logger.error('Supabase client is not initialized')
       return []
     }
 
@@ -73,13 +74,13 @@ async function fetchCharactersBySaga(sagaId: string): Promise<Character[]> {
       .order('first_appearance', { ascending: true })
 
     if (error) {
-      console.error('Error fetching characters by saga:', error)
+      logger.error('Error fetching characters by saga:', error)
       return []
     }
 
     return data || []
   } catch (error) {
-    console.error('Error in fetchCharactersBySaga:', error)
+    logger.error('Error in fetchCharactersBySaga:', error)
     return []
   }
 }
@@ -87,7 +88,7 @@ async function fetchCharactersBySaga(sagaId: string): Promise<Character[]> {
 async function fetchSagas(): Promise<Saga[]> {
   try {
     if (!supabase) {
-      console.error('Supabase client is not initialized')
+      logger.error('Supabase client is not initialized')
       return []
     }
 
@@ -97,13 +98,13 @@ async function fetchSagas(): Promise<Saga[]> {
       .order('start_chapter', { ascending: true })
 
     if (error) {
-      console.error('Error fetching sagas:', error)
+      logger.error('Error fetching sagas:', error)
       return []
     }
 
     return data || []
   } catch (error) {
-    console.error('Error in fetchSagas:', error)
+    logger.error('Error in fetchSagas:', error)
     return []
   }
 }

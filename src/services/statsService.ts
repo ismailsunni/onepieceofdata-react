@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { logger } from '../utils/logger'
 
 export interface DatabaseStats {
   chapters: number
@@ -14,7 +15,7 @@ export async function fetchDatabaseStats(): Promise<DatabaseStats> {
   try {
     // Check if Supabase client is initialized
     if (!supabase) {
-      console.error('Supabase client is not initialized. Check your .env.local file.')
+      logger.error('Supabase client is not initialized. Check your .env.local file.')
       throw new Error('Supabase not configured')
     }
 
@@ -30,17 +31,17 @@ export async function fetchDatabaseStats(): Promise<DatabaseStats> {
 
     // Check for errors in any of the queries
     if (chaptersResult.error) {
-      console.error('Chapter query error:', {
+      logger.error('Chapter query error:', {
         message: chaptersResult.error.message,
         details: chaptersResult.error.details,
         hint: chaptersResult.error.hint,
         code: chaptersResult.error.code,
       })
     }
-    if (volumesResult.error) console.error('Volume query error:', volumesResult.error)
-    if (arcsResult.error) console.error('Arc query error:', arcsResult.error)
-    if (sagasResult.error) console.error('Saga query error:', sagasResult.error)
-    if (charactersResult.error) console.error('Character query error:', charactersResult.error)
+    if (volumesResult.error) logger.error('Volume query error:', volumesResult.error)
+    if (arcsResult.error) logger.error('Arc query error:', arcsResult.error)
+    if (sagasResult.error) logger.error('Saga query error:', sagasResult.error)
+    if (charactersResult.error) logger.error('Character query error:', charactersResult.error)
 
     // Calculate total pages from chapters (column is num_page)
     const { data: chaptersData } = await supabase
@@ -88,7 +89,7 @@ export async function fetchDatabaseStats(): Promise<DatabaseStats> {
       publicationSpan,
     }
   } catch (error) {
-    console.error('Error fetching database stats:', error)
+    logger.error('Error fetching database stats:', error)
     // Return default values on error
     return {
       chapters: 0,

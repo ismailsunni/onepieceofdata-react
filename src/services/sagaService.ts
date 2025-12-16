@@ -1,10 +1,11 @@
 import { supabase } from './supabase'
+import { logger } from '../utils/logger'
 import { Saga } from '../types/arc'
 
 export async function fetchSagas(): Promise<Saga[]> {
   try {
     if (!supabase) {
-      console.error('Supabase client is not initialized')
+      logger.error('Supabase client is not initialized')
       return []
     }
 
@@ -14,13 +15,13 @@ export async function fetchSagas(): Promise<Saga[]> {
       .order('start_chapter', { ascending: true })
 
     if (error) {
-      console.error('Error fetching sagas:', error)
+      logger.error('Error fetching sagas:', error)
       return []
     }
 
     return data || []
   } catch (error) {
-    console.error('Error in fetchSagas:', error)
+    logger.error('Error in fetchSagas:', error)
     return []
   }
 }

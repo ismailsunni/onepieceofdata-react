@@ -1,10 +1,11 @@
 import { supabase } from './supabase'
+import { logger } from '../utils/logger'
 import { Chapter } from '../types/chapter'
 
 export async function fetchChapters(): Promise<Chapter[]> {
   try {
     if (!supabase) {
-      console.error('Supabase client is not initialized')
+      logger.error('Supabase client is not initialized')
       return []
     }
 
@@ -14,7 +15,7 @@ export async function fetchChapters(): Promise<Chapter[]> {
       .order('number', { ascending: true })
 
     if (error) {
-      console.error('Error fetching chapters:', error)
+      logger.error('Error fetching chapters:', error)
       return []
     }
 
@@ -24,7 +25,7 @@ export async function fetchChapters(): Promise<Chapter[]> {
       .select('chapter_list')
 
     if (charactersError) {
-      console.error('Error fetching characters for counts:', charactersError)
+      logger.error('Error fetching characters for counts:', charactersError)
       // Continue without character counts
       return data || []
     }
@@ -48,7 +49,7 @@ export async function fetchChapters(): Promise<Chapter[]> {
 
     return chaptersWithCounts
   } catch (error) {
-    console.error('Error in fetchChapters:', error)
+    logger.error('Error in fetchChapters:', error)
     return []
   }
 }

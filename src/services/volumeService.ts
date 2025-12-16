@@ -1,10 +1,11 @@
 import { supabase } from './supabase'
+import { logger } from '../utils/logger'
 import { Volume } from '../types/volume'
 
 export async function fetchVolumes(): Promise<Volume[]> {
   try {
     if (!supabase) {
-      console.error('Supabase client is not initialized')
+      logger.error('Supabase client is not initialized')
       return []
     }
 
@@ -14,7 +15,7 @@ export async function fetchVolumes(): Promise<Volume[]> {
       .order('number', { ascending: true })
 
     if (error) {
-      console.error('Error fetching volumes:', error)
+      logger.error('Error fetching volumes:', error)
       return []
     }
 
@@ -24,7 +25,7 @@ export async function fetchVolumes(): Promise<Volume[]> {
       .select('number, volume, num_page')
 
     if (chaptersError) {
-      console.error('Error fetching chapters for volume stats:', chaptersError)
+      logger.error('Error fetching chapters for volume stats:', chaptersError)
       // Return volumes without additional stats
       return data || []
     }
@@ -70,7 +71,7 @@ export async function fetchVolumes(): Promise<Volume[]> {
 
     return volumesWithStats
   } catch (error) {
-    console.error('Error in fetchVolumes:', error)
+    logger.error('Error in fetchVolumes:', error)
     return []
   }
 }
