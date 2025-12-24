@@ -240,6 +240,20 @@ function Navigation() {
                   </NavLink>
                 )}
               </MenuItem>
+              <MenuItem>
+                {({ focus }) => (
+                  <NavLink
+                    to="/analytics/publication-rate"
+                    className={`${
+                      focus ? 'bg-gray-50' : ''
+                    } block px-4 py-2 text-sm text-gray-700 ${
+                      location.pathname === '/analytics/publication-rate' ? 'bg-gray-100 font-medium' : ''
+                    }`}
+                  >
+                    Publication Rate
+                  </NavLink>
+                )}
+              </MenuItem>
             </div>
           </MenuItems>
         </Menu>
@@ -378,6 +392,9 @@ function Navigation() {
                     </NavLink>
                     <NavLink to="/analytics/chapter-releases" className={getMobileSubLinkClass} onClick={closeMobileMenu}>
                       Chapter Releases
+                    </NavLink>
+                    <NavLink to="/analytics/publication-rate" className={getMobileSubLinkClass} onClick={closeMobileMenu}>
+                      Publication Rate
                     </NavLink>
                   </div>
                 )}

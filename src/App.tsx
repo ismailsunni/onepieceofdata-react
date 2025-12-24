@@ -24,6 +24,7 @@ const StoryArcsAnalyticsPage = lazy(() => import('./pages/StoryArcsAnalyticsPage
 const CharacterTimelinePage = lazy(() => import('./pages/CharacterTimelinePage'))
 const CharacterBirthdayPage = lazy(() => import('./pages/CharacterBirthdayPage'))
 const ChapterReleaseCalendarPage = lazy(() => import('./pages/ChapterReleaseCalendarPage'))
+const PublicationRatePage = lazy(() => import('./pages/PublicationRatePage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 
 // Loading fallback component
@@ -73,6 +74,7 @@ function App() {
                 <Route path="/analytics/character-timeline" element={<CharacterTimelinePage />} />
                 <Route path="/analytics/birthdays" element={<CharacterBirthdayPage />} />
                 <Route path="/analytics/chapter-releases" element={<ChapterReleaseCalendarPage />} />
+                <Route path="/analytics/publication-rate" element={<PublicationRatePage />} />
                 <Route path="/about" element={<AboutPage />} />
               </Routes>
             </Suspense>
