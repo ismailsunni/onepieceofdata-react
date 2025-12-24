@@ -166,6 +166,320 @@ export const useCharacters = (filters) => {
 - Provide alternative text for all images
 - Add visible focus indicators on all focusable elements
 
+## Design System & UI/UX
+
+### Design Principles
+
+- **Clean & Minimal**: Focus on content with minimal distractions
+- **Data-First**: Prioritize readability and clarity of information
+- **Responsive**: Mobile-first approach, optimized for all screen sizes
+- **Consistent**: Unified visual language across all features
+- **Accessible**: WCAG 2.1 Level AA compliance
+
+### Color Palette
+
+The application uses a carefully selected color system built on Tailwind's color palette:
+
+#### Brand Colors
+- **Primary Blue**: `blue-600` to `blue-700` - Main brand color, CTAs, links
+  - Gradient: `from-blue-600 to-blue-700`
+  - Used in: Logo, primary buttons, active states
+
+#### Semantic Colors (StatCard Themes)
+- **Blue** (`blue-50/100/200/600/900`): General information, default state
+- **Green** (`green-50/100/200/600/900`): Success, positive trends, growth
+- **Purple** (`purple-50/100/200/600/900`): Premium features, special content
+- **Amber** (`amber-50/100/200/600/900`): Warnings, attention needed
+- **Pink** (`pink-50/100/200/600/900`): Highlights, featured content
+- **Emerald** (`emerald-50/100/200/600/900`): Confirmation, completion
+
+#### Neutral Colors
+- **Gray Scale**: `gray-50` (backgrounds) to `gray-900` (headings)
+  - `gray-50`: Page background
+  - `gray-100`: Hover states
+  - `gray-200`: Borders, dividers
+  - `gray-400`: Disabled states, subtle icons
+  - `gray-600`: Body text, labels
+  - `gray-900`: Headings, emphasis
+
+#### Accent Colors
+- **Orange**: `orange-500` - Beta badges, special indicators
+- **Red**: `red-600` - Errors, negative trends, critical states
+- **White**: Card backgrounds, elevated surfaces
+
+### Typography
+
+#### Font Stack
+- **System Fonts**: Uses native system font stack for optimal performance
+- Defined in TailwindCSS configuration
+
+#### Type Scale
+- **3xl** (`text-3xl`): Primary metric values (StatCard values)
+- **xl** (`text-xl`): Card titles, section headers
+- **lg** (`text-lg`): Page headers, prominent labels
+- **base** (`text-base`): Standard body text, brand name
+- **sm** (`text-sm`): Secondary text, metadata
+- **xs** (`text-xs`): Supporting text, badges, labels
+
+#### Font Weights
+- **Bold** (`font-bold`): Primary values, strong emphasis
+- **Semibold** (`font-semibold`): Headings, labels, brand
+- **Medium** (`font-medium`): Sub-headings, button text, secondary emphasis
+- **Regular**: Default body text
+
+### Spacing System
+
+Follow Tailwind's spacing scale (based on 0.25rem = 4px):
+
+- **Micro**: `1` (4px) - Icon gaps, tight spacing
+- **Small**: `2-3` (8-12px) - Component internal spacing
+- **Medium**: `4-6` (16-24px) - Card padding, section gaps
+- **Large**: `8` (32px) - Card padding (desktop), major sections
+- **XL**: `12-16` (48-64px) - Page sections, hero spacing
+
+### Layout System
+
+#### Container Widths
+- **Max Width**: `max-w-7xl` (1280px) - Main content container
+- **Centered**: `mx-auto` - Horizontally center containers
+- **Padding**: `px-4 sm:px-6 lg:px-8` - Responsive horizontal padding
+
+#### Grid System
+- Use CSS Grid or Flexbox for layouts
+- Mobile-first: Start with single column, add columns on larger screens
+- Common patterns:
+  - 1 column (mobile) → 2 columns (tablet) → 3-4 columns (desktop)
+  - Use `grid-cols-1 md:grid-cols-2 lg:grid-cols-3`
+
+### Component Patterns
+
+#### Cards
+```tsx
+// Standard Card Pattern
+<div className="bg-white border border-gray-200 rounded-xl p-8 hover:border-gray-300 hover:shadow-md transition-all duration-200">
+  {/* Card content */}
+</div>
+```
+
+Properties:
+- Background: `bg-white`
+- Border: `border-gray-200` (subtle)
+- Radius: `rounded-xl` (12px) - Friendly, modern feel
+- Padding: `p-8` (32px) on desktop
+- Hover: Enhanced border + shadow
+- Transition: `transition-all duration-200`
+
+#### StatCard Pattern
+Six color variations for different contexts:
+- Uses semantic colors for backgrounds and accents
+- Includes icons, trends, tooltips, expandable details
+- Loading states with skeleton UI
+- Optional links for navigation
+
+#### Buttons (Implicit Pattern)
+```tsx
+// Primary Button
+<button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+  Button Text
+</button>
+
+// Secondary Button
+<button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+  Button Text
+</button>
+
+// Icon Button
+<button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+  <svg className="w-5 h-5">{/* icon */}</svg>
+</button>
+```
+
+### Interactive States
+
+#### Hover States
+- Cards: `hover:border-gray-300 hover:shadow-md`
+- Links: `hover:text-blue-600`
+- Buttons: `hover:bg-blue-700`
+- Icon buttons: `hover:bg-gray-100`
+- Always include: `transition-colors` or `transition-all`
+
+#### Focus States
+- Ensure visible focus indicators for keyboard navigation
+- Use browser default or: `focus:ring-2 focus:ring-blue-500 focus:outline-none`
+
+#### Active States
+- Links: `text-blue-600`
+- Navigation items: Enhanced styling for current page
+
+#### Loading States
+- Skeleton loaders: `bg-gray-200 animate-pulse rounded`
+- Spinners: `animate-spin rounded-full border-b-2 border-blue-600`
+- Disable interaction during loading
+
+#### Disabled States
+- Reduced opacity: `opacity-50`
+- No hover effects: `pointer-events-none`
+- Gray text: `text-gray-400`
+
+### Animations & Transitions
+
+#### Standard Transitions
+- **Duration**: `duration-200` (200ms) for most interactions
+- **Easing**: Use CSS defaults (ease-in-out)
+- **Properties**:
+  - Colors: `transition-colors`
+  - All: `transition-all` (use sparingly)
+  - Transform: `transition-transform`
+
+#### Animated Effects
+- **Hover Translate**: `group-hover:translate-x-1` - Arrow icons in links
+- **Rotate**: `rotate-90` - Expandable chevrons
+- **Scale**: `hover:scale-105` - Subtle zoom effects
+- **Spin**: `animate-spin` - Loading indicators
+- **Pulse**: `animate-pulse` - Skeleton loaders
+
+### Icons
+
+#### Icon Library
+- Use **Heroicons** pattern (SVG icons from Tailwind team)
+- Inline SVG for customization and performance
+
+#### Icon Sizes
+- `w-3 h-3` (12px): Micro icons in text
+- `w-4 h-4` (16px): Small icons, inline with text
+- `w-5 h-5` (20px): Standard interactive icons
+- `w-6 h-6` (24px): Larger interactive icons
+- `w-8 h-8` (32px): Logo, feature icons
+- `w-10 h-10` (40px): StatCard icons
+
+#### Icon Containers (StatCard Pattern)
+```tsx
+<div className="inline-flex items-center justify-center w-10 h-10 bg-blue-100 text-blue-600 rounded-lg">
+  {/* Icon SVG */}
+</div>
+```
+
+### Responsive Design
+
+#### Breakpoints (Tailwind Defaults)
+- **sm**: 640px - Small tablets
+- **md**: 768px - Tablets
+- **lg**: 1024px - Laptops
+- **xl**: 1280px - Desktops
+- **2xl**: 1536px - Large desktops
+
+#### Mobile-First Patterns
+1. **Header**: Fixed sticky header
+   - Mobile: Collapsible menu, search modal
+   - Desktop: Inline search, expanded navigation
+
+2. **Grid Layouts**:
+   - Mobile: 1 column, full width
+   - Tablet: 2 columns
+   - Desktop: 3-4 columns
+
+3. **Typography**:
+   - Scale down heading sizes on mobile
+   - Maintain readability (min 16px for body text)
+
+4. **Spacing**:
+   - Reduce padding on mobile: `p-4 lg:p-8`
+   - Tighter gaps: `gap-4 lg:gap-6`
+
+### Shadows & Elevation
+
+Use shadows sparingly for depth:
+
+- **None**: Default cards (use borders instead)
+- **sm**: `shadow-sm` - Elevated header
+- **md**: `shadow-md` - Hover state on cards
+- **lg**: `shadow-lg` - Modals, tooltips, dropdowns
+
+### Forms & Inputs (Future Reference)
+
+When implementing forms:
+```tsx
+<input
+  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+  placeholder="Enter text"
+/>
+```
+
+### Badges & Labels
+
+```tsx
+// Beta Badge Example
+<sup className="text-xs text-orange-500 ml-1">beta</sup>
+```
+
+### Tooltips
+
+- Background: `bg-gray-900`
+- Text: `text-white text-sm`
+- Padding: `px-4 py-3`
+- Rounded: `rounded-lg`
+- Shadow: `shadow-lg`
+- Position: Absolute with transforms
+- Include arrow pointer
+
+### UX Patterns
+
+#### Navigation
+- Fixed header that stays visible during scroll
+- Breadcrumbs for deep navigation (if needed)
+- Clear active state indicators
+- Mobile: Hamburger menu or bottom navigation
+
+#### Data Display
+- Tables: Sortable columns, pagination, search
+- Charts: Interactive, tooltips on hover, downloadable
+- Cards: Scannable grid layouts
+- Lists: Virtualization for 100+ items
+
+#### Feedback
+- Loading states: Skeleton UI or spinners
+- Error states: Clear error messages with retry options
+- Success states: Confirmation messages
+- Empty states: Helpful guidance
+
+#### Search
+- Prominent search bar in header
+- Real-time results
+- Keyboard navigation support
+- Mobile: Full-screen search modal
+
+#### Progressive Disclosure
+- Expandable details (StatCard pattern)
+- Collapsible sections for complex data
+- "Show more" for long lists
+- Tabs or segments for related content
+
+### Accessibility Guidelines
+
+#### Color Contrast
+- Text: Minimum 4.5:1 ratio
+- Large text (18px+): Minimum 3:1 ratio
+- Interactive elements: Maintain contrast in all states
+
+#### Keyboard Navigation
+- All interactive elements must be focusable
+- Logical tab order
+- Visible focus indicators
+- Escape key closes modals/dropdowns
+- Enter/Space activates buttons
+
+#### ARIA Labels
+- Add `aria-label` to icon-only buttons
+- Use `role` attributes where needed
+- Add `alt` text to all images
+- Use semantic HTML (`<nav>`, `<main>`, `<article>`, etc.)
+
+#### Screen Readers
+- Use semantic HTML structure
+- Provide text alternatives for visual content
+- Announce dynamic content updates
+- Hide decorative elements: `aria-hidden="true"`
+
 ## Component Patterns
 
 ### Feature Components

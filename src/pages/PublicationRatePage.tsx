@@ -160,16 +160,19 @@ function PublicationRatePage() {
 
   // Calculate overall statistics
   const stats = useMemo(() => {
-    if (yearlyStats.length === 0) {
+    if (yearlyStats.length === 0 || !releases) {
       return {
         totalYears: 0,
         totalChapters: 0,
         totalBreaks: 0,
         averagePublicationRate: 0,
+        last5YearsRate: 0,
         mostPublishedYear: null,
         leastPublishedYear: null,
         mostBreaksYear: null,
         leastBreaksYear: null,
+        longestStreak: 0,
+        longestStreakInfo: null,
       }
     }
 
@@ -177,6 +180,12 @@ function PublicationRatePage() {
     const totalBreaks = yearlyStats.reduce((sum, year) => sum + year.breaks, 0)
     const totalWeeks = yearlyStats.reduce((sum, year) => sum + year.availableWeeks, 0)
     const averagePublicationRate = (totalChapters / totalWeeks) * 100
+
+    // Calculate last 5 years average publication rate
+    const last5Years = yearlyStats.slice(-5)
+    const last5YearsChapters = last5Years.reduce((sum, year) => sum + year.chapters, 0)
+    const last5YearsWeeks = last5Years.reduce((sum, year) => sum + year.availableWeeks, 0)
+    const last5YearsRate = last5YearsWeeks > 0 ? (last5YearsChapters / last5YearsWeeks) * 100 : 0
 
     // Find extreme years (excluding first and last year)
     const validYears = yearlyStats.length >= 3 ? yearlyStats.slice(1, -1) : []
@@ -201,17 +210,100 @@ function PublicationRatePage() {
       , validYears[0])
     }
 
+    // Calculate longest streak without break
+    let currentStreak = 0
+    let currentStreakStart = 0
+    let longestStreak = 0
+    let longestStreakStart = 0
+    let longestStreakEnd = 0
+
+    const sortedReleases = [...releases].sort((a, b) => a.number - b.number)
+
+    // Initialize streak with first chapter
+    if (sortedReleases.length > 0) {
+      currentStreak = 1
+      currentStreakStart = 0
+      longestStreak = 1
+      longestStreakStart = 0
+      longestStreakEnd = 0
+    }
+
+    for (let i = 1; i < sortedReleases.length; i++) {
+      const current = sortedReleases[i]
+      const previous = sortedReleases[i - 1]
+
+      if (current.year && previous.year && current.issue !== null && previous.issue !== null) {
+        let weeksBetween = 0
+
+        if (current.year === previous.year) {
+          // Calculate weeks in same year
+          weeksBetween = current.issue - previous.issue
+
+          // Adjust for double issues
+          if (previous.issueEnd !== null && previous.issueEnd > previous.issue) {
+            weeksBetween -= (previous.issueEnd - previous.issue)
+          }
+
+          // Subtract 1 for the expected next issue
+          weeksBetween -= 1
+
+          // Check if there's an issue 53 in between and subtract it
+          if (previous.issue < 53 && current.issue > 53) {
+            weeksBetween -= 1
+          }
+        } else if (current.year === previous.year + 1) {
+          // Year transition
+          weeksBetween = (52 - previous.issue) + current.issue
+
+          // Adjust for double issues
+          if (previous.issueEnd !== null && previous.issueEnd > previous.issue) {
+            weeksBetween -= (previous.issueEnd - previous.issue)
+          }
+
+          // Subtract 1 for expected next issue
+          weeksBetween -= 1
+
+          // Issue 53 is always excluded
+          weeksBetween -= 1
+        }
+
+        // Track streaks (any break of 1+ week resets the streak)
+        if (weeksBetween < 1) {
+          // No break, continue streak
+          currentStreak++
+          if (currentStreak > longestStreak) {
+            longestStreak = currentStreak
+            longestStreakStart = currentStreakStart
+            longestStreakEnd = i
+          }
+        } else {
+          // Break detected (1+ weeks), reset streak
+          currentStreak = 1
+          currentStreakStart = i
+        }
+      }
+    }
+
+    const longestStreakInfo = longestStreak > 0 ? {
+      chapters: longestStreak,
+      fromChapter: sortedReleases[longestStreakStart].number,
+      toChapter: sortedReleases[longestStreakEnd].number
+    } : null
+
     return {
       totalYears: yearlyStats.length,
       totalChapters,
       totalBreaks,
       averagePublicationRate: parseFloat(averagePublicationRate.toFixed(1)),
+      last5YearsRate: parseFloat(last5YearsRate.toFixed(1)),
       mostPublishedYear,
       leastPublishedYear,
       mostBreaksYear,
       leastBreaksYear,
+      longestStreak,
+      longestStreakInfo,
     }
-  }, [yearlyStats])
+  }, [yearlyStats, releases])
 
   if (isLoading) {
     return (
@@ -270,15 +362,16 @@ function PublicationRatePage() {
         {/* Quick Stats Row */}
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
           <StatCard
-            label="Years Covered"
-            value={stats.totalYears}
+            label="Longest Streak Without Break"
+            value={`${stats.longestStreak} ch`}
+            subtitle={stats.longestStreakInfo ? `Ch. ${stats.longestStreakInfo.fromChapter}-${stats.longestStreakInfo.toChapter}` : undefined}
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
                 />
               </svg>
             }
@@ -324,6 +417,7 @@ function PublicationRatePage() {
           <StatCard
             label="Average Publication Rate"
             value={`${stats.averagePublicationRate}%`}
+            subtitle={`Last 5 years: ${stats.last5YearsRate}%`}
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
