@@ -15,7 +15,13 @@ function PublicationRatePage() {
     if (!releases) return []
 
     const sortedReleases = [...releases].sort((a, b) => a.number - b.number)
-    const yearlyData = new Map<number, { chapters: number; breaks: number; firstIssue: number; lastIssue: number; doubleIssueWeeks: number }>()
+    const yearlyData = new Map<number, {
+      chapters: number
+      breaks: number
+      firstIssue: number
+      lastIssue: number
+      issuesWithChapters: Set<number> // Track unique issues that had chapters
+    }>()
 
     // Initialize all years with chapter count and track first/last issues
     sortedReleases.forEach((release) => {
@@ -26,7 +32,7 @@ function PublicationRatePage() {
             breaks: 0,
             firstIssue: release.issue,
             lastIssue: release.issue,
-            doubleIssueWeeks: 0
+            issuesWithChapters: new Set()
           })
         }
         const yearData = yearlyData.get(release.year)!
@@ -35,9 +41,13 @@ function PublicationRatePage() {
         yearData.firstIssue = Math.min(yearData.firstIssue, release.issue)
         yearData.lastIssue = Math.max(yearData.lastIssue, release.issue)
 
-        // Track double issues - they span multiple issue numbers but are only 1 week
+        // Track which issues had chapters (for calculating weeks)
+        // For double issues, mark all spanned issue numbers
+        yearData.issuesWithChapters.add(release.issue)
         if (release.issueEnd !== null && release.issueEnd > release.issue) {
-          yearData.doubleIssueWeeks += (release.issueEnd - release.issue)
+          for (let i = release.issue + 1; i <= release.issueEnd; i++) {
+            yearData.issuesWithChapters.add(i)
+          }
         }
       }
     })
@@ -109,18 +119,9 @@ function PublicationRatePage() {
     // Convert to array and sort by year
     return Array.from(yearlyData.entries())
       .map(([year, data]) => {
-        // Calculate available weeks for this year
-        // For partial years (like 1997 when One Piece started), count from first to last issue
-        let availableWeeks = data.lastIssue - data.firstIssue + 1
-
-        // Subtract the extra weeks covered by double issues
-        // Example: Issue 37-38 covers 2 issue numbers but is only 1 week, so subtract 1
-        availableWeeks -= data.doubleIssueWeeks
-
-        // Subtract 1 if issue 53 is in the range (it's never published)
-        if (data.firstIssue <= 53 && data.lastIssue >= 53) {
-          availableWeeks -= 1
-        }
+        // Calculate available weeks = chapters + breaks
+        // This is the simplest and most accurate way
+        const availableWeeks = data.chapters + data.breaks
 
         return {
           year,
@@ -363,10 +364,10 @@ function PublicationRatePage() {
               <strong>Publication Rate:</strong> (Chapters Published / Available Weeks) × 100%
             </p>
             <p className="text-xs text-gray-500">
-              <strong>Available Weeks:</strong> Calculated from the first to last issue that year, with double issues (e.g., Issue 37-38) counted as one week, and excluding issue 53 (One Piece is never published in that issue).
+              <strong>Available Weeks:</strong> The total number of weeks in the publishing period = Chapters Published + Break Weeks. This represents all weeks from the first to last chapter of that year.
             </p>
             <p className="text-xs text-gray-500">
-              <strong>Note:</strong> For 1997, counting starts from Issue 34 when One Piece began serialization. When there are no breaks, the rate is 100%.
+              <strong>Note:</strong> Break weeks account for planned breaks, holidays, and issue 53 (which never publishes One Piece). When there are no breaks, the rate is 100%.
             </p>
             <div className="flex flex-wrap gap-4 mt-3 pt-3 border-t border-gray-200">
               <div className="flex items-center gap-2">
