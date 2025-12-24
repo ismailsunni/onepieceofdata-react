@@ -381,6 +381,7 @@ function PublicationRatePage() {
           <StatCard
             label="Least Published Year"
             value={stats.leastPublishedYear ? String(stats.leastPublishedYear.year) : '-'}
+            subtitle={stats.leastPublishedYear ? `${stats.leastPublishedYear.chapters} published, ${stats.leastPublishedYear.breaks} breaks` : undefined}
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -393,10 +394,6 @@ function PublicationRatePage() {
             }
             color="purple"
             loading={isLoading}
-            details={stats.leastPublishedYear ? [
-              `Chapters Published: ${stats.leastPublishedYear.chapters}`,
-              `Break Weeks: ${stats.leastPublishedYear.breaks}`,
-            ] : undefined}
           />
           <StatCard
             label="Total Break Weeks"
@@ -416,8 +413,8 @@ function PublicationRatePage() {
           />
           <StatCard
             label="Average Publication Rate"
-            value={`${stats.averagePublicationRate}%`}
-            subtitle={`Last 5 years: ${stats.last5YearsRate}%`}
+            value={`${stats.averagePublicationRate}% (~${Math.round(stats.averagePublicationRate * 0.48)} ch/yr)`}
+            subtitle={`Last 5 years: ${stats.last5YearsRate}% (~${Math.round(stats.last5YearsRate * 0.48)} ch/yr)`}
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
