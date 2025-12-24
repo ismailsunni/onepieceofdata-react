@@ -32,6 +32,8 @@ function PublicationRatePage() {
       firstIssue: number
       lastIssue: number
       issuesWithChapters: Set<number> // Track unique issues that had chapters
+      firstChapter: number | null
+      lastChapter: number | null
     }>()
 
     // Initialize all years with chapter count and track first/last issues
@@ -43,7 +45,9 @@ function PublicationRatePage() {
             breaks: 0,
             firstIssue: release.issue,
             lastIssue: release.issue,
-            issuesWithChapters: new Set()
+            issuesWithChapters: new Set(),
+            firstChapter: null,
+            lastChapter: null
           })
         }
         const yearData = yearlyData.get(release.year)!
@@ -51,6 +55,14 @@ function PublicationRatePage() {
         // Update first and last issue numbers
         yearData.firstIssue = Math.min(yearData.firstIssue, release.issue)
         yearData.lastIssue = Math.max(yearData.lastIssue, release.issue)
+
+        // Track first and last chapter numbers
+        if (yearData.firstChapter === null || release.number < yearData.firstChapter) {
+          yearData.firstChapter = release.number
+        }
+        if (yearData.lastChapter === null || release.number > yearData.lastChapter) {
+          yearData.lastChapter = release.number
+        }
 
         // Track which issues had chapters (for calculating weeks)
         // For double issues, mark all spanned issue numbers
@@ -139,6 +151,8 @@ function PublicationRatePage() {
           chapters: data.chapters,
           breaks: data.breaks,
           availableWeeks,
+          firstChapter: data.firstChapter,
+          lastChapter: data.lastChapter,
         }
       })
       .sort((a, b) => a.year - b.year)
@@ -380,6 +394,9 @@ function PublicationRatePage() {
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 border border-gray-200">
                     Year
                   </th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900 border border-gray-200">
+                    Chapter Range
+                  </th>
                   <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900 border border-gray-200">
                     Chapters Published
                   </th>
@@ -405,6 +422,11 @@ function PublicationRatePage() {
                     >
                       <td className="px-4 py-3 text-sm font-medium text-gray-900 border border-gray-200">
                         {yearStat.year}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-center text-gray-700 border border-gray-200">
+                        {yearStat.firstChapter !== null && yearStat.lastChapter !== null
+                          ? `${yearStat.firstChapter} - ${yearStat.lastChapter}`
+                          : '-'}
                       </td>
                       <td className="px-4 py-3 text-sm text-right text-gray-700 border border-gray-200">
                         {yearStat.chapters}
@@ -433,6 +455,11 @@ function PublicationRatePage() {
                 <tr className="bg-blue-50 font-semibold">
                   <td className="px-4 py-3 text-sm text-gray-900 border border-gray-200">
                     Total
+                  </td>
+                  <td className="px-4 py-3 text-sm text-center text-gray-900 border border-gray-200">
+                    {yearlyStats.length > 0 && yearlyStats[0].firstChapter !== null && yearlyStats[yearlyStats.length - 1].lastChapter !== null
+                      ? `${yearlyStats[0].firstChapter} - ${yearlyStats[yearlyStats.length - 1].lastChapter}`
+                      : '-'}
                   </td>
                   <td className="px-4 py-3 text-sm text-right text-gray-900 border border-gray-200">
                     {yearlyStats.reduce((sum, year) => sum + year.chapters, 0)}
