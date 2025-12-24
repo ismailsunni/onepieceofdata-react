@@ -2,6 +2,17 @@ import { useQuery } from '@tanstack/react-query'
 import { fetchChapterReleases, ChapterRelease } from '../services/analyticsService'
 import { useMemo } from 'react'
 import { StatCard } from '../components/analytics'
+import { ChartCard } from '../components/common/ChartCard'
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts'
 
 function PublicationRatePage() {
   const { data: releases, isLoading, error } = useQuery<ChapterRelease[]>({
@@ -279,9 +290,89 @@ function PublicationRatePage() {
           />
         </div>
 
+        {/* Stacked Bar Chart */}
+        <ChartCard
+          title="Yearly Publication Statistics"
+          downloadFileName="publication-rate-by-year"
+        >
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart
+              data={yearlyStats}
+              margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis
+                dataKey="year"
+                angle={-45}
+                textAnchor="end"
+                height={80}
+                tick={{ fontSize: 12, fill: '#6b7280' }}
+              />
+              <YAxis
+                label={{ value: 'Weeks', angle: -90, position: 'insideLeft', style: { fill: '#6b7280' } }}
+                tick={{ fontSize: 12, fill: '#6b7280' }}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'white',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  padding: '12px',
+                }}
+                formatter={(value: number, name: string) => {
+                  if (name === 'chapters') return [value, 'Chapters']
+                  if (name === 'breaks') return [value, 'Breaks']
+                  return [value, name]
+                }}
+                labelFormatter={(label: number) => `Year ${label}`}
+                content={({ active, payload, label }) => {
+                  if (active && payload && payload.length) {
+                    const data = payload[0].payload
+                    const publicationRate = ((data.chapters / data.availableWeeks) * 100).toFixed(1)
+                    return (
+                      <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-lg">
+                        <p className="font-semibold text-gray-900 mb-2">Year {label}</p>
+                        <p className="text-sm text-gray-700">
+                          <span className="inline-block w-3 h-3 bg-green-500 rounded mr-2"></span>
+                          Chapters: <span className="font-medium">{data.chapters}</span>
+                        </p>
+                        <p className="text-sm text-gray-700">
+                          <span className="inline-block w-3 h-3 bg-red-500 rounded mr-2"></span>
+                          Breaks: <span className="font-medium">{data.breaks}</span>
+                        </p>
+                        <div className="border-t border-gray-200 my-2"></div>
+                        <p className="text-sm text-gray-700">
+                          Available Weeks: <span className="font-medium">{data.availableWeeks}</span>
+                        </p>
+                        <p className="text-sm text-gray-700">
+                          Publication Rate: <span className="font-medium">{publicationRate}%</span>
+                        </p>
+                      </div>
+                    )
+                  }
+                  return null
+                }}
+              />
+              <Legend
+                wrapperStyle={{ paddingTop: '20px' }}
+                formatter={(value: string) => {
+                  if (value === 'chapters') return 'Chapters Published'
+                  if (value === 'breaks') return 'Break Weeks'
+                  return value
+                }}
+              />
+              <Bar dataKey="chapters" stackId="a" fill="#10b981" name="chapters" />
+              <Bar dataKey="breaks" stackId="a" fill="#ef4444" name="breaks" />
+            </BarChart>
+          </ResponsiveContainer>
+          <p className="text-xs text-gray-500 mt-4">
+            Each bar represents the total available weeks for that year. Green shows weeks with chapters published, red shows break weeks.
+          </p>
+        </ChartCard>
+
         {/* Yearly Statistics Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Yearly Publication Statistics</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Detailed Yearly Statistics</h3>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
