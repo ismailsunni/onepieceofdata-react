@@ -166,6 +166,10 @@ function PublicationRatePage() {
         totalChapters: 0,
         totalBreaks: 0,
         averagePublicationRate: 0,
+        mostPublishedYear: null,
+        leastPublishedYear: null,
+        mostBreaksYear: null,
+        leastBreaksYear: null,
       }
     }
 
@@ -174,11 +178,38 @@ function PublicationRatePage() {
     const totalWeeks = yearlyStats.reduce((sum, year) => sum + year.availableWeeks, 0)
     const averagePublicationRate = (totalChapters / totalWeeks) * 100
 
+    // Find extreme years (excluding first and last year)
+    const validYears = yearlyStats.length >= 3 ? yearlyStats.slice(1, -1) : []
+
+    let mostPublishedYear = null
+    let leastPublishedYear = null
+    let mostBreaksYear = null
+    let leastBreaksYear = null
+
+    if (validYears.length > 0) {
+      mostPublishedYear = validYears.reduce((max, year) =>
+        year.chapters > max.chapters ? year : max
+      , validYears[0])
+      leastPublishedYear = validYears.reduce((min, year) =>
+        year.chapters < min.chapters ? year : min
+      , validYears[0])
+      mostBreaksYear = validYears.reduce((max, year) =>
+        year.breaks > max.breaks ? year : max
+      , validYears[0])
+      leastBreaksYear = validYears.reduce((min, year) =>
+        year.breaks < min.breaks ? year : min
+      , validYears[0])
+    }
+
     return {
       totalYears: yearlyStats.length,
       totalChapters,
       totalBreaks,
       averagePublicationRate: parseFloat(averagePublicationRate.toFixed(1)),
+      mostPublishedYear,
+      leastPublishedYear,
+      mostBreaksYear,
+      leastBreaksYear,
     }
   }, [yearlyStats])
 
@@ -255,20 +286,24 @@ function PublicationRatePage() {
             loading={isLoading}
           />
           <StatCard
-            label="Total Chapters"
-            value={stats.totalChapters}
+            label="Least Published Year"
+            value={stats.leastPublishedYear ? String(stats.leastPublishedYear.year) : '-'}
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                  d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
                 />
               </svg>
             }
             color="purple"
             loading={isLoading}
+            details={stats.leastPublishedYear ? [
+              `Chapters Published: ${stats.leastPublishedYear.chapters}`,
+              `Break Weeks: ${stats.leastPublishedYear.breaks}`,
+            ] : undefined}
           />
           <StatCard
             label="Total Break Weeks"
@@ -295,7 +330,7 @@ function PublicationRatePage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                 />
               </svg>
             }
@@ -415,6 +450,31 @@ function PublicationRatePage() {
                 {yearlyStats.map((yearStat, index) => {
                   const publicationRate = ((yearStat.chapters / yearStat.availableWeeks) * 100).toFixed(1)
 
+                  // Find min/max for chapters and breaks (excluding first and last years)
+                  const validYearsForComparison = yearlyStats.slice(1, -1)
+                  const maxChapters = validYearsForComparison.length > 0
+                    ? Math.max(...validYearsForComparison.map(y => y.chapters))
+                    : 0
+                  const minChapters = validYearsForComparison.length > 0
+                    ? Math.min(...validYearsForComparison.map(y => y.chapters))
+                    : 0
+                  const maxBreaks = validYearsForComparison.length > 0
+                    ? Math.max(...validYearsForComparison.map(y => y.breaks))
+                    : 0
+                  const minBreaks = validYearsForComparison.length > 0
+                    ? Math.min(...validYearsForComparison.map(y => y.breaks))
+                    : 0
+
+                  // Check if current year should be highlighted (not first or last)
+                  const isFirstYear = index === 0
+                  const isLastYear = index === yearlyStats.length - 1
+                  const shouldHighlight = !isFirstYear && !isLastYear
+
+                  const isMaxChapters = shouldHighlight && yearStat.chapters === maxChapters
+                  const isMinChapters = shouldHighlight && yearStat.chapters === minChapters
+                  const isMaxBreaks = shouldHighlight && yearStat.breaks === maxBreaks
+                  const isMinBreaks = shouldHighlight && yearStat.breaks === minBreaks
+
                   return (
                     <tr
                       key={yearStat.year}
@@ -428,11 +488,15 @@ function PublicationRatePage() {
                           ? `${yearStat.firstChapter} - ${yearStat.lastChapter}`
                           : '-'}
                       </td>
-                      <td className="px-4 py-3 text-sm text-right text-gray-700 border border-gray-200">
-                        {yearStat.chapters}
+                      <td className="px-4 py-3 text-sm text-right border border-gray-200">
+                        <span className={isMaxChapters ? 'font-bold text-green-600' : isMinChapters ? 'font-bold text-red-600' : 'text-gray-700'}>
+                          {yearStat.chapters}
+                        </span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-right text-gray-700 border border-gray-200">
-                        {yearStat.breaks}
+                      <td className="px-4 py-3 text-sm text-right border border-gray-200">
+                        <span className={isMaxBreaks ? 'font-bold text-red-600' : isMinBreaks ? 'font-bold text-green-600' : 'text-gray-700'}>
+                          {yearStat.breaks}
+                        </span>
                       </td>
                       <td className="px-4 py-3 text-sm text-right text-gray-700 border border-gray-200">
                         {yearStat.availableWeeks}
@@ -485,7 +549,7 @@ function PublicationRatePage() {
               <strong>Available Weeks:</strong> The total number of weeks in the publishing period = Chapters Published + Break Weeks. This represents all weeks from the first to last chapter of that year.
             </p>
             <p className="text-xs text-gray-500">
-              <strong>Note:</strong> Break weeks account for planned breaks, holidays, and issue 53 (which never publishes One Piece). When there are no breaks, the rate is 100%.
+              <strong>Note:</strong> Break weeks account for planned breaks, holidays, and Jump's annual breaks (typically around Issue 4-5 combined issue and year-end combined issues). When there are no breaks, the rate is 100%.
             </p>
             <div className="flex flex-wrap gap-4 mt-3 pt-3 border-t border-gray-200">
               <div className="flex items-center gap-2">
