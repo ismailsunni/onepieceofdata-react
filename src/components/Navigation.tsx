@@ -201,6 +201,20 @@ function Navigation() {
               <MenuItem>
                 {({ focus }) => (
                   <NavLink
+                    to="/analytics/character-completeness"
+                    className={`${
+                      focus ? 'bg-gray-50' : ''
+                    } block px-4 py-2 text-sm text-gray-700 ${
+                      location.pathname === '/analytics/character-completeness' ? 'bg-gray-100 font-medium' : ''
+                    }`}
+                  >
+                    Data Completeness
+                  </NavLink>
+                )}
+              </MenuItem>
+              <MenuItem>
+                {({ focus }) => (
+                  <NavLink
                     to="/analytics/story-arcs"
                     className={`${
                       focus ? 'bg-gray-50' : ''
@@ -383,6 +397,9 @@ function Navigation() {
                     </NavLink>
                     <NavLink to="/analytics/character-appearances" className={getMobileSubLinkClass} onClick={closeMobileMenu}>
                       Character Appearances
+                    </NavLink>
+                    <NavLink to="/analytics/character-completeness" className={getMobileSubLinkClass} onClick={closeMobileMenu}>
+                      Data Completeness
                     </NavLink>
                     <NavLink to="/analytics/story-arcs" className={getMobileSubLinkClass} onClick={closeMobileMenu}>
                       Story & Arcs
