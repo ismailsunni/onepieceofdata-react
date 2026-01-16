@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   fetchAppearanceDistribution,
@@ -22,8 +22,11 @@ import {
   ResponsiveContainer,
   Label,
 } from 'recharts'
+import { toPng } from 'html-to-image'
 
 function CharacterAppearancesPage() {
+  const scatterChartRef = useRef<HTMLDivElement>(null)
+  const [isExporting, setIsExporting] = useState(false)
 
   // Fetch appearance analytics data
   const { data: appearanceData = [], isLoading: appearanceLoading } = useQuery({
@@ -137,6 +140,29 @@ function CharacterAppearancesPage() {
         coverAppearances: char.cover_appearance_count || 0,
       }))
   }, [allCharacters])
+
+  // Download scatter chart handler
+  const handleDownloadScatterChart = async () => {
+    if (!scatterChartRef.current) return
+
+    setIsExporting(true)
+    try {
+      const dataUrl = await toPng(scatterChartRef.current, {
+        cacheBust: true,
+        backgroundColor: '#ffffff',
+        pixelRatio: 2,
+      })
+
+      const link = document.createElement('a')
+      link.download = 'cover-vs-chapter-appearances.png'
+      link.href = dataUrl
+      link.click()
+    } catch (error) {
+      console.error('Error exporting chart:', error)
+    } finally {
+      setIsExporting(false)
+    }
+  }
 
 
 
@@ -392,83 +418,147 @@ function CharacterAppearancesPage() {
                     </svg>
                   }
                 />
-                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm mb-8">
-                  <ResponsiveContainer width="100%" height={500}>
-                    <ScatterChart
-                      margin={{ top: 20, right: 30, bottom: 60, left: 60 }}
+                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm mb-8 relative">
+                  {/* Download Button */}
+                  <div className="absolute right-6 top-6 z-10">
+                    <button
+                      onClick={handleDownloadScatterChart}
+                      disabled={isExporting}
+                      className={`p-2 rounded-lg transition-colors ${
+                        isExporting
+                          ? 'text-gray-400 bg-gray-50 cursor-wait'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                      }`}
+                      title="Download chart"
                     >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
-                        type="number"
-                        dataKey="chapterAppearances"
-                        name="Chapter Appearances"
-                        stroke="#6b7280"
-                        tick={{ fill: '#6b7280', fontSize: 12 }}
+                      {isExporting ? (
+                        <svg
+                          className="w-5 h-5 animate-spin"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                      ) : (
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                          />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Chart Content */}
+                  <div ref={scatterChartRef} className="bg-white p-2">
+                    <style>
+                      {`
+                        .recharts-scatter-symbol:focus {
+                          outline: none !important;
+                        }
+                        .recharts-scatter-symbol:focus-visible {
+                          outline: none !important;
+                        }
+                      `}
+                    </style>
+                    <ResponsiveContainer width="100%" height={500}>
+                      <ScatterChart
+                        margin={{ top: 20, right: 30, bottom: 60, left: 60 }}
                       >
-                        <Label
-                          value="Chapter Appearances"
-                          position="bottom"
-                          offset={40}
-                          style={{ fill: '#374151', fontSize: 14, fontWeight: 600 }}
-                        />
-                      </XAxis>
-                      <YAxis
-                        type="number"
-                        dataKey="coverAppearances"
-                        name="Cover Appearances"
-                        stroke="#6b7280"
-                        tick={{ fill: '#6b7280', fontSize: 12 }}
-                      >
-                        <Label
-                          value="Cover Appearances"
-                          angle={-90}
-                          position="left"
-                          offset={40}
-                          style={{ fill: '#374151', fontSize: 14, fontWeight: 600 }}
-                        />
-                      </YAxis>
-                      <Tooltip
-                        cursor={{ strokeDasharray: '3 3' }}
-                        content={({ active, payload }) => {
-                          if (active && payload && payload.length) {
-                            const data = payload[0].payload
-                            return (
-                              <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4">
-                                <p className="font-semibold text-gray-900 mb-2">
-                                  {data.name}
-                                </p>
-                                <div className="space-y-1 text-sm">
-                                  <p className="text-gray-600">
-                                    <span className="font-medium">Chapter Appearances:</span>{' '}
-                                    <span className="text-emerald-600 font-semibold">
-                                      {data.chapterAppearances}
-                                    </span>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis
+                          type="number"
+                          dataKey="chapterAppearances"
+                          name="Chapter Appearances"
+                          stroke="#6b7280"
+                          tick={{ fill: '#6b7280', fontSize: 12 }}
+                        >
+                          <Label
+                            value="Chapter Appearances"
+                            position="bottom"
+                            offset={40}
+                            style={{ fill: '#374151', fontSize: 14, fontWeight: 600 }}
+                          />
+                        </XAxis>
+                        <YAxis
+                          type="number"
+                          dataKey="coverAppearances"
+                          name="Cover Appearances"
+                          stroke="#6b7280"
+                          tick={{ fill: '#6b7280', fontSize: 12 }}
+                        >
+                          <Label
+                            value="Cover Appearances"
+                            angle={-90}
+                            position="left"
+                            offset={40}
+                            style={{ fill: '#374151', fontSize: 14, fontWeight: 600 }}
+                          />
+                        </YAxis>
+                        <Tooltip
+                          cursor={{ strokeDasharray: '3 3' }}
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              const data = payload[0].payload
+                              return (
+                                <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4">
+                                  <p className="font-semibold text-gray-900 mb-2">
+                                    {data.name}
                                   </p>
-                                  <p className="text-gray-600">
-                                    <span className="font-medium">Cover Appearances:</span>{' '}
-                                    <span className="text-purple-600 font-semibold">
-                                      {data.coverAppearances}
-                                    </span>
-                                  </p>
+                                  <div className="space-y-1 text-sm">
+                                    <p className="text-gray-600">
+                                      <span className="font-medium">Chapter Appearances:</span>{' '}
+                                      <span className="text-emerald-600 font-semibold">
+                                        {data.chapterAppearances}
+                                      </span>
+                                    </p>
+                                    <p className="text-gray-600">
+                                      <span className="font-medium">Cover Appearances:</span>{' '}
+                                      <span className="text-purple-600 font-semibold">
+                                        {data.coverAppearances}
+                                      </span>
+                                    </p>
+                                  </div>
                                 </div>
-                              </div>
-                            )
-                          }
-                          return null
-                        }}
-                      />
-                      <Scatter
-                        name="Characters"
-                        data={coverAppearanceScatterData}
-                        fill="#8b5cf6"
-                        fillOpacity={0.6}
-                        stroke="#7c3aed"
-                        strokeWidth={1.5}
-                      />
-                    </ScatterChart>
-                  </ResponsiveContainer>
-                  <div className="mt-4 text-center text-sm text-gray-500">
-                    Each point represents a character. Hover over a point to see details.
+                              )
+                            }
+                            return null
+                          }}
+                        />
+                        <Scatter
+                          name="Characters"
+                          data={coverAppearanceScatterData}
+                          fill="#8b5cf6"
+                          fillOpacity={0.6}
+                          stroke="#7c3aed"
+                          strokeWidth={1.5}
+                          isAnimationActive={false}
+                        />
+                      </ScatterChart>
+                    </ResponsiveContainer>
+                    <div className="mt-4 text-center text-sm text-gray-500">
+                      Each point represents a character. Hover over a point to see details.
+                    </div>
                   </div>
                 </div>
               </>
