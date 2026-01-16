@@ -6,11 +6,22 @@ import {
   fetchSagaAppearanceCountDistribution,
   fetchTimeSkipDistribution,
 } from '../services/analyticsService'
+import { fetchCharacters } from '../services/characterService'
 import CharacterAppearanceChart from '../components/CharacterAppearanceChart'
 import { SagaAppearanceChart } from '../components/SagaAppearanceChart'
 import { SagaAppearanceCountChart } from '../components/SagaAppearanceCountChart'
 import TimeSkipVennDiagram from '../components/TimeSkipVennDiagram'
 import { StatCard, SectionHeader } from '../components/analytics'
+import {
+  ScatterChart,
+  Scatter,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Label,
+} from 'recharts'
 
 function CharacterAppearancesPage() {
 
@@ -35,11 +46,17 @@ function CharacterAppearancesPage() {
     queryFn: fetchTimeSkipDistribution,
   })
 
+  const { data: allCharacters = [], isLoading: charactersLoading } = useQuery({
+    queryKey: ['characters'],
+    queryFn: fetchCharacters,
+  })
+
   const isLoading =
     appearanceLoading ||
     sagaAppearanceLoading ||
     sagaAppearanceCountLoading ||
-    timeSkipLoading
+    timeSkipLoading ||
+    charactersLoading
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -104,6 +121,22 @@ function CharacterAppearancesPage() {
       newWorldArcs: newWorldSagas.length,
     }
   }, [sagaAppearanceData])
+
+  // Prepare scatter plot data for cover appearances vs chapter appearances
+  const coverAppearanceScatterData = useMemo(() => {
+    return allCharacters
+      .filter(char =>
+        char.cover_appearance_count &&
+        char.cover_appearance_count > 0 &&
+        char.appearance_count &&
+        char.appearance_count > 0
+      )
+      .map(char => ({
+        name: char.name || 'Unknown',
+        chapterAppearances: char.appearance_count || 0,
+        coverAppearances: char.cover_appearance_count || 0,
+      }))
+  }, [allCharacters])
 
 
 
@@ -337,6 +370,105 @@ function CharacterAppearancesPage() {
                         </p>
                       </div>
                     </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Cover Appearances vs Chapter Appearances Scatter Plot */}
+            {coverAppearanceScatterData.length > 0 && (
+              <>
+                <SectionHeader
+                  title="Cover Appearances vs Chapter Appearances"
+                  description="Relationship between volume cover appearances and total chapter appearances for characters featured on covers"
+                  icon={
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  }
+                />
+                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm mb-8">
+                  <ResponsiveContainer width="100%" height={500}>
+                    <ScatterChart
+                      margin={{ top: 20, right: 30, bottom: 60, left: 60 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis
+                        type="number"
+                        dataKey="chapterAppearances"
+                        name="Chapter Appearances"
+                        stroke="#6b7280"
+                        tick={{ fill: '#6b7280', fontSize: 12 }}
+                      >
+                        <Label
+                          value="Chapter Appearances"
+                          position="bottom"
+                          offset={40}
+                          style={{ fill: '#374151', fontSize: 14, fontWeight: 600 }}
+                        />
+                      </XAxis>
+                      <YAxis
+                        type="number"
+                        dataKey="coverAppearances"
+                        name="Cover Appearances"
+                        stroke="#6b7280"
+                        tick={{ fill: '#6b7280', fontSize: 12 }}
+                      >
+                        <Label
+                          value="Cover Appearances"
+                          angle={-90}
+                          position="left"
+                          offset={40}
+                          style={{ fill: '#374151', fontSize: 14, fontWeight: 600 }}
+                        />
+                      </YAxis>
+                      <Tooltip
+                        cursor={{ strokeDasharray: '3 3' }}
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const data = payload[0].payload
+                            return (
+                              <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4">
+                                <p className="font-semibold text-gray-900 mb-2">
+                                  {data.name}
+                                </p>
+                                <div className="space-y-1 text-sm">
+                                  <p className="text-gray-600">
+                                    <span className="font-medium">Chapter Appearances:</span>{' '}
+                                    <span className="text-emerald-600 font-semibold">
+                                      {data.chapterAppearances}
+                                    </span>
+                                  </p>
+                                  <p className="text-gray-600">
+                                    <span className="font-medium">Cover Appearances:</span>{' '}
+                                    <span className="text-purple-600 font-semibold">
+                                      {data.coverAppearances}
+                                    </span>
+                                  </p>
+                                </div>
+                              </div>
+                            )
+                          }
+                          return null
+                        }}
+                      />
+                      <Scatter
+                        name="Characters"
+                        data={coverAppearanceScatterData}
+                        fill="#8b5cf6"
+                        fillOpacity={0.6}
+                        stroke="#7c3aed"
+                        strokeWidth={1.5}
+                      />
+                    </ScatterChart>
+                  </ResponsiveContainer>
+                  <div className="mt-4 text-center text-sm text-gray-500">
+                    Each point represents a character. Hover over a point to see details.
                   </div>
                 </div>
               </>
