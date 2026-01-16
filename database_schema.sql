@@ -35,20 +35,18 @@ CREATE TABLE public.character (
   age integer,
   scraping_status text,
   scraping_note text,
-  birth_date text,
   chapter_list ARRAY,
   volume_list ARRAY,
+  arc_list ARRAY,
+  saga_list ARRAY,
   appearance_count integer,
   volume_appearance_count integer,
   first_appearance integer,
   last_appearance integer,
-  arc_list ARRAY,
-  saga_list ARRAY,
+  birth_date text,
+  cover_volume_list ARRAY,
+  cover_appearance_count integer,
   CONSTRAINT character_pkey PRIMARY KEY (id)
-);
-CREATE TABLE public.cov (
-  volume integer,
-  character text
 );
 CREATE TABLE public.saga (
   saga_id text NOT NULL,

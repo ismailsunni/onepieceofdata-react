@@ -30,6 +30,16 @@ export async function fetchVolumes(): Promise<Volume[]> {
       return data || []
     }
 
+    // Fetch all characters to calculate cover appearances
+    const { data: characters, error: charactersError } = await supabase
+      .from('character')
+      .select('cover_volume_list')
+
+    if (charactersError) {
+      logger.error('Error fetching characters for cover stats:', charactersError)
+      // Continue without cover stats
+    }
+
     // Calculate stats for each volume
     const volumesWithStats = (data || []).map((volume) => {
       // Filter chapters for this volume
@@ -59,6 +69,13 @@ export async function fetchVolumes(): Promise<Volume[]> {
           : `${start_chapter}-${end_chapter}`
         : '-'
 
+      // Count characters that appear on this volume's cover
+      const cover_character_count = characters?.filter(
+        (character) => character.cover_volume_list &&
+                      Array.isArray(character.cover_volume_list) &&
+                      character.cover_volume_list.includes(volume.number)
+      ).length || 0
+
       return {
         ...volume,
         chapter_count,
@@ -66,6 +83,7 @@ export async function fetchVolumes(): Promise<Volume[]> {
         chapter_range,
         start_chapter,
         end_chapter,
+        cover_character_count: cover_character_count > 0 ? cover_character_count : undefined,
       }
     })
 

@@ -62,6 +62,10 @@ function VolumeTable({
         header: 'Total Pages',
         cell: (info) => info.getValue() || '-',
       }),
+      columnHelper.accessor('cover_character_count', {
+        header: 'Cover Characters',
+        cell: (info) => info.getValue() || 0,
+      }),
     ],
     []
   )

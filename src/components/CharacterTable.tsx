@@ -92,6 +92,19 @@ function CharacterTable({
         header: 'Appearances',
         cell: (info) => info.getValue() || '-',
       }),
+      columnHelper.accessor('cover_appearance_count', {
+        header: 'Cover Appearances',
+        cell: (info) => {
+          const count = info.getValue()
+          return count ? (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+              {count}
+            </span>
+          ) : (
+            '-'
+          )
+        },
+      }),
       columnHelper.accessor('first_appearance', {
         header: 'First Appearance',
         cell: (info) => {

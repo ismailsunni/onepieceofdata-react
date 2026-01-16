@@ -87,6 +87,31 @@ async function fetchCharactersByVolume(volumeNumber: number): Promise<Character[
   }
 }
 
+async function fetchCharactersByCoverVolume(volumeNumber: number): Promise<Character[]> {
+  try {
+    if (!supabase) {
+      logger.error('Supabase client is not initialized')
+      return []
+    }
+
+    const { data, error } = await supabase
+      .from('character')
+      .select('*')
+      .contains('cover_volume_list', [volumeNumber])
+      .order('name', { ascending: true })
+
+    if (error) {
+      logger.error('Error fetching characters by cover volume:', error)
+      return []
+    }
+
+    return data || []
+  } catch (error) {
+    logger.error('Error in fetchCharactersByCoverVolume:', error)
+    return []
+  }
+}
+
 // ===== REUSABLE COMPONENTS =====
 
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -111,6 +136,7 @@ function VolumeDetailPage() {
   const volumeNumber = number ? parseInt(number, 10) : null
   const [showAllChapters, setShowAllChapters] = useState(false)
   const [showAllCharacters, setShowAllCharacters] = useState(false)
+  const [showAllCoverCharacters, setShowAllCoverCharacters] = useState(false)
   const [copyLinkFeedback, setCopyLinkFeedback] = useState(false)
 
   const { data: volume, isLoading: volumeLoading } = useQuery({
@@ -128,6 +154,12 @@ function VolumeDetailPage() {
   const { data: characters = [] } = useQuery({
     queryKey: ['volume-characters', volumeNumber],
     queryFn: () => fetchCharactersByVolume(volumeNumber!),
+    enabled: !!volumeNumber,
+  })
+
+  const { data: coverCharacters = [] } = useQuery({
+    queryKey: ['volume-cover-characters', volumeNumber],
+    queryFn: () => fetchCharactersByCoverVolume(volumeNumber!),
     enabled: !!volumeNumber,
   })
 
@@ -203,6 +235,7 @@ function VolumeDetailPage() {
 
   const displayedChapters = showAllChapters ? chapters : chapters.slice(0, 12)
   const displayedCharacters = showAllCharacters ? characters : characters.slice(0, 12)
+  const displayedCoverCharacters = showAllCoverCharacters ? coverCharacters : coverCharacters.slice(0, 12)
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -422,6 +455,75 @@ function VolumeDetailPage() {
               >
                 <span>{showAllChapters ? 'Show Less' : `Show ${chapters.length - 12} More Chapters`}</span>
                 <FontAwesomeIcon icon={showAllChapters ? faChevronUp : faChevronDown} className="w-3 h-3" />
+              </button>
+            )}
+          </Card>
+        )}
+
+        {/* Characters on Cover */}
+        {coverCharacters.length > 0 && (
+          <Card className="mb-8 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <SectionTitle>
+                  Characters on Cover
+                  <span className="ml-2 text-base text-gray-500">({coverCharacters.length})</span>
+                </SectionTitle>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {displayedCoverCharacters.map((character) => (
+                <Link
+                  key={character.id}
+                  to={`/characters/${character.id}`}
+                  className="bg-white border border-purple-200 rounded-lg p-4 hover:shadow-md hover:border-purple-300 transition-all bg-purple-50"
+                >
+                  <div className="flex flex-col h-full">
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="font-semibold text-gray-800 line-clamp-2 flex-1">
+                        {character.name || 'Unknown'}
+                      </h3>
+                      <span className="ml-2 px-2 py-0.5 bg-purple-400 text-purple-900 text-xs font-bold rounded-full whitespace-nowrap">
+                        COVER
+                      </span>
+                    </div>
+                    <div className="flex-1 space-y-1 text-sm text-gray-600">
+                      {character.status && (
+                        <p>
+                          <span className="font-medium">Status:</span> {character.status}
+                        </p>
+                      )}
+                      {character.first_appearance && (
+                        <p>
+                          <span className="font-medium">Debut:</span> Ch. {character.first_appearance}
+                        </p>
+                      )}
+                      {character.bounty !== null && character.bounty > 0 && (
+                        <p>
+                          <span className="font-medium">Bounty:</span> ₿{character.bounty.toLocaleString()}
+                        </p>
+                      )}
+                    </div>
+                    <div className="mt-3 text-xs text-purple-600 font-medium">
+                      View Details →
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            {coverCharacters.length > 12 && (
+              <button
+                onClick={() => setShowAllCoverCharacters(!showAllCoverCharacters)}
+                className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg font-medium transition-colors border border-purple-200"
+              >
+                <span>{showAllCoverCharacters ? 'Show Less' : `Show ${coverCharacters.length - 12} More Characters`}</span>
+                <FontAwesomeIcon icon={showAllCoverCharacters ? faChevronUp : faChevronDown} className="w-3 h-3" />
               </button>
             )}
           </Card>

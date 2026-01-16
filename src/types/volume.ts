@@ -6,4 +6,5 @@ export interface Volume {
   chapter_range?: string
   start_chapter?: number
   end_chapter?: number
+  cover_character_count?: number
 }
