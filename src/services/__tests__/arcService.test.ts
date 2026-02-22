@@ -10,7 +10,7 @@ vi.mock('../../utils/logger', () => ({
 import { supabase } from '../supabase'
 import { fetchArcs } from '../arcService'
 
-function mockParallelQueries(arcsData: unknown, sagasData: unknown, arcsError = null, sagasError = null) {
+function mockParallelQueries(arcsData: unknown, sagasData: unknown, arcsError: unknown = null, sagasError: unknown = null) {
   let callCount = 0
   vi.mocked(supabase!.from).mockImplementation(() => {
     callCount++
