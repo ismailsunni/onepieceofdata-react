@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import toast from 'react-hot-toast'
 import { logger } from '../../utils/logger'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload, faSpinner } from '@fortawesome/free-solid-svg-icons'
@@ -30,9 +31,10 @@ export function DownloadChartButton({
             link.download = `${fileName}.png`
             link.href = dataUrl
             link.click()
+            toast.success('Chart downloaded successfully!')
         } catch (error) {
             logger.error('Failed to download chart:', error)
-            alert('Failed to download chart. Please try again.')
+            toast.error('Failed to download chart. Please try again.')
         } finally {
             setIsDownloading(false)
         }
