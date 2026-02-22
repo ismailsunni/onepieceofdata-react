@@ -2,6 +2,7 @@ import { HashRouter, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { lazy, Suspense } from 'react'
 import Header from './components/Header'
+import ErrorBoundary from './components/common/ErrorBoundary'
 
 // Eager load home page for faster initial render
 import HomePage from './pages/HomePage'
@@ -52,6 +53,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <HashRouter>
+        <ErrorBoundary>
         <div className="min-h-screen bg-gray-50 overflow-x-hidden">
           <Header />
           <div className="pt-16">
@@ -82,6 +84,7 @@ function App() {
             </Suspense>
           </div>
         </div>
+        </ErrorBoundary>
       </HashRouter>
     </QueryClientProvider>
   )
