@@ -69,6 +69,10 @@ function CharacterTable({
         header: 'Origin',
         cell: (info) => info.getValue() || '-',
       }),
+      columnHelper.accessor('origin_region', {
+        header: 'Region',
+        cell: (info) => info.getValue() || '-',
+      }),
       columnHelper.accessor('status', {
         header: 'Status',
         cell: (info) => {

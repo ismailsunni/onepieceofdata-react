@@ -5,10 +5,12 @@ import {
   fetchBountyStats,
   fetchStatusDistribution,
   fetchTopBounties,
+  fetchOriginRegionDistribution,
 } from '../services/analyticsService'
 import BountyDistributionChart from '../components/BountyDistributionChart'
 import CharacterStatusChart from '../components/CharacterStatusChart'
 import TopBountiesChart from '../components/TopBountiesChart'
+import OriginRegionChart from '../components/OriginRegionChart'
 import { StatCard } from '../components/analytics'
 
 function CharacterStatsPage() {
@@ -39,12 +41,18 @@ function CharacterStatsPage() {
     queryFn: () => fetchTopBounties(10, true),
   })
 
+  const { data: originRegionData = [], isLoading: originRegionLoading } = useQuery({
+    queryKey: ['analytics', 'origin-region-distribution'],
+    queryFn: fetchOriginRegionDistribution,
+  })
+
   const isLoading =
     bountyLoading ||
     bountyStatsLoading ||
     statusLoading ||
     topBountiesLoadingAll ||
-    topBountiesLoadingAlive
+    topBountiesLoadingAlive ||
+    originRegionLoading
 
   // Calculate additional statistics
   const stats = useMemo(() => {
@@ -233,6 +241,13 @@ function CharacterStatsPage() {
                   dataAll={topBountiesAll}
                   dataAlive={topBountiesAlive}
                 />
+              </div>
+            )}
+
+            {/* Origin Region Distribution - Full Width */}
+            {originRegionData.length > 0 && (
+              <div className="mb-6">
+                <OriginRegionChart data={originRegionData} />
               </div>
             )}
 

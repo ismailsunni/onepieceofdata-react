@@ -2,6 +2,8 @@ export interface Character {
   id: string
   name: string | null
   origin: string | null
+  origin_region: string | null
+  is_likely_character: boolean | null
   status: string | null
   birth: string | null
   blood_type: string | null

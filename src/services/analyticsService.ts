@@ -68,6 +68,11 @@ export interface TimeSkipData {
   total: number
 }
 
+export interface OriginRegionData {
+  region: string
+  count: number
+}
+
 /**
  * Get distribution of character bounties by ranges with power tier groupings
  * Returns stacked data with alive vs not alive counts
@@ -863,6 +868,42 @@ export async function fetchChapterReleases(): Promise<ChapterRelease[]> {
     return releases
   } catch (error) {
     logger.error('Error in fetchChapterReleases:', error)
+    return []
+  }
+}
+
+/**
+ * Get distribution of characters by origin_region, sorted by count descending.
+ * Excludes characters with null origin_region.
+ */
+export async function fetchOriginRegionDistribution(): Promise<OriginRegionData[]> {
+  try {
+    if (!supabase) {
+      logger.error('Supabase client not initialized')
+      return []
+    }
+
+    const { data, error } = await supabase
+      .from('character')
+      .select('origin_region')
+      .not('origin_region', 'is', null)
+
+    if (error) {
+      logger.error('Error fetching origin_region data:', error)
+      return []
+    }
+
+    const counts: Record<string, number> = {}
+    for (const row of data || []) {
+      const region = row.origin_region as string
+      counts[region] = (counts[region] || 0) + 1
+    }
+
+    return Object.entries(counts)
+      .map(([region, count]) => ({ region, count }))
+      .sort((a, b) => b.count - a.count)
+  } catch (error) {
+    logger.error('Error in fetchOriginRegionDistribution:', error)
     return []
   }
 }
