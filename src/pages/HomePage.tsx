@@ -31,59 +31,14 @@ function HomePage() {
       <section className="bg-gray-50">
         <div className="max-w-6xl mx-auto px-6 py-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <StatCard
-              icon="📚"
-              label="Chapters"
-              value={stats?.chapters || 0}
-              loading={isLoading}
-              link="/chapters"
-            />
-            <StatCard
-              icon="📖"
-              label="Volumes"
-              value={stats?.volumes || 0}
-              loading={isLoading}
-              link="/volumes"
-            />
-            <StatCard
-              icon="🎭"
-              label="Arcs"
-              value={stats?.arcs || 0}
-              loading={isLoading}
-              link="/arcs"
-            />
-            <StatCard
-              icon="🌊"
-              label="Sagas"
-              value={stats?.sagas || 0}
-              loading={isLoading}
-              link="/sagas"
-            />
-            <StatCard
-              icon="👥"
-              label="Characters"
-              value={stats?.characters || 0}
-              loading={isLoading}
-              link="/characters"
-            />
-            <StatCard
-              icon="📄"
-              label="Total Pages"
-              value={stats?.totalPages.toLocaleString() || 0}
-              loading={isLoading}
-            />
-            <StatCard
-              icon="📅"
-              label="Publication"
-              value={stats?.publicationSpan ? `${stats.publicationSpan} days` : 'Unknown'}
-              loading={isLoading}
-            />
-            <StatCard
-              icon="📊"
-              label="Data Points"
-              value={(stats ? stats.chapters + stats.volumes + stats.arcs + stats.sagas + stats.characters : 0).toLocaleString()}
-              loading={isLoading}
-            />
+            <StatCard variant="simple" icon="📚" label="Chapters" value={stats?.chapters || 0} loading={isLoading} link="/chapters" />
+            <StatCard variant="simple" icon="📖" label="Volumes" value={stats?.volumes || 0} loading={isLoading} link="/volumes" />
+            <StatCard variant="simple" icon="🎭" label="Arcs" value={stats?.arcs || 0} loading={isLoading} link="/arcs" />
+            <StatCard variant="simple" icon="🌊" label="Sagas" value={stats?.sagas || 0} loading={isLoading} link="/sagas" />
+            <StatCard variant="simple" icon="👥" label="Characters" value={stats?.characters || 0} loading={isLoading} link="/characters" />
+            <StatCard variant="simple" icon="📄" label="Total Pages" value={stats?.totalPages.toLocaleString() || 0} loading={isLoading} />
+            <StatCard variant="simple" icon="📅" label="Publication" value={stats?.publicationSpan ? `${stats.publicationSpan} days` : 'Unknown'} loading={isLoading} />
+            <StatCard variant="simple" icon="📊" label="Data Points" value={(stats ? stats.chapters + stats.volumes + stats.arcs + stats.sagas + stats.characters : 0).toLocaleString()} loading={isLoading} />
           </div>
         </div>
       </section>
