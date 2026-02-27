@@ -1,5 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import { fetchChapterReleases, ChapterRelease } from '../services/analyticsService'
+import {
+  fetchChapterReleases,
+  ChapterRelease,
+} from '../services/analyticsService'
 import { Link } from 'react-router-dom'
 import { useMemo, useState } from 'react'
 import { StatCard, FilterButton } from '../components/analytics'
@@ -81,10 +84,11 @@ function getCellColor(
       }
       return '#9ca3af' // gray-400
 
-    case 'luffy':
+    case 'luffy': {
       // Check if Luffy appears in any of the chapters
       const luffyAppears = chapters.some((ch) => ch.luffyAppears)
       return luffyAppears ? '#fbbf24' : '#d1d5db' // yellow-400 : gray-300
+    }
 
     default:
       return '#22c55e' // green-500
@@ -95,7 +99,11 @@ function ChapterReleaseCalendarPage() {
   const [theme, setTheme] = useState<VisualizationTheme>('jump')
   const [isCompact, setIsCompact] = useState(false)
 
-  const { data: releases, isLoading, error } = useQuery<ChapterRelease[]>({
+  const {
+    data: releases,
+    isLoading,
+    error,
+  } = useQuery<ChapterRelease[]>({
     queryKey: ['analytics', 'chapter-releases'],
     queryFn: fetchChapterReleases,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -172,7 +180,11 @@ function ChapterReleaseCalendarPage() {
     const uniqueArcs = new Map<string, string>()
 
     releases.forEach((release) => {
-      if (release.sagaId && release.sagaTitle && !uniqueSagas.has(release.sagaId)) {
+      if (
+        release.sagaId &&
+        release.sagaTitle &&
+        !uniqueSagas.has(release.sagaId)
+      ) {
         uniqueSagas.set(release.sagaId, release.sagaTitle)
       }
       if (release.arcId && release.arcTitle && !uniqueArcs.has(release.arcId)) {
@@ -204,18 +216,17 @@ function ChapterReleaseCalendarPage() {
     return Array.from(issues).sort((a, b) => a - b)
   }, [yearData])
 
-
-
   // Calculate quick stats
   const stats = useMemo(() => {
-    if (!releases) return {
-      totalBreaks: 0,
-      yearsCount: 0,
-      longestStreak: 0,
-      longestStreakInfo: null,
-      uninterruptedBreaks: 0,
-      breakChapters: []
-    }
+    if (!releases)
+      return {
+        totalBreaks: 0,
+        yearsCount: 0,
+        longestStreak: 0,
+        longestStreakInfo: null,
+        uninterruptedBreaks: 0,
+        breakChapters: [],
+      }
 
     // Calculate total breaks (any week without One Piece, excluding issue 53)
     // Calculate uninterrupted breaks (3+ consecutive weeks without One Piece)
@@ -224,10 +235,10 @@ function ChapterReleaseCalendarPage() {
     let totalBreaksCount = 0
     let uninterruptedBreaksCount = 0
     const breakChapters: Array<{
-      fromChapter: number,
-      toChapter: number,
-      fromJump: string,
-      toJump: string,
+      fromChapter: number
+      toChapter: number
+      fromJump: string
+      toJump: string
       weeksBreak: number
     }> = []
 
@@ -253,7 +264,12 @@ function ChapterReleaseCalendarPage() {
       const current = sortedReleases[i]
       const previous = sortedReleases[i - 1]
 
-      if (current.year && previous.year && current.issue !== null && previous.issue !== null) {
+      if (
+        current.year &&
+        previous.year &&
+        current.issue !== null &&
+        previous.issue !== null
+      ) {
         let weeksBetween = 0
 
         if (current.year === previous.year) {
@@ -261,9 +277,12 @@ function ChapterReleaseCalendarPage() {
           weeksBetween = current.issue - previous.issue
 
           // Adjust for double issues
-          if (previous.issueEnd !== null && previous.issueEnd > previous.issue) {
+          if (
+            previous.issueEnd !== null &&
+            previous.issueEnd > previous.issue
+          ) {
             // Previous was a double issue, it already covered extra weeks
-            weeksBetween -= (previous.issueEnd - previous.issue)
+            weeksBetween -= previous.issueEnd - previous.issue
           }
 
           // Subtract 1 for the expected next issue
@@ -275,11 +294,14 @@ function ChapterReleaseCalendarPage() {
           }
         } else if (current.year === previous.year + 1) {
           // Year transition
-          weeksBetween = (52 - previous.issue) + current.issue
+          weeksBetween = 52 - previous.issue + current.issue
 
           // Adjust for double issues
-          if (previous.issueEnd !== null && previous.issueEnd > previous.issue) {
-            weeksBetween -= (previous.issueEnd - previous.issue)
+          if (
+            previous.issueEnd !== null &&
+            previous.issueEnd > previous.issue
+          ) {
+            weeksBetween -= previous.issueEnd - previous.issue
           }
 
           // Subtract 1 for expected next issue
@@ -317,17 +339,20 @@ function ChapterReleaseCalendarPage() {
             toChapter: current.number,
             fromJump: previous.jump || `${previous.year}-${previous.issue}`,
             toJump: current.jump || `${current.year}-${current.issue}`,
-            weeksBreak: weeksBetween
+            weeksBreak: weeksBetween,
           })
         }
       }
     }
 
-    const longestStreakInfo = longestStreak > 0 ? {
-      chapters: longestStreak,
-      fromChapter: sortedReleases[longestStreakStart].number,
-      toChapter: sortedReleases[longestStreakEnd].number
-    } : null
+    const longestStreakInfo =
+      longestStreak > 0
+        ? {
+            chapters: longestStreak,
+            fromChapter: sortedReleases[longestStreakStart].number,
+            toChapter: sortedReleases[longestStreakEnd].number,
+          }
+        : null
 
     return {
       totalBreaks: totalBreaksCount,
@@ -335,7 +360,7 @@ function ChapterReleaseCalendarPage() {
       longestStreak,
       longestStreakInfo,
       uninterruptedBreaks: uninterruptedBreaksCount,
-      breakChapters
+      breakChapters,
     }
   }, [releases, yearData.length, allIssues.length])
 
@@ -372,7 +397,12 @@ function ChapterReleaseCalendarPage() {
           <div className="relative bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center gap-4">
               <div className="flex-shrink-0 w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-amber-600 to-yellow-600 rounded-xl flex items-center justify-center shadow-lg">
-                <svg className="w-6 h-6 md:w-9 md:h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6 md:w-9 md:h-9 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -386,7 +416,8 @@ function ChapterReleaseCalendarPage() {
                   Chapter Release Calendar
                 </h1>
                 <p className="text-gray-600 text-lg mt-2">
-                  Visualize chapter releases by year and Weekly Shonen Jump issue
+                  Visualize chapter releases by year and Weekly Shonen Jump
+                  issue
                 </p>
               </div>
             </div>
@@ -399,7 +430,12 @@ function ChapterReleaseCalendarPage() {
             label="Years Covered"
             value={stats.yearsCount}
             icon={
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -414,9 +450,18 @@ function ChapterReleaseCalendarPage() {
           <StatCard
             label="Longest Streak Without Break"
             value={`${stats.longestStreak} ch`}
-            subtitle={stats.longestStreakInfo ? `Ch. ${stats.longestStreakInfo.fromChapter}-${stats.longestStreakInfo.toChapter}` : undefined}
+            subtitle={
+              stats.longestStreakInfo
+                ? `Ch. ${stats.longestStreakInfo.fromChapter}-${stats.longestStreakInfo.toChapter}`
+                : undefined
+            }
             icon={
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -432,7 +477,12 @@ function ChapterReleaseCalendarPage() {
             label="Total Breaks (weeks)"
             value={stats.totalBreaks}
             icon={
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -448,7 +498,12 @@ function ChapterReleaseCalendarPage() {
             label="Long Breaks (3+ weeks)"
             value={stats.uninterruptedBreaks}
             icon={
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -460,7 +515,8 @@ function ChapterReleaseCalendarPage() {
             color="green"
             loading={isLoading}
             details={stats.breakChapters.map(
-              b => `Chapter ${b.fromChapter} to ${b.toChapter} (${b.weeksBreak} weeks break)`
+              (b) =>
+                `Chapter ${b.fromChapter} to ${b.toChapter} (${b.weeksBreak} weeks break)`
             )}
           />
         </div>
@@ -471,7 +527,9 @@ function ChapterReleaseCalendarPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Theme Selection */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Color Theme:</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Color Theme:
+              </label>
               <div className="flex flex-wrap gap-2">
                 <FilterButton
                   active={theme === 'jump'}
@@ -502,7 +560,9 @@ function ChapterReleaseCalendarPage() {
 
             {/* Display Mode */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Display Mode:</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Display Mode:
+              </label>
               <div className="flex gap-2">
                 <FilterButton
                   active={!isCompact}
@@ -528,14 +588,19 @@ function ChapterReleaseCalendarPage() {
         >
           {/* Legend */}
           <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Legend:</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Legend:
+            </h3>
 
             {theme === 'jump' && (
               <div className="flex flex-wrap gap-4">
                 <div className="flex items-center gap-2">
                   <div
                     className="w-8 h-8 rounded"
-                    style={{ backgroundColor: '#22c55e', border: '1px solid #d1d5db' }}
+                    style={{
+                      backgroundColor: '#22c55e',
+                      border: '1px solid #d1d5db',
+                    }}
                   ></div>
                   <span className="text-sm" style={{ color: '#4b5563' }}>
                     Chapter Released
@@ -544,7 +609,10 @@ function ChapterReleaseCalendarPage() {
                 <div className="flex items-center gap-2">
                   <div
                     className="w-8 h-8 rounded"
-                    style={{ backgroundColor: '#fca5a5', border: '1px solid #d1d5db' }}
+                    style={{
+                      backgroundColor: '#fca5a5',
+                      border: '1px solid #d1d5db',
+                    }}
                   ></div>
                   <span className="text-sm" style={{ color: '#4b5563' }}>
                     No Chapter (Planned Break/Holiday)
@@ -556,12 +624,17 @@ function ChapterReleaseCalendarPage() {
             {theme === 'saga' && (
               <div className="flex flex-wrap gap-4">
                 {Array.from(sagaColorMap.entries()).map(([sagaId, color]) => {
-                  const sagaTitle = releases?.find((r) => r.sagaId === sagaId)?.sagaTitle
+                  const sagaTitle = releases?.find(
+                    (r) => r.sagaId === sagaId
+                  )?.sagaTitle
                   return (
                     <div key={sagaId} className="flex items-center gap-2">
                       <div
                         className="w-8 h-8 rounded"
-                        style={{ backgroundColor: color, border: '1px solid #d1d5db' }}
+                        style={{
+                          backgroundColor: color,
+                          border: '1px solid #d1d5db',
+                        }}
                       ></div>
                       <span className="text-sm" style={{ color: '#4b5563' }}>
                         {sagaTitle}
@@ -572,7 +645,10 @@ function ChapterReleaseCalendarPage() {
                 <div className="flex items-center gap-2">
                   <div
                     className="w-8 h-8 rounded"
-                    style={{ backgroundColor: '#fca5a5', border: '1px solid #d1d5db' }}
+                    style={{
+                      backgroundColor: '#fca5a5',
+                      border: '1px solid #d1d5db',
+                    }}
                   ></div>
                   <span className="text-sm" style={{ color: '#4b5563' }}>
                     No Chapter
@@ -583,20 +659,27 @@ function ChapterReleaseCalendarPage() {
 
             {theme === 'arc' && (
               <div className="flex flex-wrap gap-4">
-                {Array.from(arcColorMap.entries()).slice(0, 10).map(([arcId, color]) => {
-                  const arcTitle = releases?.find((r) => r.arcId === arcId)?.arcTitle
-                  return (
-                    <div key={arcId} className="flex items-center gap-2">
-                      <div
-                        className="w-8 h-8 rounded"
-                        style={{ backgroundColor: color, border: '1px solid #d1d5db' }}
-                      ></div>
-                      <span className="text-sm" style={{ color: '#4b5563' }}>
-                        {arcTitle}
-                      </span>
-                    </div>
-                  )
-                })}
+                {Array.from(arcColorMap.entries())
+                  .slice(0, 10)
+                  .map(([arcId, color]) => {
+                    const arcTitle = releases?.find(
+                      (r) => r.arcId === arcId
+                    )?.arcTitle
+                    return (
+                      <div key={arcId} className="flex items-center gap-2">
+                        <div
+                          className="w-8 h-8 rounded"
+                          style={{
+                            backgroundColor: color,
+                            border: '1px solid #d1d5db',
+                          }}
+                        ></div>
+                        <span className="text-sm" style={{ color: '#4b5563' }}>
+                          {arcTitle}
+                        </span>
+                      </div>
+                    )
+                  })}
                 {arcColorMap.size > 10 && (
                   <span className="text-xs italic" style={{ color: '#6b7280' }}>
                     ... and {arcColorMap.size - 10} more arcs
@@ -605,7 +688,10 @@ function ChapterReleaseCalendarPage() {
                 <div className="flex items-center gap-2">
                   <div
                     className="w-8 h-8 rounded"
-                    style={{ backgroundColor: '#fca5a5', border: '1px solid #d1d5db' }}
+                    style={{
+                      backgroundColor: '#fca5a5',
+                      border: '1px solid #d1d5db',
+                    }}
                   ></div>
                   <span className="text-sm" style={{ color: '#4b5563' }}>
                     No Chapter
@@ -619,7 +705,10 @@ function ChapterReleaseCalendarPage() {
                 <div className="flex items-center gap-2">
                   <div
                     className="w-8 h-8 rounded"
-                    style={{ backgroundColor: '#fbbf24', border: '1px solid #d1d5db' }}
+                    style={{
+                      backgroundColor: '#fbbf24',
+                      border: '1px solid #d1d5db',
+                    }}
                   ></div>
                   <span className="text-sm" style={{ color: '#4b5563' }}>
                     Luffy Appears
@@ -628,7 +717,10 @@ function ChapterReleaseCalendarPage() {
                 <div className="flex items-center gap-2">
                   <div
                     className="w-8 h-8 rounded"
-                    style={{ backgroundColor: '#d1d5db', border: '1px solid #d1d5db' }}
+                    style={{
+                      backgroundColor: '#d1d5db',
+                      border: '1px solid #d1d5db',
+                    }}
                   ></div>
                   <span className="text-sm" style={{ color: '#4b5563' }}>
                     Luffy Does Not Appear
@@ -637,7 +729,10 @@ function ChapterReleaseCalendarPage() {
                 <div className="flex items-center gap-2">
                   <div
                     className="w-8 h-8 rounded"
-                    style={{ backgroundColor: '#fca5a5', border: '1px solid #d1d5db' }}
+                    style={{
+                      backgroundColor: '#fca5a5',
+                      border: '1px solid #d1d5db',
+                    }}
                   ></div>
                   <span className="text-sm" style={{ color: '#4b5563' }}>
                     No Chapter
@@ -647,8 +742,10 @@ function ChapterReleaseCalendarPage() {
             )}
 
             <p className="text-xs mt-2" style={{ color: '#6b7280' }}>
-              * Double issues show multiple chapter numbers in the same cell. {!isCompact && 'Click on chapter numbers to view details.'}
-              {isCompact && 'Compact mode shows only the pattern of releases. Hover over cells to see chapter numbers and details.'}
+              * Double issues show multiple chapter numbers in the same cell.{' '}
+              {!isCompact && 'Click on chapter numbers to view details.'}
+              {isCompact &&
+                'Compact mode shows only the pattern of releases. Hover over cells to see chapter numbers and details.'}
             </p>
           </div>
 
@@ -677,7 +774,9 @@ function ChapterReleaseCalendarPage() {
                         minWidth: isCompact ? '40px' : '60px',
                       }}
                     >
-                      {isCompact ? String(yearData.year).slice(-2) : yearData.year}
+                      {isCompact
+                        ? String(yearData.year).slice(-2)
+                        : yearData.year}
                     </th>
                   ))}
                 </tr>
@@ -712,22 +811,40 @@ function ChapterReleaseCalendarPage() {
                               backgroundColor: '#fca5a5',
                             }}
                           >
-                            {!isCompact && <span style={{ fontSize: '0.75rem', color: '#4b5563' }}>-</span>}
+                            {!isCompact && (
+                              <span
+                                style={{
+                                  fontSize: '0.75rem',
+                                  color: '#4b5563',
+                                }}
+                              >
+                                -
+                              </span>
+                            )}
                           </td>
                         )
                       }
 
                       // Calculate rowspan for double issues
-                      const rowSpan = issue.issueEnd ? issue.issueEnd - issueNum + 1 : 1
+                      const rowSpan = issue.issueEnd
+                        ? issue.issueEnd - issueNum + 1
+                        : 1
 
                       // Get cell color based on theme
-                      const cellColor = getCellColor(issue.chapters, theme, sagaColorMap, arcColorMap)
+                      const cellColor = getCellColor(
+                        issue.chapters,
+                        theme,
+                        sagaColorMap,
+                        arcColorMap
+                      )
 
                       // Create tooltip for compact mode
                       const getTooltipText = () => {
                         if (!isCompact) return undefined
 
-                        const chapterNumbers = issue.chapters.map((ch) => ch.number).join(', ')
+                        const chapterNumbers = issue.chapters
+                          .map((ch) => ch.number)
+                          .join(', ')
                         const firstChapter = issue.chapters[0]
 
                         let additionalInfo = ''
@@ -736,7 +853,9 @@ function ChapterReleaseCalendarPage() {
                         } else if (theme === 'arc' && firstChapter.arcTitle) {
                           additionalInfo = `\nArc: ${firstChapter.arcTitle}`
                         } else if (theme === 'luffy') {
-                          const luffyAppears = issue.chapters.some((ch) => ch.luffyAppears)
+                          const luffyAppears = issue.chapters.some(
+                            (ch) => ch.luffyAppears
+                          )
                           additionalInfo = `\n${luffyAppears ? 'Luffy appears' : 'Luffy does not appear'}`
                         }
 
@@ -766,7 +885,14 @@ function ChapterReleaseCalendarPage() {
                                   {chapter.number}
                                 </Link>
                                 {idx < issue.chapters.length - 1 && (
-                                  <span style={{ color: '#4b5563', fontSize: '0.75rem' }}>, </span>
+                                  <span
+                                    style={{
+                                      color: '#4b5563',
+                                      fontSize: '0.75rem',
+                                    }}
+                                  >
+                                    ,{' '}
+                                  </span>
                                 )}
                               </span>
                             ))}
@@ -783,8 +909,9 @@ function ChapterReleaseCalendarPage() {
         {/* Footer */}
         <div className="mt-8 text-center text-sm text-gray-500">
           <p>
-            This calendar shows the release schedule of One Piece chapters in Weekly Shonen Jump.
-            Green cells indicate weeks with chapter releases, while red cells show weeks without releases.
+            This calendar shows the release schedule of One Piece chapters in
+            Weekly Shonen Jump. Green cells indicate weeks with chapter
+            releases, while red cells show weeks without releases.
           </p>
         </div>
       </div>

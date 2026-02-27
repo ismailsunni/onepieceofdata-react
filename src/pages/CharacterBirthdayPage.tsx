@@ -1,5 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import { fetchCharacterBirthdays, BirthdaysByDate } from '../services/analyticsService'
+import {
+  fetchCharacterBirthdays,
+  BirthdaysByDate,
+} from '../services/analyticsService'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -12,7 +15,13 @@ interface CalendarDay {
   dateKey: string
   isCurrentMonth: boolean
   birthdayCount: number
-  characters: { id: string; name: string; birth_date: string; age: number | null; status: string | null }[]
+  characters: {
+    id: string
+    name: string
+    birth_date: string
+    age: number | null
+    status: string | null
+  }[]
 }
 
 function CharacterBirthdayPage() {
@@ -22,7 +31,11 @@ function CharacterBirthdayPage() {
   const [viewMode, setViewMode] = useState<'month' | 'year'>('month')
   const [hoveredDay, setHoveredDay] = useState<CalendarDay | null>(null)
 
-  const { data: birthdaysData, isLoading, error } = useQuery<BirthdaysByDate>({
+  const {
+    data: birthdaysData,
+    isLoading,
+    error,
+  } = useQuery<BirthdaysByDate>({
     queryKey: ['analytics', 'character-birthdays'],
     queryFn: fetchCharacterBirthdays,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -30,8 +43,18 @@ function CharacterBirthdayPage() {
 
   // Month names
   const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ]
 
   // Get intensity color based on birthday count
@@ -180,7 +203,9 @@ function CharacterBirthdayPage() {
     ? Object.values(birthdaysData).reduce((sum, chars) => sum + chars.length, 0)
     : 0
 
-  const datesWithBirthdays = birthdaysData ? Object.keys(birthdaysData).length : 0
+  const datesWithBirthdays = birthdaysData
+    ? Object.keys(birthdaysData).length
+    : 0
 
   const maxBirthdaysOnOneDay = birthdaysData
     ? Math.max(...Object.values(birthdaysData).map((chars) => chars.length), 0)
@@ -189,7 +214,7 @@ function CharacterBirthdayPage() {
   // Find the busiest day(s)
   const busiestDays = birthdaysData
     ? Object.entries(birthdaysData)
-        .filter(([_, chars]) => chars.length === maxBirthdaysOnOneDay)
+        .filter(([, chars]) => chars.length === maxBirthdaysOnOneDay)
         .map(([date, chars]) => ({ date, characters: chars }))
     : []
 
@@ -208,7 +233,7 @@ function CharacterBirthdayPage() {
     }
 
     // Filter dates that don't have birthdays
-    return allDates.filter(date => !birthdaysData[date])
+    return allDates.filter((date) => !birthdaysData[date])
   }
 
   const datesWithoutBirthdays = getDatesWithoutBirthdays()
@@ -297,7 +322,12 @@ function CharacterBirthdayPage() {
           <div className="relative bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center gap-4">
               <div className="flex-shrink-0 w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-pink-600 to-rose-600 rounded-xl flex items-center justify-center shadow-lg">
-                <svg className="w-6 h-6 md:w-9 md:h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6 md:w-9 md:h-9 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -311,7 +341,8 @@ function CharacterBirthdayPage() {
                   Character Birthday Calendar
                 </h1>
                 <p className="text-gray-600 text-lg mt-2">
-                  Explore when One Piece characters were born throughout the year
+                  Explore when One Piece characters were born throughout the
+                  year
                 </p>
               </div>
             </div>
@@ -329,30 +360,35 @@ function CharacterBirthdayPage() {
                 Happy Birthday Today! 🎉
               </h2>
             </div>
-          <div className="flex flex-wrap gap-2">
-            {todaysBirthdays.map((char) => {
-              const isDeceased = char.status === 'Deceased'
-              const hasAge = char.age !== null && char.age !== undefined
+            <div className="flex flex-wrap gap-2">
+              {todaysBirthdays.map((char) => {
+                const isDeceased = char.status === 'Deceased'
+                const hasAge = char.age !== null && char.age !== undefined
 
-              return (
-                <Link
-                  key={char.id}
-                  to={`/characters/${char.id}`}
-                  className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-700 px-3 py-1.5 bg-white rounded-full hover:bg-orange-50 hover:ring-2 hover:ring-orange-400 transition-all cursor-pointer shadow-sm"
-                >
-                  <span>🎈</span>
-                  <span>
-                    {char.name}
-                    {!isDeceased && hasAge && (
-                      <span className="text-xs text-gray-500 ml-1">({char.age})</span>
-                    )}
-                    {isDeceased && (
-                      <FontAwesomeIcon icon={faSkull} className="text-gray-600 ml-1.5" />
-                    )}
-                  </span>
-                </Link>
-              )
-            })}
+                return (
+                  <Link
+                    key={char.id}
+                    to={`/characters/${char.id}`}
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-700 px-3 py-1.5 bg-white rounded-full hover:bg-orange-50 hover:ring-2 hover:ring-orange-400 transition-all cursor-pointer shadow-sm"
+                  >
+                    <span>🎈</span>
+                    <span>
+                      {char.name}
+                      {!isDeceased && hasAge && (
+                        <span className="text-xs text-gray-500 ml-1">
+                          ({char.age})
+                        </span>
+                      )}
+                      {isDeceased && (
+                        <FontAwesomeIcon
+                          icon={faSkull}
+                          className="text-gray-600 ml-1.5"
+                        />
+                      )}
+                    </span>
+                  </Link>
+                )
+              })}
             </div>
           </div>
         )}
@@ -360,14 +396,20 @@ function CharacterBirthdayPage() {
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-            <h3 className="text-sm font-medium text-gray-600 mb-2">Total Characters</h3>
+            <h3 className="text-sm font-medium text-gray-600 mb-2">
+              Total Characters
+            </h3>
             <p className="text-4xl font-bold text-pink-600">{totalBirthdays}</p>
             <p className="text-sm text-gray-500 mt-1">with known birthdays</p>
           </div>
 
           <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-            <h3 className="text-sm font-medium text-gray-600 mb-2">Unique Dates</h3>
-            <p className="text-4xl font-bold text-rose-600">{datesWithBirthdays}</p>
+            <h3 className="text-sm font-medium text-gray-600 mb-2">
+              Unique Dates
+            </h3>
+            <p className="text-4xl font-bold text-rose-600">
+              {datesWithBirthdays}
+            </p>
             <p className="text-sm text-gray-500 mt-1">days with birthdays</p>
             {datesWithoutBirthdays.length > 0 && (
               <details className="mt-3 cursor-pointer">
@@ -391,52 +433,64 @@ function CharacterBirthdayPage() {
           </div>
 
           <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-            <h3 className="text-sm font-medium text-gray-600 mb-2">Busiest Day</h3>
-            <p className="text-4xl font-bold text-purple-600">{maxBirthdaysOnOneDay}</p>
+            <h3 className="text-sm font-medium text-gray-600 mb-2">
+              Busiest Day
+            </h3>
+            <p className="text-4xl font-bold text-purple-600">
+              {maxBirthdaysOnOneDay}
+            </p>
             <p className="text-sm text-gray-500 mt-1">characters in one day</p>
-          {busiestDays.length > 0 && (
-            <details className="mt-3 cursor-pointer">
-              <summary className="text-xs font-medium text-gray-600 hover:text-purple-700 cursor-pointer select-none">
-                {busiestDays.length > 1 ? `${busiestDays.length} dates` : formatDate(busiestDays[0].date)}
-              </summary>
-              <div className="mt-2 max-h-48 overflow-y-auto space-y-2">
-                {busiestDays.map(({ date, characters }) => (
-                  <div key={date} className="bg-purple-50 rounded p-2">
-                    {busiestDays.length > 1 && (
-                      <div className="text-xs font-bold text-purple-700 mb-1">
-                        {formatDate(date)}
+            {busiestDays.length > 0 && (
+              <details className="mt-3 cursor-pointer">
+                <summary className="text-xs font-medium text-gray-600 hover:text-purple-700 cursor-pointer select-none">
+                  {busiestDays.length > 1
+                    ? `${busiestDays.length} dates`
+                    : formatDate(busiestDays[0].date)}
+                </summary>
+                <div className="mt-2 max-h-48 overflow-y-auto space-y-2">
+                  {busiestDays.map(({ date, characters }) => (
+                    <div key={date} className="bg-purple-50 rounded p-2">
+                      {busiestDays.length > 1 && (
+                        <div className="text-xs font-bold text-purple-700 mb-1">
+                          {formatDate(date)}
+                        </div>
+                      )}
+                      <div className="space-y-1">
+                        {characters.map((char) => {
+                          const hasAge =
+                            char.age !== null && char.age !== undefined
+                          const isDeceased = char.status === 'Deceased'
+                          return (
+                            <Link
+                              key={char.id}
+                              to={`/characters/${char.id}`}
+                              className="flex items-center gap-1.5 text-xs text-gray-700 px-2 py-1 bg-white rounded hover:bg-purple-100 hover:ring-1 hover:ring-purple-500 transition-all cursor-pointer"
+                            >
+                              <span>
+                                {char.name}
+                                {hasAge && (
+                                  <span className="text-gray-500 ml-1">
+                                    ({char.age})
+                                  </span>
+                                )}
+                                {isDeceased && (
+                                  <FontAwesomeIcon
+                                    icon={faSkull}
+                                    className="text-gray-500 text-[10px] ml-1"
+                                  />
+                                )}
+                              </span>
+                            </Link>
+                          )
+                        })}
                       </div>
-                    )}
-                    <div className="space-y-1">
-                      {characters.map((char) => {
-                        const hasAge = char.age !== null && char.age !== undefined
-                        const isDeceased = char.status === 'Deceased'
-                        return (
-                          <Link
-                            key={char.id}
-                            to={`/characters/${char.id}`}
-                            className="flex items-center gap-1.5 text-xs text-gray-700 px-2 py-1 bg-white rounded hover:bg-purple-100 hover:ring-1 hover:ring-purple-500 transition-all cursor-pointer"
-                          >
-                            <span>
-                              {char.name}
-                              {hasAge && (
-                                <span className="text-gray-500 ml-1">({char.age})</span>
-                              )}
-                              {isDeceased && (
-                                <FontAwesomeIcon icon={faSkull} className="text-gray-500 text-[10px] ml-1" />
-                              )}
-                            </span>
-                          </Link>
-                        )
-                      })}
                     </div>
-                  </div>
-                ))}
-              </div>
-            </details>
-          )}
+                  ))}
+                </div>
+              </details>
+            )}
+          </div>
         </div>
-      </div>
 
         {/* View Toggle and Navigation */}
         <div className="mb-8 flex flex-col gap-6">
@@ -499,7 +553,9 @@ function CharacterBirthdayPage() {
               >
                 ← {selectedYear - 1}
               </button>
-              <h2 className="text-2xl font-bold text-gray-800">{selectedYear}</h2>
+              <h2 className="text-2xl font-bold text-gray-800">
+                {selectedYear}
+              </h2>
               <button
                 onClick={() => setSelectedYear(selectedYear + 1)}
                 className="px-5 py-2.5 bg-gradient-to-r from-pink-600 to-rose-600 text-white rounded-lg hover:from-pink-700 hover:to-rose-700 transition-all cursor-pointer shadow-md"
@@ -512,201 +568,240 @@ function CharacterBirthdayPage() {
 
         {/* Legend */}
         <div className="mb-8 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
-          <h3 className="text-sm font-semibold text-gray-700 mb-4">Birthday Count Legend:</h3>
-        <div className="flex flex-wrap gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gray-100 border border-gray-300 rounded"></div>
-            <span className="text-sm text-gray-600">No birthdays ({dateCountsByBirthdays[0]})</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-200 border border-gray-300 rounded"></div>
-            <span className="text-sm text-gray-600">1 character ({dateCountsByBirthdays[1]})</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-400 border border-gray-300 rounded"></div>
-            <span className="text-sm text-gray-600">2 characters ({dateCountsByBirthdays[2]})</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 border border-gray-300 rounded"></div>
-            <span className="text-sm text-gray-600">3 characters ({dateCountsByBirthdays[3]})</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-800 border border-gray-300 rounded"></div>
-            <span className="text-sm text-gray-600">4+ characters ({dateCountsByBirthdays['4+']})</span>
+          <h3 className="text-sm font-semibold text-gray-700 mb-4">
+            Birthday Count Legend:
+          </h3>
+          <div className="flex flex-wrap gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-gray-100 border border-gray-300 rounded"></div>
+              <span className="text-sm text-gray-600">
+                No birthdays ({dateCountsByBirthdays[0]})
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-blue-200 border border-gray-300 rounded"></div>
+              <span className="text-sm text-gray-600">
+                1 character ({dateCountsByBirthdays[1]})
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-blue-400 border border-gray-300 rounded"></div>
+              <span className="text-sm text-gray-600">
+                2 characters ({dateCountsByBirthdays[2]})
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-blue-600 border border-gray-300 rounded"></div>
+              <span className="text-sm text-gray-600">
+                3 characters ({dateCountsByBirthdays[3]})
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-blue-800 border border-gray-300 rounded"></div>
+              <span className="text-sm text-gray-600">
+                4+ characters ({dateCountsByBirthdays['4+']})
+              </span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Calendar Grid */}
-      {viewMode === 'month' ? (
-        /* Month View */
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          {/* Day headers */}
-          <div className="grid grid-cols-7 gap-2 mb-2">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-              <div key={day} className="text-center font-semibold text-gray-700 py-2">
-                {day}
-              </div>
-            ))}
-          </div>
-
-          {/* Calendar days */}
-          <div className="grid grid-cols-7 gap-2">
-            {calendarDays.map((day, index) => {
-              const isTodayDate = isToday(day.year, day.month, day.date)
-              return (
+        {/* Calendar Grid */}
+        {viewMode === 'month' ? (
+          /* Month View */
+          <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+            {/* Day headers */}
+            <div className="grid grid-cols-7 gap-2 mb-2">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
                 <div
-                  key={index}
-                  className={`
+                  key={day}
+                  className="text-center font-semibold text-gray-700 py-2"
+                >
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            {/* Calendar days */}
+            <div className="grid grid-cols-7 gap-2">
+              {calendarDays.map((day, index) => {
+                const isTodayDate = isToday(day.year, day.month, day.date)
+                return (
+                  <div
+                    key={index}
+                    className={`
                     rounded-lg p-2 transition-all min-h-24
                     ${isTodayDate ? 'border-4 border-orange-500 shadow-lg ring-2 ring-orange-300' : 'border-2'}
                     ${!isTodayDate && day.isCurrentMonth ? 'border-gray-300' : ''}
                     ${!isTodayDate && !day.isCurrentMonth ? 'border-gray-200' : ''}
                     ${day.isCurrentMonth ? getIntensityColor(day.birthdayCount) : 'bg-gray-50'}
                   `}
-                >
-                <div
-                  className={`text-sm font-medium mb-1 ${
-                    day.isCurrentMonth
-                      ? getDateTextColor(day.birthdayCount)
-                      : 'text-gray-400'
-                  }`}
-                >
-                  {day.date}
-                </div>
-                {day.birthdayCount > 0 && day.isCurrentMonth && (
-                  <div className="space-y-1">
-                    {day.characters.map((char, idx) => {
-                      const hasAge = char.age !== null && char.age !== undefined
-                      const isDeceased = char.status === 'Deceased'
-                      return (
-                        <Link
-                          key={idx}
-                          to={`/characters/${char.id}`}
-                          className="flex items-center gap-1 text-xs text-gray-700 px-1 py-0.5 bg-white bg-opacity-80 rounded hover:bg-opacity-100 hover:ring-2 hover:ring-blue-500 transition-all cursor-pointer"
-                          title={hasAge ? `${char.name} (${char.age})` : char.name}
-                        >
-                          <span className="truncate">
-                            {char.name}
-                            {hasAge && (
-                              <span className="text-gray-500 ml-0.5">({char.age})</span>
-                            )}
-                            {isDeceased && (
-                              <FontAwesomeIcon icon={faSkull} className="text-gray-500 text-[10px] ml-0.5" />
-                            )}
-                          </span>
-                        </Link>
-                      )
-                    })}
-                  </div>
-                )}
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      ) : (
-        /* Year View */
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {monthNames.map((monthName, monthIndex) => {
-              const miniDays = generateMiniMonth(selectedYear, monthIndex)
-              return (
-                <div
-                  key={monthIndex}
-                  className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow relative"
-                >
-                  <div
-                    className="cursor-pointer"
-                    onClick={() => {
-                      setSelectedMonth(monthIndex)
-                      setViewMode('month')
-                    }}
                   >
-                    <h3 className="text-center font-bold text-gray-800 mb-2 text-sm">
-                      {monthName}
-                    </h3>
-                    {/* Mini day headers */}
-                    <div className="grid grid-cols-7 gap-1 mb-1">
-                      {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
-                        <div key={idx} className="text-center text-xs text-gray-500">
-                          {day}
-                        </div>
-                      ))}
+                    <div
+                      className={`text-sm font-medium mb-1 ${
+                        day.isCurrentMonth
+                          ? getDateTextColor(day.birthdayCount)
+                          : 'text-gray-400'
+                      }`}
+                    >
+                      {day.date}
                     </div>
-                    {/* Mini calendar days */}
-                    <div className="grid grid-cols-7 gap-1">
-                      {miniDays.map((day, dayIndex) => {
-                        const isTodayDate = day.date > 0 && isToday(day.year, day.month, day.date)
-                        const isHovered = hoveredDay?.month === monthIndex && hoveredDay?.date === day.date && day.birthdayCount > 0
-                        return (
+                    {day.birthdayCount > 0 && day.isCurrentMonth && (
+                      <div className="space-y-1">
+                        {day.characters.map((char, idx) => {
+                          const hasAge =
+                            char.age !== null && char.age !== undefined
+                          const isDeceased = char.status === 'Deceased'
+                          return (
+                            <Link
+                              key={idx}
+                              to={`/characters/${char.id}`}
+                              className="flex items-center gap-1 text-xs text-gray-700 px-1 py-0.5 bg-white bg-opacity-80 rounded hover:bg-opacity-100 hover:ring-2 hover:ring-blue-500 transition-all cursor-pointer"
+                              title={
+                                hasAge
+                                  ? `${char.name} (${char.age})`
+                                  : char.name
+                              }
+                            >
+                              <span className="truncate">
+                                {char.name}
+                                {hasAge && (
+                                  <span className="text-gray-500 ml-0.5">
+                                    ({char.age})
+                                  </span>
+                                )}
+                                {isDeceased && (
+                                  <FontAwesomeIcon
+                                    icon={faSkull}
+                                    className="text-gray-500 text-[10px] ml-0.5"
+                                  />
+                                )}
+                              </span>
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        ) : (
+          /* Year View */
+          <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {monthNames.map((monthName, monthIndex) => {
+                const miniDays = generateMiniMonth(selectedYear, monthIndex)
+                return (
+                  <div
+                    key={monthIndex}
+                    className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow relative"
+                  >
+                    <div
+                      className="cursor-pointer"
+                      onClick={() => {
+                        setSelectedMonth(monthIndex)
+                        setViewMode('month')
+                      }}
+                    >
+                      <h3 className="text-center font-bold text-gray-800 mb-2 text-sm">
+                        {monthName}
+                      </h3>
+                      {/* Mini day headers */}
+                      <div className="grid grid-cols-7 gap-1 mb-1">
+                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
                           <div
-                            key={dayIndex}
-                            className="relative"
-                            onMouseLeave={(e) => {
-                              e.stopPropagation()
-                              setHoveredDay(null)
-                            }}
+                            key={idx}
+                            className="text-center text-xs text-gray-500"
                           >
+                            {day}
+                          </div>
+                        ))}
+                      </div>
+                      {/* Mini calendar days */}
+                      <div className="grid grid-cols-7 gap-1">
+                        {miniDays.map((day, dayIndex) => {
+                          const isTodayDate =
+                            day.date > 0 &&
+                            isToday(day.year, day.month, day.date)
+                          const isHovered =
+                            hoveredDay?.month === monthIndex &&
+                            hoveredDay?.date === day.date &&
+                            day.birthdayCount > 0
+                          return (
                             <div
-                              className={`
+                              key={dayIndex}
+                              className="relative"
+                              onMouseLeave={(e) => {
+                                e.stopPropagation()
+                                setHoveredDay(null)
+                              }}
+                            >
+                              <div
+                                className={`
                                 aspect-square flex items-center justify-center text-xs rounded
                                 ${isTodayDate ? 'ring-2 ring-orange-500 border-2 border-orange-500 font-bold' : ''}
                                 ${day.date === 0 ? '' : getIntensityColor(day.birthdayCount)}
                                 ${day.date === 0 ? 'text-transparent' : getDateTextColor(day.birthdayCount)}
                               `}
-                              onMouseEnter={(e) => {
-                                e.stopPropagation()
-                                if (day.birthdayCount > 0) setHoveredDay(day)
-                              }}
-                            >
-                              {day.date || ''}
-                            </div>
-
-                            {/* Popup tooltip for this specific date */}
-                            {isHovered && (
-                              <div
-                                className="absolute left-full top-0 ml-2 bg-white border-2 border-blue-600 rounded-lg shadow-2xl p-3 z-50 min-w-[200px]"
+                                onMouseEnter={(e) => {
+                                  e.stopPropagation()
+                                  if (day.birthdayCount > 0) setHoveredDay(day)
+                                }}
                               >
-                                <h4 className="text-sm font-bold text-gray-800 mb-2 whitespace-nowrap">
-                                  {monthNames[day.month]} {day.date}
-                                </h4>
-                                <div className="space-y-1 max-h-48 overflow-y-auto">
-                                  {day.characters.map((char) => {
-                                    const hasAge = char.age !== null && char.age !== undefined
-                                    const isDeceased = char.status === 'Deceased'
-                                    return (
-                                      <Link
-                                        key={char.id}
-                                        to={`/characters/${char.id}`}
-                                        className="flex items-center gap-1 text-xs text-gray-700 px-2 py-1.5 bg-blue-50 rounded hover:bg-blue-100 hover:ring-2 hover:ring-blue-500 transition-all cursor-pointer whitespace-nowrap"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        <span className="truncate">
-                                          {char.name}
-                                          {hasAge && (
-                                            <span className="text-gray-500 ml-1">({char.age})</span>
-                                          )}
-                                          {isDeceased && (
-                                            <FontAwesomeIcon icon={faSkull} className="text-gray-500 text-[10px] ml-1" />
-                                          )}
-                                        </span>
-                                      </Link>
-                                    )
-                                  })}
-                                </div>
+                                {day.date || ''}
                               </div>
-                            )}
-                          </div>
-                        )
-                      })}
+
+                              {/* Popup tooltip for this specific date */}
+                              {isHovered && (
+                                <div className="absolute left-full top-0 ml-2 bg-white border-2 border-blue-600 rounded-lg shadow-2xl p-3 z-50 min-w-[200px]">
+                                  <h4 className="text-sm font-bold text-gray-800 mb-2 whitespace-nowrap">
+                                    {monthNames[day.month]} {day.date}
+                                  </h4>
+                                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                                    {day.characters.map((char) => {
+                                      const hasAge =
+                                        char.age !== null &&
+                                        char.age !== undefined
+                                      const isDeceased =
+                                        char.status === 'Deceased'
+                                      return (
+                                        <Link
+                                          key={char.id}
+                                          to={`/characters/${char.id}`}
+                                          className="flex items-center gap-1 text-xs text-gray-700 px-2 py-1.5 bg-blue-50 rounded hover:bg-blue-100 hover:ring-2 hover:ring-blue-500 transition-all cursor-pointer whitespace-nowrap"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <span className="truncate">
+                                            {char.name}
+                                            {hasAge && (
+                                              <span className="text-gray-500 ml-1">
+                                                ({char.age})
+                                              </span>
+                                            )}
+                                            {isDeceased && (
+                                              <FontAwesomeIcon
+                                                icon={faSkull}
+                                                className="text-gray-500 text-[10px] ml-1"
+                                              />
+                                            )}
+                                          </span>
+                                        </Link>
+                                      )
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
           </div>
-        </div>
         )}
 
         {/* Footer */}

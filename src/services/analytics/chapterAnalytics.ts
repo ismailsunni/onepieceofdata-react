@@ -22,7 +22,10 @@ export interface ChapterRelease {
  * Parse Jump issue number from various formats
  * Examples: "1997 Issue 34", "1997 Issue 37-38" (double issue), "2024 Issue 1"
  */
-function parseJumpIssue(jump: string | null, date: string | null): { year: number; issue: number; issueEnd: number | null } | null {
+function parseJumpIssue(
+  jump: string | null,
+  date: string | null
+): { year: number; issue: number; issueEnd: number | null } | null {
   if (!jump) return null
 
   // Try to parse issue number from jump field
@@ -53,13 +56,13 @@ function parseJumpIssue(jump: string | null, date: string | null): { year: numbe
   if (date) {
     try {
       year = new Date(date).getFullYear()
-    } catch (e) {
+    } catch {
       logger.warn('Error parsing date:', date)
     }
   }
 
   // Check if it has year prefix (e.g., "1997-34" or "2024-01")
-  const yearIssueMatch = jumpStr.match(/^(\d{4})[-\/](\d+)/)
+  const yearIssueMatch = jumpStr.match(/^(\d{4})[-/](\d+)/)
   if (yearIssueMatch) {
     return {
       year: parseInt(yearIssueMatch[1]),
@@ -71,17 +74,21 @@ function parseJumpIssue(jump: string | null, date: string | null): { year: numbe
   // Check for double issues like "34-35" or "1&2" - take the first number
   const oldDoubleIssueMatch = jumpStr.match(/^(\d+)[-&](\d+)/)
   if (oldDoubleIssueMatch) {
-    return year ? {
-      year,
-      issue: parseInt(oldDoubleIssueMatch[1]),
-      issueEnd: parseInt(oldDoubleIssueMatch[2]),
-    } : null
+    return year
+      ? {
+          year,
+          issue: parseInt(oldDoubleIssueMatch[1]),
+          issueEnd: parseInt(oldDoubleIssueMatch[2]),
+        }
+      : null
   }
 
   // Check for simple number like "34"
   const simpleMatch = jumpStr.match(/^(\d+)$/)
   if (simpleMatch) {
-    return year ? { year, issue: parseInt(simpleMatch[1]), issueEnd: null } : null
+    return year
+      ? { year, issue: parseInt(simpleMatch[1]), issueEnd: null }
+      : null
   }
 
   logger.warn('Could not parse Jump issue:', jump, 'with date:', date)

@@ -149,7 +149,7 @@ function parseBirthDate(birthDate: string): string | null {
     }
 
     // Try numeric formats (MM-DD, M/D, etc.)
-    const numericMatch = cleaned.match(/(\d{1,2})[-\/](\d{1,2})/)
+    const numericMatch = cleaned.match(/(\d{1,2})[-/](\d{1,2})/)
     if (numericMatch) {
       const month = numericMatch[1].padStart(2, '0')
       const day = numericMatch[2].padStart(2, '0')
@@ -167,7 +167,9 @@ function parseBirthDate(birthDate: string): string | null {
  * Get distribution of characters by origin_region, sorted by count descending.
  * Excludes characters with null origin_region.
  */
-export async function fetchOriginRegionDistribution(): Promise<OriginRegionData[]> {
+export async function fetchOriginRegionDistribution(): Promise<
+  OriginRegionData[]
+> {
   try {
     if (!supabase) {
       logger.error('Supabase client not initialized')
