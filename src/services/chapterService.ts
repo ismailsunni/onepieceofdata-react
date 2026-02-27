@@ -2,6 +2,15 @@ import { supabase } from './supabase'
 import { logger } from '../utils/logger'
 import { Chapter } from '../types/chapter'
 
+/**
+ * Fetch all chapters ordered by number, with a computed character_count per chapter.
+ *
+ * Character counts are derived by scanning every character's chapter_list array
+ * and tallying appearances per chapter number.
+ *
+ * @returns Promise resolving to an array of Chapter records (each with
+ *   character_count), or [] on error.
+ */
 export async function fetchChapters(): Promise<Chapter[]> {
   try {
     if (!supabase) {

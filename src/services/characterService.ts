@@ -2,6 +2,11 @@ import { supabase } from './supabase'
 import { logger } from '../utils/logger'
 import { Character } from '../types/character'
 
+/**
+ * Fetch all characters ordered alphabetically by name.
+ *
+ * @returns Promise resolving to an array of Character records, or [] on error.
+ */
 export async function fetchCharacters(): Promise<Character[]> {
   try {
     if (!supabase) {

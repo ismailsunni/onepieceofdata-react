@@ -2,6 +2,20 @@ import { supabase } from './supabase'
 import { logger } from '../utils/logger'
 import { Volume } from '../types/volume'
 
+/**
+ * Fetch all volumes ordered by number, with computed statistics per volume.
+ *
+ * For each volume the following fields are computed client-side from related
+ * chapter and character data:
+ * - chapter_count: number of chapters in the volume
+ * - total_pages: sum of num_page across those chapters
+ * - chapter_range: human-readable range string e.g. "1-11"
+ * - start_chapter / end_chapter: first and last chapter numbers
+ * - cover_character_count: characters whose cover_volume_list includes this volume
+ *
+ * @returns Promise resolving to an array of Volume records with computed stats,
+ *   or [] on error.
+ */
 export async function fetchVolumes(): Promise<Volume[]> {
   try {
     if (!supabase) {
@@ -36,16 +50,18 @@ export async function fetchVolumes(): Promise<Volume[]> {
       .select('cover_volume_list')
 
     if (charactersError) {
-      logger.error('Error fetching characters for cover stats:', charactersError)
+      logger.error(
+        'Error fetching characters for cover stats:',
+        charactersError
+      )
       // Continue without cover stats
     }
 
     // Calculate stats for each volume
     const volumesWithStats = (data || []).map((volume) => {
       // Filter chapters for this volume
-      const volumeChapters = chapters?.filter(
-        (chapter) => chapter.volume === volume.number
-      ) || []
+      const volumeChapters =
+        chapters?.filter((chapter) => chapter.volume === volume.number) || []
 
       // Calculate stats
       const chapter_count = volumeChapters.length
@@ -58,23 +74,28 @@ export async function fetchVolumes(): Promise<Volume[]> {
         .map((ch) => ch.number)
         .sort((a, b) => a - b)
 
-      const start_chapter = chapterNumbers.length > 0 ? chapterNumbers[0] : undefined
-      const end_chapter = chapterNumbers.length > 0
-        ? chapterNumbers[chapterNumbers.length - 1]
-        : undefined
+      const start_chapter =
+        chapterNumbers.length > 0 ? chapterNumbers[0] : undefined
+      const end_chapter =
+        chapterNumbers.length > 0
+          ? chapterNumbers[chapterNumbers.length - 1]
+          : undefined
 
-      const chapter_range = start_chapter && end_chapter
-        ? start_chapter === end_chapter
-          ? `${start_chapter}`
-          : `${start_chapter}-${end_chapter}`
-        : '-'
+      const chapter_range =
+        start_chapter && end_chapter
+          ? start_chapter === end_chapter
+            ? `${start_chapter}`
+            : `${start_chapter}-${end_chapter}`
+          : '-'
 
       // Count characters that appear on this volume's cover
-      const cover_character_count = characters?.filter(
-        (character) => character.cover_volume_list &&
-                      Array.isArray(character.cover_volume_list) &&
-                      character.cover_volume_list.includes(volume.number)
-      ).length || 0
+      const cover_character_count =
+        characters?.filter(
+          (character) =>
+            character.cover_volume_list &&
+            Array.isArray(character.cover_volume_list) &&
+            character.cover_volume_list.includes(volume.number)
+        ).length || 0
 
       return {
         ...volume,
@@ -83,7 +104,8 @@ export async function fetchVolumes(): Promise<Volume[]> {
         chapter_range,
         start_chapter,
         end_chapter,
-        cover_character_count: cover_character_count > 0 ? cover_character_count : undefined,
+        cover_character_count:
+          cover_character_count > 0 ? cover_character_count : undefined,
       }
     })
 

@@ -2,6 +2,15 @@ import { supabase } from './supabase'
 import { logger } from '../utils/logger'
 import { Arc } from '../types/arc'
 
+/**
+ * Fetch all arcs ordered by start_chapter, with each arc's parent saga resolved.
+ *
+ * Fetches arcs and sagas in parallel. Each arc is matched to its saga first by
+ * the explicit saga_id field, then as a fallback by chapter-range overlap.
+ *
+ * @returns Promise resolving to an array of Arc records (with optional saga
+ *   sub-object), or [] on error.
+ */
 export async function fetchArcs(): Promise<Arc[]> {
   try {
     if (!supabase) {

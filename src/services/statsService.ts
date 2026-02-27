@@ -11,23 +11,43 @@ export interface DatabaseStats {
   publicationSpan: string
 }
 
+/**
+ * Fetch aggregate statistics for the entire database.
+ *
+ * Issues parallel COUNT queries for chapters, volumes, arcs, sagas, and
+ * characters. Also computes:
+ * - totalPages: sum of num_page across all chapters
+ * - publicationSpan: number of days between the oldest and newest chapter
+ *   dates (formatted with toLocaleString), or 'Unknown' if dates are absent.
+ *
+ * @returns Promise resolving to a DatabaseStats object. Returns zero-value
+ *   defaults if Supabase is not configured or any query fails.
+ * @throws {Error} If Supabase client is not initialised.
+ */
 export async function fetchDatabaseStats(): Promise<DatabaseStats> {
   try {
     // Check if Supabase client is initialized
     if (!supabase) {
-      logger.error('Supabase client is not initialized. Check your .env.local file.')
+      logger.error(
+        'Supabase client is not initialized. Check your .env.local file.'
+      )
       throw new Error('Supabase not configured')
     }
 
     // Fetch counts from different tables (note: table names are singular)
-    const [chaptersResult, volumesResult, arcsResult, sagasResult, charactersResult] =
-      await Promise.all([
-        supabase.from('chapter').select('*', { count: 'exact', head: true }),
-        supabase.from('volume').select('*', { count: 'exact', head: true }),
-        supabase.from('arc').select('*', { count: 'exact', head: true }),
-        supabase.from('saga').select('*', { count: 'exact', head: true }),
-        supabase.from('character').select('*', { count: 'exact', head: true }),
-      ])
+    const [
+      chaptersResult,
+      volumesResult,
+      arcsResult,
+      sagasResult,
+      charactersResult,
+    ] = await Promise.all([
+      supabase.from('chapter').select('*', { count: 'exact', head: true }),
+      supabase.from('volume').select('*', { count: 'exact', head: true }),
+      supabase.from('arc').select('*', { count: 'exact', head: true }),
+      supabase.from('saga').select('*', { count: 'exact', head: true }),
+      supabase.from('character').select('*', { count: 'exact', head: true }),
+    ])
 
     // Check for errors in any of the queries
     if (chaptersResult.error) {
@@ -38,17 +58,23 @@ export async function fetchDatabaseStats(): Promise<DatabaseStats> {
         code: chaptersResult.error.code,
       })
     }
-    if (volumesResult.error) logger.error('Volume query error:', volumesResult.error)
+    if (volumesResult.error)
+      logger.error('Volume query error:', volumesResult.error)
     if (arcsResult.error) logger.error('Arc query error:', arcsResult.error)
     if (sagasResult.error) logger.error('Saga query error:', sagasResult.error)
-    if (charactersResult.error) logger.error('Character query error:', charactersResult.error)
+    if (charactersResult.error)
+      logger.error('Character query error:', charactersResult.error)
 
     // Calculate total pages from chapters (column is num_page)
     const { data: chaptersData } = await supabase
       .from('chapter')
       .select('num_page')
 
-    const totalPages = chaptersData?.reduce((sum, chapter) => sum + (chapter.num_page || 0), 0) || 0
+    const totalPages =
+      chaptersData?.reduce(
+        (sum, chapter) => sum + (chapter.num_page || 0),
+        0
+      ) || 0
 
     // Get publication span from chapter dates
     const { data: firstChapter } = await supabase

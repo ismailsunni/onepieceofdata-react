@@ -13,6 +13,16 @@ export interface SearchResult {
   volumes: Volume[]
 }
 
+/**
+ * Search across all entity types for a given query string.
+ *
+ * Runs five Supabase ILIKE queries in parallel (characters, arcs, sagas,
+ * chapters, volumes), each limited to 10 results. Returns empty arrays for
+ * all types when query is blank or Supabase is not initialised.
+ *
+ * @param query - The search term (case-insensitive partial match).
+ * @returns Promise resolving to a SearchResult with up to 10 matches per type.
+ */
 export async function searchAll(query: string): Promise<SearchResult> {
   if (!supabase || !query.trim()) {
     return {
