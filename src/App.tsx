@@ -22,13 +22,25 @@ const VolumeDetailPage = lazy(() => import('./pages/VolumeDetailPage'))
 const VolumesPage = lazy(() => import('./pages/VolumesPage'))
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
 const CharacterStatsPage = lazy(() => import('./pages/CharacterStatsPage'))
-const CharacterAppearancesPage = lazy(() => import('./pages/CharacterAppearancesPage'))
-const StoryArcsAnalyticsPage = lazy(() => import('./pages/StoryArcsAnalyticsPage'))
-const CharacterTimelinePage = lazy(() => import('./pages/CharacterTimelinePage'))
-const CharacterBirthdayPage = lazy(() => import('./pages/CharacterBirthdayPage'))
-const ChapterReleaseCalendarPage = lazy(() => import('./pages/ChapterReleaseCalendarPage'))
+const CharacterAppearancesPage = lazy(
+  () => import('./pages/CharacterAppearancesPage')
+)
+const StoryArcsAnalyticsPage = lazy(
+  () => import('./pages/StoryArcsAnalyticsPage')
+)
+const CharacterTimelinePage = lazy(
+  () => import('./pages/CharacterTimelinePage')
+)
+const CharacterBirthdayPage = lazy(
+  () => import('./pages/CharacterBirthdayPage')
+)
+const ChapterReleaseCalendarPage = lazy(
+  () => import('./pages/ChapterReleaseCalendarPage')
+)
 const PublicationRatePage = lazy(() => import('./pages/PublicationRatePage'))
-const CharacterCompletenessPage = lazy(() => import('./pages/CharacterCompletenessPage'))
+const CharacterCompletenessPage = lazy(
+  () => import('./pages/CharacterCompletenessPage')
+)
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 
 // Loading fallback component
@@ -55,36 +67,69 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <HashRouter>
         <ErrorBoundary>
-        <div className="min-h-screen bg-gray-50 overflow-x-hidden">
-          <Header />
-          <div className="pt-16">
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/characters" element={<CharactersPage />} />
-                <Route path="/characters/:id" element={<CharacterDetailPage />} />
-                <Route path="/arcs" element={<ArcsPage />} />
-                <Route path="/arcs/:id" element={<ArcDetailPage />} />
-                <Route path="/sagas" element={<SagasPage />} />
-                <Route path="/sagas/:id" element={<SagaDetailPage />} />
-                <Route path="/chapters" element={<ChaptersPage />} />
-                <Route path="/chapters/:number" element={<ChapterDetailPage />} />
-                <Route path="/volumes" element={<VolumesPage />} />
-                <Route path="/volumes/:number" element={<VolumeDetailPage />} />
-                <Route path="/analytics" element={<AnalyticsPage />} />
-                <Route path="/analytics/character-stats" element={<CharacterStatsPage />} />
-                <Route path="/analytics/character-appearances" element={<CharacterAppearancesPage />} />
-                <Route path="/analytics/character-completeness" element={<CharacterCompletenessPage />} />
-                <Route path="/analytics/story-arcs" element={<StoryArcsAnalyticsPage />} />
-                <Route path="/analytics/character-timeline" element={<CharacterTimelinePage />} />
-                <Route path="/analytics/birthdays" element={<CharacterBirthdayPage />} />
-                <Route path="/analytics/chapter-releases" element={<ChapterReleaseCalendarPage />} />
-                <Route path="/analytics/publication-rate" element={<PublicationRatePage />} />
-                <Route path="/about" element={<AboutPage />} />
-              </Routes>
-            </Suspense>
+          <div className="min-h-screen bg-gray-50 overflow-x-hidden">
+            <Header />
+            <div id="main-content" className="pt-16">
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/characters" element={<CharactersPage />} />
+                  <Route
+                    path="/characters/:id"
+                    element={<CharacterDetailPage />}
+                  />
+                  <Route path="/arcs" element={<ArcsPage />} />
+                  <Route path="/arcs/:id" element={<ArcDetailPage />} />
+                  <Route path="/sagas" element={<SagasPage />} />
+                  <Route path="/sagas/:id" element={<SagaDetailPage />} />
+                  <Route path="/chapters" element={<ChaptersPage />} />
+                  <Route
+                    path="/chapters/:number"
+                    element={<ChapterDetailPage />}
+                  />
+                  <Route path="/volumes" element={<VolumesPage />} />
+                  <Route
+                    path="/volumes/:number"
+                    element={<VolumeDetailPage />}
+                  />
+                  <Route path="/analytics" element={<AnalyticsPage />} />
+                  <Route
+                    path="/analytics/character-stats"
+                    element={<CharacterStatsPage />}
+                  />
+                  <Route
+                    path="/analytics/character-appearances"
+                    element={<CharacterAppearancesPage />}
+                  />
+                  <Route
+                    path="/analytics/character-completeness"
+                    element={<CharacterCompletenessPage />}
+                  />
+                  <Route
+                    path="/analytics/story-arcs"
+                    element={<StoryArcsAnalyticsPage />}
+                  />
+                  <Route
+                    path="/analytics/character-timeline"
+                    element={<CharacterTimelinePage />}
+                  />
+                  <Route
+                    path="/analytics/birthdays"
+                    element={<CharacterBirthdayPage />}
+                  />
+                  <Route
+                    path="/analytics/chapter-releases"
+                    element={<ChapterReleaseCalendarPage />}
+                  />
+                  <Route
+                    path="/analytics/publication-rate"
+                    element={<PublicationRatePage />}
+                  />
+                  <Route path="/about" element={<AboutPage />} />
+                </Routes>
+              </Suspense>
+            </div>
           </div>
-        </div>
         </ErrorBoundary>
         <Toaster position="bottom-right" toastOptions={{ duration: 3000 }} />
       </HashRouter>

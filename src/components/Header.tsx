@@ -8,19 +8,24 @@ function Header() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+      {/* Skip to main content link for keyboard/screen-reader users */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded-lg focus:text-sm focus:font-medium"
+      >
+        Skip to main content
+      </a>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-6">
           {/* Logo/Brand */}
-          <Link
-            to="/"
-            className="flex items-center gap-3 group flex-shrink-0"
-          >
+          <Link to="/" className="flex items-center gap-3 group flex-shrink-0">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-sm">
               <span className="text-white font-bold text-lg">O</span>
             </div>
             <div className="flex flex-col">
               <span className="text-gray-900 font-semibold text-base leading-tight group-hover:text-blue-600 transition-colors">
-                One Piece of Data<sup className="text-xs text-orange-500 ml-1">beta</sup>
+                One Piece of Data
+                <sup className="text-xs text-orange-500 ml-1">beta</sup>
               </span>
               <span className="text-gray-500 text-xs leading-tight hidden sm:block">
                 Data exploration for One Piece
@@ -41,7 +46,12 @@ function Header() {
               className="md:hidden p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
               aria-label="Open search"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -61,8 +71,18 @@ function Header() {
               className="hidden lg:flex items-center gap-2 text-gray-600 hover:text-gray-900 text-sm transition-colors"
               title="Report an issue or suggest a feature"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+                />
               </svg>
               <span>Feedback</span>
             </a>
@@ -72,7 +92,12 @@ function Header() {
 
       {/* Mobile Search Modal */}
       {mobileSearchOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-[70] md:hidden">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-[70] md:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Search"
+        >
           <div className="bg-white h-full flex flex-col">
             {/* Modal Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
@@ -82,7 +107,12 @@ function Header() {
                 className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                 aria-label="Close search"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"

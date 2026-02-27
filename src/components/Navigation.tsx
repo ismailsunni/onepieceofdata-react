@@ -17,8 +17,16 @@ const MEDIA_ITEMS: NavItem[] = [
 const ANALYTICS_ITEMS: NavItem[] = [
   { to: '/analytics', label: 'Dashboard', exact: true },
   { to: '/analytics/character-stats', label: 'Character Stats', exact: true },
-  { to: '/analytics/character-appearances', label: 'Character Appearances', exact: true },
-  { to: '/analytics/character-completeness', label: 'Data Completeness', exact: true },
+  {
+    to: '/analytics/character-appearances',
+    label: 'Character Appearances',
+    exact: true,
+  },
+  {
+    to: '/analytics/character-completeness',
+    label: 'Data Completeness',
+    exact: true,
+  },
   { to: '/analytics/story-arcs', label: 'Story & Arcs', exact: true },
   { to: '/analytics/birthdays', label: 'Birthdays', exact: true },
   { to: '/analytics/chapter-releases', label: 'Chapter Releases', exact: true },
@@ -42,8 +50,12 @@ function Navigation() {
   const [mediaExpanded, setMediaExpanded] = useState(false)
   const [analyticsExpanded, setAnalyticsExpanded] = useState(false)
 
-  const isStoryActive = location.pathname.startsWith('/arcs') || location.pathname.startsWith('/sagas')
-  const isMediaActive = location.pathname.startsWith('/chapters') || location.pathname.startsWith('/volumes')
+  const isStoryActive =
+    location.pathname.startsWith('/arcs') ||
+    location.pathname.startsWith('/sagas')
+  const isMediaActive =
+    location.pathname.startsWith('/chapters') ||
+    location.pathname.startsWith('/volumes')
   const isAnalyticsActive = location.pathname.startsWith('/analytics')
 
   const closeMobileMenu = () => setMobileMenuOpen(false)
@@ -52,14 +64,33 @@ function Navigation() {
     <>
       {/* Desktop Navigation */}
       <nav className="hidden lg:flex flex-wrap gap-2">
-        <NavLink to="/" className={getLinkClass}>Home</NavLink>
-        <NavLink to="/characters" className={getLinkClass}>Characters</NavLink>
+        <NavLink to="/" className={getLinkClass}>
+          Home
+        </NavLink>
+        <NavLink to="/characters" className={getLinkClass}>
+          Characters
+        </NavLink>
 
-        <DesktopDropdown label="Story" isActive={isStoryActive} items={STORY_ITEMS} />
-        <DesktopDropdown label="Media" isActive={isMediaActive} items={MEDIA_ITEMS} />
-        <DesktopDropdown label="Analytics" isActive={isAnalyticsActive} items={ANALYTICS_ITEMS} width="w-56" />
+        <DesktopDropdown
+          label="Story"
+          isActive={isStoryActive}
+          items={STORY_ITEMS}
+        />
+        <DesktopDropdown
+          label="Media"
+          isActive={isMediaActive}
+          items={MEDIA_ITEMS}
+        />
+        <DesktopDropdown
+          label="Analytics"
+          isActive={isAnalyticsActive}
+          items={ANALYTICS_ITEMS}
+          width="w-56"
+        />
 
-        <NavLink to="/about" className={getLinkClass}>About</NavLink>
+        <NavLink to="/about" className={getLinkClass}>
+          About
+        </NavLink>
       </nav>
 
       {/* Mobile Hamburger Button */}
@@ -68,14 +99,29 @@ function Navigation() {
         className="lg:hidden p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
         aria-label="Open menu"
       >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 6h16M4 12h16M4 18h16"
+          />
         </svg>
       </button>
 
       {/* Mobile Menu Drawer */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-[60] lg:hidden">
+        <div
+          className="fixed inset-0 z-[60] lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navigation menu"
+        >
           <div className="fixed inset-0 bg-white">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
@@ -85,16 +131,38 @@ function Navigation() {
                 className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                 aria-label="Close menu"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
 
             {/* Content */}
             <nav className="p-4 space-y-1 overflow-y-auto max-h-full">
-              <NavLink to="/" className={getMobileLinkClass} onClick={closeMobileMenu}>Home</NavLink>
-              <NavLink to="/characters" className={getMobileLinkClass} onClick={closeMobileMenu}>Characters</NavLink>
+              <NavLink
+                to="/"
+                className={getMobileLinkClass}
+                onClick={closeMobileMenu}
+              >
+                Home
+              </NavLink>
+              <NavLink
+                to="/characters"
+                className={getMobileLinkClass}
+                onClick={closeMobileMenu}
+              >
+                Characters
+              </NavLink>
 
               <MobileAccordion
                 label="Story"
@@ -118,7 +186,13 @@ function Navigation() {
                 onClose={closeMobileMenu}
               />
 
-              <NavLink to="/about" className={getMobileLinkClass} onClick={closeMobileMenu}>About</NavLink>
+              <NavLink
+                to="/about"
+                className={getMobileLinkClass}
+                onClick={closeMobileMenu}
+              >
+                About
+              </NavLink>
             </nav>
           </div>
         </div>
