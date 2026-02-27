@@ -1,31 +1,39 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { SortingState, PaginationState } from '@tanstack/react-table'
 import CharacterTable from '../components/CharacterTable'
 import { fetchCharacters } from '../services/characterService'
 import { fetchArcs } from '../services/arcService'
+import { CACHE } from '../constants/cache'
+import { PAGINATION } from '../constants/pagination'
 
 function CharactersPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [sorting, setSorting] = useState<SortingState>([
-    { id: 'appearance_count', desc: true }, // Sort by most appearances by default
+    { id: 'appearance_count', desc: true },
   ])
-  const [globalFilter, setGlobalFilter] = useState('')
   const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 15, // Show 15 characters per page
+    pageIndex: PAGINATION.DEFAULT_PAGE_INDEX,
+    pageSize: PAGINATION.DEFAULT_PAGE_SIZE,
   })
 
-  // Use React Query to fetch and cache characters
+  const globalFilter = searchParams.get('q') || ''
+  const setGlobalFilter = (value: string) => {
+    setSearchParams(value ? { q: value } : {}, { replace: true })
+    setPagination(p => ({ ...p, pageIndex: 0 }))
+  }
+
   const { data: characters = [], isLoading } = useQuery({
     queryKey: ['characters'],
     queryFn: fetchCharacters,
   })
 
-  // Fetch arcs to map arc IDs to names
   const { data: arcs = [], isLoading: arcsLoading } = useQuery({
     queryKey: ['arcs'],
     queryFn: fetchArcs,
+    staleTime: CACHE.REFERENCE_STALE,
+    gcTime: CACHE.REFERENCE_GC,
   })
 
   return (
@@ -33,9 +41,7 @@ function CharactersPage() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-          <Link to="/" className="hover:text-gray-900 transition-colors">
-            Home
-          </Link>
+          <Link to="/" className="hover:text-gray-900 transition-colors">Home</Link>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
@@ -45,9 +51,7 @@ function CharactersPage() {
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-3">Characters</h1>
-          <p className="text-lg text-gray-600">
-            Explore the vast world of One Piece characters
-          </p>
+          <p className="text-lg text-gray-600">Explore the vast world of One Piece characters</p>
         </div>
 
         {/* Search Box */}
@@ -68,14 +72,14 @@ function CharactersPage() {
           </div>
         </div>
 
-        {/* Loading State with Skeleton */}
+        {/* Loading State */}
         {isLoading || arcsLoading ? (
           <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    {['Name', 'Origin', 'Status', 'Appearances', 'First Appearance', 'Bounty', 'Age', 'Blood Type'].map((header) => (
+                    {['Name', 'Origin', 'Region', 'Status', 'Appearances', 'First Appearance', 'Bounty', 'Age', 'Blood Type'].map((header) => (
                       <th key={header} className="px-4 py-3 text-left">
                         <div className="h-3 bg-gray-200 rounded w-20 animate-pulse"></div>
                       </th>
@@ -85,7 +89,7 @@ function CharactersPage() {
                 <tbody className="divide-y divide-gray-200">
                   {[...Array(5)].map((_, i) => (
                     <tr key={i} className="bg-white">
-                      {[...Array(8)].map((_, j) => (
+                      {[...Array(9)].map((_, j) => (
                         <td key={j} className="px-4 py-4">
                           <div className="h-4 bg-gray-100 rounded animate-pulse"></div>
                         </td>
@@ -97,7 +101,6 @@ function CharactersPage() {
             </div>
           </div>
         ) : (
-          /* Character Table */
           <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
             <CharacterTable
               characters={characters}

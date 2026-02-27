@@ -1,22 +1,31 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { SortingState, PaginationState } from '@tanstack/react-table'
 import ArcTable from '../components/ArcTable'
 import { fetchArcs } from '../services/arcService'
+import { CACHE } from '../constants/cache'
+import { PAGINATION } from '../constants/pagination'
 
 function ArcsPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [sorting, setSorting] = useState<SortingState>([])
-  const [globalFilter, setGlobalFilter] = useState('')
   const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 15, // Show 15 arcs per page
+    pageIndex: PAGINATION.DEFAULT_PAGE_INDEX,
+    pageSize: PAGINATION.DEFAULT_PAGE_SIZE,
   })
 
-  // Use React Query to fetch and cache arcs
+  const globalFilter = searchParams.get('q') || ''
+  const setGlobalFilter = (value: string) => {
+    setSearchParams(value ? { q: value } : {}, { replace: true })
+    setPagination(p => ({ ...p, pageIndex: 0 }))
+  }
+
   const { data: arcs = [], isLoading } = useQuery({
     queryKey: ['arcs'],
     queryFn: fetchArcs,
+    staleTime: CACHE.REFERENCE_STALE,
+    gcTime: CACHE.REFERENCE_GC,
   })
 
   return (
@@ -24,9 +33,7 @@ function ArcsPage() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-          <Link to="/" className="hover:text-gray-900 transition-colors">
-            Home
-          </Link>
+          <Link to="/" className="hover:text-gray-900 transition-colors">Home</Link>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
@@ -36,9 +43,7 @@ function ArcsPage() {
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-3">Story Arcs</h1>
-          <p className="text-lg text-gray-600">
-            Follow the journey through each saga and arc of One Piece
-          </p>
+          <p className="text-lg text-gray-600">Follow the journey through each saga and arc of One Piece</p>
         </div>
 
         {/* Search Box */}
@@ -59,7 +64,7 @@ function ArcsPage() {
           </div>
         </div>
 
-        {/* Loading State with Skeleton */}
+        {/* Loading State */}
         {isLoading ? (
           <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
@@ -88,7 +93,6 @@ function ArcsPage() {
             </div>
           </div>
         ) : (
-          /* Arc Table */
           <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
             <ArcTable
               arcs={arcs}

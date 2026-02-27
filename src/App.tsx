@@ -4,6 +4,7 @@ import { lazy, Suspense } from 'react'
 import { Toaster } from 'react-hot-toast'
 import Header from './components/Header'
 import ErrorBoundary from './components/common/ErrorBoundary'
+import { CACHE } from './constants/cache'
 
 // Eager load home page for faster initial render
 import HomePage from './pages/HomePage'
@@ -37,15 +38,14 @@ const PageLoader = () => (
   </div>
 )
 
-// Create a client with longer cache times for static data
+// Create a client with sensible defaults; reference data queries override with CACHE.REFERENCE_*
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 60 * 24, // 24 hours - data stays fresh for a day
-      gcTime: 1000 * 60 * 60 * 24 * 7, // 7 days - cache persists for a week
-      refetchOnWindowFocus: false, // Don't refetch when window regains focus
-      refetchOnMount: false, // Don't refetch when component remounts if data exists
-      retry: 2, // Retry failed requests twice
+      staleTime: CACHE.DEFAULT_STALE,
+      gcTime: CACHE.DEFAULT_GC,
+      refetchOnWindowFocus: false,
+      retry: 2,
     },
   },
 })
