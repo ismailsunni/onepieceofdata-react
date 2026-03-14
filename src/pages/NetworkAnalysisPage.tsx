@@ -310,8 +310,10 @@ export default function NetworkAnalysisPage() {
 
   const [datasetId, setDatasetId] = useState('general')
   const [minApp, setMinApp] = useState(11)
+  const [maxApp, setMaxApp] = useState(1001)
   const [minAppMax, setMinAppMax] = useState(1001)
   const [minWt, setMinWt] = useState(10)
+  const [maxWt, setMaxWt] = useState(762)
   const [minWtMax, setMinWtMax] = useState(762)
   const [maxEdges, setMaxEdges] = useState(500)
   const [search, setSearch] = useState('')
@@ -327,25 +329,32 @@ export default function NetworkAnalysisPage() {
   const buildGraph = useCallback(
     (
       overrideMinApp?: number,
+      overrideMaxApp?: number,
       overrideMinWt?: number,
+      overrideMaxWt?: number,
       overrideMaxEdges?: number,
       overrideShowCommunities?: boolean
     ) => {
       if (!containerRef.current) return
       const mA = overrideMinApp ?? minApp
+      const xA = overrideMaxApp ?? maxApp
       const mW = overrideMinWt ?? minWt
+      const xW = overrideMaxWt ?? maxWt
       const mE = overrideMaxEdges ?? maxEdges
       const useCommunities = overrideShowCommunities ?? showCommunities
 
       const eligible = allNodesRef.current.filter(
-        (n) => n.appearance_count >= mA
+        (n) => n.appearance_count >= mA && n.appearance_count <= xA
       )
       const allowed = new Set(eligible.map((n) => n.id))
 
       const filteredEdges = allEdgesRef.current
         .filter(
           (e) =>
-            e.weight >= mW && allowed.has(e.source) && allowed.has(e.target)
+            e.weight >= mW &&
+            e.weight <= xW &&
+            allowed.has(e.source) &&
+            allowed.has(e.target)
         )
         .sort((a, b) => b.weight - a.weight)
         .slice(0, mE)
@@ -486,7 +495,7 @@ export default function NetworkAnalysisPage() {
 
       networkRef.current = net
     },
-    [minApp, minWt, maxEdges, showCommunities]
+    [minApp, maxApp, minWt, maxWt, maxEdges, showCommunities]
   )
 
   // ── Load dataset whenever selection changes ───────────────────────────────
@@ -515,10 +524,12 @@ export default function NetworkAnalysisPage() {
         const newMinApp = ds.defaultMinApp
         const newMinWt = ds.defaultMinWt
         setMinApp(newMinApp)
+        setMaxApp(maxApp)
         setMinWt(newMinWt)
+        setMaxWt(maxWt)
         setMaxEdges(500)
         setIsLoading(false)
-        buildGraph(newMinApp, newMinWt, 500)
+        buildGraph(newMinApp, maxApp, newMinWt, maxWt, 500)
       })
       .catch((e) => {
         setError(String(e))
@@ -584,47 +595,93 @@ export default function NetworkAnalysisPage() {
         {/* ── Filter controls ───────────────────────────────────────────── */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-end">
-            {/* Min appearances */}
+            {/* Appearance range */}
             <div>
               <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
-                Min appearances (nodes)
+                Appearances (nodes)
               </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="range"
-                  min={1}
-                  max={minAppMax}
-                  value={minApp}
-                  className="flex-1 accent-blue-600"
-                  onChange={(e) => setMinApp(Number(e.target.value))}
-                  onMouseUp={() => buildGraph()}
-                  onTouchEnd={() => buildGraph()}
-                />
-                <span className="w-10 text-right text-sm font-semibold text-blue-600">
-                  {minApp}
-                </span>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400 w-6">Min</span>
+                  <input
+                    type="range"
+                    min={1}
+                    max={minAppMax}
+                    value={minApp}
+                    className="flex-1 accent-blue-600"
+                    onChange={(e) =>
+                      setMinApp(Math.min(Number(e.target.value), maxApp - 1))
+                    }
+                    onMouseUp={() => buildGraph()}
+                    onTouchEnd={() => buildGraph()}
+                  />
+                  <span className="w-10 text-right text-xs font-semibold text-blue-600">
+                    {minApp}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400 w-6">Max</span>
+                  <input
+                    type="range"
+                    min={1}
+                    max={minAppMax}
+                    value={maxApp}
+                    className="flex-1 accent-blue-600"
+                    onChange={(e) =>
+                      setMaxApp(Math.max(Number(e.target.value), minApp + 1))
+                    }
+                    onMouseUp={() => buildGraph()}
+                    onTouchEnd={() => buildGraph()}
+                  />
+                  <span className="w-10 text-right text-xs font-semibold text-blue-600">
+                    {maxApp}
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Min edge weight */}
+            {/* Co-appearance range */}
             <div>
               <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
-                Min co-appearances (edges)
+                Co-appearances (edges)
               </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="range"
-                  min={1}
-                  max={minWtMax}
-                  value={minWt}
-                  className="flex-1 accent-blue-600"
-                  onChange={(e) => setMinWt(Number(e.target.value))}
-                  onMouseUp={() => buildGraph()}
-                  onTouchEnd={() => buildGraph()}
-                />
-                <span className="w-10 text-right text-sm font-semibold text-blue-600">
-                  {minWt}
-                </span>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400 w-6">Min</span>
+                  <input
+                    type="range"
+                    min={1}
+                    max={minWtMax}
+                    value={minWt}
+                    className="flex-1 accent-blue-600"
+                    onChange={(e) =>
+                      setMinWt(Math.min(Number(e.target.value), maxWt - 1))
+                    }
+                    onMouseUp={() => buildGraph()}
+                    onTouchEnd={() => buildGraph()}
+                  />
+                  <span className="w-10 text-right text-xs font-semibold text-blue-600">
+                    {minWt}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400 w-6">Max</span>
+                  <input
+                    type="range"
+                    min={1}
+                    max={minWtMax}
+                    value={maxWt}
+                    className="flex-1 accent-blue-600"
+                    onChange={(e) =>
+                      setMaxWt(Math.max(Number(e.target.value), minWt + 1))
+                    }
+                    onMouseUp={() => buildGraph()}
+                    onTouchEnd={() => buildGraph()}
+                  />
+                  <span className="w-10 text-right text-xs font-semibold text-blue-600">
+                    {maxWt}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -700,6 +757,8 @@ export default function NetworkAnalysisPage() {
                     onChange={(e) => {
                       setShowCommunities(e.target.checked)
                       buildGraph(
+                        undefined,
+                        undefined,
                         undefined,
                         undefined,
                         undefined,
