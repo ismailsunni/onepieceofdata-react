@@ -102,6 +102,77 @@ interface Stats {
   totalEligible: number
 }
 
+// ─── Community detection (label propagation) ─────────────────────────────────
+const COMMUNITY_COLORS = [
+  '#3b82f6', // blue
+  '#ef4444', // red
+  '#22c55e', // green
+  '#f59e0b', // amber
+  '#8b5cf6', // violet
+  '#ec4899', // pink
+  '#14b8a6', // teal
+  '#f97316', // orange
+  '#6366f1', // indigo
+  '#84cc16', // lime
+  '#06b6d4', // cyan
+  '#a855f7', // purple
+]
+
+function detectCommunities(
+  nodes: RawNode[],
+  edges: RawEdge[]
+): Map<string, number> {
+  const adj = new Map<string, Map<string, number>>()
+  nodes.forEach((n) => adj.set(n.id, new Map()))
+  edges.forEach((e) => {
+    adj.get(e.source)?.set(e.target, e.weight)
+    adj.get(e.target)?.set(e.source, e.weight)
+  })
+
+  // Each node starts in its own community (indexed by position)
+  const labels = new Map<string, number>()
+  nodes.forEach((n, i) => labels.set(n.id, i))
+
+  // Label propagation: up to 100 iterations
+  for (let iter = 0; iter < 100; iter++) {
+    let changed = false
+    const order = [...nodes].sort(() => Math.random() - 0.5)
+    for (const node of order) {
+      const neighbors = adj.get(node.id)
+      if (!neighbors || neighbors.size === 0) continue
+      const counts = new Map<number, number>()
+      for (const [neighborId, weight] of neighbors) {
+        const lbl = labels.get(neighborId)!
+        counts.set(lbl, (counts.get(lbl) ?? 0) + weight)
+      }
+      let maxScore = 0,
+        maxLabel = labels.get(node.id)!
+      for (const [lbl, score] of counts) {
+        if (score > maxScore) {
+          maxScore = score
+          maxLabel = lbl
+        }
+      }
+      if (maxLabel !== labels.get(node.id)) {
+        labels.set(node.id, maxLabel)
+        changed = true
+      }
+    }
+    if (!changed) break
+  }
+
+  // Re-index community IDs 0, 1, 2, …
+  const unique = [...new Set(labels.values())]
+  // Sort by size desc so community 0 is the largest
+  const sizeMap = new Map<number, number>()
+  labels.forEach((lbl) => sizeMap.set(lbl, (sizeMap.get(lbl) ?? 0) + 1))
+  unique.sort((a, b) => (sizeMap.get(b) ?? 0) - (sizeMap.get(a) ?? 0))
+  const remap = new Map(unique.map((lbl, i) => [lbl, i]))
+  const result = new Map<string, number>()
+  labels.forEach((lbl, id) => result.set(id, remap.get(lbl)!))
+  return result
+}
+
 // ─── Tooltip builder (vis-network needs DOM nodes for HTML) ───────────────────
 function makeTooltip(html: string): HTMLDivElement {
   const div = document.createElement('div')
@@ -216,6 +287,8 @@ export default function NetworkAnalysisPage() {
   const [maxEdges, setMaxEdges] = useState(500)
   const [search, setSearch] = useState('')
   const [selectedNode, setSelectedNode] = useState<RawNode | null>(null)
+  const [showCommunities, setShowCommunities] = useState(false)
+  const [communityCount, setCommunityCount] = useState(0)
   const [stats, setStats] = useState<Stats | null>(null)
   const [status, setStatus] = useState('Loading…')
   const [isLoading, setIsLoading] = useState(true)
@@ -226,12 +299,14 @@ export default function NetworkAnalysisPage() {
     (
       overrideMinApp?: number,
       overrideMinWt?: number,
-      overrideMaxEdges?: number
+      overrideMaxEdges?: number,
+      overrideShowCommunities?: boolean
     ) => {
       if (!containerRef.current) return
       const mA = overrideMinApp ?? minApp
       const mW = overrideMinWt ?? minWt
       const mE = overrideMaxEdges ?? maxEdges
+      const useCommunities = overrideShowCommunities ?? showCommunities
 
       const eligible = allNodesRef.current.filter(
         (n) => n.appearance_count >= mA
@@ -252,9 +327,29 @@ export default function NetworkAnalysisPage() {
         seen.add(e.target)
       })
 
-      const visNodes = eligible
-        .filter((n) => seen.has(n.id))
-        .map((n) => ({
+      const visibleNodes = eligible.filter((n) => seen.has(n.id))
+
+      // Community detection
+      let communityMap: Map<string, number> | null = null
+      if (useCommunities && visibleNodes.length > 0) {
+        const visibleEdges = filteredEdges.filter(
+          (e) => seen.has(e.source) && seen.has(e.target)
+        )
+        communityMap = detectCommunities(visibleNodes, visibleEdges)
+        const numCommunities = new Set(communityMap.values()).size
+        setCommunityCount(numCommunities)
+      } else {
+        setCommunityCount(0)
+      }
+
+      const visNodes = visibleNodes.map((n) => {
+        const community = communityMap?.get(n.id) ?? -1
+        const bg =
+          community >= 0
+            ? COMMUNITY_COLORS[community % COMMUNITY_COLORS.length]
+            : '#3b82f6'
+        const border = community >= 0 ? bg : '#1d4ed8'
+        return {
           id: n.id,
           label: n.name,
           size: Math.max(
@@ -262,13 +357,14 @@ export default function NetworkAnalysisPage() {
             Math.min(28, 8 + Math.log10(Math.max(1, n.appearance_count)) * 7)
           ),
           color: {
-            background: '#3b82f6',
-            border: '#1d4ed8',
+            background: bg,
+            border,
             highlight: { background: '#f59e0b', border: '#d97706' },
-            hover: { background: '#60a5fa', border: '#1d4ed8' },
+            hover: { background: '#60a5fa', border },
           },
           font: { color: '#1f2937', size: 11 },
-        }))
+        }
+      })
 
       const visEdges = filteredEdges.map((e) => ({
         from: e.source,
@@ -361,7 +457,7 @@ export default function NetworkAnalysisPage() {
 
       networkRef.current = net
     },
-    [minApp, minWt, maxEdges]
+    [minApp, minWt, maxEdges, showCommunities]
   )
 
   // ── Load dataset whenever selection changes ───────────────────────────────
@@ -552,7 +648,7 @@ export default function NetworkAnalysisPage() {
 
           {/* Action buttons + stats */}
           <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-4 border-t border-gray-100">
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 items-center">
               <button
                 onClick={() => buildGraph()}
                 className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
@@ -565,6 +661,39 @@ export default function NetworkAnalysisPage() {
               >
                 Fit / Reset view
               </button>
+              {/* Community toggle */}
+              <label className="flex items-center gap-2 cursor-pointer select-none ml-1">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    checked={showCommunities}
+                    onChange={(e) => {
+                      setShowCommunities(e.target.checked)
+                      buildGraph(
+                        undefined,
+                        undefined,
+                        undefined,
+                        e.target.checked
+                      )
+                    }}
+                  />
+                  <div
+                    className={`w-9 h-5 rounded-full transition-colors ${showCommunities ? 'bg-blue-600' : 'bg-gray-300'}`}
+                  />
+                  <div
+                    className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${showCommunities ? 'translate-x-4' : ''}`}
+                  />
+                </div>
+                <span className="text-sm text-gray-600">
+                  Color by community
+                </span>
+              </label>
+              {showCommunities && communityCount > 0 && (
+                <span className="text-xs text-gray-400">
+                  {communityCount} communities detected
+                </span>
+              )}
             </div>
 
             {stats && (
@@ -665,6 +794,31 @@ export default function NetworkAnalysisPage() {
             </div>
           )}
         </div>
+
+        {showCommunities && communityCount > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2 justify-center">
+            {Array.from(
+              { length: Math.min(communityCount, COMMUNITY_COLORS.length) },
+              (_, i) => (
+                <span
+                  key={i}
+                  className="flex items-center gap-1.5 text-xs text-gray-500"
+                >
+                  <span
+                    className="inline-block w-3 h-3 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: COMMUNITY_COLORS[i] }}
+                  />
+                  Community {i + 1}
+                </span>
+              )
+            )}
+            {communityCount > COMMUNITY_COLORS.length && (
+              <span className="text-xs text-gray-400">
+                +{communityCount - COMMUNITY_COLORS.length} more
+              </span>
+            )}
+          </div>
+        )}
 
         <p className="mt-3 text-xs text-gray-400 text-center">
           Scroll to zoom · Drag to pan · Click a node for details · Use keyboard
