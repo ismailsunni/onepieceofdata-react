@@ -25,6 +25,16 @@ interface Stats {
   totalEligible: number
 }
 
+// ─── Tooltip DOM element builder (vis-network needs DOM nodes for HTML) ───────
+function makeTooltip(html: string): HTMLDivElement {
+  const div = document.createElement('div')
+  div.style.cssText =
+    'font-family:Inter,sans-serif;font-size:12px;padding:6px 10px;line-height:1.6;' +
+    'background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.12);max-width:220px'
+  div.innerHTML = html
+  return div
+}
+
 // ─── CSV parser ───────────────────────────────────────────────────────────────
 function parseCsv(text: string): Record<string, string>[] {
   const lines = text.trim().split('\n')
@@ -96,11 +106,9 @@ export default function NetworkAnalysisPage() {
             8,
             Math.min(28, 8 + Math.log10(Math.max(1, n.appearance_count)) * 7)
           ),
-          title: `<div style="font-family:sans-serif;font-size:12px;padding:4px 6px;line-height:1.6">
-            <strong>${n.name}</strong><br/>
-            Appearances: ${n.appearance_count.toLocaleString()}<br/>
-            Connections: ${n.degree}
-          </div>`,
+          title: makeTooltip(
+            `<strong>${n.name}</strong><br/>Appearances: ${n.appearance_count.toLocaleString()}<br/>Connections: ${n.degree}`
+          ),
           color: {
             background: '#3b82f6',
             border: '#1d4ed8',
@@ -117,10 +125,9 @@ export default function NetworkAnalysisPage() {
           1,
           Math.min(5, Math.log10(Math.max(1, e.weight)) * 1.8)
         ),
-        title: `<div style="font-family:sans-serif;font-size:12px;padding:4px 6px">
-          <strong>${e.source_name}</strong> + <strong>${e.target_name}</strong><br/>
-          ${e.weight} co-appearances
-        </div>`,
+        title: makeTooltip(
+          `<strong>${e.source_name}</strong> + <strong>${e.target_name}</strong><br/>${e.weight} co-appearances`
+        ),
         color: {
           color: '#93c5fd',
           opacity: 0.7,
@@ -181,7 +188,10 @@ export default function NetworkAnalysisPage() {
 
       net.once('stabilizationIterationsDone', () => {
         net.setOptions({ physics: false })
-        net.fit({ animation: true })
+        requestAnimationFrame(() => {
+          net.redraw()
+          net.fit({ animation: true })
+        })
         setStatus(
           `${visNodes.length} nodes · ${visEdges.length} edges · stabilized`
         )
