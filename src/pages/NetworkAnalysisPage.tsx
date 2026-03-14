@@ -102,7 +102,7 @@ interface Stats {
   totalEligible: number
 }
 
-// ─── Community detection (label propagation) ─────────────────────────────────
+// ─── Community detection (Louvain phase-1, modularity optimisation) ──────────
 const COMMUNITY_COLORS = [
   '#3b82f6', // blue
   '#ef4444', // red
@@ -122,54 +122,83 @@ function detectCommunities(
   nodes: RawNode[],
   edges: RawEdge[]
 ): Map<string, number> {
+  // Build weighted adjacency
   const adj = new Map<string, Map<string, number>>()
   nodes.forEach((n) => adj.set(n.id, new Map()))
+  let totalWeight = 0
   edges.forEach((e) => {
     adj.get(e.source)?.set(e.target, e.weight)
     adj.get(e.target)?.set(e.source, e.weight)
+    totalWeight += e.weight
+  })
+  const m = totalWeight || 1
+
+  // Weighted degree per node
+  const k = new Map<string, number>()
+  nodes.forEach((n) => {
+    let deg = 0
+    for (const w of (adj.get(n.id) ?? new Map()).values()) deg += w
+    k.set(n.id, deg)
   })
 
-  // Each node starts in its own community (indexed by position)
-  const labels = new Map<string, number>()
-  nodes.forEach((n, i) => labels.set(n.id, i))
+  // Each node starts in its own community (keyed by node id)
+  const comm = new Map<string, string>()
+  nodes.forEach((n) => comm.set(n.id, n.id))
 
-  // Label propagation: up to 100 iterations
-  for (let iter = 0; iter < 100; iter++) {
-    let changed = false
+  // Sum of weights incident to each community (Σ_tot)
+  const commTot = new Map<string, number>()
+  nodes.forEach((n) => commTot.set(n.id, k.get(n.id) ?? 0))
+
+  // Louvain phase 1: move each node to the neighbour community with max ΔQ
+  for (let iter = 0; iter < 150; iter++) {
+    let improved = false
     const order = [...nodes].sort(() => Math.random() - 0.5)
+
     for (const node of order) {
-      const neighbors = adj.get(node.id)
-      if (!neighbors || neighbors.size === 0) continue
-      const counts = new Map<number, number>()
-      for (const [neighborId, weight] of neighbors) {
-        const lbl = labels.get(neighborId)!
-        counts.set(lbl, (counts.get(lbl) ?? 0) + weight)
+      const curComm = comm.get(node.id)!
+      const ki = k.get(node.id) ?? 0
+      const neighbors = adj.get(node.id) ?? new Map<string, number>()
+
+      // Aggregate edge weight from this node into each neighbouring community
+      const toComm = new Map<string, number>()
+      for (const [nbId, w] of neighbors) {
+        const c = comm.get(nbId)!
+        toComm.set(c, (toComm.get(c) ?? 0) + w)
       }
-      let maxScore = 0,
-        maxLabel = labels.get(node.id)!
-      for (const [lbl, score] of counts) {
-        if (score > maxScore) {
-          maxScore = score
-          maxLabel = lbl
+
+      // ΔQ = k_i_in/m − (Σ_tot × k_i) / (2m²)
+      let bestDelta = 0
+      let bestComm = curComm
+
+      for (const [cand, kiIn] of toComm) {
+        if (cand === curComm) continue
+        const sigmaTot = commTot.get(cand) ?? 0
+        const delta = kiIn / m - (sigmaTot * ki) / (2 * m * m)
+        if (delta > bestDelta) {
+          bestDelta = delta
+          bestComm = cand
         }
       }
-      if (maxLabel !== labels.get(node.id)) {
-        labels.set(node.id, maxLabel)
-        changed = true
+
+      if (bestComm !== curComm) {
+        commTot.set(curComm, (commTot.get(curComm) ?? 0) - ki)
+        commTot.set(bestComm, (commTot.get(bestComm) ?? 0) + ki)
+        comm.set(node.id, bestComm)
+        improved = true
       }
     }
-    if (!changed) break
+    if (!improved) break
   }
 
-  // Re-index community IDs 0, 1, 2, …
-  const unique = [...new Set(labels.values())]
-  // Sort by size desc so community 0 is the largest
-  const sizeMap = new Map<number, number>()
-  labels.forEach((lbl) => sizeMap.set(lbl, (sizeMap.get(lbl) ?? 0) + 1))
-  unique.sort((a, b) => (sizeMap.get(b) ?? 0) - (sizeMap.get(a) ?? 0))
-  const remap = new Map(unique.map((lbl, i) => [lbl, i]))
+  // Re-index 0,1,2,… sorted by community size descending
+  const sizeCount = new Map<string, number>()
+  comm.forEach((c) => sizeCount.set(c, (sizeCount.get(c) ?? 0) + 1))
+  const unique = [...new Set(comm.values())]
+  unique.sort((a, b) => (sizeCount.get(b) ?? 0) - (sizeCount.get(a) ?? 0))
+  const remap = new Map(unique.map((c, i) => [c, i]))
+
   const result = new Map<string, number>()
-  labels.forEach((lbl, id) => result.set(id, remap.get(lbl)!))
+  comm.forEach((c, id) => result.set(id, remap.get(c)!))
   return result
 }
 
