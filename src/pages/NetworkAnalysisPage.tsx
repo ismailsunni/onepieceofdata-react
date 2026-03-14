@@ -1,398 +1,599 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import Graph from 'graphology'
-import Sigma from 'sigma'
-import { circular } from 'graphology-layout'
-import forceAtlas2 from 'graphology-layout-forceatlas2'
-import { SectionHeader } from '../components/analytics'
+import { Network, DataSet } from 'vis-network/standalone'
 
-// Network dataset options
-const NETWORK_DATASETS = [
-  { id: 'arc', label: 'By Arc', description: 'Characters co-appearing in the same arc' },
-  { id: 'saga', label: 'By Saga', description: 'Characters co-appearing in the same saga' },
-  { id: 'chapter', label: 'By Chapter', description: 'Characters co-appearing in the same chapter' },
-  { id: 'consec-2', label: 'Consecutive (2)', description: 'Characters co-appearing in 2 consecutive chapters' },
-  { id: 'consec-3', label: 'Consecutive (3)', description: 'Characters co-appearing in 3 consecutive chapters' },
-  { id: 'consec-5', label: 'Consecutive (5)', description: 'Characters co-appearing in 5 consecutive chapters' },
-  { id: 'consec-7', label: 'Consecutive (7)', description: 'Characters co-appearing in 7 consecutive chapters' },
-]
-
-interface NetworkNode {
+// ─── Types ────────────────────────────────────────────────────────────────────
+interface RawNode {
   id: string
-  label: string
+  name: string
   appearance_count: number
+  weighted_degree: number
+  degree: number
 }
 
-interface NetworkEdge {
+interface RawEdge {
   source: string
+  source_name: string
   target: string
+  target_name: string
   weight: number
 }
 
-interface NetworkData {
-  nodes: NetworkNode[]
-  edges: NetworkEdge[]
+interface Stats {
+  nodesShown: number
+  edgesShown: number
+  minApp: number
+  minWt: number
+  edgeCap: number
+  totalEligible: number
 }
 
-// Color palette for node degrees
-const NODE_COLORS = [
-  '#3b82f6', // blue - low degree
-  '#8b5cf6', // purple
-  '#f59e0b', // amber
-  '#ef4444', // red - high degree
-]
-
-function getNodeColor(degree: number, maxDegree: number): string {
-  const ratio = degree / maxDegree
-  if (ratio < 0.25) return NODE_COLORS[0]
-  if (ratio < 0.5) return NODE_COLORS[1]
-  if (ratio < 0.75) return NODE_COLORS[2]
-  return NODE_COLORS[3]
+// ─── CSV parser (no dep) ───────────────────────────────────────────────────────
+function parseCsv(text: string): Record<string, string>[] {
+  const lines = text.trim().split('\n')
+  const headers = lines[0].split(',').map((h) => h.trim())
+  return lines.slice(1).map((line) => {
+    const vals = line.split(',')
+    const obj: Record<string, string> = {}
+    headers.forEach((h, i) => (obj[h] = (vals[i] ?? '').trim()))
+    return obj
+  })
 }
 
-function NetworkAnalysisPage() {
+// ─── Component ────────────────────────────────────────────────────────────────
+export default function NetworkAnalysisPage() {
   const containerRef = useRef<HTMLDivElement>(null)
-  const sigmaRef = useRef<Sigma | null>(null)
-  const graphRef = useRef<Graph | null>(null)
+  const networkRef = useRef<Network | null>(null)
+  const allNodesRef = useRef<RawNode[]>([])
+  const allEdgesRef = useRef<RawEdge[]>([])
+  const nameToIdRef = useRef<Record<string, string>>({})
 
-  const [selectedDataset, setSelectedDataset] = useState('saga')
-  const [isLoading, setIsLoading] = useState(false)
+  const [minApp, setMinApp] = useState(11)
+  const [minAppMax, setMinAppMax] = useState(1001)
+  const [minWt, setMinWt] = useState(10)
+  const [minWtMax, setMinWtMax] = useState(762)
+  const [maxEdges, setMaxEdges] = useState(500)
+  const [search, setSearch] = useState('')
+  const [stats, setStats] = useState<Stats | null>(null)
+  const [status, setStatus] = useState('Loading...')
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [stats, setStats] = useState<{ nodes: number; edges: number } | null>(null)
-  const [hoveredNode, setHoveredNode] = useState<{ label: string; degree: number; appearances: number } | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [minWeight, setMinWeight] = useState(1)
-  const [isLayoutRunning, setIsLayoutRunning] = useState(false)
-  const layoutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const buildGraph = useCallback(async (datasetId: string, weightThreshold: number) => {
-    setIsLoading(true)
-    setError(null)
-    setHoveredNode(null)
+  // ── Build / refresh graph ───────────────────────────────────────────────────
+  const buildGraph = useCallback(
+    (
+      overrideMinApp?: number,
+      overrideMinWt?: number,
+      overrideMaxEdges?: number
+    ) => {
+      if (!containerRef.current) return
+      const mA = overrideMinApp ?? minApp
+      const mW = overrideMinWt ?? minWt
+      const mE = overrideMaxEdges ?? maxEdges
 
-    try {
-      const res = await fetch(`/network_${datasetId}.json`)
-      if (!res.ok) throw new Error(`Failed to load network data: ${res.statusText}`)
-      const data: NetworkData = await res.json()
+      const eligible = allNodesRef.current.filter(
+        (n) => n.appearance_count >= mA
+      )
+      const allowed = new Set(eligible.map((n) => n.id))
 
-      // Filter edges by weight
-      const filteredEdges = data.edges.filter((e) => e.weight >= weightThreshold)
+      const filteredEdges = allEdgesRef.current
+        .filter(
+          (e) =>
+            e.weight >= mW && allowed.has(e.source) && allowed.has(e.target)
+        )
+        .sort((a, b) => b.weight - a.weight)
+        .slice(0, mE)
 
-      // Only include nodes that are referenced in filtered edges
-      const referencedNodes = new Set<string>()
+      const seen = new Set<string>()
       filteredEdges.forEach((e) => {
-        referencedNodes.add(e.source)
-        referencedNodes.add(e.target)
+        seen.add(e.source)
+        seen.add(e.target)
       })
-      const filteredNodes = data.nodes.filter((n) => referencedNodes.has(n.id))
 
-      const graph = new Graph({ type: 'undirected', multi: false })
+      const visNodes = eligible
+        .filter((n) => seen.has(n.id))
+        .map((n) => ({
+          id: n.id,
+          label: n.name,
+          size: Math.max(
+            8,
+            Math.min(28, 8 + Math.log10(Math.max(1, n.appearance_count)) * 7)
+          ),
+          title: `<b>${n.name}</b><br>Appearances: ${n.appearance_count}<br>Weighted degree: ${n.weighted_degree}`,
+          color: {
+            background: '#5aa8ff',
+            border: '#3468a8',
+            highlight: { background: '#ffcc44', border: '#cc8800' },
+            hover: { background: '#7ec8ff', border: '#3468a8' },
+          },
+          font: { color: '#e5ecff', size: 11 },
+        }))
 
-      // Add nodes
-      filteredNodes.forEach((node) => {
-        if (!graph.hasNode(node.id)) {
-          graph.addNode(node.id, {
-            label: node.label,
-            appearance_count: node.appearance_count,
-            x: Math.random(),
-            y: Math.random(),
-            size: Math.max(4, Math.min(20, Math.log(node.appearance_count + 1) * 2)),
-            color: '#3b82f6',
-          })
+      const visEdges = filteredEdges.map((e) => ({
+        from: e.source,
+        to: e.target,
+        width: Math.max(1, Math.min(6, Math.log10(Math.max(1, e.weight)) * 2)),
+        title: `${e.source_name} + ${e.target_name}: ${e.weight} chapters`,
+        color: {
+          color: '#4a7fcc',
+          opacity: 0.5,
+          highlight: '#ffcc44',
+          hover: '#7ec8ff',
+        },
+      }))
+
+      setStats({
+        nodesShown: visNodes.length,
+        edgesShown: visEdges.length,
+        minApp: mA,
+        minWt: mW,
+        edgeCap: mE,
+        totalEligible: eligible.length,
+      })
+      setStatus(`${visNodes.length} nodes / ${visEdges.length} edges`)
+
+      if (visNodes.length === 0) {
+        if (networkRef.current) {
+          networkRef.current.destroy()
+          networkRef.current = null
         }
-      })
+        setStatus('No nodes match filters — lower the sliders')
+        return
+      }
 
-      // Add edges
-      filteredEdges.forEach((edge) => {
-        if (graph.hasNode(edge.source) && graph.hasNode(edge.target)) {
-          const key = [edge.source, edge.target].sort().join('|')
-          if (!graph.hasEdge(edge.source, edge.target)) {
-            graph.addEdge(edge.source, edge.target, {
-              weight: edge.weight,
-              size: Math.max(0.3, Math.min(3, Math.log(edge.weight + 1) * 0.5)),
-              color: '#cbd5e1',
-              key,
-            })
-          }
+      if (networkRef.current) {
+        networkRef.current.destroy()
+        networkRef.current = null
+      }
+
+      const net = new Network(
+        containerRef.current,
+        {
+          nodes: new DataSet(visNodes as never[]),
+          edges: new DataSet(visEdges as never[]),
+        },
+        {
+          nodes: { shape: 'dot' },
+          edges: { smooth: false },
+          layout: {
+            randomSeed: 7,
+            improvedLayout: visNodes.length < 80,
+          },
+          interaction: {
+            hover: true,
+            tooltipDelay: 100,
+            navigationButtons: true,
+            keyboard: true,
+          },
+          physics: {
+            barnesHut: {
+              gravitationalConstant: -2000,
+              springLength: 120,
+              springConstant: 0.04,
+              damping: 0.2,
+            },
+            stabilization: { enabled: true, iterations: 300, fit: true },
+          },
         }
+      )
+
+      net.once('stabilizationIterationsDone', () => {
+        net.setOptions({ physics: false })
+        net.fit({ animation: true })
+        setStatus(
+          `${visNodes.length} nodes / ${visEdges.length} edges · stabilized`
+        )
       })
 
-      // Compute degree-based colors
-      const degrees = graph.nodes().map((n) => graph.degree(n))
-      const maxDegree = Math.max(...degrees, 1)
-      graph.nodes().forEach((nodeId) => {
-        const degree = graph.degree(nodeId)
-        graph.setNodeAttribute(nodeId, 'color', getNodeColor(degree, maxDegree))
-      })
+      networkRef.current = net
+    },
+    [minApp, minWt, maxEdges]
+  )
 
-      // Apply circular layout first, then run ForceAtlas2
-      circular.assign(graph, { scale: 1 })
+  // ── Load CSVs on mount ──────────────────────────────────────────────────────
+  useEffect(() => {
+    setStatus('Fetching data...')
+    let nodesDone = false
+    let edgesDone = false
+    let rawN: RawNode[] = []
+    let rawE: RawEdge[] = []
 
-      setStats({ nodes: graph.order, edges: graph.size })
-      return graph
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error')
-      return null
-    } finally {
+    function tryBuild() {
+      if (!nodesDone || !edgesDone) return
+      allNodesRef.current = rawN
+      allEdgesRef.current = rawE
+      nameToIdRef.current = {}
+      rawN.forEach((n) => (nameToIdRef.current[n.name] = n.id))
+
+      const maxApp = Math.max(...rawN.map((n) => n.appearance_count), 11)
+      const maxWt = Math.max(...rawE.map((e) => e.weight), 1)
+      setMinAppMax(maxApp)
+      setMinWtMax(maxWt)
       setIsLoading(false)
-    }
-  }, [])
-
-  const initSigma = useCallback((graph: Graph) => {
-    if (!containerRef.current) return
-
-    // Destroy existing instance
-    if (sigmaRef.current) {
-      sigmaRef.current.kill()
-      sigmaRef.current = null
+      buildGraph(11, 10, 500)
     }
 
-    const sigma = new Sigma(graph, containerRef.current, {
-      renderEdgeLabels: false,
-      defaultEdgeColor: '#cbd5e1',
-      defaultNodeColor: '#3b82f6',
-      minCameraRatio: 0.05,
-      maxCameraRatio: 10,
-      labelRenderedSizeThreshold: 8,
-    })
-
-    // Hover events
-    sigma.on('enterNode', ({ node }) => {
-      const attrs = graph.getNodeAttributes(node)
-      setHoveredNode({
-        label: attrs.label as string,
-        degree: graph.degree(node),
-        appearances: attrs.appearance_count as number,
+    fetch('/character_network_nodes_gt10.csv')
+      .then((r) => r.text())
+      .then((text) => {
+        rawN = parseCsv(text)
+          .map((r) => ({
+            id: r.id ?? '',
+            name: r.name ?? r.id ?? '',
+            appearance_count: Number(r.appearance_count) || 0,
+            weighted_degree: Number(r.weighted_degree) || 0,
+            degree: Number(r.degree) || 0,
+          }))
+          .filter((n) => n.id)
+        nodesDone = true
+        tryBuild()
       })
-      // Highlight neighbors
-      graph.nodes().forEach((n) => {
-        if (n === node || graph.neighbors(node).includes(n)) {
-          graph.setNodeAttribute(n, 'highlighted', true)
-        }
+      .catch((e) => setError(String(e)))
+
+    fetch('/character_coappearance_edges_gt10.csv')
+      .then((r) => r.text())
+      .then((text) => {
+        rawE = parseCsv(text)
+          .map((r) => ({
+            source: r.source ?? '',
+            source_name: r.source_name ?? r.source ?? '',
+            target: r.target ?? '',
+            target_name: r.target_name ?? r.target ?? '',
+            weight: Number(r.weight) || 0,
+          }))
+          .filter((e) => e.source && e.target)
+        edgesDone = true
+        tryBuild()
       })
-      sigma.refresh()
-    })
+      .catch((e) => setError(String(e)))
 
-    sigma.on('leaveNode', () => {
-      setHoveredNode(null)
-      graph.nodes().forEach((n) => graph.removeNodeAttribute(n, 'highlighted'))
-      sigma.refresh()
-    })
-
-    sigmaRef.current = sigma
-    graphRef.current = graph
-  }, [])
-
-  // Run ForceAtlas2 layout animation
-  const runLayout = useCallback(() => {
-    if (!graphRef.current || !sigmaRef.current) return
-    setIsLayoutRunning(true)
-
-    let iterations = 0
-    const maxIterations = 200
-    const batchSize = 10
-
-    const step = () => {
-      if (!graphRef.current || !sigmaRef.current) return
-      forceAtlas2.assign(graphRef.current, { iterations: batchSize, settings: { gravity: 1, scalingRatio: 5 } })
-      sigmaRef.current.refresh()
-      iterations += batchSize
-      if (iterations < maxIterations) {
-        layoutTimerRef.current = setTimeout(step, 16)
-      } else {
-        setIsLayoutRunning(false)
+    return () => {
+      if (networkRef.current) {
+        networkRef.current.destroy()
+        networkRef.current = null
       }
     }
-    step()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Stop layout
-  const stopLayout = useCallback(() => {
-    if (layoutTimerRef.current) clearTimeout(layoutTimerRef.current)
-    setIsLayoutRunning(false)
-  }, [])
-
-  // Load & render on dataset / weight change
-  useEffect(() => {
-    buildGraph(selectedDataset, minWeight).then((graph) => {
-      if (graph) initSigma(graph)
+  // ── Focus character ─────────────────────────────────────────────────────────
+  const focusCharacter = useCallback(() => {
+    if (!networkRef.current) return
+    const id = nameToIdRef.current[search.trim()]
+    if (!id) {
+      setStatus(`Not found: "${search}"`)
+      return
+    }
+    networkRef.current.selectNodes([id])
+    networkRef.current.focus(id, {
+      scale: 1.5,
+      animation: { duration: 400, easingFunction: 'easeInOutQuad' },
     })
-    return () => {
-      if (layoutTimerRef.current) clearTimeout(layoutTimerRef.current)
-    }
-  }, [selectedDataset, minWeight, buildGraph, initSigma])
+    setStatus(`Focused: ${search}`)
+  }, [search])
 
-  // Search: highlight matching node
-  useEffect(() => {
-    if (!graphRef.current || !sigmaRef.current) return
-    const query = searchQuery.trim().toLowerCase()
-    if (!query) {
-      graphRef.current.nodes().forEach((n) => graphRef.current!.removeNodeAttribute(n, 'highlighted'))
-    } else {
-      graphRef.current.nodes().forEach((n) => {
-        const label = (graphRef.current!.getNodeAttribute(n, 'label') as string).toLowerCase()
-        if (label.includes(query)) {
-          graphRef.current!.setNodeAttribute(n, 'highlighted', true)
-          graphRef.current!.setNodeAttribute(n, 'color', '#f97316')
-        } else {
-          graphRef.current!.removeNodeAttribute(n, 'highlighted')
-          const degree = graphRef.current!.degree(n)
-          const maxDegree = Math.max(...graphRef.current!.nodes().map((nn) => graphRef.current!.degree(nn)), 1)
-          graphRef.current!.setNodeAttribute(n, 'color', getNodeColor(degree, maxDegree))
-        }
-      })
-    }
-    sigmaRef.current.refresh()
-  }, [searchQuery])
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (sigmaRef.current) sigmaRef.current.kill()
-      if (layoutTimerRef.current) clearTimeout(layoutTimerRef.current)
-    }
-  }, [])
+  const fitView = () => {
+    if (networkRef.current) networkRef.current.fit({ animation: true })
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <SectionHeader
-          title="Character Network Analysis"
-          description="Explore how One Piece characters are connected through co-appearances. Nodes represent characters, edges represent shared appearances."
-        />
+    <div
+      style={{
+        display: 'flex',
+        width: '100%',
+        height: 'calc(100vh - 64px)',
+        background: '#0b1020',
+        color: '#e5ecff',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '13px',
+        overflow: 'hidden',
+      }}
+    >
+      {/* ── Sidebar ─────────────────────────────────────────────────────── */}
+      <aside
+        style={{
+          width: 300,
+          flexShrink: 0,
+          background: '#121a30',
+          borderRight: '1px solid #273455',
+          padding: 14,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 12,
+        }}
+      >
+        <div>
+          <h1 style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>
+            Network Controls
+          </h1>
+          <small style={{ color: '#7a90b8', fontSize: 11 }}>
+            One Piece · chapter co-appearances
+          </small>
+        </div>
 
-        {/* Controls */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
-          <div className="flex flex-wrap gap-4 items-end">
-            {/* Dataset selector */}
-            <div className="flex-1 min-w-48">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Network Type</label>
-              <select
-                value={selectedDataset}
-                onChange={(e) => setSelectedDataset(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {NETWORK_DATASETS.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.label} — {d.description}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Min weight filter */}
-            <div className="min-w-40">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Min. Co-appearances: <span className="font-bold text-blue-600">{minWeight}</span>
-              </label>
-              <input
-                type="range"
-                min={1}
-                max={20}
-                value={minWeight}
-                onChange={(e) => setMinWeight(Number(e.target.value))}
-                className="w-full accent-blue-600"
-              />
-            </div>
-
-            {/* Search */}
-            <div className="min-w-48">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Search Character</label>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="e.g. Luffy, Zoro…"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* Layout controls */}
-            <div className="flex gap-2">
-              <button
-                onClick={runLayout}
-                disabled={isLoading || isLayoutRunning}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white text-sm font-medium rounded-lg transition-colors"
-              >
-                {isLayoutRunning ? 'Running…' : '▶ Run Layout'}
-              </button>
-              {isLayoutRunning && (
-                <button
-                  onClick={stopLayout}
-                  className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors"
-                >
-                  ⏹ Stop
-                </button>
-              )}
-            </div>
+        {/* Min appearances */}
+        <div>
+          <label
+            style={{
+              display: 'block',
+              color: '#9db0d1',
+              fontSize: 11,
+              marginBottom: 4,
+            }}
+          >
+            Min chapter appearances (node filter)
+          </label>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <input
+              type="range"
+              min={1}
+              max={minAppMax}
+              value={minApp}
+              style={{ flex: 1, accentColor: '#5aa8ff' }}
+              onChange={(e) => setMinApp(Number(e.target.value))}
+              onMouseUp={() => buildGraph()}
+              onTouchEnd={() => buildGraph()}
+            />
+            <span
+              style={{
+                width: 36,
+                textAlign: 'right',
+                color: '#5aa8ff',
+                fontWeight: 600,
+              }}
+            >
+              {minApp}
+            </span>
           </div>
         </div>
 
-        {/* Stats bar */}
-        {stats && !isLoading && (
-          <div className="flex gap-4 mb-4 text-sm text-gray-600">
-            <span className="bg-white border border-gray-200 rounded-lg px-3 py-1.5 shadow-sm">
-              <span className="font-semibold text-blue-600">{stats.nodes.toLocaleString()}</span> characters
+        {/* Min edge weight */}
+        <div>
+          <label
+            style={{
+              display: 'block',
+              color: '#9db0d1',
+              fontSize: 11,
+              marginBottom: 4,
+            }}
+          >
+            Min co-appearance weight (edge filter)
+          </label>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <input
+              type="range"
+              min={1}
+              max={minWtMax}
+              value={minWt}
+              style={{ flex: 1, accentColor: '#5aa8ff' }}
+              onChange={(e) => setMinWt(Number(e.target.value))}
+              onMouseUp={() => buildGraph()}
+              onTouchEnd={() => buildGraph()}
+            />
+            <span
+              style={{
+                width: 36,
+                textAlign: 'right',
+                color: '#5aa8ff',
+                fontWeight: 600,
+              }}
+            >
+              {minWt}
             </span>
-            <span className="bg-white border border-gray-200 rounded-lg px-3 py-1.5 shadow-sm">
-              <span className="font-semibold text-purple-600">{stats.edges.toLocaleString()}</span> connections
-            </span>
-            {hoveredNode && (
-              <span className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-1.5 shadow-sm text-orange-700">
-                <span className="font-semibold">{hoveredNode.label}</span> — {hoveredNode.degree} connections,{' '}
-                {hoveredNode.appearances.toLocaleString()} appearances
-              </span>
-            )}
+          </div>
+        </div>
+
+        {/* Max edges */}
+        <div>
+          <label
+            style={{
+              display: 'block',
+              color: '#9db0d1',
+              fontSize: 11,
+              marginBottom: 4,
+            }}
+          >
+            Max edges rendered
+          </label>
+          <input
+            type="number"
+            min={50}
+            max={10000}
+            step={50}
+            value={maxEdges}
+            onChange={(e) => setMaxEdges(Number(e.target.value))}
+            onBlur={() => buildGraph()}
+            style={{
+              width: '100%',
+              padding: '6px 8px',
+              border: '1px solid #273455',
+              borderRadius: 6,
+              background: '#0e1630',
+              color: '#e5ecff',
+              fontSize: 12,
+            }}
+          />
+        </div>
+
+        {/* Search */}
+        <div>
+          <label
+            style={{
+              display: 'block',
+              color: '#9db0d1',
+              fontSize: 11,
+              marginBottom: 4,
+            }}
+          >
+            Find character
+          </label>
+          <input
+            list="charList"
+            type="text"
+            value={search}
+            placeholder="Type a name..."
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && focusCharacter()}
+            style={{
+              width: '100%',
+              padding: '6px 8px',
+              border: '1px solid #273455',
+              borderRadius: 6,
+              background: '#0e1630',
+              color: '#e5ecff',
+              fontSize: 12,
+            }}
+          />
+          <datalist id="charList">
+            {allNodesRef.current.map((n) => (
+              <option key={n.id} value={n.name} />
+            ))}
+          </datalist>
+        </div>
+
+        {/* Buttons */}
+        {[
+          { label: 'Focus character', action: focusCharacter },
+          { label: 'Apply filters', action: () => buildGraph() },
+          { label: 'Fit / Reset view', action: fitView },
+        ].map(({ label, action }) => (
+          <button
+            key={label}
+            onClick={action}
+            style={{
+              width: '100%',
+              padding: '7px 0',
+              border: '1px solid #273455',
+              borderRadius: 6,
+              background: '#1a2a4a',
+              color: '#e5ecff',
+              cursor: 'pointer',
+              fontSize: 12,
+              transition: 'background 0.15s',
+            }}
+            onMouseEnter={(e) =>
+              ((e.target as HTMLButtonElement).style.background = '#223560')
+            }
+            onMouseLeave={(e) =>
+              ((e.target as HTMLButtonElement).style.background = '#1a2a4a')
+            }
+          >
+            {label}
+          </button>
+        ))}
+
+        {/* Stats */}
+        {stats && (
+          <div
+            style={{
+              background: '#0e1630',
+              border: '1px solid #273455',
+              borderRadius: 6,
+              padding: 8,
+              lineHeight: 1.7,
+              color: '#9db0d1',
+              fontSize: 11,
+              whiteSpace: 'pre',
+            }}
+          >
+            {`Nodes shown:      ${stats.nodesShown}
+Edges shown:      ${stats.edgesShown}
+Min appearances:  ${stats.minApp}
+Min edge weight:  ${stats.minWt}
+Edge cap:         ${stats.edgeCap}
+Total eligible:   ${stats.totalEligible}`}
           </div>
         )}
+      </aside>
 
-        {/* Legend */}
-        <div className="flex gap-3 mb-4 flex-wrap">
-          {['Low connectivity', 'Medium', 'High', 'Very high'].map((label, i) => (
-            <span key={label} className="flex items-center gap-1.5 text-xs text-gray-600">
-              <span
-                className="inline-block w-3 h-3 rounded-full"
-                style={{ backgroundColor: NODE_COLORS[i] }}
-              />
-              {label}
-            </span>
-          ))}
-          <span className="flex items-center gap-1.5 text-xs text-gray-600">
-            <span className="inline-block w-3 h-3 rounded-full bg-orange-500" />
-            Search match
-          </span>
+      {/* ── Right panel ─────────────────────────────────────────────────── */}
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          minWidth: 0,
+        }}
+      >
+        {/* Topbar */}
+        <div
+          style={{
+            flexShrink: 0,
+            height: 40,
+            padding: '0 14px',
+            background: '#0e1630',
+            borderBottom: '1px solid #273455',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <strong style={{ fontSize: 13 }}>
+            One Piece Character Co-Appearance Explorer
+          </strong>
+          <span style={{ color: '#5aa8ff', fontSize: 12 }}>{status}</span>
         </div>
 
-        {/* Canvas container */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative">
+        {/* Network canvas */}
+        <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
           {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80 z-10">
-              <div className="flex flex-col items-center gap-3">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-                <p className="text-sm text-gray-600">Loading network…</p>
-              </div>
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background: '#0b1020',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 12,
+                zIndex: 10,
+                color: '#9db0d1',
+                fontSize: 15,
+              }}
+            >
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  border: '3px solid #273455',
+                  borderTopColor: '#5aa8ff',
+                  borderRadius: '50%',
+                  animation: 'spin 0.8s linear infinite',
+                }}
+              />
+              Loading network data...
+              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
           )}
           {error && (
-            <div className="absolute inset-0 flex items-center justify-center z-10">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-                <p className="text-red-600 font-medium">Failed to load network</p>
-                <p className="text-red-500 text-sm mt-1">{error}</p>
-              </div>
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#ff8ca8',
+                fontSize: 14,
+                zIndex: 10,
+              }}
+            >
+              Failed to load: {error}
             </div>
           )}
           <div
             ref={containerRef}
-            style={{ width: '100%', height: '70vh', minHeight: '500px' }}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
           />
         </div>
-
-        {/* Help text */}
-        <p className="mt-3 text-xs text-gray-500 text-center">
-          Scroll to zoom · Drag to pan · Hover a node for details · Use "Run Layout" to spread the network with ForceAtlas2
-        </p>
       </div>
     </div>
   )
 }
-
-export default NetworkAnalysisPage
