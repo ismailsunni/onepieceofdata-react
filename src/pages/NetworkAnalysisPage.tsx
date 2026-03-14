@@ -58,6 +58,7 @@ export default function NetworkAnalysisPage() {
   const [minApp, setMinApp] = useState(11)
   const [minAppMax, setMinAppMax] = useState(1001)
   const [minWt, setMinWt] = useState(10)
+  const [selectedNode, setSelectedNode] = useState<RawNode | null>(null)
   const [minWtMax, setMinWtMax] = useState(762)
   const [maxEdges, setMaxEdges] = useState(500)
   const [search, setSearch] = useState('')
@@ -106,9 +107,7 @@ export default function NetworkAnalysisPage() {
             8,
             Math.min(28, 8 + Math.log10(Math.max(1, n.appearance_count)) * 7)
           ),
-          title: makeTooltip(
-            `<strong>${n.name}</strong><br/>Appearances: ${n.appearance_count.toLocaleString()}<br/>Connections: ${n.degree}`
-          ),
+          // No title — we handle click popups via React overlay
           color: {
             background: '#3b82f6',
             border: '#1d4ed8',
@@ -195,6 +194,17 @@ export default function NetworkAnalysisPage() {
         setStatus(
           `${visNodes.length} nodes · ${visEdges.length} edges · stabilized`
         )
+      })
+
+      // Custom click popup — vis-network's built-in doesn't render HTML
+      net.on('click', (params) => {
+        if (params.nodes.length > 0) {
+          const nodeId = params.nodes[0] as string
+          const node = allNodesRef.current.find((n) => n.id === nodeId) ?? null
+          setSelectedNode(node)
+        } else {
+          setSelectedNode(null)
+        }
       })
 
       networkRef.current = net
@@ -447,6 +457,56 @@ export default function NetworkAnalysisPage() {
             ref={containerRef}
             style={{ width: '100%', height: '70vh', minHeight: 500 }}
           />
+
+          {/* Node click popup */}
+          {selectedNode && (
+            <div className="absolute bottom-4 left-4 bg-white border border-gray-200 rounded-xl shadow-lg p-4 z-10 min-w-48">
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <h4 className="font-semibold text-gray-900 text-sm leading-tight">
+                  {selectedNode.name}
+                </h4>
+                <button
+                  onClick={() => setSelectedNode(null)}
+                  className="text-gray-400 hover:text-gray-600 flex-shrink-0 -mt-0.5"
+                  aria-label="Close"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <dl className="text-xs text-gray-600 space-y-1">
+                <div className="flex justify-between gap-4">
+                  <dt className="text-gray-400">Appearances</dt>
+                  <dd className="font-semibold text-gray-800">
+                    {selectedNode.appearance_count.toLocaleString()}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-gray-400">Connections</dt>
+                  <dd className="font-semibold text-gray-800">
+                    {selectedNode.degree.toLocaleString()}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-gray-400">Weighted degree</dt>
+                  <dd className="font-semibold text-gray-800">
+                    {selectedNode.weighted_degree.toLocaleString()}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          )}
         </div>
 
         <p className="mt-3 text-xs text-gray-400 text-center">
