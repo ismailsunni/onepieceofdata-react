@@ -442,22 +442,17 @@ export default function NetworkAnalysisPage() {
           <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
             Network Dataset
           </label>
-          <div className="flex flex-wrap gap-2">
+          <select
+            value={datasetId}
+            onChange={(e) => setDatasetId(e.target.value)}
+            className="w-full sm:w-80 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+          >
             {DATASETS.map((ds) => (
-              <button
-                key={ds.id}
-                onClick={() => setDatasetId(ds.id)}
-                title={ds.description}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-                  datasetId === ds.id
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
-                }`}
-              >
+              <option key={ds.id} value={ds.id}>
                 {ds.label}
-              </button>
+              </option>
             ))}
-          </div>
+          </select>
           <p className="mt-2 text-xs text-gray-400">{activeDs.description}</p>
         </div>
 
