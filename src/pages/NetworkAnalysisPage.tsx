@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { Network, DataSet } from 'vis-network/standalone'
+import { SectionHeader } from '../components/analytics'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface RawNode {
@@ -21,13 +22,10 @@ interface RawEdge {
 interface Stats {
   nodesShown: number
   edgesShown: number
-  minApp: number
-  minWt: number
-  edgeCap: number
   totalEligible: number
 }
 
-// ─── CSV parser (no dep) ───────────────────────────────────────────────────────
+// ─── CSV parser ───────────────────────────────────────────────────────────────
 function parseCsv(text: string): Record<string, string>[] {
   const lines = text.trim().split('\n')
   const headers = lines[0].split(',').map((h) => h.trim())
@@ -54,11 +52,11 @@ export default function NetworkAnalysisPage() {
   const [maxEdges, setMaxEdges] = useState(500)
   const [search, setSearch] = useState('')
   const [stats, setStats] = useState<Stats | null>(null)
-  const [status, setStatus] = useState('Loading...')
+  const [status, setStatus] = useState('Loading…')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // ── Build / refresh graph ───────────────────────────────────────────────────
+  // ── Build / refresh graph ────────────────────────────────────────────────────
   const buildGraph = useCallback(
     (
       overrideMinApp?: number,
@@ -98,47 +96,55 @@ export default function NetworkAnalysisPage() {
             8,
             Math.min(28, 8 + Math.log10(Math.max(1, n.appearance_count)) * 7)
           ),
-          title: `<b>${n.name}</b><br>Appearances: ${n.appearance_count}<br>Weighted degree: ${n.weighted_degree}`,
+          title: `<div style="font-family:sans-serif;font-size:12px;padding:4px 6px;line-height:1.6">
+            <strong>${n.name}</strong><br/>
+            Appearances: ${n.appearance_count.toLocaleString()}<br/>
+            Connections: ${n.degree}
+          </div>`,
           color: {
-            background: '#5aa8ff',
-            border: '#3468a8',
-            highlight: { background: '#ffcc44', border: '#cc8800' },
-            hover: { background: '#7ec8ff', border: '#3468a8' },
+            background: '#3b82f6',
+            border: '#1d4ed8',
+            highlight: { background: '#f59e0b', border: '#d97706' },
+            hover: { background: '#60a5fa', border: '#1d4ed8' },
           },
-          font: { color: '#e5ecff', size: 11 },
+          font: { color: '#1f2937', size: 11 },
         }))
 
       const visEdges = filteredEdges.map((e) => ({
         from: e.source,
         to: e.target,
-        width: Math.max(1, Math.min(6, Math.log10(Math.max(1, e.weight)) * 2)),
-        title: `${e.source_name} + ${e.target_name}: ${e.weight} chapters`,
+        width: Math.max(
+          1,
+          Math.min(5, Math.log10(Math.max(1, e.weight)) * 1.8)
+        ),
+        title: `<div style="font-family:sans-serif;font-size:12px;padding:4px 6px">
+          <strong>${e.source_name}</strong> + <strong>${e.target_name}</strong><br/>
+          ${e.weight} co-appearances
+        </div>`,
         color: {
-          color: '#4a7fcc',
-          opacity: 0.5,
-          highlight: '#ffcc44',
-          hover: '#7ec8ff',
+          color: '#93c5fd',
+          opacity: 0.7,
+          highlight: '#f59e0b',
+          hover: '#60a5fa',
         },
       }))
 
       setStats({
         nodesShown: visNodes.length,
         edgesShown: visEdges.length,
-        minApp: mA,
-        minWt: mW,
-        edgeCap: mE,
         totalEligible: eligible.length,
       })
-      setStatus(`${visNodes.length} nodes / ${visEdges.length} edges`)
 
       if (visNodes.length === 0) {
+        setStatus('No nodes match — try lowering the filters')
         if (networkRef.current) {
           networkRef.current.destroy()
           networkRef.current = null
         }
-        setStatus('No nodes match filters — lower the sliders')
         return
       }
+
+      setStatus('Building graph…')
 
       if (networkRef.current) {
         networkRef.current.destroy()
@@ -154,10 +160,7 @@ export default function NetworkAnalysisPage() {
         {
           nodes: { shape: 'dot' },
           edges: { smooth: false },
-          layout: {
-            randomSeed: 7,
-            improvedLayout: visNodes.length < 80,
-          },
+          layout: { randomSeed: 7, improvedLayout: visNodes.length < 80 },
           interaction: {
             hover: true,
             tooltipDelay: 100,
@@ -180,7 +183,7 @@ export default function NetworkAnalysisPage() {
         net.setOptions({ physics: false })
         net.fit({ animation: true })
         setStatus(
-          `${visNodes.length} nodes / ${visEdges.length} edges · stabilized`
+          `${visNodes.length} nodes · ${visEdges.length} edges · stabilized`
         )
       })
 
@@ -189,9 +192,8 @@ export default function NetworkAnalysisPage() {
     [minApp, minWt, maxEdges]
   )
 
-  // ── Load CSVs on mount ──────────────────────────────────────────────────────
+  // ── Load CSVs on mount ────────────────────────────────────────────────────────
   useEffect(() => {
-    setStatus('Fetching data...')
     let nodesDone = false
     let edgesDone = false
     let rawN: RawNode[] = []
@@ -201,13 +203,9 @@ export default function NetworkAnalysisPage() {
       if (!nodesDone || !edgesDone) return
       allNodesRef.current = rawN
       allEdgesRef.current = rawE
-      nameToIdRef.current = {}
       rawN.forEach((n) => (nameToIdRef.current[n.name] = n.id))
-
-      const maxApp = Math.max(...rawN.map((n) => n.appearance_count), 11)
-      const maxWt = Math.max(...rawE.map((e) => e.weight), 1)
-      setMinAppMax(maxApp)
-      setMinWtMax(maxWt)
+      setMinAppMax(Math.max(...rawN.map((n) => n.appearance_count), 11))
+      setMinWtMax(Math.max(...rawE.map((e) => e.weight), 1))
       setIsLoading(false)
       buildGraph(11, 10, 500)
     }
@@ -255,7 +253,7 @@ export default function NetworkAnalysisPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // ── Focus character ─────────────────────────────────────────────────────────
+  // ── Focus character ───────────────────────────────────────────────────────────
   const focusCharacter = useCallback(() => {
     if (!networkRef.current) return
     const id = nameToIdRef.current[search.trim()]
@@ -271,328 +269,180 @@ export default function NetworkAnalysisPage() {
     setStatus(`Focused: ${search}`)
   }, [search])
 
-  const fitView = () => {
-    if (networkRef.current) networkRef.current.fit({ animation: true })
-  }
+  const fitView = () => networkRef.current?.fit({ animation: true })
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        width: '100%',
-        height: 'calc(100vh - 64px)',
-        background: '#0b1020',
-        color: '#e5ecff',
-        fontFamily: 'Inter, system-ui, sans-serif',
-        fontSize: '13px',
-        overflow: 'hidden',
-      }}
-    >
-      {/* ── Sidebar ─────────────────────────────────────────────────────── */}
-      <aside
-        style={{
-          width: 300,
-          flexShrink: 0,
-          background: '#121a30',
-          borderRight: '1px solid #273455',
-          padding: 14,
-          overflowY: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 12,
-        }}
-      >
-        <div>
-          <h1 style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>
-            Network Controls
-          </h1>
-          <small style={{ color: '#7a90b8', fontSize: 11 }}>
-            One Piece · chapter co-appearances
-          </small>
-        </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <SectionHeader
+          title="Character Network Analysis"
+          description="Explore how One Piece characters are connected through chapter co-appearances. Node size reflects appearance count; edge width reflects co-appearance frequency."
+        />
 
-        {/* Min appearances */}
-        <div>
-          <label
-            style={{
-              display: 'block',
-              color: '#9db0d1',
-              fontSize: 11,
-              marginBottom: 4,
-            }}
-          >
-            Min chapter appearances (node filter)
-          </label>
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            <input
-              type="range"
-              min={1}
-              max={minAppMax}
-              value={minApp}
-              style={{ flex: 1, accentColor: '#5aa8ff' }}
-              onChange={(e) => setMinApp(Number(e.target.value))}
-              onMouseUp={() => buildGraph()}
-              onTouchEnd={() => buildGraph()}
-            />
-            <span
-              style={{
-                width: 36,
-                textAlign: 'right',
-                color: '#5aa8ff',
-                fontWeight: 600,
-              }}
-            >
-              {minApp}
-            </span>
-          </div>
-        </div>
+        {/* ── Controls card ─────────────────────────────────────────────── */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-end">
+            {/* Min appearances */}
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
+                Min appearances (nodes)
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="range"
+                  min={1}
+                  max={minAppMax}
+                  value={minApp}
+                  className="flex-1 accent-blue-600"
+                  onChange={(e) => setMinApp(Number(e.target.value))}
+                  onMouseUp={() => buildGraph()}
+                  onTouchEnd={() => buildGraph()}
+                />
+                <span className="w-10 text-right text-sm font-semibold text-blue-600">
+                  {minApp}
+                </span>
+              </div>
+            </div>
 
-        {/* Min edge weight */}
-        <div>
-          <label
-            style={{
-              display: 'block',
-              color: '#9db0d1',
-              fontSize: 11,
-              marginBottom: 4,
-            }}
-          >
-            Min co-appearance weight (edge filter)
-          </label>
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            <input
-              type="range"
-              min={1}
-              max={minWtMax}
-              value={minWt}
-              style={{ flex: 1, accentColor: '#5aa8ff' }}
-              onChange={(e) => setMinWt(Number(e.target.value))}
-              onMouseUp={() => buildGraph()}
-              onTouchEnd={() => buildGraph()}
-            />
-            <span
-              style={{
-                width: 36,
-                textAlign: 'right',
-                color: '#5aa8ff',
-                fontWeight: 600,
-              }}
-            >
-              {minWt}
-            </span>
-          </div>
-        </div>
+            {/* Min edge weight */}
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
+                Min co-appearances (edges)
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="range"
+                  min={1}
+                  max={minWtMax}
+                  value={minWt}
+                  className="flex-1 accent-blue-600"
+                  onChange={(e) => setMinWt(Number(e.target.value))}
+                  onMouseUp={() => buildGraph()}
+                  onTouchEnd={() => buildGraph()}
+                />
+                <span className="w-10 text-right text-sm font-semibold text-blue-600">
+                  {minWt}
+                </span>
+              </div>
+            </div>
 
-        {/* Max edges */}
-        <div>
-          <label
-            style={{
-              display: 'block',
-              color: '#9db0d1',
-              fontSize: 11,
-              marginBottom: 4,
-            }}
-          >
-            Max edges rendered
-          </label>
-          <input
-            type="number"
-            min={50}
-            max={10000}
-            step={50}
-            value={maxEdges}
-            onChange={(e) => setMaxEdges(Number(e.target.value))}
-            onBlur={() => buildGraph()}
-            style={{
-              width: '100%',
-              padding: '6px 8px',
-              border: '1px solid #273455',
-              borderRadius: 6,
-              background: '#0e1630',
-              color: '#e5ecff',
-              fontSize: 12,
-            }}
-          />
-        </div>
-
-        {/* Search */}
-        <div>
-          <label
-            style={{
-              display: 'block',
-              color: '#9db0d1',
-              fontSize: 11,
-              marginBottom: 4,
-            }}
-          >
-            Find character
-          </label>
-          <input
-            list="charList"
-            type="text"
-            value={search}
-            placeholder="Type a name..."
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && focusCharacter()}
-            style={{
-              width: '100%',
-              padding: '6px 8px',
-              border: '1px solid #273455',
-              borderRadius: 6,
-              background: '#0e1630',
-              color: '#e5ecff',
-              fontSize: 12,
-            }}
-          />
-          <datalist id="charList">
-            {allNodesRef.current.map((n) => (
-              <option key={n.id} value={n.name} />
-            ))}
-          </datalist>
-        </div>
-
-        {/* Buttons */}
-        {[
-          { label: 'Focus character', action: focusCharacter },
-          { label: 'Apply filters', action: () => buildGraph() },
-          { label: 'Fit / Reset view', action: fitView },
-        ].map(({ label, action }) => (
-          <button
-            key={label}
-            onClick={action}
-            style={{
-              width: '100%',
-              padding: '7px 0',
-              border: '1px solid #273455',
-              borderRadius: 6,
-              background: '#1a2a4a',
-              color: '#e5ecff',
-              cursor: 'pointer',
-              fontSize: 12,
-              transition: 'background 0.15s',
-            }}
-            onMouseEnter={(e) =>
-              ((e.target as HTMLButtonElement).style.background = '#223560')
-            }
-            onMouseLeave={(e) =>
-              ((e.target as HTMLButtonElement).style.background = '#1a2a4a')
-            }
-          >
-            {label}
-          </button>
-        ))}
-
-        {/* Stats */}
-        {stats && (
-          <div
-            style={{
-              background: '#0e1630',
-              border: '1px solid #273455',
-              borderRadius: 6,
-              padding: 8,
-              lineHeight: 1.7,
-              color: '#9db0d1',
-              fontSize: 11,
-              whiteSpace: 'pre',
-            }}
-          >
-            {`Nodes shown:      ${stats.nodesShown}
-Edges shown:      ${stats.edgesShown}
-Min appearances:  ${stats.minApp}
-Min edge weight:  ${stats.minWt}
-Edge cap:         ${stats.edgeCap}
-Total eligible:   ${stats.totalEligible}`}
-          </div>
-        )}
-      </aside>
-
-      {/* ── Right panel ─────────────────────────────────────────────────── */}
-      <div
-        style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          minWidth: 0,
-        }}
-      >
-        {/* Topbar */}
-        <div
-          style={{
-            flexShrink: 0,
-            height: 40,
-            padding: '0 14px',
-            background: '#0e1630',
-            borderBottom: '1px solid #273455',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <strong style={{ fontSize: 13 }}>
-            One Piece Character Co-Appearance Explorer
-          </strong>
-          <span style={{ color: '#5aa8ff', fontSize: 12 }}>{status}</span>
-        </div>
-
-        {/* Network canvas */}
-        <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
-          {isLoading && (
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                background: '#0b1020',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 12,
-                zIndex: 10,
-                color: '#9db0d1',
-                fontSize: 15,
-              }}
-            >
-              <div
-                style={{
-                  width: 40,
-                  height: 40,
-                  border: '3px solid #273455',
-                  borderTopColor: '#5aa8ff',
-                  borderRadius: '50%',
-                  animation: 'spin 0.8s linear infinite',
-                }}
+            {/* Max edges */}
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
+                Max edges
+              </label>
+              <input
+                type="number"
+                min={50}
+                max={10000}
+                step={50}
+                value={maxEdges}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => setMaxEdges(Number(e.target.value))}
+                onBlur={() => buildGraph()}
               />
-              Loading network data...
-              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            </div>
+
+            {/* Search + buttons */}
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
+                Find character
+              </label>
+              <div className="flex gap-2">
+                <input
+                  list="charList"
+                  type="text"
+                  value={search}
+                  placeholder="Type a name…"
+                  className="flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && focusCharacter()}
+                />
+                <datalist id="charList">
+                  {allNodesRef.current.map((n) => (
+                    <option key={n.id} value={n.name} />
+                  ))}
+                </datalist>
+                <button
+                  onClick={focusCharacter}
+                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap"
+                >
+                  Focus
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Second row: action buttons + stats */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-4 border-t border-gray-100">
+            <div className="flex gap-2">
+              <button
+                onClick={() => buildGraph()}
+                className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                Apply filters
+              </button>
+              <button
+                onClick={fitView}
+                className="px-4 py-1.5 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg border border-gray-300 transition-colors"
+              >
+                Fit / Reset view
+              </button>
+            </div>
+
+            {stats && (
+              <div className="flex flex-wrap gap-3 text-sm text-gray-500">
+                <span className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-1">
+                  <span className="font-semibold text-blue-600">
+                    {stats.nodesShown.toLocaleString()}
+                  </span>{' '}
+                  characters shown
+                  <span className="text-gray-400 ml-1">
+                    / {stats.totalEligible.toLocaleString()} eligible
+                  </span>
+                </span>
+                <span className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-1">
+                  <span className="font-semibold text-indigo-600">
+                    {stats.edgesShown.toLocaleString()}
+                  </span>{' '}
+                  connections
+                </span>
+                <span className="text-xs text-gray-400 self-center">
+                  {status}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Graph card ────────────────────────────────────────────────── */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative">
+          {isLoading && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white bg-opacity-90 z-10 gap-3">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+              <p className="text-sm text-gray-500">Loading network data…</p>
             </div>
           )}
           {error && (
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#ff8ca8',
-                fontSize: 14,
-                zIndex: 10,
-              }}
-            >
-              Failed to load: {error}
+            <div className="absolute inset-0 flex items-center justify-center z-10">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+                <p className="text-red-600 font-medium">
+                  Failed to load network
+                </p>
+                <p className="text-red-500 text-sm mt-1">{error}</p>
+              </div>
             </div>
           )}
           <div
             ref={containerRef}
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-            }}
+            style={{ width: '100%', height: '70vh', minHeight: 500 }}
           />
         </div>
+
+        <p className="mt-3 text-xs text-gray-400 text-center">
+          Scroll to zoom · Drag to pan · Hover a node or edge for details · Use
+          keyboard arrows to navigate
+        </p>
       </div>
     </div>
   )
