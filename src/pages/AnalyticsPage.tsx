@@ -162,6 +162,25 @@ function AnalyticsPage() {
       borderColor: 'border-green-200',
       iconColor: 'text-green-600',
     },
+    {
+      title: 'Character Network Analysis',
+      description: 'Explore character co-appearance networks across arcs, sagas, and chapters with interactive graph visualization',
+      path: '/analytics/network',
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M13 10V3L4 14h7v7l9-11h-7z"
+          />
+        </svg>
+      ),
+      gradient: 'from-indigo-500 to-violet-600',
+      bgColor: 'bg-indigo-50',
+      borderColor: 'border-indigo-200',
+      iconColor: 'text-indigo-600',
+    },
   ]
 
   return (

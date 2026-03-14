@@ -41,6 +41,7 @@ const PublicationRatePage = lazy(() => import('./pages/PublicationRatePage'))
 const CharacterCompletenessPage = lazy(
   () => import('./pages/CharacterCompletenessPage')
 )
+const NetworkAnalysisPage = lazy(() => import('./pages/NetworkAnalysisPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 
 // Loading fallback component
@@ -124,6 +125,10 @@ function App() {
                   <Route
                     path="/analytics/publication-rate"
                     element={<PublicationRatePage />}
+                  />
+                  <Route
+                    path="/analytics/network"
+                    element={<NetworkAnalysisPage />}
                   />
                   <Route path="/about" element={<AboutPage />} />
                 </Routes>
