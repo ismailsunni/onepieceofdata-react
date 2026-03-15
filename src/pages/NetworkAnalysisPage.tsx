@@ -307,6 +307,7 @@ export default function NetworkAnalysisPage() {
   const networkRef = useRef<Network | null>(null)
   const allNodesRef = useRef<RawNode[]>([])
   const allEdgesRef = useRef<RawEdge[]>([])
+  const activeEdgesRef = useRef<RawEdge[]>([])
   const nameToIdRef = useRef<Record<string, string>>({})
 
   const [datasetId, setDatasetId] = useState('general')
@@ -359,6 +360,8 @@ export default function NetworkAnalysisPage() {
         )
         .sort((a, b) => b.weight - a.weight)
         .slice(0, mE)
+
+      activeEdgesRef.current = filteredEdges
 
       const seen = new Set<string>()
       filteredEdges.forEach((e) => {
@@ -769,54 +772,92 @@ export default function NetworkAnalysisPage() {
           />
 
           {/* Node click popup */}
-          {selectedNode && (
-            <div className="absolute bottom-4 left-4 bg-white border border-gray-200 rounded-xl shadow-lg p-4 z-10 min-w-48">
-              <div className="flex items-start justify-between gap-3 mb-2">
-                <h4 className="font-semibold text-gray-900 text-sm leading-tight">
-                  {selectedNode.name}
-                </h4>
-                <button
-                  onClick={() => setSelectedNode(null)}
-                  className="text-gray-400 hover:text-gray-600 flex-shrink-0 -mt-0.5"
-                  aria-label="Close"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <dl className="text-xs text-gray-600 space-y-1">
-                <div className="flex justify-between gap-4">
-                  <dt className="text-gray-400">Appearances</dt>
-                  <dd className="font-semibold text-gray-800">
-                    {selectedNode.appearance_count.toLocaleString()}
-                  </dd>
+          {selectedNode &&
+            (() => {
+              const nodeId = selectedNode.id
+              const neighbors = activeEdgesRef.current
+                .filter((e) => e.source === nodeId || e.target === nodeId)
+                .map((e) => ({
+                  name: e.source === nodeId ? e.target_name : e.source_name,
+                  weight: e.weight,
+                }))
+                .sort((a, b) => b.weight - a.weight)
+              return (
+                <div className="absolute bottom-4 left-4 bg-white border border-gray-200 rounded-xl shadow-lg p-4 z-10 w-64 max-h-[60vh] flex flex-col">
+                  {/* Header */}
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <h4 className="font-semibold text-gray-900 text-sm leading-tight">
+                      {selectedNode.name}
+                    </h4>
+                    <button
+                      onClick={() => setSelectedNode(null)}
+                      className="text-gray-400 hover:text-gray-600 flex-shrink-0 -mt-0.5"
+                      aria-label="Close"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {/* Stats */}
+                  <dl className="text-xs text-gray-600 space-y-1 mb-3 pb-3 border-b border-gray-100">
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-gray-400">Appearances</dt>
+                      <dd className="font-semibold text-gray-800">
+                        {selectedNode.appearance_count.toLocaleString()}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-gray-400">Connections shown</dt>
+                      <dd className="font-semibold text-gray-800">
+                        {neighbors.length.toLocaleString()}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-gray-400">Weighted degree</dt>
+                      <dd className="font-semibold text-gray-800">
+                        {selectedNode.weighted_degree.toLocaleString()}
+                      </dd>
+                    </div>
+                  </dl>
+
+                  {/* Connected nodes list */}
+                  {neighbors.length > 0 && (
+                    <>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+                        Connected characters
+                      </p>
+                      <div className="overflow-y-auto flex-1 -mx-1 px-1">
+                        {neighbors.map((nb) => (
+                          <div
+                            key={nb.name}
+                            className="flex items-center justify-between py-1 border-b border-gray-50 last:border-0"
+                          >
+                            <span className="text-xs text-gray-700 truncate mr-2">
+                              {nb.name}
+                            </span>
+                            <span className="text-xs font-semibold text-blue-600 flex-shrink-0">
+                              {nb.weight}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
-                <div className="flex justify-between gap-4">
-                  <dt className="text-gray-400">Connections</dt>
-                  <dd className="font-semibold text-gray-800">
-                    {selectedNode.degree.toLocaleString()}
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <dt className="text-gray-400">Weighted degree</dt>
-                  <dd className="font-semibold text-gray-800">
-                    {selectedNode.weighted_degree.toLocaleString()}
-                  </dd>
-                </div>
-              </dl>
-            </div>
-          )}
+              )
+            })()}
         </div>
 
         {showCommunities && communityCount > 0 && (
