@@ -322,6 +322,9 @@ export default function NetworkAnalysisPage() {
   const [selectedNode, setSelectedNode] = useState<RawNode | null>(null)
   const [showCommunities, setShowCommunities] = useState(false)
   const [communityCount, setCommunityCount] = useState(0)
+  const [communityGroups, setCommunityGroups] = useState<
+    { communityIndex: number; nodes: RawNode[] }[]
+  >([])
   const [stats, setStats] = useState<Stats | null>(null)
   const [status, setStatus] = useState('Loading…')
   const [isLoading, setIsLoading] = useState(true)
@@ -380,8 +383,26 @@ export default function NetworkAnalysisPage() {
         communityMap = detectCommunities(visibleNodes, visibleEdges)
         const numCommunities = new Set(communityMap.values()).size
         setCommunityCount(numCommunities)
+        // Build groups for the legend table
+        const groups = new Map<number, RawNode[]>()
+        for (let i = 0; i < numCommunities; i++) groups.set(i, [])
+        visibleNodes.forEach((n) => {
+          const c = communityMap!.get(n.id) ?? 0
+          groups.get(c)?.push(n)
+        })
+        // Sort each group by appearance_count desc
+        const sortedGroups = [...groups.entries()]
+          .map(([ci, nodes]) => ({
+            communityIndex: ci,
+            nodes: nodes.sort(
+              (a, b) => b.appearance_count - a.appearance_count
+            ),
+          }))
+          .sort((a, b) => b.nodes.length - a.nodes.length)
+        setCommunityGroups(sortedGroups)
       } else {
         setCommunityCount(0)
+        setCommunityGroups([])
       }
 
       const visNodes = visibleNodes.map((n) => {
@@ -860,28 +881,59 @@ export default function NetworkAnalysisPage() {
             })()}
         </div>
 
-        {showCommunities && communityCount > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2 justify-center">
-            {Array.from(
-              { length: Math.min(communityCount, COMMUNITY_COLORS.length) },
-              (_, i) => (
-                <span
-                  key={i}
-                  className="flex items-center gap-1.5 text-xs text-gray-500"
-                >
-                  <span
-                    className="inline-block w-3 h-3 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: COMMUNITY_COLORS[i] }}
-                  />
-                  Community {i + 1}
-                </span>
-              )
-            )}
-            {communityCount > COMMUNITY_COLORS.length && (
-              <span className="text-xs text-gray-400">
-                +{communityCount - COMMUNITY_COLORS.length} more
-              </span>
-            )}
+        {showCommunities && communityGroups.length > 0 && (
+          <div className="mt-4 bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+            <h3 className="text-sm font-semibold text-gray-800 mb-4">
+              Communities · {communityGroups.length} detected
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {communityGroups.map(({ communityIndex, nodes }) => {
+                const color =
+                  COMMUNITY_COLORS[communityIndex % COMMUNITY_COLORS.length]
+                return (
+                  <div
+                    key={communityIndex}
+                    className="border border-gray-100 rounded-lg overflow-hidden"
+                  >
+                    {/* Community header */}
+                    <div
+                      className="flex items-center gap-2 px-3 py-2"
+                      style={{
+                        backgroundColor: color + '18',
+                        borderBottom: `2px solid ${color}`,
+                      }}
+                    >
+                      <span
+                        className="inline-block w-3 h-3 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: color }}
+                      />
+                      <span className="text-xs font-semibold text-gray-700">
+                        Community {communityIndex + 1}
+                      </span>
+                      <span className="ml-auto text-xs text-gray-400">
+                        {nodes.length} chars
+                      </span>
+                    </div>
+                    {/* Character list */}
+                    <div className="divide-y divide-gray-50 max-h-48 overflow-y-auto">
+                      {nodes.map((n) => (
+                        <div
+                          key={n.id}
+                          className="flex items-center justify-between px-3 py-1.5"
+                        >
+                          <span className="text-xs text-gray-700 truncate mr-2">
+                            {n.name}
+                          </span>
+                          <span className="text-xs text-gray-400 flex-shrink-0">
+                            {n.appearance_count.toLocaleString()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         )}
 
