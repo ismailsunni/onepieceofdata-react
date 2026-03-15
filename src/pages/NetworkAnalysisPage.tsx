@@ -522,6 +522,7 @@ export default function NetworkAnalysisPage() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const updates = (nodesDataSetRef.current.get() as any[]).map(
           (n: any) => ({
+            // eslint-disable-line @typescript-eslint/no-explicit-any
             id: n.id,
             color: baseNodeColorsRef.current.get(n.id) ?? {
               background: '#3b82f6',
@@ -559,6 +560,7 @@ export default function NetworkAnalysisPage() {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const updates = (nodesDataSetRef.current.get() as any[]).map(
                 (n: any) => {
+                  // eslint-disable-line @typescript-eslint/no-explicit-any
                   if (n.id === nodeId) {
                     return {
                       id: n.id,
@@ -675,21 +677,69 @@ export default function NetworkAnalysisPage() {
 
   const fitView = () => networkRef.current?.fit({ animation: true })
 
-  const focusNodeById = useCallback((nodeId: string) => {
-    const node = allNodesRef.current.find((n) => n.id === nodeId)
-    if (!node || !networkRef.current) return
-    setSelectedNode(node)
-    networkRef.current.selectNodes([nodeId])
-    networkRef.current.focus(nodeId, {
-      scale: 1.8,
-      animation: { duration: 400, easingFunction: 'easeInOutQuad' },
+  const applyHighlight = useCallback((nodeId: string) => {
+    if (!nodesDataSetRef.current) return
+    const neighborIds = new Set(
+      activeEdgesRef.current
+        .filter((e) => e.source === nodeId || e.target === nodeId)
+        .map((e) => (e.source === nodeId ? e.target : e.source))
+    )
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updates = (nodesDataSetRef.current.get() as any[]).map((n: any) => {
+      if (n.id === nodeId) {
+        return {
+          id: n.id,
+          color: {
+            background: '#f59e0b',
+            border: '#d97706',
+            highlight: { background: '#fbbf24', border: '#d97706' },
+            hover: { background: '#fbbf24', border: '#d97706' },
+          },
+        }
+      } else if (neighborIds.has(n.id)) {
+        return {
+          id: n.id,
+          color: {
+            background: '#60a5fa',
+            border: '#3b82f6',
+            highlight: { background: '#93c5fd', border: '#3b82f6' },
+            hover: { background: '#93c5fd', border: '#3b82f6' },
+          },
+        }
+      } else {
+        return {
+          id: n.id,
+          color: {
+            background: '#e5e7eb',
+            border: '#d1d5db',
+            highlight: { background: '#e5e7eb', border: '#d1d5db' },
+            hover: { background: '#e5e7eb', border: '#d1d5db' },
+          },
+        }
+      }
     })
-    // Scroll graph into view
-    containerRef.current?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'center',
-    })
+    nodesDataSetRef.current.update(updates)
   }, [])
+
+  const focusNodeById = useCallback(
+    (nodeId: string) => {
+      const node = allNodesRef.current.find((n) => n.id === nodeId)
+      if (!node || !networkRef.current) return
+      setSelectedNode(node)
+      networkRef.current.selectNodes([nodeId])
+      networkRef.current.focus(nodeId, {
+        scale: 1.8,
+        animation: { duration: 400, easingFunction: 'easeInOutQuad' },
+      })
+      applyHighlight(nodeId)
+      // Scroll graph into view
+      containerRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      })
+    },
+    [applyHighlight]
+  )
 
   const activeDs = DATASETS.find((d) => d.id === datasetId)!
 
