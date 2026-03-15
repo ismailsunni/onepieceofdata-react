@@ -307,6 +307,7 @@ export default function NetworkAnalysisPage() {
   const networkRef = useRef<Network | null>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const nodesDataSetRef = useRef<any>(null)
+  const baseNodeColorsRef = useRef<Map<string, object>>(new Map())
   const allNodesRef = useRef<RawNode[]>([])
   const allEdgesRef = useRef<RawEdge[]>([])
   const activeEdgesRef = useRef<RawEdge[]>([])
@@ -322,7 +323,7 @@ export default function NetworkAnalysisPage() {
   const [maxEdges, setMaxEdges] = useState(500)
   const [search, setSearch] = useState('')
   const [selectedNode, setSelectedNode] = useState<RawNode | null>(null)
-  const [showCommunities, setShowCommunities] = useState(false)
+  const [showCommunities, setShowCommunities] = useState(true)
   const [communityCount, setCommunityCount] = useState(0)
   const [communityGroups, setCommunityGroups] = useState<
     { communityIndex: number; nodes: RawNode[] }[]
@@ -431,6 +432,9 @@ export default function NetworkAnalysisPage() {
         }
       })
 
+      // Store base colors so we can restore them after deselect
+      baseNodeColorsRef.current = new Map(visNodes.map((n) => [n.id, n.color]))
+
       const visEdges = filteredEdges.map((e) => ({
         from: e.source,
         to: e.target,
@@ -512,75 +516,91 @@ export default function NetworkAnalysisPage() {
         )
       })
 
+      // Helper: restore each node to its base color (community or default)
+      const restoreColors = () => {
+        if (!nodesDataSetRef.current) return
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const updates = (nodesDataSetRef.current.get() as any[]).map(
+          (n: any) => ({
+            id: n.id,
+            color: baseNodeColorsRef.current.get(n.id) ?? {
+              background: '#3b82f6',
+              border: '#1d4ed8',
+              highlight: { background: '#f59e0b', border: '#d97706' },
+              hover: { background: '#60a5fa', border: '#1d4ed8' },
+            },
+          })
+        )
+        nodesDataSetRef.current.update(updates)
+      }
+
       net.on('click', (params) => {
         if (params.nodes.length > 0) {
           const nodeId = params.nodes[0] as string
-          setSelectedNode(
-            allNodesRef.current.find((n) => n.id === nodeId) ?? null
-          )
-          // Highlight selected node (amber), neighbours (blue), dim rest (gray)
-          if (nodesDataSetRef.current) {
-            const neighborIds = new Set(
-              activeEdgesRef.current
-                .filter((e) => e.source === nodeId || e.target === nodeId)
-                .map((e) => (e.source === nodeId ? e.target : e.source))
-            )
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const updates = (nodesDataSetRef.current.get() as any[]).map(
-              (n: any) => {
-                if (n.id === nodeId) {
-                  return {
-                    id: n.id,
-                    color: {
-                      background: '#f59e0b',
-                      border: '#d97706',
-                      highlight: { background: '#fbbf24', border: '#d97706' },
-                      hover: { background: '#fbbf24', border: '#d97706' },
-                    },
-                  }
-                } else if (neighborIds.has(n.id)) {
-                  return {
-                    id: n.id,
-                    color: {
-                      background: '#60a5fa',
-                      border: '#3b82f6',
-                      highlight: { background: '#93c5fd', border: '#3b82f6' },
-                      hover: { background: '#93c5fd', border: '#3b82f6' },
-                    },
-                  }
-                } else {
-                  return {
-                    id: n.id,
-                    color: {
-                      background: '#e5e7eb',
-                      border: '#d1d5db',
-                      highlight: { background: '#e5e7eb', border: '#d1d5db' },
-                      hover: { background: '#e5e7eb', border: '#d1d5db' },
-                    },
+          // Re-clicking the same node → deselect
+          setSelectedNode((prev) => {
+            if (prev?.id === nodeId) {
+              restoreColors()
+              net.unselectAll()
+              return null
+            }
+            return allNodesRef.current.find((n) => n.id === nodeId) ?? null
+          })
+          // If it's a new node, highlight selection
+          setSelectedNode((prev) => {
+            if (!prev || prev.id !== nodeId) return prev // handled above
+            // Apply highlight colours
+            if (nodesDataSetRef.current) {
+              const neighborIds = new Set(
+                activeEdgesRef.current
+                  .filter((e) => e.source === nodeId || e.target === nodeId)
+                  .map((e) => (e.source === nodeId ? e.target : e.source))
+              )
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const updates = (nodesDataSetRef.current.get() as any[]).map(
+                (n: any) => {
+                  if (n.id === nodeId) {
+                    return {
+                      id: n.id,
+                      color: {
+                        background: '#f59e0b',
+                        border: '#d97706',
+                        highlight: { background: '#fbbf24', border: '#d97706' },
+                        hover: { background: '#fbbf24', border: '#d97706' },
+                      },
+                    }
+                  } else if (neighborIds.has(n.id)) {
+                    return {
+                      id: n.id,
+                      color: {
+                        background: '#60a5fa',
+                        border: '#3b82f6',
+                        highlight: { background: '#93c5fd', border: '#3b82f6' },
+                        hover: { background: '#93c5fd', border: '#3b82f6' },
+                      },
+                    }
+                  } else {
+                    return {
+                      id: n.id,
+                      color: {
+                        background: '#e5e7eb',
+                        border: '#d1d5db',
+                        highlight: { background: '#e5e7eb', border: '#d1d5db' },
+                        hover: { background: '#e5e7eb', border: '#d1d5db' },
+                      },
+                    }
                   }
                 }
-              }
-            )
-            nodesDataSetRef.current.update(updates)
-          }
+              )
+              nodesDataSetRef.current.update(updates)
+            }
+            return prev
+          })
         } else {
+          // Clicked canvas — deselect without resetting community colors
           setSelectedNode(null)
-          // Restore original blue colours
-          if (nodesDataSetRef.current) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const updates = (nodesDataSetRef.current.get() as any[]).map(
-              (n: any) => ({
-                id: n.id,
-                color: {
-                  background: '#3b82f6',
-                  border: '#1d4ed8',
-                  highlight: { background: '#f59e0b', border: '#d97706' },
-                  hover: { background: '#60a5fa', border: '#1d4ed8' },
-                },
-              })
-            )
-            nodesDataSetRef.current.update(updates)
-          }
+          restoreColors()
+          net.unselectAll()
         }
       })
 
