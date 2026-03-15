@@ -33,8 +33,8 @@ export function RangeSlider({
         max={max}
         step={1}
         value={value}
-        onValueChange={(v) => onChange(v as [number, number])}
-        onValueCommit={(v) => onCommit?.(v as [number, number])}
+        onValueChange={(v: number[]) => onChange(v as [number, number])}
+        onValueCommit={(v: number[]) => onCommit?.(v as [number, number])}
         minStepsBetweenThumbs={1}
       >
         <Slider.Track className="bg-gray-200 relative grow rounded-full h-1.5">
