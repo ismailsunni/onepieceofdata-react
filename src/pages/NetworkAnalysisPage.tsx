@@ -334,6 +334,15 @@ export default function NetworkAnalysisPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Excluded characters
+  const [excludedCharacters, setExcludedCharacters] = useState<
+    { id: string; name: string }[]
+  >([])
+  const excludedIdsRef = useRef<Set<string>>(new Set())
+  const [excludeSearch, setExcludeSearch] = useState('')
+  const [showExcludeDropdown, setShowExcludeDropdown] = useState(false)
+  const excludeInputRef = useRef<HTMLInputElement>(null)
+
   // ── Build graph from loaded data ──────────────────────────────────────────
   const buildGraph = useCallback(
     (
@@ -353,7 +362,10 @@ export default function NetworkAnalysisPage() {
       const useCommunities = overrideShowCommunities ?? showCommunities
 
       const eligible = allNodesRef.current.filter(
-        (n) => n.appearance_count >= mA && n.appearance_count <= xA
+        (n) =>
+          n.appearance_count >= mA &&
+          n.appearance_count <= xA &&
+          !excludedIdsRef.current.has(n.id)
       )
       const allowed = new Set(eligible.map((n) => n.id))
 
@@ -542,8 +554,9 @@ export default function NetworkAnalysisPage() {
                   .filter((e) => e.source === nodeId || e.target === nodeId)
                   .map((e) => (e.source === nodeId ? e.target : e.source))
               )
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
               const updates = (nodesDataSetRef.current.get() as any[]).map(
+                // eslint-disable-line @typescript-eslint/no-explicit-any
                 (n: any) => {
                   // eslint-disable-line @typescript-eslint/no-explicit-any
                   if (n.id === nodeId) {
@@ -603,6 +616,8 @@ export default function NetworkAnalysisPage() {
     setSelectedNode(null)
     setStats(null)
     setStatus('Loading…')
+    setExcludedCharacters([])
+    excludedIdsRef.current = new Set()
 
     const ds = DATASETS.find((d) => d.id === datasetId)!
 
@@ -748,6 +763,44 @@ export default function NetworkAnalysisPage() {
     [applyHighlight, deselectNode]
   )
 
+  const addExcludedCharacter = useCallback(
+    (char: { id: string; name: string }) => {
+      if (excludedIdsRef.current.has(char.id)) return
+      excludedIdsRef.current.add(char.id)
+      setExcludedCharacters((prev) => [...prev, char])
+      setExcludeSearch('')
+      setShowExcludeDropdown(false)
+      buildGraph()
+    },
+    [buildGraph]
+  )
+
+  const removeExcludedCharacter = useCallback(
+    (id: string) => {
+      excludedIdsRef.current.delete(id)
+      setExcludedCharacters((prev) => prev.filter((c) => c.id !== id))
+      buildGraph()
+    },
+    [buildGraph]
+  )
+
+  const clearExcludedCharacters = useCallback(() => {
+    excludedIdsRef.current = new Set()
+    setExcludedCharacters([])
+    buildGraph()
+  }, [buildGraph])
+
+  // Filtered suggestions for exclude autocomplete
+  const excludeSuggestions = excludeSearch.trim()
+    ? allNodesRef.current
+        .filter(
+          (n) =>
+            n.name.toLowerCase().includes(excludeSearch.toLowerCase()) &&
+            !excludedIdsRef.current.has(n.id)
+        )
+        .slice(0, 20)
+    : []
+
   const activeDs = DATASETS.find((d) => d.id === datasetId)!
 
   return (
@@ -850,6 +903,94 @@ export default function NetworkAnalysisPage() {
                 </button>
               </div>
             </div>
+          </div>
+
+          {/* Exclude characters */}
+          <div className="mt-5 pt-4 border-t border-gray-100">
+            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
+              Exclude characters
+            </label>
+            <div className="relative w-full sm:w-80">
+              <input
+                ref={excludeInputRef}
+                type="text"
+                value={excludeSearch}
+                placeholder="Search to exclude…"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                onChange={(e) => {
+                  setExcludeSearch(e.target.value)
+                  setShowExcludeDropdown(true)
+                }}
+                onFocus={() => setShowExcludeDropdown(true)}
+                onBlur={() =>
+                  setTimeout(() => setShowExcludeDropdown(false), 150)
+                }
+              />
+              {showExcludeDropdown && excludeSuggestions.length > 0 && (
+                <div className="absolute z-20 left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  {excludeSuggestions.map((n) => (
+                    <button
+                      key={n.id}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() =>
+                        addExcludedCharacter({ id: n.id, name: n.name })
+                      }
+                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 flex items-center justify-between gap-2"
+                    >
+                      <span className="truncate">{n.name}</span>
+                      <span className="text-xs text-gray-400 flex-shrink-0">
+                        {n.appearance_count.toLocaleString()} apps
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {showExcludeDropdown &&
+                excludeSearch.trim().length > 0 &&
+                excludeSuggestions.length === 0 && (
+                  <div className="absolute z-20 left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-2 text-sm text-gray-400">
+                    No matching characters
+                  </div>
+                )}
+            </div>
+
+            {excludedCharacters.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 mt-2">
+                {excludedCharacters.map((c) => (
+                  <span
+                    key={c.id}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 border border-red-200 text-red-700 text-xs font-medium rounded-full"
+                  >
+                    {c.name}
+                    <button
+                      onClick={() => removeExcludedCharacter(c.id)}
+                      className="ml-0.5 hover:text-red-900 flex-shrink-0"
+                      aria-label={`Remove ${c.name} from exclusions`}
+                    >
+                      <svg
+                        className="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </span>
+                ))}
+                <button
+                  onClick={clearExcludedCharacters}
+                  className="text-xs text-red-500 hover:text-red-700 underline"
+                >
+                  Clear all
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Action buttons + stats */}
