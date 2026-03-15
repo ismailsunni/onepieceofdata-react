@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { Network, DataSet } from 'vis-network/standalone'
 import { SectionHeader } from '../components/analytics'
+import { RangeSlider } from '../components/common/RangeSlider'
 
 // ─── Dataset definitions ──────────────────────────────────────────────────────
 const DATASETS = [
@@ -595,96 +596,31 @@ export default function NetworkAnalysisPage() {
         {/* ── Filter controls ───────────────────────────────────────────── */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-end">
-            {/* Appearance range */}
-            <div>
-              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
-                Appearances (nodes)
-              </label>
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400 w-6">Min</span>
-                  <input
-                    type="range"
-                    min={1}
-                    max={minAppMax}
-                    value={minApp}
-                    className="flex-1 accent-blue-600"
-                    onChange={(e) =>
-                      setMinApp(Math.min(Number(e.target.value), maxApp - 1))
-                    }
-                    onMouseUp={() => buildGraph()}
-                    onTouchEnd={() => buildGraph()}
-                  />
-                  <span className="w-10 text-right text-xs font-semibold text-blue-600">
-                    {minApp}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400 w-6">Max</span>
-                  <input
-                    type="range"
-                    min={1}
-                    max={minAppMax}
-                    value={maxApp}
-                    className="flex-1 accent-blue-600"
-                    onChange={(e) =>
-                      setMaxApp(Math.max(Number(e.target.value), minApp + 1))
-                    }
-                    onMouseUp={() => buildGraph()}
-                    onTouchEnd={() => buildGraph()}
-                  />
-                  <span className="w-10 text-right text-xs font-semibold text-blue-600">
-                    {maxApp}
-                  </span>
-                </div>
-              </div>
-            </div>
+            {/* Appearance range slider */}
+            <RangeSlider
+              label="Appearances (nodes)"
+              min={1}
+              max={minAppMax}
+              value={[minApp, maxApp]}
+              onChange={([lo, hi]) => {
+                setMinApp(lo)
+                setMaxApp(hi)
+              }}
+              onCommit={() => buildGraph()}
+            />
 
-            {/* Co-appearance range */}
-            <div>
-              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
-                Co-appearances (edges)
-              </label>
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400 w-6">Min</span>
-                  <input
-                    type="range"
-                    min={1}
-                    max={minWtMax}
-                    value={minWt}
-                    className="flex-1 accent-blue-600"
-                    onChange={(e) =>
-                      setMinWt(Math.min(Number(e.target.value), maxWt - 1))
-                    }
-                    onMouseUp={() => buildGraph()}
-                    onTouchEnd={() => buildGraph()}
-                  />
-                  <span className="w-10 text-right text-xs font-semibold text-blue-600">
-                    {minWt}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400 w-6">Max</span>
-                  <input
-                    type="range"
-                    min={1}
-                    max={minWtMax}
-                    value={maxWt}
-                    className="flex-1 accent-blue-600"
-                    onChange={(e) =>
-                      setMaxWt(Math.max(Number(e.target.value), minWt + 1))
-                    }
-                    onMouseUp={() => buildGraph()}
-                    onTouchEnd={() => buildGraph()}
-                  />
-                  <span className="w-10 text-right text-xs font-semibold text-blue-600">
-                    {maxWt}
-                  </span>
-                </div>
-              </div>
-            </div>
-
+            {/* Co-appearance range slider */}
+            <RangeSlider
+              label="Co-appearances (edges)"
+              min={1}
+              max={minWtMax}
+              value={[minWt, maxWt]}
+              onChange={([lo, hi]) => {
+                setMinWt(lo)
+                setMaxWt(hi)
+              }}
+              onCommit={() => buildGraph()}
+            />
             {/* Max edges */}
             <div>
               <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
