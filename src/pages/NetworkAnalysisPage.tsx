@@ -308,6 +308,7 @@ export default function NetworkAnalysisPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const nodesDataSetRef = useRef<any>(null)
   const baseNodeColorsRef = useRef<Map<string, object>>(new Map())
+  const restoreColorsRef = useRef<() => void>(() => {})
   const allNodesRef = useRef<RawNode[]>([])
   const allEdgesRef = useRef<RawEdge[]>([])
   const activeEdgesRef = useRef<RawEdge[]>([])
@@ -516,24 +517,8 @@ export default function NetworkAnalysisPage() {
         )
       })
 
-      // Helper: restore each node to its base color (community or default)
-      const restoreColors = () => {
-        if (!nodesDataSetRef.current) return
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const updates = (nodesDataSetRef.current.get() as any[]).map(
-          (n: any) => ({
-            // eslint-disable-line @typescript-eslint/no-explicit-any
-            id: n.id,
-            color: baseNodeColorsRef.current.get(n.id) ?? {
-              background: '#3b82f6',
-              border: '#1d4ed8',
-              highlight: { background: '#f59e0b', border: '#d97706' },
-              hover: { background: '#60a5fa', border: '#1d4ed8' },
-            },
-          })
-        )
-        nodesDataSetRef.current.update(updates)
-      }
+      // Use the outer restoreColors via ref to avoid stale closure
+      const restoreColors = () => restoreColorsRef.current()
 
       net.on('click', (params) => {
         if (params.nodes.length > 0) {
@@ -721,24 +706,46 @@ export default function NetworkAnalysisPage() {
     nodesDataSetRef.current.update(updates)
   }, [])
 
+  const restoreColors = useCallback(() => {
+    if (!nodesDataSetRef.current) return
+
+    const updates = (nodesDataSetRef.current.get() as any[]).map((n: any) => ({
+      // eslint-disable-line @typescript-eslint/no-explicit-any
+      id: n.id,
+      color: baseNodeColorsRef.current.get(n.id) ?? {
+        background: '#3b82f6',
+        border: '#1d4ed8',
+        highlight: { background: '#f59e0b', border: '#d97706' },
+        hover: { background: '#60a5fa', border: '#1d4ed8' },
+      },
+    }))
+    nodesDataSetRef.current.update(updates)
+  }, [])
+
+  restoreColorsRef.current = restoreColors
+
+  const deselectNode = useCallback(() => {
+    setSelectedNode(null)
+    restoreColors()
+    networkRef.current?.unselectAll()
+  }, [restoreColors])
+
   const focusNodeById = useCallback(
     (nodeId: string) => {
       const node = allNodesRef.current.find((n) => n.id === nodeId)
       if (!node || !networkRef.current) return
-      setSelectedNode(node)
-      networkRef.current.selectNodes([nodeId])
-      networkRef.current.focus(nodeId, {
-        scale: 1.8,
-        animation: { duration: 400, easingFunction: 'easeInOutQuad' },
-      })
-      applyHighlight(nodeId)
-      // Scroll graph into view
-      containerRef.current?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
+      // Toggle: clicking the already-selected node deselects it
+      setSelectedNode((prev) => {
+        if (prev?.id === nodeId) {
+          deselectNode()
+          return null
+        }
+        networkRef.current!.selectNodes([nodeId])
+        applyHighlight(nodeId)
+        return node
       })
     },
-    [applyHighlight]
+    [applyHighlight, deselectNode]
   )
 
   const activeDs = DATASETS.find((d) => d.id === datasetId)!
@@ -964,7 +971,7 @@ export default function NetworkAnalysisPage() {
                       {selectedNode.name}
                     </h4>
                     <button
-                      onClick={() => setSelectedNode(null)}
+                      onClick={() => deselectNode()}
                       className="text-gray-400 hover:text-gray-600 flex-shrink-0 -mt-0.5"
                       aria-label="Close"
                     >
