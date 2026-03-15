@@ -555,10 +555,10 @@ export default function NetworkAnalysisPage() {
                   .map((e) => (e.source === nodeId ? e.target : e.source))
               )
 
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const updates = (nodesDataSetRef.current.get() as any[]).map(
-                // eslint-disable-line @typescript-eslint/no-explicit-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (n: any) => {
-                  // eslint-disable-line @typescript-eslint/no-explicit-any
                   if (n.id === nodeId) {
                     return {
                       id: n.id,
@@ -724,8 +724,8 @@ export default function NetworkAnalysisPage() {
   const restoreColors = useCallback(() => {
     if (!nodesDataSetRef.current) return
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updates = (nodesDataSetRef.current.get() as any[]).map((n: any) => ({
-      // eslint-disable-line @typescript-eslint/no-explicit-any
       id: n.id,
       color: baseNodeColorsRef.current.get(n.id) ?? {
         background: '#3b82f6',
