@@ -312,7 +312,7 @@ export default function NetworkAnalysisPage() {
 
   const [datasetId, setDatasetId] = useState('general')
   const [minApp, setMinApp] = useState(11)
-  const [maxApp, setMaxApp] = useState(1001)
+  const [maxApp, setMaxApp] = useState(200)
   const [minAppMax, setMinAppMax] = useState(1001)
   const [minWt, setMinWt] = useState(10)
   const [maxWt, setMaxWt] = useState(762)
@@ -548,13 +548,14 @@ export default function NetworkAnalysisPage() {
         // Reset filters to dataset defaults
         const newMinApp = ds.defaultMinApp
         const newMinWt = ds.defaultMinWt
+        const defaultMaxApp = 200
         setMinApp(newMinApp)
-        setMaxApp(maxApp)
+        setMaxApp(defaultMaxApp)
         setMinWt(newMinWt)
         setMaxWt(maxWt)
         setMaxEdges(500)
         setIsLoading(false)
-        buildGraph(newMinApp, maxApp, newMinWt, maxWt, 500)
+        buildGraph(newMinApp, defaultMaxApp, newMinWt, maxWt, 500)
       })
       .catch((e) => {
         setError(String(e))
@@ -587,6 +588,22 @@ export default function NetworkAnalysisPage() {
   }, [search])
 
   const fitView = () => networkRef.current?.fit({ animation: true })
+
+  const focusNodeById = useCallback((nodeId: string) => {
+    const node = allNodesRef.current.find((n) => n.id === nodeId)
+    if (!node || !networkRef.current) return
+    setSelectedNode(node)
+    networkRef.current.selectNodes([nodeId])
+    networkRef.current.focus(nodeId, {
+      scale: 1.8,
+      animation: { duration: 400, easingFunction: 'easeInOutQuad' },
+    })
+    // Scroll graph into view
+    containerRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+    })
+  }, [])
 
   const activeDs = DATASETS.find((d) => d.id === datasetId)!
 
@@ -917,9 +934,10 @@ export default function NetworkAnalysisPage() {
                     {/* Character list */}
                     <div className="divide-y divide-gray-50 max-h-48 overflow-y-auto">
                       {nodes.map((n) => (
-                        <div
+                        <button
                           key={n.id}
-                          className="flex items-center justify-between px-3 py-1.5"
+                          onClick={() => focusNodeById(n.id)}
+                          className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-gray-50 transition-colors text-left"
                         >
                           <span className="text-xs text-gray-700 truncate mr-2">
                             {n.name}
@@ -927,7 +945,7 @@ export default function NetworkAnalysisPage() {
                           <span className="text-xs text-gray-400 flex-shrink-0">
                             {n.appearance_count.toLocaleString()}
                           </span>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </div>
