@@ -305,6 +305,8 @@ async function loadDataset(
 export default function NetworkAnalysisPage() {
   const containerRef = useRef<HTMLDivElement>(null)
   const networkRef = useRef<Network | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const nodesDataSetRef = useRef<any>(null)
   const allNodesRef = useRef<RawNode[]>([])
   const allEdgesRef = useRef<RawEdge[]>([])
   const activeEdgesRef = useRef<RawEdge[]>([])
@@ -470,10 +472,13 @@ export default function NetworkAnalysisPage() {
 
       const net = new Network(
         containerRef.current,
-        {
-          nodes: new DataSet(visNodes as never[]),
-          edges: new DataSet(visEdges as never[]),
-        },
+        (() => {
+          nodesDataSetRef.current = new DataSet(visNodes as never[])
+          return {
+            nodes: nodesDataSetRef.current,
+            edges: new DataSet(visEdges as never[]),
+          }
+        })(),
         {
           nodes: { shape: 'dot' },
           edges: { smooth: false },
@@ -513,8 +518,69 @@ export default function NetworkAnalysisPage() {
           setSelectedNode(
             allNodesRef.current.find((n) => n.id === nodeId) ?? null
           )
+          // Highlight selected node (amber), neighbours (blue), dim rest (gray)
+          if (nodesDataSetRef.current) {
+            const neighborIds = new Set(
+              activeEdgesRef.current
+                .filter((e) => e.source === nodeId || e.target === nodeId)
+                .map((e) => (e.source === nodeId ? e.target : e.source))
+            )
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const updates = (nodesDataSetRef.current.get() as any[]).map(
+              (n: any) => {
+                if (n.id === nodeId) {
+                  return {
+                    id: n.id,
+                    color: {
+                      background: '#f59e0b',
+                      border: '#d97706',
+                      highlight: { background: '#fbbf24', border: '#d97706' },
+                      hover: { background: '#fbbf24', border: '#d97706' },
+                    },
+                  }
+                } else if (neighborIds.has(n.id)) {
+                  return {
+                    id: n.id,
+                    color: {
+                      background: '#60a5fa',
+                      border: '#3b82f6',
+                      highlight: { background: '#93c5fd', border: '#3b82f6' },
+                      hover: { background: '#93c5fd', border: '#3b82f6' },
+                    },
+                  }
+                } else {
+                  return {
+                    id: n.id,
+                    color: {
+                      background: '#e5e7eb',
+                      border: '#d1d5db',
+                      highlight: { background: '#e5e7eb', border: '#d1d5db' },
+                      hover: { background: '#e5e7eb', border: '#d1d5db' },
+                    },
+                  }
+                }
+              }
+            )
+            nodesDataSetRef.current.update(updates)
+          }
         } else {
           setSelectedNode(null)
+          // Restore original blue colours
+          if (nodesDataSetRef.current) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const updates = (nodesDataSetRef.current.get() as any[]).map(
+              (n: any) => ({
+                id: n.id,
+                color: {
+                  background: '#3b82f6',
+                  border: '#1d4ed8',
+                  highlight: { background: '#f59e0b', border: '#d97706' },
+                  hover: { background: '#60a5fa', border: '#1d4ed8' },
+                },
+              })
+            )
+            nodesDataSetRef.current.update(updates)
+          }
         }
       })
 
@@ -609,7 +675,7 @@ export default function NetworkAnalysisPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <SectionHeader
           title="Character Network Analysis"
           description="Explore how One Piece characters are connected through co-appearances. Node size reflects appearance count; edge width reflects co-appearance frequency."
