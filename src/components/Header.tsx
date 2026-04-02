@@ -10,7 +10,7 @@ function Header() {
   // Auth UI is in the header (desktop) and Navigation (mobile)
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+    <header className="bg-white border-b border-gray-200 shadow-sm shrink-0 z-50 relative">
       {/* Skip to main content link for keyboard/screen-reader users */}
       <a
         href="#main-content"

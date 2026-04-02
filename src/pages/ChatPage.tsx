@@ -63,7 +63,7 @@ function ChatPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+      <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600" />
       </div>
     )
@@ -71,7 +71,7 @@ function ChatPage() {
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+      <div className="flex items-center justify-center h-full">
         <div className="bg-white border border-gray-200 rounded-xl p-8 max-w-md text-center">
           <div className="text-4xl mb-4">🏴☠️</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">AI Chat</h1>
@@ -110,7 +110,7 @@ function ChatPage() {
 
   if (!profile?.ai_enabled) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+      <div className="flex items-center justify-center h-full">
         <div className="bg-white border border-gray-200 rounded-xl p-8 max-w-md text-center">
           <div className="text-4xl mb-4">🔒</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
@@ -128,7 +128,7 @@ function ChatPage() {
   const avatarUrl = user.user_metadata?.avatar_url
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)]">
+    <div className="flex flex-col h-full">
       {/* Chat header — sticky within the chat area */}
       <div className="bg-white border-b border-gray-200 px-4 py-2 shrink-0">
         <div className="max-w-3xl mx-auto flex items-center justify-between">

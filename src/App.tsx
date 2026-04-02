@@ -71,9 +71,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <HashRouter>
         <ErrorBoundary>
-          <div className="min-h-screen bg-gray-50 overflow-x-hidden">
+          <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
             <Header />
-            <div id="main-content" className="pt-16">
+            <div id="main-content" className="flex-1 overflow-y-auto">
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<HomePage />} />
