@@ -5,12 +5,10 @@ import MobileAccordion from './navigation/MobileAccordion'
 import type { NavItem } from './navigation/DesktopDropdown'
 import { useAuth } from '../contexts/AuthContext'
 
-const STORY_ITEMS: NavItem[] = [
+const EXPLORE_ITEMS: NavItem[] = [
+  { to: '/characters', label: 'Characters' },
   { to: '/sagas', label: 'Sagas' },
   { to: '/arcs', label: 'Arcs' },
-]
-
-const MEDIA_ITEMS: NavItem[] = [
   { to: '/volumes', label: 'Volumes' },
   { to: '/chapters', label: 'Chapters' },
 ]
@@ -36,7 +34,7 @@ const ANALYTICS_ITEMS: NavItem[] = [
 ]
 
 const getLinkClass = ({ isActive }: { isActive: boolean }) => {
-  const base = 'px-2 py-1.5 rounded-md transition-colors text-xs font-medium whitespace-nowrap'
+  const base = 'px-3 py-2 rounded-md transition-colors text-sm font-medium'
   return `${base} ${isActive ? 'text-gray-900 bg-gray-100' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`
 }
 
@@ -49,14 +47,13 @@ function Navigation() {
   const location = useLocation()
   const { user, signIn, signOut } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [storyExpanded, setStoryExpanded] = useState(false)
-  const [mediaExpanded, setMediaExpanded] = useState(false)
+  const [exploreExpanded, setExploreExpanded] = useState(false)
   const [analyticsExpanded, setAnalyticsExpanded] = useState(false)
 
-  const isStoryActive =
+  const isExploreActive =
+    location.pathname.startsWith('/characters') ||
     location.pathname.startsWith('/arcs') ||
-    location.pathname.startsWith('/sagas')
-  const isMediaActive =
+    location.pathname.startsWith('/sagas') ||
     location.pathname.startsWith('/chapters') ||
     location.pathname.startsWith('/volumes')
   const isAnalyticsActive = location.pathname.startsWith('/analytics')
@@ -70,19 +67,11 @@ function Navigation() {
         <NavLink to="/" className={getLinkClass}>
           Home
         </NavLink>
-        <NavLink to="/characters" className={getLinkClass}>
-          Characters
-        </NavLink>
 
         <DesktopDropdown
-          label="Story"
-          isActive={isStoryActive}
-          items={STORY_ITEMS}
-        />
-        <DesktopDropdown
-          label="Media"
-          isActive={isMediaActive}
-          items={MEDIA_ITEMS}
+          label="Explore"
+          isActive={isExploreActive}
+          items={EXPLORE_ITEMS}
         />
         <DesktopDropdown
           label="Analytics"
@@ -163,26 +152,11 @@ function Navigation() {
               >
                 Home
               </NavLink>
-              <NavLink
-                to="/characters"
-                className={getMobileLinkClass}
-                onClick={closeMobileMenu}
-              >
-                Characters
-              </NavLink>
-
               <MobileAccordion
-                label="Story"
-                expanded={storyExpanded}
-                onToggle={() => setStoryExpanded((v) => !v)}
-                items={STORY_ITEMS}
-                onClose={closeMobileMenu}
-              />
-              <MobileAccordion
-                label="Media"
-                expanded={mediaExpanded}
-                onToggle={() => setMediaExpanded((v) => !v)}
-                items={MEDIA_ITEMS}
+                label="Explore"
+                expanded={exploreExpanded}
+                onToggle={() => setExploreExpanded((v) => !v)}
+                items={EXPLORE_ITEMS}
                 onClose={closeMobileMenu}
               />
               <MobileAccordion
