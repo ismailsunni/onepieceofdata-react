@@ -36,7 +36,7 @@ const ANALYTICS_ITEMS: NavItem[] = [
 ]
 
 const getLinkClass = ({ isActive }: { isActive: boolean }) => {
-  const base = 'px-3 py-2 rounded-md transition-colors text-sm font-medium'
+  const base = 'px-2 py-1.5 rounded-md transition-colors text-xs font-medium whitespace-nowrap'
   return `${base} ${isActive ? 'text-gray-900 bg-gray-100' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`
 }
 
@@ -66,7 +66,7 @@ function Navigation() {
   return (
     <>
       {/* Desktop Navigation */}
-      <nav className="hidden lg:flex flex-wrap gap-2">
+      <nav className="hidden lg:flex items-center gap-1">
         <NavLink to="/" className={getLinkClass}>
           Home
         </NavLink>

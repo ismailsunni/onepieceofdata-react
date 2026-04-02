@@ -19,7 +19,7 @@ function Header() {
         Skip to main content
       </a>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-6">
+        <div className="flex items-center justify-between h-16 gap-3">
           {/* Logo/Brand */}
           <Link to="/" className="flex items-center gap-3 group flex-shrink-0">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-sm">
@@ -37,12 +37,12 @@ function Header() {
           </Link>
 
           {/* Desktop Search */}
-          <div className="hidden md:block flex-1 max-w-md">
+          <div className="hidden md:block flex-1 max-w-xs">
             <Search />
           </div>
 
           {/* Navigation */}
-          <div className="flex items-center gap-4 relative z-[60]">
+          <div className="flex items-center gap-2 relative z-[60]">
             {/* Mobile Search Button */}
             <button
               onClick={() => setMobileSearchOpen(true)}
