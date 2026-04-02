@@ -332,9 +332,13 @@ Deno.serve(async (req) => {
       rounds++
     }
 
+    const finalContent = message?.content
+      || (result?.error?.message ? `Error: ${result.error.message}` : null)
+      || "I couldn't generate a response. Please try again."
+
     return new Response(
       JSON.stringify({
-        content: message?.content || "I couldn't generate a response.",
+        content: finalContent,
         tool_calls_count: rounds,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
