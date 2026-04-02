@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext'
 function Header() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const { user, signIn, signOut } = useAuth()
+  // Auth UI is in the header (desktop) and Navigation (mobile)
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
@@ -65,69 +66,38 @@ function Header() {
 
             <Navigation />
 
-            {/* AI Chat Link */}
-            <Link
-              to="/chat"
-              className="hidden lg:flex items-center gap-1.5 text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"
-            >
-              <span>✨</span>
-              <span>AI Chat</span>
-            </Link>
-
-            {/* Feedback Link */}
-            <a
-              href="https://github.com/ismailsunni/onepieceofdata-react/issues/new"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden lg:flex items-center gap-2 text-gray-600 hover:text-gray-900 text-sm transition-colors"
-              title="Report an issue or suggest a feature"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
-                />
-              </svg>
-              <span>Feedback</span>
-            </a>
-
-            {/* Auth Section */}
-            {user ? (
-              <div className="hidden lg:flex items-center gap-2">
-                {user.user_metadata?.avatar_url ? (
-                  <img
-                    src={user.user_metadata.avatar_url}
-                    alt={user.user_metadata?.full_name || 'User'}
-                    className="w-7 h-7 rounded-full"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-medium">
-                    {user.email?.[0]?.toUpperCase() || 'U'}
-                  </div>
-                )}
+            {/* Auth Section — desktop only */}
+            <div className="hidden lg:flex items-center gap-3 border-l border-gray-200 pl-3">
+              {user ? (
+                <>
+                  {user.user_metadata?.avatar_url ? (
+                    <img
+                      src={user.user_metadata.avatar_url}
+                      alt={user.user_metadata?.full_name || 'User'}
+                      className="w-7 h-7 rounded-full"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-medium">
+                      {user.email?.[0]?.toUpperCase() || 'U'}
+                    </div>
+                  )}
+                  <button
+                    onClick={signOut}
+                    className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                  >
+                    Sign out
+                  </button>
+                </>
+              ) : (
                 <button
-                  onClick={signOut}
-                  className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                  onClick={signIn}
+                  className="text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
                 >
-                  Sign out
+                  Sign In
                 </button>
-              </div>
-            ) : (
-              <button
-                onClick={signIn}
-                className="hidden lg:block text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
-              >
-                Sign In
-              </button>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
