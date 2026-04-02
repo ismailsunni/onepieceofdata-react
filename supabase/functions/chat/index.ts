@@ -254,7 +254,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    const { messages, model = 'llama-3.3-70b-versatile' } = await req.json()
+    const { messages, model = 'qwen/qwen3-32b' } = await req.json()
 
     if (!messages || !Array.isArray(messages)) {
       return new Response(
@@ -332,9 +332,30 @@ Deno.serve(async (req) => {
       rounds++
     }
 
-    const finalContent = message?.content
-      || (result?.error?.message ? `Error: ${result.error.message}` : null)
-      || "I couldn't generate a response. Please try again."
+    let finalContent = message?.content
+
+    // If tool calling failed, retry without tools as fallback
+    if (!finalContent && result?.error) {
+      const fallbackResponse = await fetch(
+        'https://api.groq.com/openai/v1/chat/completions',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${GROQ_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'llama-3.3-70b-versatile',
+            messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages],
+            max_tokens: 2048,
+          }),
+        }
+      )
+      const fallbackResult = await fallbackResponse.json()
+      finalContent = fallbackResult.choices?.[0]?.message?.content
+    }
+
+    finalContent = finalContent || "I couldn't generate a response. Please try again."
 
     return new Response(
       JSON.stringify({
