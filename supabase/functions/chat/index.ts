@@ -220,6 +220,40 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Auth check: require valid JWT and ai_enabled flag
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required. Please sign in.' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const userClient = createClient(SUPABASE_URL, Deno.env.get('ANON_KEY') || Deno.env.get('SUPABASE_ANON_KEY')!, {
+      global: { headers: { Authorization: authHeader } },
+    })
+    const { data: { user }, error: authError } = await userClient.auth.getUser()
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid or expired session. Please sign in again.' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Check ai_enabled flag
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('ai_enabled')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile?.ai_enabled) {
+      return new Response(
+        JSON.stringify({ error: 'AI chat is not enabled for your account. Contact the admin.' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     const { messages, model = 'llama-3.3-70b-versatile' } = await req.json()
 
     if (!messages || !Array.isArray(messages)) {
