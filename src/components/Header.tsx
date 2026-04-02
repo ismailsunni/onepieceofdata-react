@@ -2,9 +2,11 @@ import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import Navigation from './Navigation'
 import Search from './Search'
+import { useAuth } from '../contexts/AuthContext'
 
 function Header() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
+  const { user, signIn, signOut } = useAuth()
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
@@ -63,6 +65,15 @@ function Header() {
 
             <Navigation />
 
+            {/* AI Chat Link */}
+            <Link
+              to="/chat"
+              className="hidden lg:flex items-center gap-1.5 text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"
+            >
+              <span>✨</span>
+              <span>AI Chat</span>
+            </Link>
+
             {/* Feedback Link */}
             <a
               href="https://github.com/ismailsunni/onepieceofdata-react/issues/new"
@@ -86,6 +97,37 @@ function Header() {
               </svg>
               <span>Feedback</span>
             </a>
+
+            {/* Auth Section */}
+            {user ? (
+              <div className="hidden lg:flex items-center gap-2">
+                {user.user_metadata?.avatar_url ? (
+                  <img
+                    src={user.user_metadata.avatar_url}
+                    alt={user.user_metadata?.full_name || 'User'}
+                    className="w-7 h-7 rounded-full"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-medium">
+                    {user.email?.[0]?.toUpperCase() || 'U'}
+                  </div>
+                )}
+                <button
+                  onClick={signOut}
+                  className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  Sign out
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={signIn}
+                className="hidden lg:block text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
+              >
+                Sign In
+              </button>
+            )}
           </div>
         </div>
       </div>

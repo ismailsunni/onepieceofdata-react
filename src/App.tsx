@@ -4,6 +4,7 @@ import { lazy, Suspense } from 'react'
 import { Toaster } from 'react-hot-toast'
 import Header from './components/Header'
 import ErrorBoundary from './components/common/ErrorBoundary'
+import { AuthProvider } from './contexts/AuthContext'
 import { CACHE } from './constants/cache'
 
 // Eager load home page for faster initial render
@@ -43,6 +44,7 @@ const CharacterCompletenessPage = lazy(
 )
 const NetworkAnalysisPage = lazy(() => import('./pages/NetworkAnalysisPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
+const ChatPage = lazy(() => import('./pages/ChatPage'))
 
 // Loading fallback component
 const PageLoader = () => (
@@ -65,6 +67,7 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
+    <AuthProvider>
     <QueryClientProvider client={queryClient}>
       <HashRouter>
         <ErrorBoundary>
@@ -131,6 +134,7 @@ function App() {
                     element={<NetworkAnalysisPage />}
                   />
                   <Route path="/about" element={<AboutPage />} />
+                  <Route path="/chat" element={<ChatPage />} />
                 </Routes>
               </Suspense>
             </div>
@@ -139,6 +143,7 @@ function App() {
         <Toaster position="bottom-right" toastOptions={{ duration: 3000 }} />
       </HashRouter>
     </QueryClientProvider>
+    </AuthProvider>
   )
 }
 

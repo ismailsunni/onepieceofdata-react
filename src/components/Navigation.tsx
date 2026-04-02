@@ -3,6 +3,7 @@ import { useState } from 'react'
 import DesktopDropdown from './navigation/DesktopDropdown'
 import MobileAccordion from './navigation/MobileAccordion'
 import type { NavItem } from './navigation/DesktopDropdown'
+import { useAuth } from '../contexts/AuthContext'
 
 const STORY_ITEMS: NavItem[] = [
   { to: '/sagas', label: 'Sagas' },
@@ -46,6 +47,7 @@ const getMobileLinkClass = ({ isActive }: { isActive: boolean }) => {
 
 function Navigation() {
   const location = useLocation()
+  const { user, signIn, signOut } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [storyExpanded, setStoryExpanded] = useState(false)
   const [mediaExpanded, setMediaExpanded] = useState(false)
@@ -88,6 +90,10 @@ function Navigation() {
           items={ANALYTICS_ITEMS}
           width="w-56"
         />
+
+        <NavLink to="/chat" className={getLinkClass}>
+          <span className="inline-flex items-center gap-1">✨ AI Chat</span>
+        </NavLink>
 
         <NavLink to="/about" className={getLinkClass}>
           About
@@ -188,12 +194,45 @@ function Navigation() {
               />
 
               <NavLink
+                to="/chat"
+                className={getMobileLinkClass}
+                onClick={closeMobileMenu}
+              >
+                ✨ AI Chat
+              </NavLink>
+
+              <NavLink
                 to="/about"
                 className={getMobileLinkClass}
                 onClick={closeMobileMenu}
               >
                 About
               </NavLink>
+
+              {/* Mobile Auth */}
+              <div className="border-t border-gray-200 mt-4 pt-4">
+                {user ? (
+                  <button
+                    onClick={() => {
+                      signOut()
+                      closeMobileMenu()
+                    }}
+                    className="block w-full text-left px-4 py-3 rounded-lg text-base text-gray-700 hover:bg-gray-50 font-medium transition-colors"
+                  >
+                    Sign out
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      signIn()
+                      closeMobileMenu()
+                    }}
+                    className="block w-full text-left px-4 py-3 rounded-lg text-base text-blue-600 hover:bg-blue-50 font-medium transition-colors"
+                  >
+                    Sign In
+                  </button>
+                )}
+              </div>
             </nav>
           </div>
         </div>
