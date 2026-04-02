@@ -63,21 +63,18 @@ function ChatPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
         <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600" />
-      </main>
+      </div>
     )
   }
 
-  // Not signed in
   if (!user) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
         <div className="bg-white border border-gray-200 rounded-xl p-8 max-w-md text-center">
-          <div className="text-4xl mb-4">🏴‍☠️</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            AI Chat
-          </h1>
+          <div className="text-4xl mb-4">🏴☠️</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">AI Chat</h1>
           <p className="text-gray-600 mb-6">
             Sign in with Google to chat about One Piece data with our AI
             assistant.
@@ -107,14 +104,13 @@ function ChatPage() {
             Sign in with Google
           </button>
         </div>
-      </main>
+      </div>
     )
   }
 
-  // Signed in but AI not enabled
   if (!profile?.ai_enabled) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
         <div className="bg-white border border-gray-200 rounded-xl p-8 max-w-md text-center">
           <div className="text-4xl mb-4">🔒</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
@@ -125,44 +121,41 @@ function ChatPage() {
             to request access.
           </p>
         </div>
-      </main>
+      </div>
     )
   }
 
   const avatarUrl = user.user_metadata?.avatar_url
 
   return (
-    <main className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Chat header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3">
+    <div className="flex flex-col h-[calc(100vh-4rem)]">
+      {/* Chat header — sticky within the chat area */}
+      <div className="bg-white border-b border-gray-200 px-4 py-2 shrink-0">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-xl">🏴‍☠️</span>
-            <h1 className="text-lg font-semibold text-gray-900">
-              AI Chat
-            </h1>
+            <span className="text-lg">🏴☠️</span>
+            <h1 className="text-base font-semibold text-gray-900">AI Chat</h1>
           </div>
           <button
             onClick={resetConversation}
-            className="text-sm text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+            className="text-xs text-gray-500 hover:text-gray-900 px-2 py-1 rounded hover:bg-gray-100 transition-colors"
           >
             New conversation
           </button>
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-6">
-        <div className="max-w-3xl mx-auto space-y-4">
+      {/* Messages — only this scrolls */}
+      <div className="flex-1 overflow-y-auto px-4 py-4">
+        <div className="max-w-3xl mx-auto space-y-3">
           {messages.length === 0 && (
-            <div className="text-center text-gray-500 py-16">
-              <div className="text-4xl mb-3">🏴‍☠️</div>
-              <p className="text-lg font-medium text-gray-700 mb-1">
+            <div className="text-center text-gray-500 py-12">
+              <div className="text-3xl mb-2">🏴☠️</div>
+              <p className="text-base font-medium text-gray-700 mb-1">
                 Ask me anything about One Piece!
               </p>
-              <p className="text-sm text-gray-500">
-                I can help with characters, arcs, devil fruits, bounties, and
-                more.
+              <p className="text-xs text-gray-400">
+                Characters, arcs, devil fruits, bounties, and more.
               </p>
             </div>
           )}
@@ -170,29 +163,27 @@ function ChatPage() {
           {messages.map((msg, i) => (
             <div
               key={i}
-              className={`flex items-start gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
+              className={`flex items-start gap-2 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
             >
-              {/* Avatar */}
               {msg.role === 'assistant' ? (
-                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-sm">
-                  🏴‍☠️
+                <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center shrink-0 text-xs">
+                  🏴☠️
                 </div>
               ) : avatarUrl ? (
                 <img
                   src={avatarUrl}
                   alt="You"
-                  className="w-8 h-8 rounded-full flex-shrink-0"
+                  className="w-7 h-7 rounded-full shrink-0"
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0 text-white text-sm font-medium">
+                <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center shrink-0 text-white text-xs font-medium">
                   {user.email?.[0]?.toUpperCase() || 'U'}
                 </div>
               )}
 
-              {/* Bubble */}
               <div
-                className={`rounded-xl px-4 py-2.5 max-w-[75%] whitespace-pre-wrap text-sm leading-relaxed ${
+                className={`rounded-xl px-3 py-2 max-w-[80%] whitespace-pre-wrap text-sm leading-relaxed ${
                   msg.role === 'user'
                     ? 'bg-blue-600 text-white'
                     : 'bg-white border border-gray-200 text-gray-800'
@@ -204,19 +195,19 @@ function ChatPage() {
           ))}
 
           {sending && (
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-sm">
-                🏴‍☠️
+            <div className="flex items-start gap-2">
+              <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center shrink-0 text-xs">
+                🏴☠️
               </div>
-              <div className="bg-white border border-gray-200 rounded-xl px-4 py-2.5">
+              <div className="bg-white border border-gray-200 rounded-xl px-3 py-2">
                 <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" />
                   <div
-                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
                     style={{ animationDelay: '0.15s' }}
                   />
                   <div
-                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
                     style={{ animationDelay: '0.3s' }}
                   />
                 </div>
@@ -228,13 +219,8 @@ function ChatPage() {
         </div>
       </div>
 
-      {/* Attribution */}
-      <div className="text-center text-xs text-gray-400 py-1">
-        Data sourced from One Piece Wiki (CC-BY-SA) &bull; Powered by Groq
-      </div>
-
-      {/* Input */}
-      <div className="bg-white border-t border-gray-200 px-4 py-3">
+      {/* Input bar — fixed at bottom of chat area */}
+      <div className="bg-white border-t border-gray-200 px-4 py-2 shrink-0">
         <div className="max-w-3xl mx-auto flex items-end gap-2">
           <textarea
             ref={inputRef}
@@ -243,12 +229,12 @@ function ChatPage() {
             onKeyDown={handleKeyDown}
             placeholder="Ask about One Piece..."
             rows={1}
-            className="flex-1 resize-none border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            className="flex-1 resize-none border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
           />
           <button
             onClick={handleSend}
             disabled={!input.trim() || sending}
-            className="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+            className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:pointer-events-none"
             aria-label="Send message"
           >
             <svg
@@ -266,8 +252,11 @@ function ChatPage() {
             </svg>
           </button>
         </div>
+        <p className="text-center text-[10px] text-gray-400 mt-1">
+          Data from One Piece Wiki (CC-BY-SA) • Powered by Groq
+        </p>
       </div>
-    </main>
+    </div>
   )
 }
 
