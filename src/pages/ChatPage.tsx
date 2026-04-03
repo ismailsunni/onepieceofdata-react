@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import Markdown from 'react-markdown'
 import { useAuth } from '../contexts/AuthContext'
 import { sendChatMessage } from '../services/chatService'
 
@@ -189,7 +190,30 @@ function ChatPage() {
                     : 'bg-white border border-gray-200 text-gray-800'
                 }`}
               >
-                {msg.content}
+                {msg.role === 'assistant' ? (
+                  <Markdown
+                    components={{
+                      h1: ({ children }) => <h1 className="text-lg font-bold mt-3 mb-1">{children}</h1>,
+                      h2: ({ children }) => <h2 className="text-base font-bold mt-3 mb-1">{children}</h2>,
+                      h3: ({ children }) => <h3 className="text-sm font-bold mt-2 mb-1">{children}</h3>,
+                      p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                      ul: ({ children }) => <ul className="list-disc pl-4 mb-2">{children}</ul>,
+                      ol: ({ children }) => <ol className="list-decimal pl-4 mb-2">{children}</ol>,
+                      li: ({ children }) => <li className="mb-0.5">{children}</li>,
+                      strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                      table: ({ children }) => <table className="border-collapse text-xs my-2 w-full">{children}</table>,
+                      thead: ({ children }) => <thead className="bg-gray-50">{children}</thead>,
+                      th: ({ children }) => <th className="border border-gray-300 px-2 py-1 text-left font-semibold">{children}</th>,
+                      td: ({ children }) => <td className="border border-gray-300 px-2 py-1">{children}</td>,
+                      hr: () => <hr className="my-2 border-gray-200" />,
+                      code: ({ children }) => <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">{children}</code>,
+                    }}
+                  >
+                    {msg.content}
+                  </Markdown>
+                ) : (
+                  msg.content
+                )}
               </div>
             </div>
           ))}
