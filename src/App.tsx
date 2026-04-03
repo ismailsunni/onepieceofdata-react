@@ -43,6 +43,9 @@ const CharacterCompletenessPage = lazy(
   () => import('./pages/CharacterCompletenessPage')
 )
 const NetworkAnalysisPage = lazy(() => import('./pages/NetworkAnalysisPage'))
+const CharacterSagaMatrixPage = lazy(
+  () => import('./pages/CharacterSagaMatrixPage')
+)
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 const ChatPage = lazy(() => import('./pages/ChatPage'))
 
@@ -132,6 +135,10 @@ function App() {
                   <Route
                     path="/analytics/network"
                     element={<NetworkAnalysisPage />}
+                  />
+                  <Route
+                    path="/analytics/saga-matrix"
+                    element={<CharacterSagaMatrixPage />}
                   />
                   <Route path="/about" element={<AboutPage />} />
                   <Route path="/chat" element={<ChatPage />} />
