@@ -131,6 +131,7 @@ function ArcDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [copyLinkFeedback, setCopyLinkFeedback] = useState(false)
+  const [hideStrawHats, setHideStrawHats] = useState(false)
 
   const { data: arc, isLoading: arcLoading } = useQuery({
     queryKey: ['arc', id],
@@ -263,6 +264,9 @@ function ArcDetailPage() {
     },
   ]
 
+  const STRAW_HAT_IDS = new Set(['Monkey_D._Luffy','Roronoa_Zoro','Nami','Usopp','Sanji','Tony_Tony_Chopper','Nico_Robin','Franky','Brook','Jinbe'])
+  const filteredCharacters = hideStrawHats ? characters.filter(c => !STRAW_HAT_IDS.has(c.id)) : characters
+
   const arcStart = arc?.start_chapter ?? 0
   const arcEnd = arc?.end_chapter ?? 9999
 
@@ -284,7 +288,7 @@ function ArcDetailPage() {
     },
     {
       key: 'arc_appearances',
-      label: 'In Arc',
+      label: 'App. in Arc',
       sortValue: (row) => countAppearancesInArc(row.chapter_list),
       render: (row) => countAppearancesInArc(row.chapter_list) || '-',
     },
@@ -537,13 +541,19 @@ function ArcDetailPage() {
               </div>
               <SectionTitle>
                 Characters Appearing
-                <span className="ml-2 text-base text-gray-500">({characters.length})</span>
+                <span className="ml-2 text-base text-gray-500">({filteredCharacters.length})</span>
               </SectionTitle>
+            </div>
+            <div className="mb-3">
+              <label className="inline-flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+                <input type="checkbox" checked={hideStrawHats} onChange={(e) => setHideStrawHats(e.target.checked)} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                Hide Straw Hat Pirates
+              </label>
             </div>
 
             <SortableTable
               columns={characterColumns}
-              data={characters}
+              data={filteredCharacters}
               defaultSortField="arc_appearances"
               defaultSortDirection="desc"
               rowKey={(row) => row.id}
