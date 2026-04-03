@@ -263,6 +263,14 @@ function ArcDetailPage() {
     },
   ]
 
+  const arcStart = arc?.start_chapter ?? 0
+  const arcEnd = arc?.end_chapter ?? 9999
+
+  const countAppearancesInArc = (chapters: number[] | null) => {
+    if (!chapters) return 0
+    return chapters.filter((ch) => ch >= arcStart && ch <= arcEnd).length
+  }
+
   const characterColumns: Column<Character>[] = [
     {
       key: 'name',
@@ -273,6 +281,12 @@ function ArcDetailPage() {
           {row.name || 'Unknown'}
         </Link>
       ),
+    },
+    {
+      key: 'arc_appearances',
+      label: 'In Arc',
+      sortValue: (row) => countAppearancesInArc(row.chapter_list),
+      render: (row) => countAppearancesInArc(row.chapter_list) || '-',
     },
     {
       key: 'status',
@@ -530,8 +544,8 @@ function ArcDetailPage() {
             <SortableTable
               columns={characterColumns}
               data={characters}
-              defaultSortField="first_appearance"
-              defaultSortDirection="asc"
+              defaultSortField="arc_appearances"
+              defaultSortDirection="desc"
               rowKey={(row) => row.id}
               maxHeight="600px"
             />

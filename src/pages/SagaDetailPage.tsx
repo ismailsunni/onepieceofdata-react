@@ -255,6 +255,14 @@ function SagaDetailPage() {
     },
   ]
 
+  const sagaStart = saga?.start_chapter ?? 0
+  const sagaEnd = saga?.end_chapter ?? 9999
+
+  const countAppearancesInRange = (chapters: number[] | null) => {
+    if (!chapters) return 0
+    return chapters.filter((ch) => ch >= sagaStart && ch <= sagaEnd).length
+  }
+
   const characterColumns: Column<Character>[] = [
     {
       key: 'name',
@@ -265,6 +273,12 @@ function SagaDetailPage() {
           {row.name || 'Unknown'}
         </Link>
       ),
+    },
+    {
+      key: 'saga_appearances',
+      label: 'In Saga',
+      sortValue: (row) => countAppearancesInRange(row.chapter_list),
+      render: (row) => countAppearancesInRange(row.chapter_list) || '-',
     },
     {
       key: 'status',
@@ -509,8 +523,8 @@ function SagaDetailPage() {
             <SortableTable
               columns={characterColumns}
               data={characters}
-              defaultSortField="first_appearance"
-              defaultSortDirection="asc"
+              defaultSortField="saga_appearances"
+              defaultSortDirection="desc"
               rowKey={(row) => row.id}
               maxHeight="600px"
             />
