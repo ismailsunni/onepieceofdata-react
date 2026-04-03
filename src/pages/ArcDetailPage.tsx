@@ -3,13 +3,14 @@ import { logger } from '../utils/logger'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowLeft, faLink, faCheck, faExternalLinkAlt, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons'
+import { faArrowLeft, faLink, faCheck, faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons'
 import { faXTwitter } from '@fortawesome/free-brands-svg-icons'
 import { supabase } from '../services/supabase'
 import { Arc } from '../types/arc'
 import { Character } from '../types/character'
 import { Chapter } from '../types/chapter'
 import { fetchArcs } from '../services/arcService'
+import SortableTable, { Column } from '../components/common/SortableTable'
 
 // Service functions
 async function fetchArcById(id: string): Promise<Arc | null> {
@@ -129,8 +130,6 @@ function Tag({
 function ArcDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [showAllChapters, setShowAllChapters] = useState(false)
-  const [showAllCharacters, setShowAllCharacters] = useState(false)
   const [copyLinkFeedback, setCopyLinkFeedback] = useState(false)
 
   const { data: arc, isLoading: arcLoading } = useQuery({
@@ -224,8 +223,82 @@ function ArcDetailPage() {
   const wikiName = arc.title.replace(/ /g, '_')
   const wikiUrl = `https://onepiece.fandom.com/wiki/${wikiName}`
 
-  const displayedChapters = showAllChapters ? chapters : chapters.slice(0, 12)
-  const displayedCharacters = showAllCharacters ? characters : characters.slice(0, 12)
+  const chapterColumns: Column<Chapter>[] = [
+    {
+      key: 'number',
+      label: '#',
+      sortValue: (row) => row.number,
+      render: (row) => (
+        <Link to={`/chapters/${row.number}`} className="text-blue-600 hover:text-blue-800 hover:underline font-medium">
+          {row.number}
+        </Link>
+      ),
+    },
+    {
+      key: 'title',
+      label: 'Title',
+      sortValue: (row) => row.title ?? '',
+      render: (row) => row.title || '-',
+    },
+    {
+      key: 'volume',
+      label: 'Volume',
+      sortValue: (row) => row.volume ?? 0,
+      render: (row) => row.volume ?? '-',
+    },
+    {
+      key: 'num_page',
+      label: 'Pages',
+      sortValue: (row) => row.num_page ?? 0,
+      render: (row) => row.num_page ?? '-',
+    },
+    {
+      key: 'date',
+      label: 'Date',
+      sortValue: (row) => row.date ?? '',
+      render: (row) =>
+        row.date
+          ? new Date(row.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+          : '-',
+    },
+  ]
+
+  const characterColumns: Column<Character>[] = [
+    {
+      key: 'name',
+      label: 'Name',
+      sortValue: (row) => row.name ?? '',
+      render: (row) => (
+        <Link to={`/characters/${row.id}`} className="text-blue-600 hover:text-blue-800 hover:underline font-medium">
+          {row.name || 'Unknown'}
+        </Link>
+      ),
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      sortValue: (row) => row.status ?? '',
+      render: (row) => row.status || '-',
+    },
+    {
+      key: 'bounty',
+      label: 'Bounty',
+      sortValue: (row) => row.bounty ?? -1,
+      render: (row) => (row.bounty != null && row.bounty > 0 ? `₿${row.bounty.toLocaleString()}` : '-'),
+    },
+    {
+      key: 'first_appearance',
+      label: 'First Appearance',
+      sortValue: (row) => row.first_appearance ?? 0,
+      render: (row) => (row.first_appearance ? `Ch. ${row.first_appearance}` : '-'),
+    },
+    {
+      key: 'appearance_count',
+      label: 'Total Appearances',
+      sortValue: (row) => row.appearance_count ?? 0,
+      render: (row) => row.appearance_count ?? '-',
+    },
+  ]
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -416,123 +489,52 @@ function ArcDetailPage() {
         {/* Chapters */}
         {chapters.length > 0 && (
           <Card className="mb-8 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
-                </div>
-                <SectionTitle>
-                  Chapters in This Arc
-                  <span className="ml-2 text-base text-gray-500">({chapters.length})</span>
-                </SectionTitle>
+            <div className="flex items-center gap-2 mb-5">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
               </div>
+              <SectionTitle>
+                Chapters in This Arc
+                <span className="ml-2 text-base text-gray-500">({chapters.length})</span>
+              </SectionTitle>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {displayedChapters.map((chapter) => (
-                <Link
-                  key={chapter.number}
-                  to={`/chapters/${chapter.number}`}
-                  className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all"
-                >
-                  <div className="flex flex-col h-full">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-semibold text-gray-800">
-                        Chapter {chapter.number}
-                      </h3>
-                      {chapter.num_page && (
-                        <span className="ml-2 px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full whitespace-nowrap">
-                          {chapter.num_page} pages
-                        </span>
-                      )}
-                    </div>
-                    {chapter.title && (
-                      <p className="text-sm text-gray-600 mb-2 line-clamp-2">
-                        {chapter.title}
-                      </p>
-                    )}
-                    <div className="mt-auto text-xs text-blue-600 font-medium">
-                      View Details →
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-            {chapters.length > 12 && (
-              <button
-                onClick={() => setShowAllChapters(!showAllChapters)}
-                className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg font-medium transition-colors border border-green-200"
-              >
-                <span>{showAllChapters ? 'Show Less' : `Show ${chapters.length - 12} More Chapters`}</span>
-                <FontAwesomeIcon icon={showAllChapters ? faChevronUp : faChevronDown} className="w-3 h-3" />
-              </button>
-            )}
+            <SortableTable
+              columns={chapterColumns}
+              data={chapters}
+              defaultSortField="number"
+              defaultSortDirection="asc"
+              rowKey={(row) => row.number}
+              maxHeight="600px"
+            />
           </Card>
         )}
 
         {/* Characters */}
         {characters.length > 0 && (
           <Card className="hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
-                <SectionTitle>
-                  Characters Appearing
-                  <span className="ml-2 text-base text-gray-500">({characters.length})</span>
-                </SectionTitle>
+            <div className="flex items-center gap-2 mb-5">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
               </div>
+              <SectionTitle>
+                Characters Appearing
+                <span className="ml-2 text-base text-gray-500">({characters.length})</span>
+              </SectionTitle>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {displayedCharacters.map((character) => (
-                <Link
-                  key={character.id}
-                  to={`/characters/${character.id}`}
-                  className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all"
-                >
-                  <div className="flex flex-col h-full">
-                    <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2">
-                      {character.name || 'Unknown'}
-                    </h3>
-                    <div className="flex-1 space-y-1 text-sm text-gray-600">
-                      {character.status && (
-                        <p>
-                          <span className="font-medium">Status:</span> {character.status}
-                        </p>
-                      )}
-                      {character.first_appearance && (
-                        <p>
-                          <span className="font-medium">Debut:</span> Ch. {character.first_appearance}
-                        </p>
-                      )}
-                      {character.bounty !== null && character.bounty > 0 && (
-                        <p>
-                          <span className="font-medium">Bounty:</span> ₿{character.bounty.toLocaleString()}
-                        </p>
-                      )}
-                    </div>
-                    <div className="mt-3 text-xs text-blue-600 font-medium">
-                      View Details →
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-            {characters.length > 12 && (
-              <button
-                onClick={() => setShowAllCharacters(!showAllCharacters)}
-                className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg font-medium transition-colors border border-blue-200"
-              >
-                <span>{showAllCharacters ? 'Show Less' : `Show ${characters.length - 12} More Characters`}</span>
-                <FontAwesomeIcon icon={showAllCharacters ? faChevronUp : faChevronDown} className="w-3 h-3" />
-              </button>
-            )}
+            <SortableTable
+              columns={characterColumns}
+              data={characters}
+              defaultSortField="first_appearance"
+              defaultSortDirection="asc"
+              rowKey={(row) => row.id}
+              maxHeight="600px"
+            />
           </Card>
         )}
       </div>

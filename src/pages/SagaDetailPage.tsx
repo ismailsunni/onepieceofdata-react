@@ -3,11 +3,12 @@ import { logger } from '../utils/logger'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowLeft, faLink, faCheck, faExternalLinkAlt, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons'
+import { faArrowLeft, faLink, faCheck, faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons'
 import { faXTwitter } from '@fortawesome/free-brands-svg-icons'
 import { supabase } from '../services/supabase'
 import { Saga, Arc } from '../types/arc'
 import { Character } from '../types/character'
+import SortableTable, { Column } from '../components/common/SortableTable'
 
 // Service functions
 async function fetchSagaById(id: string): Promise<Saga | null> {
@@ -130,8 +131,6 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 function SagaDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [showAllArcs, setShowAllArcs] = useState(true)
-  const [showAllCharacters, setShowAllCharacters] = useState(false)
   const [copyLinkFeedback, setCopyLinkFeedback] = useState(false)
 
   const { data: saga, isLoading: sagaLoading } = useQuery({
@@ -225,7 +224,73 @@ function SagaDetailPage() {
   const wikiName = saga.title.replace(/ /g, '_')
   const wikiUrl = `https://onepiece.fandom.com/wiki/${wikiName}`
 
-  const displayedCharacters = showAllCharacters ? characters : characters.slice(0, 12)
+  const arcColumns: Column<Arc>[] = [
+    {
+      key: 'title',
+      label: 'Title',
+      sortValue: (row) => row.title,
+      render: (row) => (
+        <Link to={`/arcs/${row.arc_id}`} className="text-blue-600 hover:text-blue-800 hover:underline font-medium">
+          {row.title}
+        </Link>
+      ),
+    },
+    {
+      key: 'start_chapter',
+      label: 'Start Chapter',
+      sortValue: (row) => row.start_chapter,
+      render: (row) => row.start_chapter,
+    },
+    {
+      key: 'end_chapter',
+      label: 'End Chapter',
+      sortValue: (row) => row.end_chapter,
+      render: (row) => row.end_chapter,
+    },
+    {
+      key: 'total_chapters',
+      label: 'Total Chapters',
+      sortValue: (row) => row.end_chapter - row.start_chapter + 1,
+      render: (row) => row.end_chapter - row.start_chapter + 1,
+    },
+  ]
+
+  const characterColumns: Column<Character>[] = [
+    {
+      key: 'name',
+      label: 'Name',
+      sortValue: (row) => row.name ?? '',
+      render: (row) => (
+        <Link to={`/characters/${row.id}`} className="text-blue-600 hover:text-blue-800 hover:underline font-medium">
+          {row.name || 'Unknown'}
+        </Link>
+      ),
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      sortValue: (row) => row.status ?? '',
+      render: (row) => row.status || '-',
+    },
+    {
+      key: 'bounty',
+      label: 'Bounty',
+      sortValue: (row) => row.bounty ?? -1,
+      render: (row) => (row.bounty != null && row.bounty > 0 ? `₿${row.bounty.toLocaleString()}` : '-'),
+    },
+    {
+      key: 'first_appearance',
+      label: 'First Appearance',
+      sortValue: (row) => row.first_appearance ?? 0,
+      render: (row) => (row.first_appearance ? `Ch. ${row.first_appearance}` : '-'),
+    },
+    {
+      key: 'appearance_count',
+      label: 'Total Appearances',
+      sortValue: (row) => row.appearance_count ?? 0,
+      render: (row) => row.appearance_count ?? '-',
+    },
+  ]
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -403,123 +468,52 @@ function SagaDetailPage() {
         {/* Story Arcs */}
         {arcs.length > 0 && (
           <Card className="mb-8 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <SectionTitle>
-                  Story Arcs in This Saga
-                  <span className="ml-2 text-base text-gray-500">({arcs.length})</span>
-                </SectionTitle>
+            <div className="flex items-center gap-2 mb-5">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
               </div>
-              {arcs.length > 0 && (
-                <button
-                  onClick={() => setShowAllArcs(!showAllArcs)}
-                  className="flex items-center gap-2 px-4 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg font-medium transition-colors border border-purple-200"
-                >
-                  <span>{showAllArcs ? 'Collapse' : 'Expand'}</span>
-                  <FontAwesomeIcon icon={showAllArcs ? faChevronUp : faChevronDown} className="w-3 h-3" />
-                </button>
-              )}
+              <SectionTitle>
+                Story Arcs in This Saga
+                <span className="ml-2 text-base text-gray-500">({arcs.length})</span>
+              </SectionTitle>
             </div>
 
-            {showAllArcs ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {arcs.map((arc) => (
-                  <Link
-                    key={arc.arc_id}
-                    to={`/arcs/${arc.arc_id}`}
-                    className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all"
-                  >
-                    <h3 className="font-semibold text-gray-800 mb-2">{arc.title}</h3>
-                    <div className="space-y-1 text-sm text-gray-600">
-                      <p>
-                        <span className="font-medium">Chapters:</span> {arc.start_chapter} - {arc.end_chapter}
-                      </p>
-                      <p>
-                        <span className="font-medium">Total:</span> {arc.end_chapter - arc.start_chapter + 1} chapters
-                      </p>
-                    </div>
-                    <div className="mt-3 text-xs text-blue-600 font-medium">
-                      View Arc Details →
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="bg-gray-50 rounded-lg p-6">
-                <p className="text-gray-600 text-center">
-                  Click "Expand" to view all {arcs.length} arcs in this saga
-                </p>
-              </div>
-            )}
+            <SortableTable
+              columns={arcColumns}
+              data={arcs}
+              defaultSortField="start_chapter"
+              defaultSortDirection="asc"
+              rowKey={(row) => row.arc_id}
+              maxHeight="600px"
+            />
           </Card>
         )}
 
         {/* Characters */}
         {characters.length > 0 && (
           <Card className="hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
-                <SectionTitle>
-                  Characters Appearing
-                  <span className="ml-2 text-base text-gray-500">({characters.length})</span>
-                </SectionTitle>
+            <div className="flex items-center gap-2 mb-5">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
               </div>
+              <SectionTitle>
+                Characters Appearing
+                <span className="ml-2 text-base text-gray-500">({characters.length})</span>
+              </SectionTitle>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {displayedCharacters.map((character) => (
-                <Link
-                  key={character.id}
-                  to={`/characters/${character.id}`}
-                  className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all"
-                >
-                  <div className="flex flex-col h-full">
-                    <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2">
-                      {character.name || 'Unknown'}
-                    </h3>
-                    <div className="flex-1 space-y-1 text-sm text-gray-600">
-                      {character.status && (
-                        <p>
-                          <span className="font-medium">Status:</span> {character.status}
-                        </p>
-                      )}
-                      {character.first_appearance && (
-                        <p>
-                          <span className="font-medium">Debut:</span> Ch. {character.first_appearance}
-                        </p>
-                      )}
-                      {character.bounty !== null && character.bounty > 0 && (
-                        <p>
-                          <span className="font-medium">Bounty:</span> ₿{character.bounty.toLocaleString()}
-                        </p>
-                      )}
-                    </div>
-                    <div className="mt-3 text-xs text-blue-600 font-medium">
-                      View Details →
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-            {characters.length > 12 && (
-              <button
-                onClick={() => setShowAllCharacters(!showAllCharacters)}
-                className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg font-medium transition-colors border border-blue-200"
-              >
-                <span>{showAllCharacters ? 'Show Less' : `Show ${characters.length - 12} More Characters`}</span>
-                <FontAwesomeIcon icon={showAllCharacters ? faChevronUp : faChevronDown} className="w-3 h-3" />
-              </button>
-            )}
+            <SortableTable
+              columns={characterColumns}
+              data={characters}
+              defaultSortField="first_appearance"
+              defaultSortDirection="asc"
+              rowKey={(row) => row.id}
+              maxHeight="600px"
+            />
           </Card>
         )}
       </div>
