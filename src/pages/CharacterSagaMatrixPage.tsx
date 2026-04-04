@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import * as Slider from '@radix-ui/react-slider'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -89,7 +89,7 @@ function CharacterSagaMatrixPage() {
   const maxAppearance = characters.length > 0 ? Math.max(...characters.map((c) => c.appearance_count ?? 0)) : 100
   const maxSagaCount = characters.length > 0 ? Math.max(...characters.map((c) => c.saga_list?.length ?? 0)) : 11
 
-  const matrixData = useMemo(() => {
+  const matrixData = (() => {
     if (!characters.length || !sagas.length) return []
 
     let filtered = characters.filter(
@@ -119,18 +119,16 @@ function CharacterSagaMatrixPage() {
         avgPerSaga,
       }
     })
-  }, [characters, sagas, hideStrawHats, appearanceRange, sagaCountRange])
+  })()
 
-  const sortedMatrixData = useMemo(() => {
+  const sortedMatrixData = [...matrixData].sort((a, b) => {
     const { field, dir } = heatmapSort
-    return [...matrixData].sort((a, b) => {
-      let av: number, bv: number
-      if (field === 'total') { av = a.total; bv = b.total }
-      else if (field === 'name') { return dir === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name) }
-      else { av = a.sagaCounts[field] ?? 0; bv = b.sagaCounts[field] ?? 0 }
-      return dir === 'asc' ? av - bv : bv - av
-    })
-  }, [matrixData, heatmapSort])
+    let av: number, bv: number
+    if (field === 'total') { av = a.total; bv = b.total }
+    else if (field === 'name') { return dir === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name) }
+    else { av = a.sagaCounts[field] ?? 0; bv = b.sagaCounts[field] ?? 0 }
+    return dir === 'asc' ? av - bv : bv - av
+  })
 
   const toggleHeatmapSort = (field: string) => {
     setHeatmapSort((prev) =>
