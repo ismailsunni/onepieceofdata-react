@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import * as Slider from '@radix-ui/react-slider'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -12,6 +12,7 @@ interface SagaMatrixCharacter {
   name: string | null
   chapter_list: number[] | null
   appearance_count: number | null
+  saga_list: string[] | null
 }
 
 const STRAW_HAT_IDS = new Set([
@@ -34,7 +35,7 @@ async function fetchMatrixCharacters(): Promise<SagaMatrixCharacter[]> {
   }
   const { data, error } = await supabase
     .from('character')
-    .select('id, name, chapter_list, appearance_count')
+    .select('id, name, chapter_list, appearance_count, saga_list')
     .gt('appearance_count', 0)
     .order('appearance_count', { ascending: false })
   if (error) {
@@ -361,7 +362,8 @@ function ConcentrationTable({ data }: { data: Array<{ id: string; name: string; 
   const [totalRange, setTotalRange] = useState<[number, number]>([10, maxTotal])
 
   // Update ranges when data changes
-  useMemo(() => {
+  useEffect(() => {
+    if (data.length === 0) return
     const newMaxTotal = Math.max(...data.map((d) => d.total), 1)
     const newMaxSagas = Math.max(...data.map((d) => d.sagasAppeared), 1)
     setTotalRange((prev) => [prev[0], Math.min(prev[1], newMaxTotal) || newMaxTotal])
