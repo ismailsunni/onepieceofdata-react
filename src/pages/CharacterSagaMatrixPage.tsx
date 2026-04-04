@@ -72,6 +72,7 @@ function getCellColor(count: number): string {
 function CharacterSagaMatrixPage() {
   const [hideStrawHats, setHideStrawHats] = useState(false)
   const [appearanceRange, setAppearanceRange] = useState<[number, number]>([10, 9999])
+  const [sagaCountRange, setSagaCountRange] = useState<[number, number]>([1, 20])
   const [heatmapSort, setHeatmapSort] = useState<{ field: string; dir: 'asc' | 'desc' }>({ field: 'total', dir: 'desc' })
 
   const { data: characters = [], isLoading: charsLoading } = useQuery({
@@ -89,6 +90,7 @@ function CharacterSagaMatrixPage() {
 
     let filtered = characters.filter(
       (c) => (c.appearance_count ?? 0) >= appearanceRange[0] && (c.appearance_count ?? 0) <= appearanceRange[1]
+        && (c.saga_list?.length ?? 0) >= sagaCountRange[0] && (c.saga_list?.length ?? 0) <= sagaCountRange[1]
     )
     if (hideStrawHats) {
       filtered = filtered.filter((c) => !STRAW_HAT_IDS.has(c.id))
@@ -113,7 +115,7 @@ function CharacterSagaMatrixPage() {
         avgPerSaga,
       }
     })
-  }, [characters, sagas, hideStrawHats, appearanceRange])
+  }, [characters, sagas, hideStrawHats, appearanceRange, sagaCountRange])
 
   const sortedMatrixData = useMemo(() => {
     const { field, dir } = heatmapSort
@@ -188,6 +190,13 @@ function CharacterSagaMatrixPage() {
           max={Math.max(...characters.map((c) => c.appearance_count ?? 0), 100)}
           value={appearanceRange}
           onChange={setAppearanceRange}
+        />
+        <RangeSlider
+          label="Sagas appeared in"
+          min={1}
+          max={sagas.length || 11}
+          value={sagaCountRange}
+          onChange={setSagaCountRange}
         />
 
         <span className="text-xs text-gray-400">
@@ -343,6 +352,7 @@ function ConcentrationTable({ data }: { data: Array<{ id: string; name: string; 
   type SortField = 'avgPerSaga' | 'sagaPerApp' | 'total' | 'sagasAppeared' | 'name'
   const [sortField, setSortField] = useState<SortField>('avgPerSaga')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+  const [hideStrawHats, setHideStrawHats] = useState(false)
 
   const maxTotal = Math.max(...data.map((d) => d.total), 1)
   const maxSagas = Math.max(...data.map((d) => d.sagasAppeared), 1)
@@ -361,6 +371,7 @@ function ConcentrationTable({ data }: { data: Array<{ id: string; name: string; 
   const filtered = data.filter(
     (d) => d.sagasAppeared >= sagaRange[0] && d.sagasAppeared <= sagaRange[1]
       && d.total >= totalRange[0] && d.total <= totalRange[1]
+      && (!hideStrawHats || !STRAW_HAT_IDS.has(d.id))
   )
 
   const sorted = [...filtered].sort((a, b) => {
@@ -391,8 +402,13 @@ function ConcentrationTable({ data }: { data: Array<{ id: string; name: string; 
         <p className="text-sm text-gray-500">Avg/Saga = concentrated presence · Sagas/App = spread across sagas (supporting characters)</p>
       </div>
 
-      {/* Range filters */}
-      <div className="flex flex-wrap gap-6 mb-4 p-3 bg-gray-50 rounded-lg">
+      {/* Filters */}
+      <div className="flex flex-wrap gap-6 mb-4 p-3 bg-gray-50 rounded-lg items-center">
+        <label className="inline-flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+          <input type="checkbox" checked={hideStrawHats} onChange={(e) => setHideStrawHats(e.target.checked)}
+            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+          Hide Straw Hats
+        </label>
         <RangeSlider label="Sagas" min={1} max={maxSagas} value={sagaRange} onChange={setSagaRange} />
         <RangeSlider label="Total appearances" min={1} max={maxTotal} value={totalRange} onChange={setTotalRange} />
       </div>
