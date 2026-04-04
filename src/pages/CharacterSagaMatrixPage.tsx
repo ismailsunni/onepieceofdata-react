@@ -86,8 +86,8 @@ function CharacterSagaMatrixPage() {
     queryFn: fetchSagas,
   })
 
-  const maxAppearance = useMemo(() => characters.length > 0 ? Math.max(...characters.map((c) => c.appearance_count ?? 0)) : 100, [characters])
-  const maxSagaCount = useMemo(() => characters.length > 0 ? Math.max(...characters.map((c) => c.saga_list?.length ?? 0)) : 11, [characters])
+  const maxAppearance = characters.length > 0 ? Math.max(...characters.map((c) => c.appearance_count ?? 0)) : 100
+  const maxSagaCount = characters.length > 0 ? Math.max(...characters.map((c) => c.saga_list?.length ?? 0)) : 11
 
   const matrixData = useMemo(() => {
     if (!characters.length || !sagas.length) return []
