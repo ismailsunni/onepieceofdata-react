@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import * as Slider from '@radix-ui/react-slider'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { supabase } from '../services/supabase'
@@ -290,46 +291,92 @@ function CharacterSagaMatrixPage() {
   )
 }
 
-function ConcentrationTable({ data }: { data: Array<{ id: string; name: string; total: number; sagasAppeared: number; avgPerSaga: number }> }) {
-  const [sortField, setSortField] = useState<'avgPerSaga' | 'total' | 'sagasAppeared' | 'name'>('avgPerSaga')
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
-  const [minSagas, setMinSagas] = useState(3)
+function RangeSlider({ label, min, max, value, onChange }: {
+  label: string; min: number; max: number; value: [number, number]; onChange: (v: [number, number]) => void
+}) {
+  return (
+    <div className="flex-1 min-w-[200px]">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs font-medium text-gray-600">{label}</span>
+        <span className="text-xs text-gray-400">{value[0]} – {value[1]}</span>
+      </div>
+      <Slider.Root
+        className="relative flex items-center select-none touch-none w-full h-5"
+        value={value}
+        onValueChange={(v) => onChange(v as [number, number])}
+        min={min}
+        max={max}
+        step={1}
+        minStepsBetweenThumbs={1}
+      >
+        <Slider.Track className="bg-gray-200 relative grow rounded-full h-1.5">
+          <Slider.Range className="absolute bg-blue-500 rounded-full h-full" />
+        </Slider.Track>
+        <Slider.Thumb className="block w-4 h-4 bg-white border-2 border-blue-500 rounded-full hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 cursor-pointer" />
+        <Slider.Thumb className="block w-4 h-4 bg-white border-2 border-blue-500 rounded-full hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 cursor-pointer" />
+      </Slider.Root>
+    </div>
+  )
+}
 
-  const filtered = data.filter((d) => d.sagasAppeared >= minSagas)
+function ConcentrationTable({ data }: { data: Array<{ id: string; name: string; total: number; sagasAppeared: number; avgPerSaga: number }> }) {
+  type SortField = 'avgPerSaga' | 'sagaPerApp' | 'total' | 'sagasAppeared' | 'name'
+  const [sortField, setSortField] = useState<SortField>('avgPerSaga')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+
+  const maxTotal = Math.max(...data.map((d) => d.total), 1)
+  const maxSagas = Math.max(...data.map((d) => d.sagasAppeared), 1)
+
+  const [sagaRange, setSagaRange] = useState<[number, number]>([3, maxSagas])
+  const [totalRange, setTotalRange] = useState<[number, number]>([10, maxTotal])
+
+  // Update ranges when data changes
+  useMemo(() => {
+    const newMaxTotal = Math.max(...data.map((d) => d.total), 1)
+    const newMaxSagas = Math.max(...data.map((d) => d.sagasAppeared), 1)
+    setTotalRange((prev) => [prev[0], Math.min(prev[1], newMaxTotal) || newMaxTotal])
+    setSagaRange((prev) => [prev[0], Math.min(prev[1], newMaxSagas) || newMaxSagas])
+  }, [data])
+
+  const filtered = data.filter(
+    (d) => d.sagasAppeared >= sagaRange[0] && d.sagasAppeared <= sagaRange[1]
+      && d.total >= totalRange[0] && d.total <= totalRange[1]
+  )
+
   const sorted = [...filtered].sort((a, b) => {
-    const av = a[sortField] ?? 0
-    const bv = b[sortField] ?? 0
+    let av: number | string, bv: number | string
+    if (sortField === 'sagaPerApp') {
+      av = a.sagasAppeared > 0 ? a.sagasAppeared / a.total : 0
+      bv = b.sagasAppeared > 0 ? b.sagasAppeared / b.total : 0
+    } else if (sortField === 'name') {
+      av = a.name; bv = b.name
+    } else {
+      av = a[sortField] ?? 0; bv = b[sortField] ?? 0
+    }
     if (typeof av === 'string' && typeof bv === 'string') return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av)
     return sortDir === 'asc' ? Number(av) - Number(bv) : Number(bv) - Number(av)
   })
 
-  const toggleSort = (field: typeof sortField) => {
+  const toggleSort = (field: SortField) => {
     if (sortField === field) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
     else { setSortField(field); setSortDir('desc') }
   }
 
-  const arrow = (field: typeof sortField) => sortField === field ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''
+  const arrow = (field: SortField) => sortField === field ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 mt-6">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900">Appearance Concentration</h2>
-          <p className="text-sm text-gray-500">Total appearances ÷ number of sagas = avg appearances per saga</p>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <label htmlFor="min-sagas">Min sagas:</label>
-          <input
-            id="min-sagas"
-            type="number"
-            min={1}
-            max={20}
-            value={minSagas}
-            onChange={(e) => setMinSagas(Number(e.target.value) || 1)}
-            className="w-16 border border-gray-300 rounded-lg px-2 py-1 text-sm"
-          />
-        </div>
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold text-gray-900">Appearance Concentration</h2>
+        <p className="text-sm text-gray-500">Avg/Saga = concentrated presence · Sagas/App = spread across sagas (supporting characters)</p>
       </div>
+
+      {/* Range filters */}
+      <div className="flex flex-wrap gap-6 mb-4 p-3 bg-gray-50 rounded-lg">
+        <RangeSlider label="Sagas" min={1} max={maxSagas} value={sagaRange} onChange={setSagaRange} />
+        <RangeSlider label="Total appearances" min={1} max={maxTotal} value={totalRange} onChange={setTotalRange} />
+      </div>
+
       <div className="overflow-x-auto" style={{ maxHeight: '500px', overflowY: 'auto' }}>
         <table className="w-full text-sm border-collapse">
           <thead className="bg-gray-50 sticky top-0">
@@ -346,23 +393,30 @@ function ConcentrationTable({ data }: { data: Array<{ id: string; name: string; 
               <th className="text-right px-3 py-2 font-semibold text-gray-700 border-b border-gray-200 cursor-pointer select-none hover:bg-gray-100" onClick={() => toggleSort('avgPerSaga')}>
                 Avg/Saga{arrow('avgPerSaga')}
               </th>
+              <th className="text-right px-3 py-2 font-semibold text-gray-700 border-b border-gray-200 cursor-pointer select-none hover:bg-gray-100" onClick={() => toggleSort('sagaPerApp')}>
+                Sagas/App{arrow('sagaPerApp')}
+              </th>
             </tr>
           </thead>
           <tbody>
-            {sorted.map((row, idx) => (
-              <tr key={row.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                <td className="px-3 py-2 border-b border-gray-100">
-                  <Link to={`/characters/${row.id}`} className="text-blue-600 hover:underline font-medium">
-                    {row.name}
-                  </Link>
-                </td>
-                <td className="text-right px-3 py-2 border-b border-gray-100">{row.total}</td>
-                <td className="text-right px-3 py-2 border-b border-gray-100">{row.sagasAppeared}</td>
-                <td className="text-right px-3 py-2 border-b border-gray-100 font-semibold">{row.avgPerSaga.toFixed(1)}</td>
-              </tr>
-            ))}
+            {sorted.map((row, idx) => {
+              const sagaPerApp = row.total > 0 ? row.sagasAppeared / row.total : 0
+              return (
+                <tr key={row.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <td className="px-3 py-2 border-b border-gray-100">
+                    <Link to={`/characters/${row.id}`} className="text-blue-600 hover:underline font-medium">
+                      {row.name}
+                    </Link>
+                  </td>
+                  <td className="text-right px-3 py-2 border-b border-gray-100">{row.total}</td>
+                  <td className="text-right px-3 py-2 border-b border-gray-100">{row.sagasAppeared}</td>
+                  <td className="text-right px-3 py-2 border-b border-gray-100 font-semibold">{row.avgPerSaga.toFixed(1)}</td>
+                  <td className="text-right px-3 py-2 border-b border-gray-100 font-semibold text-purple-700">{sagaPerApp.toFixed(3)}</td>
+                </tr>
+              )
+            })}
             {sorted.length === 0 && (
-              <tr><td colSpan={4} className="text-center py-8 text-gray-400">No characters match the filters</td></tr>
+              <tr><td colSpan={5} className="text-center py-8 text-gray-400">No characters match the filters</td></tr>
             )}
           </tbody>
         </table>
