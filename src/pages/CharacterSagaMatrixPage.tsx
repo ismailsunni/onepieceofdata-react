@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import * as Slider from '@radix-ui/react-slider'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -358,21 +358,16 @@ function ConcentrationTable({ data }: { data: Array<{ id: string; name: string; 
   const maxTotal = Math.max(...data.map((d) => d.total), 1)
   const maxSagas = Math.max(...data.map((d) => d.sagasAppeared), 1)
 
-  const [sagaRange, setSagaRange] = useState<[number, number]>([3, maxSagas])
-  const [totalRange, setTotalRange] = useState<[number, number]>([10, maxTotal])
+  const [sagaRange, setSagaRange] = useState<[number, number]>([3, 99])
+  const [totalRange, setTotalRange] = useState<[number, number]>([10, 9999])
 
-  // Update ranges when data changes
-  useEffect(() => {
-    if (data.length === 0) return
-    const newMaxTotal = Math.max(...data.map((d) => d.total), 1)
-    const newMaxSagas = Math.max(...data.map((d) => d.sagasAppeared), 1)
-    setTotalRange((prev) => [prev[0], Math.min(prev[1], newMaxTotal) || newMaxTotal])
-    setSagaRange((prev) => [prev[0], Math.min(prev[1], newMaxSagas) || newMaxSagas])
-  }, [data])
+  // Clamp ranges to actual max values
+  const effectiveSagaRange: [number, number] = [sagaRange[0], Math.min(sagaRange[1], maxSagas)]
+  const effectiveTotalRange: [number, number] = [totalRange[0], Math.min(totalRange[1], maxTotal)]
 
   const filtered = data.filter(
-    (d) => d.sagasAppeared >= sagaRange[0] && d.sagasAppeared <= sagaRange[1]
-      && d.total >= totalRange[0] && d.total <= totalRange[1]
+    (d) => d.sagasAppeared >= effectiveSagaRange[0] && d.sagasAppeared <= effectiveSagaRange[1]
+      && d.total >= effectiveTotalRange[0] && d.total <= effectiveTotalRange[1]
       && (!hideStrawHats || !STRAW_HAT_IDS.has(d.id))
   )
 
