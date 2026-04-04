@@ -71,7 +71,7 @@ function getCellColor(count: number): string {
 
 function CharacterSagaMatrixPage() {
   const [hideStrawHats, setHideStrawHats] = useState(false)
-  const [minAppearances, setMinAppearances] = useState(10)
+  const [appearanceRange, setAppearanceRange] = useState<[number, number]>([10, 9999])
 
   const { data: characters = [], isLoading: charsLoading } = useQuery({
     queryKey: ['saga-matrix', 'characters'],
@@ -87,7 +87,7 @@ function CharacterSagaMatrixPage() {
     if (!characters.length || !sagas.length) return []
 
     let filtered = characters.filter(
-      (c) => (c.appearance_count ?? 0) >= minAppearances
+      (c) => (c.appearance_count ?? 0) >= appearanceRange[0] && (c.appearance_count ?? 0) <= appearanceRange[1]
     )
     if (hideStrawHats) {
       filtered = filtered.filter((c) => !STRAW_HAT_IDS.has(c.id))
@@ -112,7 +112,7 @@ function CharacterSagaMatrixPage() {
         avgPerSaga,
       }
     })
-  }, [characters, sagas, hideStrawHats, minAppearances])
+  }, [characters, sagas, hideStrawHats, appearanceRange])
 
   const isLoading = charsLoading || sagasLoading
 
@@ -162,20 +162,13 @@ function CharacterSagaMatrixPage() {
           Hide Straw Hat Pirates
         </label>
 
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <label htmlFor="min-appearances">Min appearances:</label>
-          <input
-            id="min-appearances"
-            type="number"
-            min={1}
-            max={1000}
-            value={minAppearances}
-            onChange={(e) =>
-              setMinAppearances(Math.max(1, parseInt(e.target.value) || 1))
-            }
-            className="w-20 px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
+        <RangeSlider
+          label="Total appearances"
+          min={1}
+          max={Math.max(...characters.map((c) => c.appearance_count ?? 0), 100)}
+          value={appearanceRange}
+          onChange={setAppearanceRange}
+        />
 
         <span className="text-xs text-gray-400">
           {matrixData.length} characters shown
