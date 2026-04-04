@@ -86,6 +86,20 @@ async function fetchCharactersBySaga(sagaId: string): Promise<Character[]> {
   }
 }
 
+async function fetchVolumeRange(startChapter: number, endChapter: number): Promise<{ startVol: number | null; endVol: number | null }> {
+  if (!supabase) return { startVol: null, endVol: null }
+  const { data } = await supabase
+    .from('chapter')
+    .select('volume')
+    .gte('number', startChapter)
+    .lte('number', endChapter)
+    .not('volume', 'is', null)
+    .order('volume', { ascending: true })
+  if (!data || data.length === 0) return { startVol: null, endVol: null }
+  const volumes = data.map(d => d.volume).filter(Boolean) as number[]
+  return { startVol: Math.min(...volumes), endVol: Math.max(...volumes) }
+}
+
 async function fetchSagas(): Promise<Saga[]> {
   try {
     if (!supabase) {
@@ -149,6 +163,12 @@ function SagaDetailPage() {
   const { data: characters = [] } = useQuery({
     queryKey: ['saga-characters', saga?.saga_id],
     queryFn: () => fetchCharactersBySaga(saga!.saga_id),
+    enabled: !!saga,
+  })
+
+  const { data: volumeRange } = useQuery({
+    queryKey: ['saga-volumes', saga?.start_chapter, saga?.end_chapter],
+    queryFn: () => fetchVolumeRange(saga!.start_chapter, saga!.end_chapter),
     enabled: !!saga,
   })
 
@@ -465,6 +485,14 @@ function SagaDetailPage() {
               <dt className="text-sm font-medium text-gray-500">Chapter Range</dt>
               <dd className="text-sm font-semibold text-gray-900 text-right ml-4">{chapterRange}</dd>
             </div>
+            {volumeRange?.startVol && (
+            <div className="flex justify-between items-start py-2 border-b border-gray-100">
+              <dt className="text-sm font-medium text-gray-500">Volumes</dt>
+              <dd className="text-sm font-semibold text-gray-900 text-right ml-4">
+                Vol. {volumeRange.startVol}{volumeRange.endVol !== volumeRange.startVol ? ` – ${volumeRange.endVol}` : ''}
+              </dd>
+            </div>
+            )}
             <div className="flex justify-between items-start py-2 border-b border-gray-100">
               <dt className="text-sm font-medium text-gray-500">Number of Arcs</dt>
               <dd className="text-sm font-semibold text-gray-900 text-right ml-4">{arcs.length}</dd>

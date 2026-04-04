@@ -96,6 +96,14 @@ function CharacterTable({
         header: 'Appearances',
         cell: (info) => info.getValue() || '-',
       }),
+      columnHelper.accessor('saga_list', {
+        header: 'Sagas',
+        cell: (info) => {
+          const sagas = info.getValue()
+          return sagas?.length || '-'
+        },
+        sortingFn: (a, b) => (a.original.saga_list?.length ?? 0) - (b.original.saga_list?.length ?? 0),
+      }),
       columnHelper.accessor('cover_appearance_count', {
         header: 'Cover Appearances',
         cell: (info) => {

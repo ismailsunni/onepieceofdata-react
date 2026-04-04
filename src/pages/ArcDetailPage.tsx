@@ -490,6 +490,20 @@ function ArcDetailPage() {
               <dt className="text-sm font-medium text-gray-500">Chapter Range</dt>
               <dd className="text-sm font-semibold text-gray-900 text-right ml-4">{chapterRange}</dd>
             </div>
+            {(() => {
+              const vols = chapters.map(c => c.volume).filter(Boolean) as number[]
+              if (vols.length === 0) return null
+              const startVol = Math.min(...vols)
+              const endVol = Math.max(...vols)
+              return (
+                <div className="flex justify-between items-start py-2 border-b border-gray-100">
+                  <dt className="text-sm font-medium text-gray-500">Volumes</dt>
+                  <dd className="text-sm font-semibold text-gray-900 text-right ml-4">
+                    Vol. {startVol}{endVol !== startVol ? ` – ${endVol}` : ''}
+                  </dd>
+                </div>
+              )
+            })()}
           </dl>
 
           {arc.description && (
