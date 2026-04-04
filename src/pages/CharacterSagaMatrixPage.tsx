@@ -72,8 +72,10 @@ function getCellColor(count: number): string {
 
 function CharacterSagaMatrixPage() {
   const [hideStrawHats, setHideStrawHats] = useState(false)
+  const maxAppearance = useMemo(() => Math.max(...characters.map((c) => c.appearance_count ?? 0), 1), [characters])
+  const maxSagaCount = useMemo(() => Math.max(...characters.map((c) => c.saga_list?.length ?? 0), 1), [characters])
   const [appearanceRange, setAppearanceRange] = useState<[number, number]>([10, 9999])
-  const [sagaCountRange, setSagaCountRange] = useState<[number, number]>([1, 20])
+  const [sagaCountRange, setSagaCountRange] = useState<[number, number]>([2, 99])
   const [heatmapSort, setHeatmapSort] = useState<{ field: string; dir: 'asc' | 'desc' }>({ field: 'total', dir: 'desc' })
 
   const { data: characters = [], isLoading: charsLoading } = useQuery({
@@ -90,8 +92,8 @@ function CharacterSagaMatrixPage() {
     if (!characters.length || !sagas.length) return []
 
     let filtered = characters.filter(
-      (c) => (c.appearance_count ?? 0) >= appearanceRange[0] && (c.appearance_count ?? 0) <= appearanceRange[1]
-        && (c.saga_list?.length ?? 0) >= sagaCountRange[0] && (c.saga_list?.length ?? 0) <= sagaCountRange[1]
+      (c) => (c.appearance_count ?? 0) >= appearanceRange[0] && (c.appearance_count ?? 0) <= Math.min(appearanceRange[1], maxAppearance)
+        && (c.saga_list?.length ?? 0) >= sagaCountRange[0] && (c.saga_list?.length ?? 0) <= Math.min(sagaCountRange[1], maxSagaCount)
     )
     if (hideStrawHats) {
       filtered = filtered.filter((c) => !STRAW_HAT_IDS.has(c.id))
@@ -188,15 +190,15 @@ function CharacterSagaMatrixPage() {
         <RangeSlider
           label="Total appearances"
           min={1}
-          max={Math.max(...characters.map((c) => c.appearance_count ?? 0), 100)}
-          value={appearanceRange}
+          max={maxAppearance}
+          value={[appearanceRange[0], Math.min(appearanceRange[1], maxAppearance)]}
           onChange={setAppearanceRange}
         />
         <RangeSlider
           label="Sagas appeared in"
           min={1}
-          max={sagas.length || 11}
-          value={sagaCountRange}
+          max={maxSagaCount}
+          value={[sagaCountRange[0], Math.min(sagaCountRange[1], maxSagaCount)]}
           onChange={setSagaCountRange}
         />
 
@@ -358,7 +360,7 @@ function ConcentrationTable({ data }: { data: Array<{ id: string; name: string; 
   const maxTotal = Math.max(...data.map((d) => d.total), 1)
   const maxSagas = Math.max(...data.map((d) => d.sagasAppeared), 1)
 
-  const [sagaRange, setSagaRange] = useState<[number, number]>([3, 99])
+  const [sagaRange, setSagaRange] = useState<[number, number]>([2, 99])
   const [totalRange, setTotalRange] = useState<[number, number]>([10, 9999])
 
   // Clamp ranges to actual max values
@@ -406,8 +408,8 @@ function ConcentrationTable({ data }: { data: Array<{ id: string; name: string; 
             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
           Hide Straw Hats
         </label>
-        <RangeSlider label="Sagas" min={1} max={maxSagas} value={sagaRange} onChange={setSagaRange} />
-        <RangeSlider label="Total appearances" min={1} max={maxTotal} value={totalRange} onChange={setTotalRange} />
+        <RangeSlider label="Sagas" min={1} max={maxSagas} value={[sagaRange[0], Math.min(sagaRange[1], maxSagas)]} onChange={setSagaRange} />
+        <RangeSlider label="Total appearances" min={1} max={maxTotal} value={[totalRange[0], Math.min(totalRange[1], maxTotal)]} onChange={setTotalRange} />
       </div>
 
       <div className="overflow-x-auto" style={{ maxHeight: '500px', overflowY: 'auto' }}>
