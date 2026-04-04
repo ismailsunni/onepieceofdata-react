@@ -100,11 +100,15 @@ function CharacterSagaMatrixPage() {
           (ch) => ch >= saga.start_chapter && ch <= saga.end_chapter
         ).length
       }
+      const sagasAppeared = Object.values(sagaCounts).filter((v) => v > 0).length
+      const avgPerSaga = sagasAppeared > 0 ? (char.appearance_count ?? 0) / sagasAppeared : 0
       return {
         id: char.id,
         name: char.name ?? char.id,
         total: char.appearance_count ?? 0,
         sagaCounts,
+        sagasAppeared,
+        avgPerSaga,
       }
     })
   }, [characters, sagas, hideStrawHats, minAppearances])
@@ -279,6 +283,91 @@ function CharacterSagaMatrixPage() {
           </table>
         </div>
       </div>
+
+      {/* Concentration Ranking */}
+      <ConcentrationTable data={matrixData} />
+    </div>
+  )
+}
+
+function ConcentrationTable({ data }: { data: Array<{ id: string; name: string; total: number; sagasAppeared: number; avgPerSaga: number }> }) {
+  const [sortField, setSortField] = useState<'avgPerSaga' | 'total' | 'sagasAppeared' | 'name'>('avgPerSaga')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+  const [minSagas, setMinSagas] = useState(3)
+
+  const filtered = data.filter((d) => d.sagasAppeared >= minSagas)
+  const sorted = [...filtered].sort((a, b) => {
+    const av = a[sortField] ?? 0
+    const bv = b[sortField] ?? 0
+    if (typeof av === 'string' && typeof bv === 'string') return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av)
+    return sortDir === 'asc' ? Number(av) - Number(bv) : Number(bv) - Number(av)
+  })
+
+  const toggleSort = (field: typeof sortField) => {
+    if (sortField === field) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    else { setSortField(field); setSortDir('desc') }
+  }
+
+  const arrow = (field: typeof sortField) => sortField === field ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 mt-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">Appearance Concentration</h2>
+          <p className="text-sm text-gray-500">Total appearances ÷ number of sagas = avg appearances per saga</p>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <label htmlFor="min-sagas">Min sagas:</label>
+          <input
+            id="min-sagas"
+            type="number"
+            min={1}
+            max={20}
+            value={minSagas}
+            onChange={(e) => setMinSagas(Number(e.target.value) || 1)}
+            className="w-16 border border-gray-300 rounded-lg px-2 py-1 text-sm"
+          />
+        </div>
+      </div>
+      <div className="overflow-x-auto" style={{ maxHeight: '500px', overflowY: 'auto' }}>
+        <table className="w-full text-sm border-collapse">
+          <thead className="bg-gray-50 sticky top-0">
+            <tr>
+              <th className="text-left px-3 py-2 font-semibold text-gray-700 border-b border-gray-200 cursor-pointer select-none hover:bg-gray-100" onClick={() => toggleSort('name')}>
+                Character{arrow('name')}
+              </th>
+              <th className="text-right px-3 py-2 font-semibold text-gray-700 border-b border-gray-200 cursor-pointer select-none hover:bg-gray-100" onClick={() => toggleSort('total')}>
+                Total App.{arrow('total')}
+              </th>
+              <th className="text-right px-3 py-2 font-semibold text-gray-700 border-b border-gray-200 cursor-pointer select-none hover:bg-gray-100" onClick={() => toggleSort('sagasAppeared')}>
+                Sagas{arrow('sagasAppeared')}
+              </th>
+              <th className="text-right px-3 py-2 font-semibold text-gray-700 border-b border-gray-200 cursor-pointer select-none hover:bg-gray-100" onClick={() => toggleSort('avgPerSaga')}>
+                Avg/Saga{arrow('avgPerSaga')}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map((row, idx) => (
+              <tr key={row.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                <td className="px-3 py-2 border-b border-gray-100">
+                  <Link to={`/characters/${row.id}`} className="text-blue-600 hover:underline font-medium">
+                    {row.name}
+                  </Link>
+                </td>
+                <td className="text-right px-3 py-2 border-b border-gray-100">{row.total}</td>
+                <td className="text-right px-3 py-2 border-b border-gray-100">{row.sagasAppeared}</td>
+                <td className="text-right px-3 py-2 border-b border-gray-100 font-semibold">{row.avgPerSaga.toFixed(1)}</td>
+              </tr>
+            ))}
+            {sorted.length === 0 && (
+              <tr><td colSpan={4} className="text-center py-8 text-gray-400">No characters match the filters</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-xs text-gray-400 mt-2">{sorted.length} characters shown</p>
     </div>
   )
 }
