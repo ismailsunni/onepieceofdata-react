@@ -72,8 +72,6 @@ function getCellColor(count: number): string {
 
 function CharacterSagaMatrixPage() {
   const [hideStrawHats, setHideStrawHats] = useState(false)
-  const maxAppearance = useMemo(() => Math.max(...characters.map((c) => c.appearance_count ?? 0), 1), [characters])
-  const maxSagaCount = useMemo(() => Math.max(...characters.map((c) => c.saga_list?.length ?? 0), 1), [characters])
   const [appearanceRange, setAppearanceRange] = useState<[number, number]>([10, 9999])
   const [sagaCountRange, setSagaCountRange] = useState<[number, number]>([2, 99])
   const [heatmapSort, setHeatmapSort] = useState<{ field: string; dir: 'asc' | 'desc' }>({ field: 'total', dir: 'desc' })
@@ -87,6 +85,9 @@ function CharacterSagaMatrixPage() {
     queryKey: ['saga-matrix', 'sagas'],
     queryFn: fetchSagas,
   })
+
+  const maxAppearance = useMemo(() => characters.length > 0 ? Math.max(...characters.map((c) => c.appearance_count ?? 0)) : 100, [characters])
+  const maxSagaCount = useMemo(() => characters.length > 0 ? Math.max(...characters.map((c) => c.saga_list?.length ?? 0)) : 11, [characters])
 
   const matrixData = useMemo(() => {
     if (!characters.length || !sagas.length) return []
