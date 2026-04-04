@@ -72,6 +72,7 @@ function getCellColor(count: number): string {
 function CharacterSagaMatrixPage() {
   const [hideStrawHats, setHideStrawHats] = useState(false)
   const [appearanceRange, setAppearanceRange] = useState<[number, number]>([10, 9999])
+  const [heatmapSort, setHeatmapSort] = useState<{ field: string; dir: 'asc' | 'desc' }>({ field: 'total', dir: 'desc' })
 
   const { data: characters = [], isLoading: charsLoading } = useQuery({
     queryKey: ['saga-matrix', 'characters'],
@@ -113,6 +114,25 @@ function CharacterSagaMatrixPage() {
       }
     })
   }, [characters, sagas, hideStrawHats, appearanceRange])
+
+  const sortedMatrixData = useMemo(() => {
+    const { field, dir } = heatmapSort
+    return [...matrixData].sort((a, b) => {
+      let av: number, bv: number
+      if (field === 'total') { av = a.total; bv = b.total }
+      else if (field === 'name') { return dir === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name) }
+      else { av = a.sagaCounts[field] ?? 0; bv = b.sagaCounts[field] ?? 0 }
+      return dir === 'asc' ? av - bv : bv - av
+    })
+  }, [matrixData, heatmapSort])
+
+  const toggleHeatmapSort = (field: string) => {
+    setHeatmapSort((prev) =>
+      prev.field === field ? { field, dir: prev.dir === 'asc' ? 'desc' : 'asc' } : { field, dir: 'desc' }
+    )
+  }
+
+  const heatmapArrow = (field: string) => heatmapSort.field === field ? (heatmapSort.dir === 'asc' ? ' ▲' : ' ▼') : ''
 
   const isLoading = charsLoading || sagasLoading
 
@@ -171,7 +191,7 @@ function CharacterSagaMatrixPage() {
         />
 
         <span className="text-xs text-gray-400">
-          {matrixData.length} characters shown
+          {sortedMatrixData.length} characters shown
         </span>
       </div>
 
@@ -204,13 +224,18 @@ function CharacterSagaMatrixPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="sticky left-0 z-20 bg-gray-50 px-3 py-2 text-left font-semibold text-gray-700 min-w-[160px] border-r border-gray-200">
-                  Character
+                <th
+                  className="sticky left-0 z-20 bg-gray-50 px-3 py-2 text-left font-semibold text-gray-700 min-w-[160px] border-r border-gray-200 cursor-pointer hover:bg-gray-100 select-none"
+                  onClick={() => toggleHeatmapSort('name')}
+                >
+                  Character{heatmapArrow('name')}
                 </th>
                 {sagas.map((saga) => (
                   <th
                     key={saga.saga_id}
-                    className="bg-gray-50 px-1 py-2 text-center font-medium text-gray-600 min-w-[60px]"
+                    className="bg-gray-50 px-1 py-2 text-center font-medium text-gray-600 min-w-[60px] cursor-pointer hover:bg-gray-100 select-none"
+                    onClick={() => toggleHeatmapSort(saga.saga_id)}
+                    title={`Sort by ${saga.title}`}
                   >
                     <div
                       className="writing-vertical whitespace-nowrap text-xs"
@@ -221,19 +246,21 @@ function CharacterSagaMatrixPage() {
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                       }}
-                      title={saga.title}
                     >
-                      {saga.title}
+                      {saga.title}{heatmapArrow(saga.saga_id)}
                     </div>
                   </th>
                 ))}
-                <th className="sticky right-0 z-20 bg-gray-50 px-3 py-2 text-center font-semibold text-gray-700 min-w-[60px] border-l border-gray-200">
-                  Total
+                <th
+                  className="sticky right-0 z-20 bg-gray-50 px-3 py-2 text-center font-semibold text-gray-700 min-w-[60px] border-l border-gray-200 cursor-pointer hover:bg-gray-100 select-none"
+                  onClick={() => toggleHeatmapSort('total')}
+                >
+                  Total{heatmapArrow('total')}
                 </th>
               </tr>
             </thead>
             <tbody>
-              {matrixData.map((row, idx) => (
+              {sortedMatrixData.map((row, idx) => (
                 <tr
                   key={row.id}
                   className={`border-b border-gray-100 hover:bg-gray-50/50 transition-colors ${idx % 2 === 0 ? '' : 'bg-gray-50/30'}`}
@@ -263,7 +290,7 @@ function CharacterSagaMatrixPage() {
                   </td>
                 </tr>
               ))}
-              {matrixData.length === 0 && (
+              {sortedMatrixData.length === 0 && (
                 <tr>
                   <td
                     colSpan={sagas.length + 2}
