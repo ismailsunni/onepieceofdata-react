@@ -72,6 +72,7 @@ function getCellColor(count: number): string {
 
 function CharacterSagaMatrixPage() {
   const [hideStrawHats, setHideStrawHats] = useState(false)
+  const [nameSearch, setNameSearch] = useState('')
   const [appearanceRange, setAppearanceRange] = useState<[number, number]>([
     10, 9999,
   ])
@@ -115,6 +116,12 @@ function CharacterSagaMatrixPage() {
     )
     if (hideStrawHats) {
       filtered = filtered.filter((c) => !STRAW_HAT_IDS.has(c.id))
+    }
+    if (nameSearch.trim()) {
+      const q = nameSearch.trim().toLowerCase()
+      filtered = filtered.filter((c) =>
+        (c.name ?? c.id).toLowerCase().includes(q)
+      )
     }
 
     return filtered.map((char) => {
@@ -216,6 +223,14 @@ function CharacterSagaMatrixPage() {
           />
           Hide Straw Hat Pirates
         </label>
+
+        <input
+          type="text"
+          value={nameSearch}
+          onChange={(e) => setNameSearch(e.target.value)}
+          placeholder="Search character name…"
+          className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors w-48"
+        />
 
         <RangeSlider
           label="Total appearances"
@@ -382,7 +397,7 @@ function RangeSlider({
         min={min}
         max={max}
         step={1}
-        minStepsBetweenThumbs={1}
+        minStepsBetweenThumbs={0}
       >
         <Slider.Track className="bg-gray-200 relative grow rounded-full h-1.5">
           <Slider.Range className="absolute bg-blue-500 rounded-full h-full" />
