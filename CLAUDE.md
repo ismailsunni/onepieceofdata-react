@@ -8,59 +8,79 @@ One Piece of Data is a React-based data exploration application for visualizing 
 
 ## Tech Stack
 
-- **Frontend:** React 18+ with TypeScript, built with Vite
-- **Routing:** React Router v6 with HashRouter (for GitHub Pages compatibility)
+- **Frontend:** React 19 with TypeScript, built with Vite
+- **Routing:** React Router v7 with HashRouter (for GitHub Pages compatibility)
 - **State Management:** React Context API + Custom Hooks
-- **UI Framework:** TailwindCSS + Headless UI
+- **UI Framework:** TailwindCSS v4 + Headless UI + Radix UI (slider)
 - **Tables:** TanStack Table (React Table v8)
-- **Charts:** Recharts (primary) + Chart.js wrapper
+- **Charts:** Recharts (primary)
+- **Graph Visualization:** Sigma.js + Graphology + vis-network
+- **Icons:** Font Awesome (`@fortawesome/react-fontawesome`)
 - **Data Fetching:** React Query (TanStack Query)
+- **Notifications:** react-hot-toast
+- **Markdown:** react-markdown
 - **Backend:** Supabase (PostgreSQL database, REST API)
 - **Hosting:** GitHub Pages
 - **Testing:** Vitest + React Testing Library
+- **Linting/Formatting:** ESLint + Prettier + Husky (pre-commit hooks)
 
 ## Architecture
 
 ### Folder Structure
 
-The project follows a feature-based architecture:
+The project uses a page-based architecture (not feature-based):
 
 ```
 src/
-├── app/                    # App root and router setup
-├── features/               # Feature-based modules
-│   ├── characters/         # Character listing, detail pages
-│   ├── arcs/              # Story arc features
-│   ├── devilfruits/       # Devil fruit features
-│   └── analytics/         # Data visualization
-├── shared/                # Shared components, hooks, utilities
-│   ├── components/        # Reusable UI components
-│   ├── hooks/             # Custom React hooks
-│   ├── utils/             # Helper functions
-│   └── types/             # TypeScript type definitions
-├── services/              # API clients and services
-└── context/               # React Context providers
+├── App.tsx                 # App root and router setup
+├── main.tsx                # Entry point
+├── pages/                  # Route-level page components
+│   ├── CharactersPage.tsx, CharacterDetailPage.tsx, ...
+│   ├── ArcsPage.tsx, ArcDetailPage.tsx, ...
+│   ├── SagasPage.tsx, SagaDetailPage.tsx, ...
+│   ├── ChaptersPage.tsx, ChapterDetailPage.tsx, ...
+│   ├── VolumesPage.tsx, VolumeDetailPage.tsx, ...
+│   ├── AnalyticsPage.tsx, NetworkAnalysisPage.tsx, ...
+│   ├── ChatPage.tsx, AboutPage.tsx, HomePage.tsx, ...
+│   └── (many analytics sub-pages)
+├── components/             # UI components
+│   ├── analytics/          # Analytics-specific components (StatCard, ChartCard, etc.)
+│   ├── common/             # Reusable components (SortableTable, SkeletonCard, etc.)
+│   └── navigation/         # Navigation components (DesktopDropdown, MobileAccordion)
+├── services/               # API clients and services
+│   ├── supabase.ts         # Supabase client
+│   ├── characterService.ts, arcService.ts, sagaService.ts, ...
+│   ├── chapterService.ts, volumeService.ts
+│   ├── analyticsService.ts, statsService.ts, searchService.ts
+│   ├── chatService.ts, auth.ts
+│   └── analytics/          # Analytics-specific services
+├── contexts/               # React Context providers
+│   └── AuthContext.tsx
+├── types/                  # TypeScript type definitions
+│   ├── arc.ts, character.ts, chapter.ts, volume.ts
+├── utils/                  # Helper functions
+│   ├── logger.ts, mergeChartWithWatermark.ts
+├── constants/              # Shared constants
+└── scripts/                # Utility scripts
 ```
-
-Each feature module contains:
-- `components/` - Feature-specific UI components
-- `hooks/` - Feature-specific custom hooks
-- `services/` - API calls for that feature
-- `pages/` - Route-level page components
 
 ### Data Model
 
-The application works with three main entities:
+The application works with these main entities:
 
 1. **Characters**: Name, epithet, status, affiliation, devil fruit, bounty, debut arc
 2. **Arcs**: Name, description, chapter/episode ranges, saga, chronological order
-3. **Devil Fruits**: Names (Japanese/English), type (Paramecia/Zoan/Logia), abilities, users
+3. **Sagas**: Grouping of arcs
+4. **Devil Fruits**: Names (Japanese/English), type (Paramecia/Zoan/Logia), abilities, users
+5. **Chapters**: Chapter number, title, volume, release date
+6. **Volumes**: Volume number, title, chapter ranges
 
 These are stored in Supabase with relationships managed via junction tables (e.g., Character_Arcs).
 
 ## Development Commands
 
 ### Initial Setup
+
 ```bash
 # Install dependencies
 npm install
@@ -72,6 +92,7 @@ npm install
 ```
 
 ### Development
+
 ```bash
 # Start development server
 npm run dev
@@ -93,6 +114,7 @@ npm run format
 ```
 
 ### Build & Deploy
+
 ```bash
 # Create production build
 npm run build
@@ -130,8 +152,8 @@ Use React Query for all API calls:
 
 ```typescript
 // Example pattern
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/services/supabase';
+import { useQuery } from '@tanstack/react-query'
+import { supabase } from '@/services/supabase'
 
 export const useCharacters = (filters) => {
   return useQuery({
@@ -140,13 +162,13 @@ export const useCharacters = (filters) => {
       const { data, error } = await supabase
         .from('characters')
         .select('*')
-        .order('name');
-      if (error) throw error;
-      return data;
+        .order('name')
+      if (error) throw error
+      return data
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-};
+  })
+}
 ```
 
 ### Security
@@ -181,11 +203,13 @@ export const useCharacters = (filters) => {
 The application uses a carefully selected color system built on Tailwind's color palette:
 
 #### Brand Colors
+
 - **Primary Blue**: `blue-600` to `blue-700` - Main brand color, CTAs, links
   - Gradient: `from-blue-600 to-blue-700`
   - Used in: Logo, primary buttons, active states
 
 #### Semantic Colors (StatCard Themes)
+
 - **Blue** (`blue-50/100/200/600/900`): General information, default state
 - **Green** (`green-50/100/200/600/900`): Success, positive trends, growth
 - **Purple** (`purple-50/100/200/600/900`): Premium features, special content
@@ -194,6 +218,7 @@ The application uses a carefully selected color system built on Tailwind's color
 - **Emerald** (`emerald-50/100/200/600/900`): Confirmation, completion
 
 #### Neutral Colors
+
 - **Gray Scale**: `gray-50` (backgrounds) to `gray-900` (headings)
   - `gray-50`: Page background
   - `gray-100`: Hover states
@@ -203,6 +228,7 @@ The application uses a carefully selected color system built on Tailwind's color
   - `gray-900`: Headings, emphasis
 
 #### Accent Colors
+
 - **Orange**: `orange-500` - Beta badges, special indicators
 - **Red**: `red-600` - Errors, negative trends, critical states
 - **White**: Card backgrounds, elevated surfaces
@@ -210,10 +236,12 @@ The application uses a carefully selected color system built on Tailwind's color
 ### Typography
 
 #### Font Stack
+
 - **System Fonts**: Uses native system font stack for optimal performance
 - Defined in TailwindCSS configuration
 
 #### Type Scale
+
 - **3xl** (`text-3xl`): Primary metric values (StatCard values)
 - **xl** (`text-xl`): Card titles, section headers
 - **lg** (`text-lg`): Page headers, prominent labels
@@ -222,6 +250,7 @@ The application uses a carefully selected color system built on Tailwind's color
 - **xs** (`text-xs`): Supporting text, badges, labels
 
 #### Font Weights
+
 - **Bold** (`font-bold`): Primary values, strong emphasis
 - **Semibold** (`font-semibold`): Headings, labels, brand
 - **Medium** (`font-medium`): Sub-headings, button text, secondary emphasis
@@ -240,11 +269,13 @@ Follow Tailwind's spacing scale (based on 0.25rem = 4px):
 ### Layout System
 
 #### Container Widths
+
 - **Max Width**: `max-w-7xl` (1280px) - Main content container
 - **Centered**: `mx-auto` - Horizontally center containers
 - **Padding**: `px-4 sm:px-6 lg:px-8` - Responsive horizontal padding
 
 #### Grid System
+
 - Use CSS Grid or Flexbox for layouts
 - Mobile-first: Start with single column, add columns on larger screens
 - Common patterns:
@@ -254,6 +285,7 @@ Follow Tailwind's spacing scale (based on 0.25rem = 4px):
 ### Component Patterns
 
 #### Cards
+
 ```tsx
 // Standard Card Pattern
 <div className="bg-white border border-gray-200 rounded-xl p-8 hover:border-gray-300 hover:shadow-md transition-all duration-200">
@@ -262,6 +294,7 @@ Follow Tailwind's spacing scale (based on 0.25rem = 4px):
 ```
 
 Properties:
+
 - Background: `bg-white`
 - Border: `border-gray-200` (subtle)
 - Radius: `rounded-xl` (12px) - Friendly, modern feel
@@ -270,13 +303,16 @@ Properties:
 - Transition: `transition-all duration-200`
 
 #### StatCard Pattern
+
 Six color variations for different contexts:
+
 - Uses semantic colors for backgrounds and accents
 - Includes icons, trends, tooltips, expandable details
 - Loading states with skeleton UI
 - Optional links for navigation
 
 #### Buttons (Implicit Pattern)
+
 ```tsx
 // Primary Button
 <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
@@ -297,6 +333,7 @@ Six color variations for different contexts:
 ### Interactive States
 
 #### Hover States
+
 - Cards: `hover:border-gray-300 hover:shadow-md`
 - Links: `hover:text-blue-600`
 - Buttons: `hover:bg-blue-700`
@@ -304,19 +341,23 @@ Six color variations for different contexts:
 - Always include: `transition-colors` or `transition-all`
 
 #### Focus States
+
 - Ensure visible focus indicators for keyboard navigation
 - Use browser default or: `focus:ring-2 focus:ring-blue-500 focus:outline-none`
 
 #### Active States
+
 - Links: `text-blue-600`
 - Navigation items: Enhanced styling for current page
 
 #### Loading States
+
 - Skeleton loaders: `bg-gray-200 animate-pulse rounded`
 - Spinners: `animate-spin rounded-full border-b-2 border-blue-600`
 - Disable interaction during loading
 
 #### Disabled States
+
 - Reduced opacity: `opacity-50`
 - No hover effects: `pointer-events-none`
 - Gray text: `text-gray-400`
@@ -324,6 +365,7 @@ Six color variations for different contexts:
 ### Animations & Transitions
 
 #### Standard Transitions
+
 - **Duration**: `duration-200` (200ms) for most interactions
 - **Easing**: Use CSS defaults (ease-in-out)
 - **Properties**:
@@ -332,6 +374,7 @@ Six color variations for different contexts:
   - Transform: `transition-transform`
 
 #### Animated Effects
+
 - **Hover Translate**: `group-hover:translate-x-1` - Arrow icons in links
 - **Rotate**: `rotate-90` - Expandable chevrons
 - **Scale**: `hover:scale-105` - Subtle zoom effects
@@ -341,10 +384,12 @@ Six color variations for different contexts:
 ### Icons
 
 #### Icon Library
-- Use **Heroicons** pattern (SVG icons from Tailwind team)
-- Inline SVG for customization and performance
+
+- Use **Font Awesome** via `@fortawesome/react-fontawesome` + `@fortawesome/free-solid-svg-icons` / `@fortawesome/free-brands-svg-icons`
+- Inline SVG fallback for customization when needed
 
 #### Icon Sizes
+
 - `w-3 h-3` (12px): Micro icons in text
 - `w-4 h-4` (16px): Small icons, inline with text
 - `w-5 h-5` (20px): Standard interactive icons
@@ -353,15 +398,20 @@ Six color variations for different contexts:
 - `w-10 h-10` (40px): StatCard icons
 
 #### Icon Containers (StatCard Pattern)
+
 ```tsx
-<div className="inline-flex items-center justify-center w-10 h-10 bg-blue-100 text-blue-600 rounded-lg">
-  {/* Icon SVG */}
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faUser } from '@fortawesome/free-solid-svg-icons'
+
+;<div className="inline-flex items-center justify-center w-10 h-10 bg-blue-100 text-blue-600 rounded-lg">
+  <FontAwesomeIcon icon={faUser} className="w-5 h-5" />
 </div>
 ```
 
 ### Responsive Design
 
 #### Breakpoints (Tailwind Defaults)
+
 - **sm**: 640px - Small tablets
 - **md**: 768px - Tablets
 - **lg**: 1024px - Laptops
@@ -369,6 +419,7 @@ Six color variations for different contexts:
 - **2xl**: 1536px - Large desktops
 
 #### Mobile-First Patterns
+
 1. **Header**: Fixed sticky header
    - Mobile: Collapsible menu, search modal
    - Desktop: Inline search, expanded navigation
@@ -398,6 +449,7 @@ Use shadows sparingly for depth:
 ### Forms & Inputs (Future Reference)
 
 When implementing forms:
+
 ```tsx
 <input
   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
@@ -425,30 +477,35 @@ When implementing forms:
 ### UX Patterns
 
 #### Navigation
+
 - Fixed header that stays visible during scroll
 - Breadcrumbs for deep navigation (if needed)
 - Clear active state indicators
 - Mobile: Hamburger menu or bottom navigation
 
 #### Data Display
+
 - Tables: Sortable columns, pagination, search
 - Charts: Interactive, tooltips on hover, downloadable
 - Cards: Scannable grid layouts
 - Lists: Virtualization for 100+ items
 
 #### Feedback
+
 - Loading states: Skeleton UI or spinners
 - Error states: Clear error messages with retry options
 - Success states: Confirmation messages
 - Empty states: Helpful guidance
 
 #### Search
+
 - Prominent search bar in header
 - Real-time results
 - Keyboard navigation support
 - Mobile: Full-screen search modal
 
 #### Progressive Disclosure
+
 - Expandable details (StatCard pattern)
 - Collapsible sections for complex data
 - "Show more" for long lists
@@ -457,11 +514,13 @@ When implementing forms:
 ### Accessibility Guidelines
 
 #### Color Contrast
+
 - Text: Minimum 4.5:1 ratio
 - Large text (18px+): Minimum 3:1 ratio
 - Interactive elements: Maintain contrast in all states
 
 #### Keyboard Navigation
+
 - All interactive elements must be focusable
 - Logical tab order
 - Visible focus indicators
@@ -469,12 +528,14 @@ When implementing forms:
 - Enter/Space activates buttons
 
 #### ARIA Labels
+
 - Add `aria-label` to icon-only buttons
 - Use `role` attributes where needed
 - Add `alt` text to all images
 - Use semantic HTML (`<nav>`, `<main>`, `<article>`, etc.)
 
 #### Screen Readers
+
 - Use semantic HTML structure
 - Provide text alternatives for visual content
 - Announce dynamic content updates
@@ -492,6 +553,7 @@ When implementing forms:
 ### Shared Components
 
 Located in `shared/components/`, these should be:
+
 - Highly reusable across features
 - Well-documented with TypeScript types
 - Tested with unit tests
@@ -554,6 +616,7 @@ export const characterService = {
 ### Real-time Updates (Optional)
 
 Supabase supports real-time subscriptions. If implementing live updates:
+
 - Use sparingly to avoid excessive re-renders
 - Clean up subscriptions in useEffect cleanup
 - Consider user preference toggles for real-time features
@@ -561,6 +624,7 @@ Supabase supports real-time subscriptions. If implementing live updates:
 ## Browser Compatibility
 
 Support modern browsers:
+
 - Chrome 90+
 - Firefox 88+
 - Safari 14+

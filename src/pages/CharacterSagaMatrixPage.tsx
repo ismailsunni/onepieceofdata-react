@@ -72,9 +72,16 @@ function getCellColor(count: number): string {
 
 function CharacterSagaMatrixPage() {
   const [hideStrawHats, setHideStrawHats] = useState(false)
-  const [appearanceRange, setAppearanceRange] = useState<[number, number]>([10, 9999])
-  const [sagaCountRange, setSagaCountRange] = useState<[number, number]>([2, 99])
-  const [heatmapSort, setHeatmapSort] = useState<{ field: string; dir: 'asc' | 'desc' }>({ field: 'total', dir: 'desc' })
+  const [appearanceRange, setAppearanceRange] = useState<[number, number]>([
+    10, 9999,
+  ])
+  const [sagaCountRange, setSagaCountRange] = useState<[number, number]>([
+    2, 99,
+  ])
+  const [heatmapSort, setHeatmapSort] = useState<{
+    field: string
+    dir: 'asc' | 'desc'
+  }>({ field: 'total', dir: 'desc' })
 
   const { data: characters = [], isLoading: charsLoading } = useQuery({
     queryKey: ['saga-matrix', 'characters'],
@@ -86,15 +93,25 @@ function CharacterSagaMatrixPage() {
     queryFn: fetchSagas,
   })
 
-  const maxAppearance = characters.length > 0 ? Math.max(...characters.map((c) => c.appearance_count ?? 0)) : 100
-  const maxSagaCount = characters.length > 0 ? Math.max(...characters.map((c) => c.saga_list?.length ?? 0)) : 11
+  const maxAppearance =
+    characters.length > 0
+      ? Math.max(...characters.map((c) => c.appearance_count ?? 0))
+      : 100
+  const maxSagaCount =
+    characters.length > 0
+      ? Math.max(...characters.map((c) => c.saga_list?.length ?? 0))
+      : 11
 
   const matrixData = (() => {
     if (!characters.length || !sagas.length) return []
 
     let filtered = characters.filter(
-      (c) => (c.appearance_count ?? 0) >= appearanceRange[0] && (c.appearance_count ?? 0) <= Math.min(appearanceRange[1], maxAppearance)
-        && (c.saga_list?.length ?? 0) >= sagaCountRange[0] && (c.saga_list?.length ?? 0) <= Math.min(sagaCountRange[1], maxSagaCount)
+      (c) =>
+        (c.appearance_count ?? 0) >= appearanceRange[0] &&
+        (c.appearance_count ?? 0) <=
+          Math.min(appearanceRange[1], maxAppearance) &&
+        (c.saga_list?.length ?? 0) >= sagaCountRange[0] &&
+        (c.saga_list?.length ?? 0) <= Math.min(sagaCountRange[1], maxSagaCount)
     )
     if (hideStrawHats) {
       filtered = filtered.filter((c) => !STRAW_HAT_IDS.has(c.id))
@@ -108,8 +125,11 @@ function CharacterSagaMatrixPage() {
           (ch) => ch >= saga.start_chapter && ch <= saga.end_chapter
         ).length
       }
-      const sagasAppeared = Object.values(sagaCounts).filter((v) => v > 0).length
-      const avgPerSaga = sagasAppeared > 0 ? (char.appearance_count ?? 0) / sagasAppeared : 0
+      const sagasAppeared = Object.values(sagaCounts).filter(
+        (v) => v > 0
+      ).length
+      const avgPerSaga =
+        sagasAppeared > 0 ? (char.appearance_count ?? 0) / sagasAppeared : 0
       return {
         id: char.id,
         name: char.name ?? char.id,
@@ -124,19 +144,30 @@ function CharacterSagaMatrixPage() {
   const sortedMatrixData = [...matrixData].sort((a, b) => {
     const { field, dir } = heatmapSort
     let av: number, bv: number
-    if (field === 'total') { av = a.total; bv = b.total }
-    else if (field === 'name') { return dir === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name) }
-    else { av = a.sagaCounts[field] ?? 0; bv = b.sagaCounts[field] ?? 0 }
+    if (field === 'total') {
+      av = a.total
+      bv = b.total
+    } else if (field === 'name') {
+      return dir === 'asc'
+        ? a.name.localeCompare(b.name)
+        : b.name.localeCompare(a.name)
+    } else {
+      av = a.sagaCounts[field] ?? 0
+      bv = b.sagaCounts[field] ?? 0
+    }
     return dir === 'asc' ? av - bv : bv - av
   })
 
   const toggleHeatmapSort = (field: string) => {
     setHeatmapSort((prev) =>
-      prev.field === field ? { field, dir: prev.dir === 'asc' ? 'desc' : 'asc' } : { field, dir: 'desc' }
+      prev.field === field
+        ? { field, dir: prev.dir === 'asc' ? 'desc' : 'asc' }
+        : { field, dir: 'desc' }
     )
   }
 
-  const heatmapArrow = (field: string) => heatmapSort.field === field ? (heatmapSort.dir === 'asc' ? ' ▲' : ' ▼') : ''
+  const heatmapArrow = (field: string) =>
+    heatmapSort.field === field ? (heatmapSort.dir === 'asc' ? ' ▲' : ' ▼') : ''
 
   const isLoading = charsLoading || sagasLoading
 
@@ -190,7 +221,10 @@ function CharacterSagaMatrixPage() {
           label="Total appearances"
           min={1}
           max={maxAppearance}
-          value={[appearanceRange[0], Math.min(appearanceRange[1], maxAppearance)]}
+          value={[
+            appearanceRange[0],
+            Math.min(appearanceRange[1], maxAppearance),
+          ]}
           onChange={setAppearanceRange}
         />
         <RangeSlider
@@ -258,7 +292,8 @@ function CharacterSagaMatrixPage() {
                         textOverflow: 'ellipsis',
                       }}
                     >
-                      {saga.title}{heatmapArrow(saga.saga_id)}
+                      {saga.title}
+                      {heatmapArrow(saga.saga_id)}
                     </div>
                   </th>
                 ))}
@@ -315,21 +350,30 @@ function CharacterSagaMatrixPage() {
           </table>
         </div>
       </div>
-
-      {/* Concentration Ranking */}
-      <ConcentrationTable data={matrixData} />
     </div>
   )
 }
 
-function RangeSlider({ label, min, max, value, onChange }: {
-  label: string; min: number; max: number; value: [number, number]; onChange: (v: [number, number]) => void
+function RangeSlider({
+  label,
+  min,
+  max,
+  value,
+  onChange,
+}: {
+  label: string
+  min: number
+  max: number
+  value: [number, number]
+  onChange: (v: [number, number]) => void
 }) {
   return (
     <div className="flex-1 min-w-[200px]">
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs font-medium text-gray-600">{label}</span>
-        <span className="text-xs text-gray-400">{value[0]} – {value[1]}</span>
+        <span className="text-xs text-gray-400">
+          {value[0]} – {value[1]}
+        </span>
       </div>
       <Slider.Root
         className="relative flex items-center select-none touch-none w-full h-5"
@@ -346,116 +390,6 @@ function RangeSlider({ label, min, max, value, onChange }: {
         <Slider.Thumb className="block w-4 h-4 bg-white border-2 border-blue-500 rounded-full hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 cursor-pointer" />
         <Slider.Thumb className="block w-4 h-4 bg-white border-2 border-blue-500 rounded-full hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 cursor-pointer" />
       </Slider.Root>
-    </div>
-  )
-}
-
-function ConcentrationTable({ data }: { data: Array<{ id: string; name: string; total: number; sagasAppeared: number; avgPerSaga: number }> }) {
-  type SortField = 'avgPerSaga' | 'sagaPerApp' | 'total' | 'sagasAppeared' | 'name'
-  const [sortField, setSortField] = useState<SortField>('avgPerSaga')
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
-  const [hideStrawHats, setHideStrawHats] = useState(false)
-
-  const maxTotal = Math.max(...data.map((d) => d.total), 1)
-  const maxSagas = Math.max(...data.map((d) => d.sagasAppeared), 1)
-
-  const [sagaRange, setSagaRange] = useState<[number, number]>([2, 99])
-  const [totalRange, setTotalRange] = useState<[number, number]>([10, 9999])
-
-  // Clamp ranges to actual max values
-  const effectiveSagaRange: [number, number] = [sagaRange[0], Math.min(sagaRange[1], maxSagas)]
-  const effectiveTotalRange: [number, number] = [totalRange[0], Math.min(totalRange[1], maxTotal)]
-
-  const filtered = data.filter(
-    (d) => d.sagasAppeared >= effectiveSagaRange[0] && d.sagasAppeared <= effectiveSagaRange[1]
-      && d.total >= effectiveTotalRange[0] && d.total <= effectiveTotalRange[1]
-      && (!hideStrawHats || !STRAW_HAT_IDS.has(d.id))
-  )
-
-  const sorted = [...filtered].sort((a, b) => {
-    let av: number | string, bv: number | string
-    if (sortField === 'sagaPerApp') {
-      av = a.sagasAppeared > 0 ? a.sagasAppeared / a.total : 0
-      bv = b.sagasAppeared > 0 ? b.sagasAppeared / b.total : 0
-    } else if (sortField === 'name') {
-      av = a.name; bv = b.name
-    } else {
-      av = a[sortField] ?? 0; bv = b[sortField] ?? 0
-    }
-    if (typeof av === 'string' && typeof bv === 'string') return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av)
-    return sortDir === 'asc' ? Number(av) - Number(bv) : Number(bv) - Number(av)
-  })
-
-  const toggleSort = (field: SortField) => {
-    if (sortField === field) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
-    else { setSortField(field); setSortDir('desc') }
-  }
-
-  const arrow = (field: SortField) => sortField === field ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''
-
-  return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 mt-6">
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">Appearance Concentration</h2>
-        <p className="text-sm text-gray-500">Avg/Saga = concentrated presence · Sagas/App = spread across sagas (supporting characters)</p>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-6 mb-4 p-3 bg-gray-50 rounded-lg items-center">
-        <label className="inline-flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
-          <input type="checkbox" checked={hideStrawHats} onChange={(e) => setHideStrawHats(e.target.checked)}
-            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-          Hide Straw Hats
-        </label>
-        <RangeSlider label="Sagas" min={1} max={maxSagas} value={[sagaRange[0], Math.min(sagaRange[1], maxSagas)]} onChange={setSagaRange} />
-        <RangeSlider label="Total appearances" min={1} max={maxTotal} value={[totalRange[0], Math.min(totalRange[1], maxTotal)]} onChange={setTotalRange} />
-      </div>
-
-      <div className="overflow-x-auto" style={{ maxHeight: '500px', overflowY: 'auto' }}>
-        <table className="w-full text-sm border-collapse">
-          <thead className="bg-gray-50 sticky top-0">
-            <tr>
-              <th className="text-left px-3 py-2 font-semibold text-gray-700 border-b border-gray-200 cursor-pointer select-none hover:bg-gray-100" onClick={() => toggleSort('name')}>
-                Character{arrow('name')}
-              </th>
-              <th className="text-right px-3 py-2 font-semibold text-gray-700 border-b border-gray-200 cursor-pointer select-none hover:bg-gray-100" onClick={() => toggleSort('total')}>
-                Total App.{arrow('total')}
-              </th>
-              <th className="text-right px-3 py-2 font-semibold text-gray-700 border-b border-gray-200 cursor-pointer select-none hover:bg-gray-100" onClick={() => toggleSort('sagasAppeared')}>
-                Sagas{arrow('sagasAppeared')}
-              </th>
-              <th className="text-right px-3 py-2 font-semibold text-gray-700 border-b border-gray-200 cursor-pointer select-none hover:bg-gray-100" onClick={() => toggleSort('avgPerSaga')}>
-                Avg/Saga{arrow('avgPerSaga')}
-              </th>
-              <th className="text-right px-3 py-2 font-semibold text-gray-700 border-b border-gray-200 cursor-pointer select-none hover:bg-gray-100" onClick={() => toggleSort('sagaPerApp')}>
-                Sagas/App{arrow('sagaPerApp')}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {sorted.map((row, idx) => {
-              const sagaPerApp = row.total > 0 ? row.sagasAppeared / row.total : 0
-              return (
-                <tr key={row.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <td className="px-3 py-2 border-b border-gray-100">
-                    <Link to={`/characters/${row.id}`} className="text-blue-600 hover:underline font-medium">
-                      {row.name}
-                    </Link>
-                  </td>
-                  <td className="text-right px-3 py-2 border-b border-gray-100">{row.total}</td>
-                  <td className="text-right px-3 py-2 border-b border-gray-100">{row.sagasAppeared}</td>
-                  <td className="text-right px-3 py-2 border-b border-gray-100 font-semibold">{row.avgPerSaga.toFixed(1)}</td>
-                  <td className="text-right px-3 py-2 border-b border-gray-100 font-semibold text-purple-700">{sagaPerApp.toFixed(3)}</td>
-                </tr>
-              )
-            })}
-            {sorted.length === 0 && (
-              <tr><td colSpan={5} className="text-center py-8 text-gray-400">No characters match the filters</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-      <p className="text-xs text-gray-400 mt-2">{sorted.length} characters shown</p>
     </div>
   )
 }

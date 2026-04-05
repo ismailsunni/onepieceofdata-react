@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 import {
   fetchAppearanceDistribution,
   fetchSagaAppearanceDistribution,
@@ -7,11 +8,15 @@ import {
   fetchTimeSkipDistribution,
 } from '../services/analyticsService'
 import { fetchCharacters } from '../services/characterService'
+import { fetchSagas } from '../services/sagaService'
+import { supabase } from '../services/supabase'
+import { logger } from '../utils/logger'
 import CharacterAppearanceChart from '../components/CharacterAppearanceChart'
 import { SagaAppearanceChart } from '../components/SagaAppearanceChart'
 import { SagaAppearanceCountChart } from '../components/SagaAppearanceCountChart'
 import TimeSkipVennDiagram from '../components/TimeSkipVennDiagram'
 import { StatCard, SectionHeader } from '../components/analytics'
+import { RangeSlider } from '../components/common/RangeSlider'
 import {
   ScatterChart,
   Scatter,
@@ -24,6 +29,43 @@ import {
 } from 'recharts'
 import { toPng } from 'html-to-image'
 
+interface MatrixCharacter {
+  id: string
+  name: string | null
+  chapter_list: number[] | null
+  appearance_count: number | null
+}
+
+async function fetchMatrixCharacters(): Promise<MatrixCharacter[]> {
+  if (!supabase) {
+    logger.error('Supabase client is not initialized')
+    return []
+  }
+  const { data, error } = await supabase
+    .from('character')
+    .select('id, name, chapter_list, appearance_count')
+    .gt('appearance_count', 0)
+    .order('appearance_count', { ascending: false })
+  if (error) {
+    logger.error('Error fetching matrix characters:', error)
+    return []
+  }
+  return data || []
+}
+
+const STRAW_HAT_IDS = new Set([
+  'Monkey_D._Luffy',
+  'Roronoa_Zoro',
+  'Nami',
+  'Usopp',
+  'Sanji',
+  'Tony_Tony_Chopper',
+  'Nico_Robin',
+  'Franky',
+  'Brook',
+  'Jinbe',
+])
+
 function CharacterAppearancesPage() {
   const scatterChartRef = useRef<HTMLDivElement>(null)
   const [isExporting, setIsExporting] = useState(false)
@@ -34,12 +76,16 @@ function CharacterAppearancesPage() {
     queryFn: fetchAppearanceDistribution,
   })
 
-  const { data: sagaAppearanceData = [], isLoading: sagaAppearanceLoading } = useQuery({
-    queryKey: ['analytics', 'saga-appearance-distribution'],
-    queryFn: fetchSagaAppearanceDistribution,
-  })
+  const { data: sagaAppearanceData = [], isLoading: sagaAppearanceLoading } =
+    useQuery({
+      queryKey: ['analytics', 'saga-appearance-distribution'],
+      queryFn: fetchSagaAppearanceDistribution,
+    })
 
-  const { data: sagaAppearanceCountData = [], isLoading: sagaAppearanceCountLoading } = useQuery({
+  const {
+    data: sagaAppearanceCountData = [],
+    isLoading: sagaAppearanceCountLoading,
+  } = useQuery({
     queryKey: ['analytics', 'saga-appearance-count-distribution'],
     queryFn: fetchSagaAppearanceCountDistribution,
   })
@@ -54,12 +100,48 @@ function CharacterAppearancesPage() {
     queryFn: fetchCharacters,
   })
 
+  const { data: matrixCharacters = [], isLoading: matrixCharsLoading } =
+    useQuery({
+      queryKey: ['concentration', 'characters'],
+      queryFn: fetchMatrixCharacters,
+    })
+
+  const { data: sagas = [], isLoading: sagasLoading } = useQuery({
+    queryKey: ['sagas'],
+    queryFn: fetchSagas,
+  })
+
   const isLoading =
     appearanceLoading ||
     sagaAppearanceLoading ||
     sagaAppearanceCountLoading ||
     timeSkipLoading ||
-    charactersLoading
+    charactersLoading ||
+    matrixCharsLoading ||
+    sagasLoading
+
+  const concentrationData = useMemo(() => {
+    if (!matrixCharacters.length || !sagas.length) return []
+    return matrixCharacters.map((char) => {
+      const chapters = char.chapter_list ?? []
+      let sagasAppeared = 0
+      for (const saga of sagas) {
+        const count = chapters.filter(
+          (ch) => ch >= saga.start_chapter && ch <= saga.end_chapter
+        ).length
+        if (count > 0) sagasAppeared++
+      }
+      const total = char.appearance_count ?? 0
+      const avgPerSaga = sagasAppeared > 0 ? total / sagasAppeared : 0
+      return {
+        id: char.id,
+        name: char.name ?? char.id,
+        total,
+        sagasAppeared,
+        avgPerSaga,
+      }
+    })
+  }, [matrixCharacters, sagas])
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -74,7 +156,10 @@ function CharacterAppearancesPage() {
       }
     }
 
-    const totalCharacters = sagaAppearanceData.reduce((sum, saga) => sum + saga.characterCount, 0)
+    const totalCharacters = sagaAppearanceData.reduce(
+      (sum, saga) => sum + saga.characterCount,
+      0
+    )
     const avgPerSaga = totalCharacters / sagaAppearanceData.length
 
     const mostActive = sagaAppearanceData.reduce((max, saga) =>
@@ -82,9 +167,10 @@ function CharacterAppearancesPage() {
     )
 
     // Find saga with highest character density (characters per chapter)
-    const sagaWithDensity = sagaAppearanceData.map(saga => ({
+    const sagaWithDensity = sagaAppearanceData.map((saga) => ({
       ...saga,
-      density: saga.chapterCount > 0 ? saga.characterCount / saga.chapterCount : 0
+      density:
+        saga.chapterCount > 0 ? saga.characterCount / saga.chapterCount : 0,
     }))
 
     const highestDensity = sagaWithDensity.reduce((max, saga) =>
@@ -114,12 +200,18 @@ function CharacterAppearancesPage() {
 
     // Paradise Era: East Blue through Summit War (first 6 sagas)
     // New World Era: Return to Sabaody onwards (sagas 7+)
-    const paradiseSagas = sagaAppearanceData.filter(s => s.sagaOrder <= 6)
-    const newWorldSagas = sagaAppearanceData.filter(s => s.sagaOrder > 6)
+    const paradiseSagas = sagaAppearanceData.filter((s) => s.sagaOrder <= 6)
+    const newWorldSagas = sagaAppearanceData.filter((s) => s.sagaOrder > 6)
 
     return {
-      paradiseChars: paradiseSagas.reduce((sum, s) => sum + s.characterCount, 0),
-      newWorldChars: newWorldSagas.reduce((sum, s) => sum + s.characterCount, 0),
+      paradiseChars: paradiseSagas.reduce(
+        (sum, s) => sum + s.characterCount,
+        0
+      ),
+      newWorldChars: newWorldSagas.reduce(
+        (sum, s) => sum + s.characterCount,
+        0
+      ),
       paradiseArcs: paradiseSagas.length,
       newWorldArcs: newWorldSagas.length,
     }
@@ -128,13 +220,14 @@ function CharacterAppearancesPage() {
   // Prepare scatter plot data for cover appearances vs chapter appearances
   const coverAppearanceScatterData = useMemo(() => {
     return allCharacters
-      .filter(char =>
-        char.cover_appearance_count &&
-        char.cover_appearance_count > 0 &&
-        char.appearance_count &&
-        char.appearance_count > 0
+      .filter(
+        (char) =>
+          char.cover_appearance_count &&
+          char.cover_appearance_count > 0 &&
+          char.appearance_count &&
+          char.appearance_count > 0
       )
-      .map(char => ({
+      .map((char) => ({
         name: char.name || 'Unknown',
         chapterAppearances: char.appearance_count || 0,
         coverAppearances: char.cover_appearance_count || 0,
@@ -164,8 +257,6 @@ function CharacterAppearancesPage() {
     }
   }
 
-
-
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -175,7 +266,12 @@ function CharacterAppearancesPage() {
           <div className="relative bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center gap-4">
               <div className="flex-shrink-0 w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
-                <svg className="w-6 h-6 md:w-9 md:h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6 md:w-9 md:h-9 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -189,7 +285,8 @@ function CharacterAppearancesPage() {
                   Character Appearances
                 </h1>
                 <p className="text-gray-600 text-lg mt-2">
-                  Explore how characters appear and are introduced throughout the story
+                  Explore how characters appear and are introduced throughout
+                  the story
                 </p>
               </div>
             </div>
@@ -212,7 +309,12 @@ function CharacterAppearancesPage() {
                 label={`Highest Density (${stats.highestDensityRate}/ch)`}
                 value={stats.highestDensitySaga}
                 icon={
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -229,7 +331,12 @@ function CharacterAppearancesPage() {
                 label="Debut Rate"
                 value={`${stats.debutRate}/saga`}
                 icon={
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -246,7 +353,12 @@ function CharacterAppearancesPage() {
                 label="Most Active Saga"
                 value={stats.mostActiveSaga}
                 icon={
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -263,7 +375,12 @@ function CharacterAppearancesPage() {
                 label="Character Debuts"
                 value={stats.mostActiveSagaCount}
                 icon={
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -285,7 +402,12 @@ function CharacterAppearancesPage() {
                   title="Time Skip Character Distribution"
                   description="Character appearances before, after, and across the 2-year time skip"
                   icon={
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -329,7 +451,12 @@ function CharacterAppearancesPage() {
                   title="Era Comparison"
                   description="Character introductions in Paradise Era vs New World Era"
                   icon={
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -343,7 +470,12 @@ function CharacterAppearancesPage() {
                   <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border border-blue-200 p-6">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg
+                          className="w-6 h-6 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -352,18 +484,34 @@ function CharacterAppearancesPage() {
                           />
                         </svg>
                       </div>
-                      <h3 className="text-xl font-semibold text-gray-900">Paradise Era</h3>
+                      <h3 className="text-xl font-semibold text-gray-900">
+                        Paradise Era
+                      </h3>
                     </div>
                     <div className="space-y-3">
                       <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4">
-                        <p className="text-sm text-gray-600 mb-1">Characters Introduced</p>
-                        <p className="text-3xl font-bold text-blue-600">{eraStats.paradiseChars}</p>
+                        <p className="text-sm text-gray-600 mb-1">
+                          Characters Introduced
+                        </p>
+                        <p className="text-3xl font-bold text-blue-600">
+                          {eraStats.paradiseChars}
+                        </p>
                       </div>
                       <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4">
-                        <p className="text-sm text-gray-600 mb-1">Number of Sagas</p>
-                        <p className="text-2xl font-semibold text-gray-900">{eraStats.paradiseArcs}</p>
+                        <p className="text-sm text-gray-600 mb-1">
+                          Number of Sagas
+                        </p>
+                        <p className="text-2xl font-semibold text-gray-900">
+                          {eraStats.paradiseArcs}
+                        </p>
                         <p className="text-xs text-gray-500 mt-1">
-                          ~{eraStats.paradiseArcs > 0 ? Math.round(eraStats.paradiseChars / eraStats.paradiseArcs) : 0} characters per saga
+                          ~
+                          {eraStats.paradiseArcs > 0
+                            ? Math.round(
+                                eraStats.paradiseChars / eraStats.paradiseArcs
+                              )
+                            : 0}{' '}
+                          characters per saga
                         </p>
                       </div>
                     </div>
@@ -372,7 +520,12 @@ function CharacterAppearancesPage() {
                   <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border border-purple-200 p-6">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg
+                          className="w-6 h-6 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -381,18 +534,34 @@ function CharacterAppearancesPage() {
                           />
                         </svg>
                       </div>
-                      <h3 className="text-xl font-semibold text-gray-900">New World Era</h3>
+                      <h3 className="text-xl font-semibold text-gray-900">
+                        New World Era
+                      </h3>
                     </div>
                     <div className="space-y-3">
                       <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4">
-                        <p className="text-sm text-gray-600 mb-1">Characters Introduced</p>
-                        <p className="text-3xl font-bold text-purple-600">{eraStats.newWorldChars}</p>
+                        <p className="text-sm text-gray-600 mb-1">
+                          Characters Introduced
+                        </p>
+                        <p className="text-3xl font-bold text-purple-600">
+                          {eraStats.newWorldChars}
+                        </p>
                       </div>
                       <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4">
-                        <p className="text-sm text-gray-600 mb-1">Number of Sagas</p>
-                        <p className="text-2xl font-semibold text-gray-900">{eraStats.newWorldArcs}</p>
+                        <p className="text-sm text-gray-600 mb-1">
+                          Number of Sagas
+                        </p>
+                        <p className="text-2xl font-semibold text-gray-900">
+                          {eraStats.newWorldArcs}
+                        </p>
                         <p className="text-xs text-gray-500 mt-1">
-                          ~{eraStats.newWorldArcs > 0 ? Math.round(eraStats.newWorldChars / eraStats.newWorldArcs) : 0} characters per saga
+                          ~
+                          {eraStats.newWorldArcs > 0
+                            ? Math.round(
+                                eraStats.newWorldChars / eraStats.newWorldArcs
+                              )
+                            : 0}{' '}
+                          characters per saga
                         </p>
                       </div>
                     </div>
@@ -408,7 +577,12 @@ function CharacterAppearancesPage() {
                   title="Cover Appearances vs Chapter Appearances"
                   description="Relationship between volume cover appearances and total chapter appearances for characters featured on covers"
                   icon={
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -497,7 +671,11 @@ function CharacterAppearancesPage() {
                             value="Chapter Appearances"
                             position="bottom"
                             offset={40}
-                            style={{ fill: '#374151', fontSize: 14, fontWeight: 600 }}
+                            style={{
+                              fill: '#374151',
+                              fontSize: 14,
+                              fontWeight: 600,
+                            }}
                           />
                         </XAxis>
                         <YAxis
@@ -512,7 +690,11 @@ function CharacterAppearancesPage() {
                             angle={-90}
                             position="left"
                             offset={40}
-                            style={{ fill: '#374151', fontSize: 14, fontWeight: 600 }}
+                            style={{
+                              fill: '#374151',
+                              fontSize: 14,
+                              fontWeight: 600,
+                            }}
                           />
                         </YAxis>
                         <Tooltip
@@ -527,13 +709,17 @@ function CharacterAppearancesPage() {
                                   </p>
                                   <div className="space-y-1 text-sm">
                                     <p className="text-gray-600">
-                                      <span className="font-medium">Chapter Appearances:</span>{' '}
+                                      <span className="font-medium">
+                                        Chapter Appearances:
+                                      </span>{' '}
                                       <span className="text-emerald-600 font-semibold">
                                         {data.chapterAppearances}
                                       </span>
                                     </p>
                                     <p className="text-gray-600">
-                                      <span className="font-medium">Cover Appearances:</span>{' '}
+                                      <span className="font-medium">
+                                        Cover Appearances:
+                                      </span>{' '}
                                       <span className="text-purple-600 font-semibold">
                                         {data.coverAppearances}
                                       </span>
@@ -557,11 +743,17 @@ function CharacterAppearancesPage() {
                       </ScatterChart>
                     </ResponsiveContainer>
                     <div className="mt-4 text-center text-sm text-gray-500">
-                      Each point represents a character. Hover over a point to see details.
+                      Each point represents a character. Hover over a point to
+                      see details.
                     </div>
                   </div>
                 </div>
               </>
+            )}
+
+            {/* Appearance Concentration */}
+            {concentrationData.length > 0 && (
+              <ConcentrationTable data={concentrationData} />
             )}
 
             {/* Empty State */}
@@ -570,7 +762,12 @@ function CharacterAppearancesPage() {
               sagaAppearanceCountData.length === 0 &&
               (!timeSkipData || timeSkipData.total === 0) && (
                 <div className="text-center py-20">
-                  <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-16 h-16 text-gray-300 mx-auto mb-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -587,6 +784,210 @@ function CharacterAppearancesPage() {
         )}
       </div>
     </main>
+  )
+}
+
+function ConcentrationTable({
+  data,
+}: {
+  data: Array<{
+    id: string
+    name: string
+    total: number
+    sagasAppeared: number
+    avgPerSaga: number
+  }>
+}) {
+  type SortField =
+    | 'avgPerSaga'
+    | 'sagaPerApp'
+    | 'total'
+    | 'sagasAppeared'
+    | 'name'
+  const [sortField, setSortField] = useState<SortField>('avgPerSaga')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+  const [hideStrawHats, setHideStrawHats] = useState(false)
+
+  const maxTotal = Math.max(...data.map((d) => d.total), 1)
+  const maxSagas = Math.max(...data.map((d) => d.sagasAppeared), 1)
+
+  const [sagaRange, setSagaRange] = useState<[number, number]>([2, 99])
+  const [totalRange, setTotalRange] = useState<[number, number]>([10, 9999])
+
+  const effectiveSagaRange: [number, number] = [
+    sagaRange[0],
+    Math.min(sagaRange[1], maxSagas),
+  ]
+  const effectiveTotalRange: [number, number] = [
+    totalRange[0],
+    Math.min(totalRange[1], maxTotal),
+  ]
+
+  const filtered = data.filter(
+    (d) =>
+      d.sagasAppeared >= effectiveSagaRange[0] &&
+      d.sagasAppeared <= effectiveSagaRange[1] &&
+      d.total >= effectiveTotalRange[0] &&
+      d.total <= effectiveTotalRange[1] &&
+      (!hideStrawHats || !STRAW_HAT_IDS.has(d.id))
+  )
+
+  const sorted = [...filtered].sort((a, b) => {
+    let av: number | string, bv: number | string
+    if (sortField === 'sagaPerApp') {
+      av = a.sagasAppeared > 0 ? a.sagasAppeared / a.total : 0
+      bv = b.sagasAppeared > 0 ? b.sagasAppeared / b.total : 0
+    } else if (sortField === 'name') {
+      av = a.name
+      bv = b.name
+    } else {
+      av = a[sortField] ?? 0
+      bv = b[sortField] ?? 0
+    }
+    if (typeof av === 'string' && typeof bv === 'string')
+      return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av)
+    return sortDir === 'asc' ? Number(av) - Number(bv) : Number(bv) - Number(av)
+  })
+
+  const toggleSort = (field: SortField) => {
+    if (sortField === field) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    else {
+      setSortField(field)
+      setSortDir('desc')
+    }
+  }
+
+  const arrow = (field: SortField) =>
+    sortField === field ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 mt-6 mb-8">
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold text-gray-900">
+          Appearance Concentration
+        </h2>
+        <p className="text-sm text-gray-500">
+          Avg/Saga = concentrated presence · Sagas/App = spread across sagas
+          (supporting characters)
+        </p>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-6 mb-4 p-3 bg-gray-50 rounded-lg items-center">
+        <label className="inline-flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={hideStrawHats}
+            onChange={(e) => setHideStrawHats(e.target.checked)}
+            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          Hide Straw Hats
+        </label>
+        <div className="flex-1 min-w-[200px]">
+          <RangeSlider
+            label="Sagas"
+            min={1}
+            max={maxSagas}
+            value={[sagaRange[0], Math.min(sagaRange[1], maxSagas)]}
+            onChange={setSagaRange}
+          />
+        </div>
+        <div className="flex-1 min-w-[200px]">
+          <RangeSlider
+            label="Total appearances"
+            min={1}
+            max={maxTotal}
+            value={[totalRange[0], Math.min(totalRange[1], maxTotal)]}
+            onChange={setTotalRange}
+          />
+        </div>
+      </div>
+
+      <div
+        className="overflow-x-auto"
+        style={{ maxHeight: '500px', overflowY: 'auto' }}
+      >
+        <table className="w-full text-sm border-collapse">
+          <thead className="bg-gray-50 sticky top-0">
+            <tr>
+              <th
+                className="text-left px-3 py-2 font-semibold text-gray-700 border-b border-gray-200 cursor-pointer select-none hover:bg-gray-100"
+                onClick={() => toggleSort('name')}
+              >
+                Character{arrow('name')}
+              </th>
+              <th
+                className="text-right px-3 py-2 font-semibold text-gray-700 border-b border-gray-200 cursor-pointer select-none hover:bg-gray-100"
+                onClick={() => toggleSort('total')}
+              >
+                Total App.{arrow('total')}
+              </th>
+              <th
+                className="text-right px-3 py-2 font-semibold text-gray-700 border-b border-gray-200 cursor-pointer select-none hover:bg-gray-100"
+                onClick={() => toggleSort('sagasAppeared')}
+              >
+                Sagas{arrow('sagasAppeared')}
+              </th>
+              <th
+                className="text-right px-3 py-2 font-semibold text-gray-700 border-b border-gray-200 cursor-pointer select-none hover:bg-gray-100"
+                onClick={() => toggleSort('avgPerSaga')}
+              >
+                Avg/Saga{arrow('avgPerSaga')}
+              </th>
+              <th
+                className="text-right px-3 py-2 font-semibold text-gray-700 border-b border-gray-200 cursor-pointer select-none hover:bg-gray-100"
+                onClick={() => toggleSort('sagaPerApp')}
+              >
+                Sagas/App{arrow('sagaPerApp')}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map((row, idx) => {
+              const sagaPerApp =
+                row.total > 0 ? row.sagasAppeared / row.total : 0
+              return (
+                <tr
+                  key={row.id}
+                  className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+                >
+                  <td className="px-3 py-2 border-b border-gray-100">
+                    <Link
+                      to={`/characters/${row.id}`}
+                      className="text-blue-600 hover:underline font-medium"
+                    >
+                      {row.name}
+                    </Link>
+                  </td>
+                  <td className="text-right px-3 py-2 border-b border-gray-100">
+                    {row.total}
+                  </td>
+                  <td className="text-right px-3 py-2 border-b border-gray-100">
+                    {row.sagasAppeared}
+                  </td>
+                  <td className="text-right px-3 py-2 border-b border-gray-100 font-semibold">
+                    {row.avgPerSaga.toFixed(1)}
+                  </td>
+                  <td className="text-right px-3 py-2 border-b border-gray-100 font-semibold text-purple-700">
+                    {sagaPerApp.toFixed(3)}
+                  </td>
+                </tr>
+              )
+            })}
+            {sorted.length === 0 && (
+              <tr>
+                <td colSpan={5} className="text-center py-8 text-gray-400">
+                  No characters match the filters
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-xs text-gray-400 mt-2">
+        {sorted.length} characters shown
+      </p>
+    </div>
   )
 }
 
