@@ -3,7 +3,12 @@ import { logger } from '../utils/logger'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowLeft, faLink, faCheck, faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons'
+import {
+  faArrowLeft,
+  faLink,
+  faCheck,
+  faExternalLinkAlt,
+} from '@fortawesome/free-solid-svg-icons'
 import { faXTwitter } from '@fortawesome/free-brands-svg-icons'
 import { supabase } from '../services/supabase'
 import { Saga, Arc } from '../types/arc'
@@ -86,7 +91,10 @@ async function fetchCharactersBySaga(sagaId: string): Promise<Character[]> {
   }
 }
 
-async function fetchVolumeRange(startChapter: number, endChapter: number): Promise<{ startVol: number | null; endVol: number | null }> {
+async function fetchVolumeRange(
+  startChapter: number,
+  endChapter: number
+): Promise<{ startVol: number | null; endVol: number | null }> {
   if (!supabase) return { startVol: null, endVol: null }
   const { data } = await supabase
     .from('chapter')
@@ -96,7 +104,7 @@ async function fetchVolumeRange(startChapter: number, endChapter: number): Promi
     .not('volume', 'is', null)
     .order('volume', { ascending: true })
   if (!data || data.length === 0) return { startVol: null, endVol: null }
-  const volumes = data.map(d => d.volume).filter(Boolean) as number[]
+  const volumes = data.map((d) => d.volume).filter(Boolean) as number[]
   return { startVol: Math.min(...volumes), endVol: Math.max(...volumes) }
 }
 
@@ -126,9 +134,17 @@ async function fetchSagas(): Promise<Saga[]> {
 
 // ===== REUSABLE COMPONENTS =====
 
-function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+function Card({
+  children,
+  className = '',
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
   return (
-    <div className={`bg-white rounded-xl shadow-sm border border-gray-200 p-6 ${className}`}>
+    <div
+      className={`bg-white rounded-xl shadow-sm border border-gray-200 p-6 ${className}`}
+    >
       {children}
     </div>
   )
@@ -136,9 +152,7 @@ function Card({ children, className = '' }: { children: React.ReactNode; classNa
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="text-xl font-semibold text-gray-900 mb-4">
-      {children}
-    </h2>
+    <h2 className="text-xl font-semibold text-gray-900 mb-4">{children}</h2>
   )
 }
 
@@ -177,10 +191,13 @@ function SagaDetailPage() {
     queryFn: fetchSagas,
   })
 
-  const sortedSagas = [...allSagas].sort((a, b) => a.start_chapter - b.start_chapter)
+  const sortedSagas = [...allSagas].sort(
+    (a, b) => a.start_chapter - b.start_chapter
+  )
   const currentIndex = sortedSagas.findIndex((s) => s.saga_id === saga?.saga_id)
   const previousSaga = currentIndex > 0 ? sortedSagas[currentIndex - 1] : null
-  const nextSaga = currentIndex < sortedSagas.length - 1 ? sortedSagas[currentIndex + 1] : null
+  const nextSaga =
+    currentIndex < sortedSagas.length - 1 ? sortedSagas[currentIndex + 1] : null
 
   const handleRandomSaga = () => {
     if (allSagas.length > 0) {
@@ -251,7 +268,10 @@ function SagaDetailPage() {
       label: 'Title',
       sortValue: (row) => row.title,
       render: (row) => (
-        <Link to={`/arcs/${row.arc_id}`} className="text-blue-600 hover:text-blue-800 hover:underline font-medium">
+        <Link
+          to={`/arcs/${row.arc_id}`}
+          className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+        >
           {row.title}
         </Link>
       ),
@@ -276,8 +296,21 @@ function SagaDetailPage() {
     },
   ]
 
-  const STRAW_HAT_IDS = new Set(['Monkey_D._Luffy','Roronoa_Zoro','Nami','Usopp','Sanji','Tony_Tony_Chopper','Nico_Robin','Franky','Brook','Jinbe'])
-  const filteredCharacters = hideStrawHats ? characters.filter(c => !STRAW_HAT_IDS.has(c.id)) : characters
+  const STRAW_HAT_IDS = new Set([
+    'Monkey_D._Luffy',
+    'Roronoa_Zoro',
+    'Nami',
+    'Usopp',
+    'Sanji',
+    'Tony_Tony_Chopper',
+    'Nico_Robin',
+    'Franky',
+    'Brook',
+    'Jinbe',
+  ])
+  const filteredCharacters = hideStrawHats
+    ? characters.filter((c) => !STRAW_HAT_IDS.has(c.id))
+    : characters
 
   const sagaStart = saga?.start_chapter ?? 0
   const sagaEnd = saga?.end_chapter ?? 9999
@@ -293,7 +326,10 @@ function SagaDetailPage() {
       label: 'Name',
       sortValue: (row) => row.name ?? '',
       render: (row) => (
-        <Link to={`/characters/${row.id}`} className="text-blue-600 hover:text-blue-800 hover:underline font-medium">
+        <Link
+          to={`/characters/${row.id}`}
+          className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+        >
           {row.name || 'Unknown'}
         </Link>
       ),
@@ -314,13 +350,17 @@ function SagaDetailPage() {
       key: 'bounty',
       label: 'Bounty',
       sortValue: (row) => row.bounty ?? -1,
-      render: (row) => (row.bounty != null && row.bounty > 0 ? `₿${row.bounty.toLocaleString()}` : '-'),
+      render: (row) =>
+        row.bounty != null && row.bounty > 0
+          ? `₿${row.bounty.toLocaleString()}`
+          : '-',
     },
     {
       key: 'first_appearance',
       label: 'First Appearance',
       sortValue: (row) => row.first_appearance ?? 0,
-      render: (row) => (row.first_appearance ? `Ch. ${row.first_appearance}` : '-'),
+      render: (row) =>
+        row.first_appearance ? `Ch. ${row.first_appearance}` : '-',
     },
     {
       key: 'appearance_count',
@@ -338,14 +378,34 @@ function SagaDetailPage() {
           <Link to="/" className="hover:text-gray-900 transition-colors">
             Home
           </Link>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
           </svg>
           <Link to="/sagas" className="hover:text-gray-900 transition-colors">
             Sagas
           </Link>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
           </svg>
           <span className="text-gray-900 font-medium">{saga.title}</span>
         </nav>
@@ -363,10 +423,16 @@ function SagaDetailPage() {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => previousSaga && navigate(`/sagas/${previousSaga.saga_id}`)}
+              onClick={() =>
+                previousSaga && navigate(`/sagas/${previousSaga.saga_id}`)
+              }
               disabled={!previousSaga}
               className="px-3 py-2 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
-              title={previousSaga ? `Previous: ${previousSaga.title}` : 'No previous saga'}
+              title={
+                previousSaga
+                  ? `Previous: ${previousSaga.title}`
+                  : 'No previous saga'
+              }
             >
               <span className="hidden md:inline text-sm font-medium">Prev</span>
               <span className="md:hidden text-sm font-medium">‹</span>
@@ -397,14 +463,20 @@ function SagaDetailPage() {
               className="p-2 bg-white/90 hover:bg-white border border-gray-200 rounded-lg transition-colors shadow-sm"
               title={copyLinkFeedback ? 'Copied!' : 'Copy link'}
             >
-              <FontAwesomeIcon icon={copyLinkFeedback ? faCheck : faLink} className="w-4 h-4 text-gray-700" />
+              <FontAwesomeIcon
+                icon={copyLinkFeedback ? faCheck : faLink}
+                className="w-4 h-4 text-gray-700"
+              />
             </button>
             <button
               onClick={handleShareToTwitter}
               className="p-2 bg-white/90 hover:bg-white border border-gray-200 rounded-lg transition-colors shadow-sm"
               title="Share on Twitter"
             >
-              <FontAwesomeIcon icon={faXTwitter} className="w-4 h-4 text-gray-700" />
+              <FontAwesomeIcon
+                icon={faXTwitter}
+                className="w-4 h-4 text-gray-700"
+              />
             </button>
             <a
               href={wikiUrl}
@@ -413,7 +485,10 @@ function SagaDetailPage() {
               className="p-2 bg-white/90 hover:bg-white border border-gray-200 rounded-lg transition-colors shadow-sm"
               title="View on Wiki"
             >
-              <FontAwesomeIcon icon={faExternalLinkAlt} className="w-4 h-4 text-gray-700" />
+              <FontAwesomeIcon
+                icon={faExternalLinkAlt}
+                className="w-4 h-4 text-gray-700"
+              />
             </a>
           </div>
         </div>
@@ -433,22 +508,42 @@ function SagaDetailPage() {
                   <div className="h-1 w-32 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full"></div>
                 </div>
                 {saga.japanese_title && (
-                  <p className="text-lg text-gray-600 mb-1">{saga.japanese_title}</p>
+                  <p className="text-lg text-gray-600 mb-1">
+                    {saga.japanese_title}
+                  </p>
                 )}
                 {saga.romanized_title && (
-                  <p className="text-base text-gray-500">{saga.romanized_title}</p>
+                  <p className="text-base text-gray-500">
+                    {saga.romanized_title}
+                  </p>
                 )}
               </div>
 
               <div className="flex-shrink-0 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-6 border-2 border-purple-200 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
-                  <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <svg
+                    className="w-5 h-5 text-purple-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
                   </svg>
-                  <div className="text-sm font-semibold text-purple-800 uppercase tracking-wide">Chapters</div>
+                  <div className="text-sm font-semibold text-purple-800 uppercase tracking-wide">
+                    Chapters
+                  </div>
                 </div>
-                <div className="text-4xl font-bold text-purple-900">{chapterCount}</div>
-                <div className="text-xs text-purple-700 mt-1">{chapterRange}</div>
+                <div className="text-4xl font-bold text-purple-900">
+                  {chapterCount}
+                </div>
+                <div className="text-xs text-purple-700 mt-1">
+                  {chapterRange}
+                </div>
               </div>
             </div>
           </Card>
@@ -458,8 +553,18 @@ function SagaDetailPage() {
         <Card className="mb-8 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-2 mb-5">
             <div className="p-2 bg-purple-100 rounded-lg">
-              <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-5 h-5 text-purple-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </div>
             <SectionTitle>Saga Information</SectionTitle>
@@ -467,41 +572,66 @@ function SagaDetailPage() {
           <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex justify-between items-start py-2 border-b border-gray-100">
               <dt className="text-sm font-medium text-gray-500">Saga ID</dt>
-              <dd className="text-sm font-semibold text-gray-900 text-right ml-4">{saga.saga_id}</dd>
+              <dd className="text-sm font-semibold text-gray-900 text-right ml-4">
+                {saga.saga_id}
+              </dd>
             </div>
             <div className="flex justify-between items-start py-2 border-b border-gray-100">
-              <dt className="text-sm font-medium text-gray-500">Start Chapter</dt>
-              <dd className="text-sm font-semibold text-gray-900 text-right ml-4">{saga.start_chapter}</dd>
+              <dt className="text-sm font-medium text-gray-500">
+                Start Chapter
+              </dt>
+              <dd className="text-sm font-semibold text-gray-900 text-right ml-4">
+                {saga.start_chapter}
+              </dd>
             </div>
             <div className="flex justify-between items-start py-2 border-b border-gray-100">
               <dt className="text-sm font-medium text-gray-500">End Chapter</dt>
-              <dd className="text-sm font-semibold text-gray-900 text-right ml-4">{saga.end_chapter}</dd>
-            </div>
-            <div className="flex justify-between items-start py-2 border-b border-gray-100">
-              <dt className="text-sm font-medium text-gray-500">Total Chapters</dt>
-              <dd className="text-sm font-semibold text-gray-900 text-right ml-4">{chapterCount}</dd>
-            </div>
-            <div className="flex justify-between items-start py-2 border-b border-gray-100">
-              <dt className="text-sm font-medium text-gray-500">Chapter Range</dt>
-              <dd className="text-sm font-semibold text-gray-900 text-right ml-4">{chapterRange}</dd>
-            </div>
-            {volumeRange?.startVol && (
-            <div className="flex justify-between items-start py-2 border-b border-gray-100">
-              <dt className="text-sm font-medium text-gray-500">Volumes</dt>
               <dd className="text-sm font-semibold text-gray-900 text-right ml-4">
-                Vol. {volumeRange.startVol}{volumeRange.endVol !== volumeRange.startVol ? ` – ${volumeRange.endVol}` : ''}
+                {saga.end_chapter}
               </dd>
             </div>
+            <div className="flex justify-between items-start py-2 border-b border-gray-100">
+              <dt className="text-sm font-medium text-gray-500">
+                Total Chapters
+              </dt>
+              <dd className="text-sm font-semibold text-gray-900 text-right ml-4">
+                {chapterCount}
+              </dd>
+            </div>
+            <div className="flex justify-between items-start py-2 border-b border-gray-100">
+              <dt className="text-sm font-medium text-gray-500">
+                Chapter Range
+              </dt>
+              <dd className="text-sm font-semibold text-gray-900 text-right ml-4">
+                {chapterRange}
+              </dd>
+            </div>
+            {volumeRange?.startVol && (
+              <div className="flex justify-between items-start py-2 border-b border-gray-100">
+                <dt className="text-sm font-medium text-gray-500">Volumes</dt>
+                <dd className="text-sm font-semibold text-gray-900 text-right ml-4">
+                  Vol. {volumeRange.startVol}
+                  {volumeRange.endVol !== volumeRange.startVol
+                    ? ` – ${volumeRange.endVol}`
+                    : ''}
+                </dd>
+              </div>
             )}
             <div className="flex justify-between items-start py-2 border-b border-gray-100">
-              <dt className="text-sm font-medium text-gray-500">Number of Arcs</dt>
-              <dd className="text-sm font-semibold text-gray-900 text-right ml-4">{arcs.length}</dd>
+              <dt className="text-sm font-medium text-gray-500">
+                Number of Arcs
+              </dt>
+              <dd className="text-sm font-semibold text-gray-900 text-right ml-4">
+                {arcs.length}
+              </dd>
             </div>
           </dl>
 
           {saga.description && (
             <div className="mt-6 pt-6 border-t border-gray-200">
-              <h3 className="text-base font-semibold text-gray-900 mb-3">Description</h3>
+              <h3 className="text-base font-semibold text-gray-900 mb-3">
+                Description
+              </h3>
               <div className="bg-gray-50 rounded-lg p-4">
                 <p className="text-gray-700 leading-relaxed whitespace-pre-line">
                   {saga.description}
@@ -516,13 +646,25 @@ function SagaDetailPage() {
           <Card className="mb-8 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-2 mb-5">
               <div className="p-2 bg-purple-100 rounded-lg">
-                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                <svg
+                  className="w-5 h-5 text-purple-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
                 </svg>
               </div>
               <SectionTitle>
                 Story Arcs in This Saga
-                <span className="ml-2 text-base text-gray-500">({arcs.length})</span>
+                <span className="ml-2 text-base text-gray-500">
+                  ({arcs.length})
+                </span>
               </SectionTitle>
             </div>
 
@@ -542,18 +684,35 @@ function SagaDetailPage() {
           <Card className="hover:shadow-md transition-shadow">
             <div className="flex items-center gap-2 mb-5">
               <div className="p-2 bg-blue-100 rounded-lg">
-                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                <svg
+                  className="w-5 h-5 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
                 </svg>
               </div>
               <SectionTitle>
                 Characters Appearing
-                <span className="ml-2 text-base text-gray-500">({filteredCharacters.length})</span>
+                <span className="ml-2 text-base text-gray-500">
+                  ({filteredCharacters.length})
+                </span>
               </SectionTitle>
             </div>
             <div className="mb-3">
               <label className="inline-flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
-                <input type="checkbox" checked={hideStrawHats} onChange={(e) => setHideStrawHats(e.target.checked)} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                <input
+                  type="checkbox"
+                  checked={hideStrawHats}
+                  onChange={(e) => setHideStrawHats(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
                 Hide Straw Hat Pirates
               </label>
             </div>
@@ -568,6 +727,51 @@ function SagaDetailPage() {
             />
           </Card>
         )}
+
+        {/* Analytics Cross-links */}
+        <div className="mt-6 p-4 bg-indigo-50 border border-indigo-100 rounded-xl flex flex-wrap items-center gap-3">
+          <span className="text-sm font-medium text-indigo-700">
+            Explore in Analytics:
+          </span>
+          <Link
+            to="/analytics/saga-matrix"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-indigo-200 text-indigo-700 text-sm font-medium rounded-lg hover:bg-indigo-50 transition-colors"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+              />
+            </svg>
+            Saga Appearance Matrix
+          </Link>
+          <Link
+            to="/analytics/story-arcs"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-indigo-200 text-indigo-700 text-sm font-medium rounded-lg hover:bg-indigo-50 transition-colors"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+              />
+            </svg>
+            Story & Arc Analytics
+          </Link>
+        </div>
       </div>
     </main>
   )

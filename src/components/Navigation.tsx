@@ -11,10 +11,12 @@ const EXPLORE_ITEMS: NavItem[] = [
   { to: '/arcs', label: 'Arcs' },
   { to: '/volumes', label: 'Volumes' },
   { to: '/chapters', label: 'Chapters' },
+  { to: '/devil-fruits', label: 'Devil Fruits', badge: 'soon' },
 ]
 
 const ANALYTICS_ITEMS: NavItem[] = [
   { to: '/analytics', label: 'Dashboard', exact: true },
+  { label: 'Characters', heading: true },
   { to: '/analytics/character-stats', label: 'Character Stats', exact: true },
   {
     to: '/analytics/character-appearances',
@@ -26,12 +28,18 @@ const ANALYTICS_ITEMS: NavItem[] = [
     label: 'Data Completeness',
     exact: true,
   },
-  { to: '/analytics/story-arcs', label: 'Story & Arcs', exact: true },
+  {
+    to: '/analytics/character-timeline',
+    label: 'Character Timeline',
+    exact: true,
+  },
   { to: '/analytics/birthdays', label: 'Birthdays', exact: true },
+  { label: 'Story & Publication', heading: true },
+  { to: '/analytics/story-arcs', label: 'Story & Arcs', exact: true },
+  { to: '/analytics/saga-matrix', label: 'Saga Matrix', exact: true },
   { to: '/analytics/chapter-releases', label: 'Chapter Releases', exact: true },
   { to: '/analytics/publication-rate', label: 'Publication Rate', exact: true },
   { to: '/analytics/network', label: 'Character Network', exact: true },
-  { to: '/analytics/saga-matrix', label: 'Saga Matrix', exact: true },
 ]
 
 const getLinkClass = ({ isActive }: { isActive: boolean }) => {
@@ -56,7 +64,8 @@ function Navigation() {
     location.pathname.startsWith('/arcs') ||
     location.pathname.startsWith('/sagas') ||
     location.pathname.startsWith('/chapters') ||
-    location.pathname.startsWith('/volumes')
+    location.pathname.startsWith('/volumes') ||
+    location.pathname.startsWith('/devil-fruits')
   const isAnalyticsActive = location.pathname.startsWith('/analytics')
 
   const closeMobileMenu = () => setMobileMenuOpen(false)
@@ -78,15 +87,15 @@ function Navigation() {
           label="Analytics"
           isActive={isAnalyticsActive}
           items={ANALYTICS_ITEMS}
-          width="w-56"
+          width="w-64"
         />
-
-        <NavLink to="/chat" className={getLinkClass}>
-          <span className="inline-flex items-center gap-1">✨ AI Chat</span>
-        </NavLink>
 
         <NavLink to="/about" className={getLinkClass}>
           About
+        </NavLink>
+
+        <NavLink to="/chat" className={getLinkClass}>
+          <span className="inline-flex items-center gap-1">✨ AI Chat</span>
         </NavLink>
       </nav>
 
@@ -169,19 +178,19 @@ function Navigation() {
               />
 
               <NavLink
-                to="/chat"
-                className={getMobileLinkClass}
-                onClick={closeMobileMenu}
-              >
-                ✨ AI Chat
-              </NavLink>
-
-              <NavLink
                 to="/about"
                 className={getMobileLinkClass}
                 onClick={closeMobileMenu}
               >
                 About
+              </NavLink>
+
+              <NavLink
+                to="/chat"
+                className={getMobileLinkClass}
+                onClick={closeMobileMenu}
+              >
+                ✨ AI Chat
               </NavLink>
 
               {/* Mobile Auth */}

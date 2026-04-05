@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import { Network, DataSet } from 'vis-network/standalone'
 import { SectionHeader } from '../components/analytics'
 import { RangeSlider } from '../components/common/RangeSlider'
@@ -806,6 +807,29 @@ export default function NetworkAnalysisPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+          <Link
+            to="/analytics"
+            className="hover:text-gray-900 transition-colors"
+          >
+            Analytics
+          </Link>
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+          <span className="text-gray-900 font-medium">Character Network</span>
+        </nav>
         <SectionHeader
           title="Character Network Analysis"
           description="Explore how One Piece characters are connected through co-appearances. Node size reflects appearance count; edge width reflects co-appearance frequency."

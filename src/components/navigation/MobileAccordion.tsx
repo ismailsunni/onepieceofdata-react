@@ -36,22 +36,43 @@ export default function MobileAccordion({
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
       {expanded && (
         <div className="space-y-1 mt-1">
-          {items.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={subLinkClass}
-              onClick={onClose}
-              end={item.exact}
-            >
-              {item.label}
-            </NavLink>
-          ))}
+          {items.map((item, idx) =>
+            item.heading ? (
+              <div
+                key={`heading-${idx}`}
+                className="pl-8 pr-4 pt-2 pb-0.5 text-xs font-semibold text-gray-400 uppercase tracking-wider"
+              >
+                {item.label}
+              </div>
+            ) : (
+              <NavLink
+                key={item.to}
+                to={item.to!}
+                className={subLinkClass}
+                onClick={onClose}
+                end={item.exact}
+              >
+                <span className="flex items-center justify-between gap-2">
+                  {item.label}
+                  {item.badge && (
+                    <span className="text-xs text-orange-500 font-medium">
+                      {item.badge}
+                    </span>
+                  )}
+                </span>
+              </NavLink>
+            )
+          )}
         </div>
       )}
     </div>

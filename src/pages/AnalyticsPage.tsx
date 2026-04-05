@@ -15,7 +15,9 @@ function AnalyticsPage() {
       const [characters, arcs, chapters, sagas] = await Promise.all([
         supabase.from('character').select('id', { count: 'exact', head: true }),
         supabase.from('arc').select('arc_id', { count: 'exact', head: true }),
-        supabase.from('chapter').select('number', { count: 'exact', head: true }),
+        supabase
+          .from('chapter')
+          .select('number', { count: 'exact', head: true }),
         supabase.from('saga').select('saga_id', { count: 'exact', head: true }),
       ])
 
@@ -31,10 +33,16 @@ function AnalyticsPage() {
   const analyticsCategories = [
     {
       title: 'Character Statistics',
-      description: 'Analyze character bounties, status distribution, and rankings',
+      description:
+        'Analyze character bounties, status distribution, and rankings',
       path: '/analytics/character-stats',
       icon: (
-        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -50,10 +58,16 @@ function AnalyticsPage() {
     },
     {
       title: 'Character Appearances',
-      description: 'Explore character introductions and appearance patterns across sagas',
+      description:
+        'Explore character introductions and appearance patterns across sagas',
       path: '/analytics/character-appearances',
       icon: (
-        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -69,10 +83,16 @@ function AnalyticsPage() {
     },
     {
       title: 'Data Completeness',
-      description: 'Analyze completeness of character profile attributes in the database',
+      description:
+        'Analyze completeness of character profile attributes in the database',
       path: '/analytics/character-completeness',
       icon: (
-        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -91,7 +111,12 @@ function AnalyticsPage() {
       description: 'Visualize arc lengths and story progression',
       path: '/analytics/story-arcs',
       icon: (
-        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -107,10 +132,16 @@ function AnalyticsPage() {
     },
     {
       title: 'Birthday Calendar',
-      description: 'Explore character birthdays throughout the year with an interactive calendar',
+      description:
+        'Explore character birthdays throughout the year with an interactive calendar',
       path: '/analytics/birthdays',
       icon: (
-        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -126,10 +157,16 @@ function AnalyticsPage() {
     },
     {
       title: 'Chapter Release Calendar',
-      description: 'View chapter release schedule by year and Weekly Shonen Jump issue',
+      description:
+        'View chapter release schedule by year and Weekly Shonen Jump issue',
       path: '/analytics/chapter-releases',
       icon: (
-        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -145,10 +182,16 @@ function AnalyticsPage() {
     },
     {
       title: 'Publication Rate Analytics',
-      description: 'Track One Piece\'s publication consistency and break patterns year by year',
+      description:
+        "Track One Piece's publication consistency and break patterns year by year",
       path: '/analytics/publication-rate',
       icon: (
-        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -164,10 +207,16 @@ function AnalyticsPage() {
     },
     {
       title: 'Character Network Analysis',
-      description: 'Explore character co-appearance networks across arcs, sagas, and chapters with interactive graph visualization',
+      description:
+        'Explore character co-appearance networks across arcs, sagas, and chapters with interactive graph visualization',
       path: '/analytics/network',
       icon: (
-        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -181,6 +230,56 @@ function AnalyticsPage() {
       borderColor: 'border-indigo-200',
       iconColor: 'text-indigo-600',
     },
+    {
+      title: 'Character Timeline',
+      description:
+        'Compare chapter appearance timelines for multiple characters side by side with preset groups',
+      path: '/analytics/character-timeline',
+      icon: (
+        <svg
+          className="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
+          />
+        </svg>
+      ),
+      gradient: 'from-teal-500 to-cyan-600',
+      bgColor: 'bg-teal-50',
+      borderColor: 'border-teal-200',
+      iconColor: 'text-teal-600',
+    },
+    {
+      title: 'Saga Appearance Matrix',
+      description:
+        'Heatmap of character appearances broken down by saga, with filters and concentration ranking',
+      path: '/analytics/saga-matrix',
+      icon: (
+        <svg
+          className="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+          />
+        </svg>
+      ),
+      gradient: 'from-orange-500 to-amber-600',
+      bgColor: 'bg-orange-50',
+      borderColor: 'border-orange-200',
+      iconColor: 'text-orange-600',
+    },
   ]
 
   return (
@@ -192,7 +291,12 @@ function AnalyticsPage() {
           <div className="relative bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center gap-4 mb-4">
               <div className="flex-shrink-0 w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                <svg className="w-6 h-6 md:w-9 md:h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6 md:w-9 md:h-9 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -206,7 +310,8 @@ function AnalyticsPage() {
                   Analytics Dashboard
                 </h1>
                 <p className="text-gray-600 text-lg mt-2">
-                  Explore visual insights and statistics from the One Piece universe
+                  Explore visual insights and statistics from the One Piece
+                  universe
                 </p>
               </div>
             </div>
@@ -219,7 +324,12 @@ function AnalyticsPage() {
             label="Total Characters"
             value={stats?.characters || 0}
             icon={
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -236,7 +346,12 @@ function AnalyticsPage() {
             label="Story Arcs"
             value={stats?.arcs || 0}
             icon={
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -253,7 +368,12 @@ function AnalyticsPage() {
             label="Chapters"
             value={stats?.chapters || 0}
             icon={
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -270,7 +390,12 @@ function AnalyticsPage() {
             label="Sagas"
             value={stats?.sagas || 0}
             icon={
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -287,8 +412,12 @@ function AnalyticsPage() {
 
         {/* Section Title */}
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Analytics Categories</h2>
-          <p className="text-gray-600">Choose a category to explore detailed visualizations and insights</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Analytics Categories
+          </h2>
+          <p className="text-gray-600">
+            Choose a category to explore detailed visualizations and insights
+          </p>
         </div>
 
         {/* Analytics Categories Grid */}
@@ -301,7 +430,9 @@ function AnalyticsPage() {
             >
               <div className="flex items-start gap-4">
                 {/* Icon */}
-                <div className={`${category.bgColor} ${category.iconColor} p-3 rounded-lg flex-shrink-0 transition-transform duration-200 group-hover:scale-110`}>
+                <div
+                  className={`${category.bgColor} ${category.iconColor} p-3 rounded-lg flex-shrink-0 transition-transform duration-200 group-hover:scale-110`}
+                >
                   {category.icon}
                 </div>
 
@@ -317,8 +448,18 @@ function AnalyticsPage() {
 
                 {/* Arrow */}
                 <div className="text-gray-400 group-hover:text-gray-600 transition-all duration-200 group-hover:translate-x-1 flex-shrink-0">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                 </div>
               </div>
@@ -330,7 +471,12 @@ function AnalyticsPage() {
         <div className="bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-100 rounded-xl p-6">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -340,35 +486,86 @@ function AnalyticsPage() {
               </svg>
             </div>
             <div className="flex-1">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Getting Started</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                Getting Started
+              </h3>
               <p className="text-gray-700 mb-4">
-                Explore comprehensive analytics and visualizations of the One Piece universe. Each category
-                provides interactive charts and insights derived from our extensive database.
+                Explore comprehensive analytics and visualizations of the One
+                Piece universe. Each category provides interactive charts and
+                insights derived from our extensive database.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                 <div className="flex items-start gap-2">
-                  <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
-                  <span className="text-gray-700">Interactive charts with filtering options</span>
+                  <span className="text-gray-700">
+                    Interactive charts with filtering options
+                  </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
-                  <span className="text-gray-700">Export charts as PNG images</span>
+                  <span className="text-gray-700">
+                    Export charts as PNG images
+                  </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
-                  <span className="text-gray-700">Real-time data updates from the database</span>
+                  <span className="text-gray-700">
+                    Real-time data updates from the database
+                  </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
-                  <span className="text-gray-700">Responsive design for all devices</span>
+                  <span className="text-gray-700">
+                    Responsive design for all devices
+                  </span>
                 </div>
               </div>
             </div>

@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   fetchBountyDistribution,
@@ -14,7 +15,6 @@ import OriginRegionChart from '../components/OriginRegionChart'
 import { StatCard } from '../components/analytics'
 
 function CharacterStatsPage() {
-
   // Fetch bounty analytics data
   const { data: bountyData = [], isLoading: bountyLoading } = useQuery({
     queryKey: ['analytics', 'bounty-distribution'],
@@ -31,20 +31,23 @@ function CharacterStatsPage() {
     queryFn: fetchStatusDistribution,
   })
 
-  const { data: topBountiesAll = [], isLoading: topBountiesLoadingAll } = useQuery({
-    queryKey: ['analytics', 'top-bounties', 'all'],
-    queryFn: () => fetchTopBounties(10, false),
-  })
+  const { data: topBountiesAll = [], isLoading: topBountiesLoadingAll } =
+    useQuery({
+      queryKey: ['analytics', 'top-bounties', 'all'],
+      queryFn: () => fetchTopBounties(10, false),
+    })
 
-  const { data: topBountiesAlive = [], isLoading: topBountiesLoadingAlive } = useQuery({
-    queryKey: ['analytics', 'top-bounties', 'alive'],
-    queryFn: () => fetchTopBounties(10, true),
-  })
+  const { data: topBountiesAlive = [], isLoading: topBountiesLoadingAlive } =
+    useQuery({
+      queryKey: ['analytics', 'top-bounties', 'alive'],
+      queryFn: () => fetchTopBounties(10, true),
+    })
 
-  const { data: originRegionData = [], isLoading: originRegionLoading } = useQuery({
-    queryKey: ['analytics', 'origin-region-distribution'],
-    queryFn: fetchOriginRegionDistribution,
-  })
+  const { data: originRegionData = [], isLoading: originRegionLoading } =
+    useQuery({
+      queryKey: ['analytics', 'origin-region-distribution'],
+      queryFn: fetchOriginRegionDistribution,
+    })
 
   const isLoading =
     bountyLoading ||
@@ -57,7 +60,7 @@ function CharacterStatsPage() {
   // Calculate additional statistics
   const stats = useMemo(() => {
     const total = bountyStats?.totalCharacters || 0
-    const aliveCount = statusData.find(s => s.status === 'Alive')?.count || 0
+    const aliveCount = statusData.find((s) => s.status === 'Alive')?.count || 0
     const charactersWithBounty = bountyStats?.charactersWithBounty || 0
 
     return {
@@ -67,19 +70,44 @@ function CharacterStatsPage() {
     }
   }, [bountyStats, statusData])
 
-
-
-
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+          <Link
+            to="/analytics"
+            className="hover:text-gray-900 transition-colors"
+          >
+            Analytics
+          </Link>
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+          <span className="text-gray-900 font-medium">Character Stats</span>
+        </nav>
         {/* Hero Section */}
         <div className="relative mb-6 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-50 opacity-60 rounded-2xl"></div>
           <div className="relative bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center gap-4">
               <div className="flex-shrink-0 w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg">
-                <svg className="w-6 h-6 md:w-9 md:h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6 md:w-9 md:h-9 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -116,7 +144,12 @@ function CharacterStatsPage() {
                 label="Total Characters"
                 value={stats.totalCharacters}
                 icon={
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -132,7 +165,12 @@ function CharacterStatsPage() {
                 label="Characters with Bounty"
                 value={stats.charactersWithBounty}
                 icon={
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -148,7 +186,12 @@ function CharacterStatsPage() {
                 label="Living Characters"
                 value={stats.aliveCount}
                 icon={
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -164,7 +207,12 @@ function CharacterStatsPage() {
                 label="Devil Fruit Users"
                 value="Coming Soon"
                 icon={
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -255,7 +303,12 @@ function CharacterStatsPage() {
             {bountyStats && (
               <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border border-blue-200 p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-6 h-6 text-blue-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -263,20 +316,33 @@ function CharacterStatsPage() {
                       d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
                     />
                   </svg>
-                  <h3 className="text-xl font-semibold text-gray-900">Key Insights</h3>
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    Key Insights
+                  </h3>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4">
-                    <p className="text-sm text-gray-600 mb-1">Bounty Coverage</p>
-                    <p className="text-2xl font-bold text-blue-600">{bountyStats.percentage}%</p>
+                    <p className="text-sm text-gray-600 mb-1">
+                      Bounty Coverage
+                    </p>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {bountyStats.percentage}%
+                    </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      {bountyStats.charactersWithBounty} of {bountyStats.totalCharacters} characters have bounties
+                      {bountyStats.charactersWithBounty} of{' '}
+                      {bountyStats.totalCharacters} characters have bounties
                     </p>
                   </div>
                   <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4">
                     <p className="text-sm text-gray-600 mb-1">Survival Rate</p>
                     <p className="text-2xl font-bold text-green-600">
-                      {bountyStats.totalCharacters ? Math.round((stats.aliveCount / bountyStats.totalCharacters) * 100) : 0}%
+                      {bountyStats.totalCharacters
+                        ? Math.round(
+                            (stats.aliveCount / bountyStats.totalCharacters) *
+                              100
+                          )
+                        : 0}
+                      %
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
                       {stats.aliveCount} characters are confirmed alive
@@ -291,7 +357,12 @@ function CharacterStatsPage() {
               statusData.length === 0 &&
               topBountiesAll.length === 0 && (
                 <div className="text-center py-20">
-                  <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-16 h-16 text-gray-300 mx-auto mb-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"

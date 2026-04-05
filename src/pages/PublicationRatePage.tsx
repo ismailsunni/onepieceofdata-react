@@ -1,5 +1,9 @@
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { fetchChapterReleases, ChapterRelease } from '../services/analyticsService'
+import {
+  fetchChapterReleases,
+  ChapterRelease,
+} from '../services/analyticsService'
 import { useMemo } from 'react'
 import { StatCard } from '../components/analytics'
 import { ChartCard } from '../components/common/ChartCard'
@@ -15,7 +19,11 @@ import {
 } from 'recharts'
 
 function PublicationRatePage() {
-  const { data: releases, isLoading, error } = useQuery<ChapterRelease[]>({
+  const {
+    data: releases,
+    isLoading,
+    error,
+  } = useQuery<ChapterRelease[]>({
     queryKey: ['analytics', 'chapter-releases'],
     queryFn: fetchChapterReleases,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -26,15 +34,18 @@ function PublicationRatePage() {
     if (!releases) return []
 
     const sortedReleases = [...releases].sort((a, b) => a.number - b.number)
-    const yearlyData = new Map<number, {
-      chapters: number
-      breaks: number
-      firstIssue: number
-      lastIssue: number
-      issuesWithChapters: Set<number> // Track unique issues that had chapters
-      firstChapter: number | null
-      lastChapter: number | null
-    }>()
+    const yearlyData = new Map<
+      number,
+      {
+        chapters: number
+        breaks: number
+        firstIssue: number
+        lastIssue: number
+        issuesWithChapters: Set<number> // Track unique issues that had chapters
+        firstChapter: number | null
+        lastChapter: number | null
+      }
+    >()
 
     // Initialize all years with chapter count and track first/last issues
     sortedReleases.forEach((release) => {
@@ -47,7 +58,7 @@ function PublicationRatePage() {
             lastIssue: release.issue,
             issuesWithChapters: new Set(),
             firstChapter: null,
-            lastChapter: null
+            lastChapter: null,
           })
         }
         const yearData = yearlyData.get(release.year)!
@@ -57,10 +68,16 @@ function PublicationRatePage() {
         yearData.lastIssue = Math.max(yearData.lastIssue, release.issue)
 
         // Track first and last chapter numbers
-        if (yearData.firstChapter === null || release.number < yearData.firstChapter) {
+        if (
+          yearData.firstChapter === null ||
+          release.number < yearData.firstChapter
+        ) {
           yearData.firstChapter = release.number
         }
-        if (yearData.lastChapter === null || release.number > yearData.lastChapter) {
+        if (
+          yearData.lastChapter === null ||
+          release.number > yearData.lastChapter
+        ) {
           yearData.lastChapter = release.number
         }
 
@@ -80,7 +97,12 @@ function PublicationRatePage() {
       const current = sortedReleases[i]
       const previous = sortedReleases[i - 1]
 
-      if (current.year && previous.year && current.issue !== null && previous.issue !== null) {
+      if (
+        current.year &&
+        previous.year &&
+        current.issue !== null &&
+        previous.issue !== null
+      ) {
         let weeksBetween = 0
 
         if (current.year === previous.year) {
@@ -88,8 +110,11 @@ function PublicationRatePage() {
           weeksBetween = current.issue - previous.issue
 
           // Adjust for double issues
-          if (previous.issueEnd !== null && previous.issueEnd > previous.issue) {
-            weeksBetween -= (previous.issueEnd - previous.issue)
+          if (
+            previous.issueEnd !== null &&
+            previous.issueEnd > previous.issue
+          ) {
+            weeksBetween -= previous.issueEnd - previous.issue
           }
 
           // Subtract 1 for the expected next issue
@@ -107,11 +132,14 @@ function PublicationRatePage() {
         } else if (current.year === previous.year + 1) {
           // Year transition - distribute breaks between years
           // Calculate total weeks between
-          let totalWeeksBetween = (52 - previous.issue) + current.issue
+          let totalWeeksBetween = 52 - previous.issue + current.issue
 
           // Adjust for double issues
-          if (previous.issueEnd !== null && previous.issueEnd > previous.issue) {
-            totalWeeksBetween -= (previous.issueEnd - previous.issue)
+          if (
+            previous.issueEnd !== null &&
+            previous.issueEnd > previous.issue
+          ) {
+            totalWeeksBetween -= previous.issueEnd - previous.issue
           }
 
           // Subtract 1 for expected next issue
@@ -122,7 +150,11 @@ function PublicationRatePage() {
 
           if (totalWeeksBetween > 0) {
             // Calculate breaks before end of previous year
-            const breaksInPreviousYear = 52 - previous.issue - (previous.issueEnd ? (previous.issueEnd - previous.issue) : 0) - 1
+            const breaksInPreviousYear =
+              52 -
+              previous.issue -
+              (previous.issueEnd ? previous.issueEnd - previous.issue : 0) -
+              1
 
             // Calculate breaks in current year
             const breaksInCurrentYear = current.issue - 1
@@ -176,16 +208,29 @@ function PublicationRatePage() {
       }
     }
 
-    const totalChapters = yearlyStats.reduce((sum, year) => sum + year.chapters, 0)
+    const totalChapters = yearlyStats.reduce(
+      (sum, year) => sum + year.chapters,
+      0
+    )
     const totalBreaks = yearlyStats.reduce((sum, year) => sum + year.breaks, 0)
-    const totalWeeks = yearlyStats.reduce((sum, year) => sum + year.availableWeeks, 0)
+    const totalWeeks = yearlyStats.reduce(
+      (sum, year) => sum + year.availableWeeks,
+      0
+    )
     const averagePublicationRate = (totalChapters / totalWeeks) * 100
 
     // Calculate last 5 years average publication rate
     const last5Years = yearlyStats.slice(-5)
-    const last5YearsChapters = last5Years.reduce((sum, year) => sum + year.chapters, 0)
-    const last5YearsWeeks = last5Years.reduce((sum, year) => sum + year.availableWeeks, 0)
-    const last5YearsRate = last5YearsWeeks > 0 ? (last5YearsChapters / last5YearsWeeks) * 100 : 0
+    const last5YearsChapters = last5Years.reduce(
+      (sum, year) => sum + year.chapters,
+      0
+    )
+    const last5YearsWeeks = last5Years.reduce(
+      (sum, year) => sum + year.availableWeeks,
+      0
+    )
+    const last5YearsRate =
+      last5YearsWeeks > 0 ? (last5YearsChapters / last5YearsWeeks) * 100 : 0
 
     // Find extreme years (excluding first and last year)
     const validYears = yearlyStats.length >= 3 ? yearlyStats.slice(1, -1) : []
@@ -196,18 +241,22 @@ function PublicationRatePage() {
     let leastBreaksYear = null
 
     if (validYears.length > 0) {
-      mostPublishedYear = validYears.reduce((max, year) =>
-        year.chapters > max.chapters ? year : max
-      , validYears[0])
-      leastPublishedYear = validYears.reduce((min, year) =>
-        year.chapters < min.chapters ? year : min
-      , validYears[0])
-      mostBreaksYear = validYears.reduce((max, year) =>
-        year.breaks > max.breaks ? year : max
-      , validYears[0])
-      leastBreaksYear = validYears.reduce((min, year) =>
-        year.breaks < min.breaks ? year : min
-      , validYears[0])
+      mostPublishedYear = validYears.reduce(
+        (max, year) => (year.chapters > max.chapters ? year : max),
+        validYears[0]
+      )
+      leastPublishedYear = validYears.reduce(
+        (min, year) => (year.chapters < min.chapters ? year : min),
+        validYears[0]
+      )
+      mostBreaksYear = validYears.reduce(
+        (max, year) => (year.breaks > max.breaks ? year : max),
+        validYears[0]
+      )
+      leastBreaksYear = validYears.reduce(
+        (min, year) => (year.breaks < min.breaks ? year : min),
+        validYears[0]
+      )
     }
 
     // Calculate longest streak without break
@@ -232,7 +281,12 @@ function PublicationRatePage() {
       const current = sortedReleases[i]
       const previous = sortedReleases[i - 1]
 
-      if (current.year && previous.year && current.issue !== null && previous.issue !== null) {
+      if (
+        current.year &&
+        previous.year &&
+        current.issue !== null &&
+        previous.issue !== null
+      ) {
         let weeksBetween = 0
 
         if (current.year === previous.year) {
@@ -240,8 +294,11 @@ function PublicationRatePage() {
           weeksBetween = current.issue - previous.issue
 
           // Adjust for double issues
-          if (previous.issueEnd !== null && previous.issueEnd > previous.issue) {
-            weeksBetween -= (previous.issueEnd - previous.issue)
+          if (
+            previous.issueEnd !== null &&
+            previous.issueEnd > previous.issue
+          ) {
+            weeksBetween -= previous.issueEnd - previous.issue
           }
 
           // Subtract 1 for the expected next issue
@@ -253,11 +310,14 @@ function PublicationRatePage() {
           }
         } else if (current.year === previous.year + 1) {
           // Year transition
-          weeksBetween = (52 - previous.issue) + current.issue
+          weeksBetween = 52 - previous.issue + current.issue
 
           // Adjust for double issues
-          if (previous.issueEnd !== null && previous.issueEnd > previous.issue) {
-            weeksBetween -= (previous.issueEnd - previous.issue)
+          if (
+            previous.issueEnd !== null &&
+            previous.issueEnd > previous.issue
+          ) {
+            weeksBetween -= previous.issueEnd - previous.issue
           }
 
           // Subtract 1 for expected next issue
@@ -284,11 +344,14 @@ function PublicationRatePage() {
       }
     }
 
-    const longestStreakInfo = longestStreak > 0 ? {
-      chapters: longestStreak,
-      fromChapter: sortedReleases[longestStreakStart].number,
-      toChapter: sortedReleases[longestStreakEnd].number
-    } : null
+    const longestStreakInfo =
+      longestStreak > 0
+        ? {
+            chapters: longestStreak,
+            fromChapter: sortedReleases[longestStreakStart].number,
+            toChapter: sortedReleases[longestStreakEnd].number,
+          }
+        : null
 
     return {
       totalYears: yearlyStats.length,
@@ -332,13 +395,41 @@ function PublicationRatePage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+          <Link
+            to="/analytics"
+            className="hover:text-gray-900 transition-colors"
+          >
+            Analytics
+          </Link>
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+          <span className="text-gray-900 font-medium">Publication Rate</span>
+        </nav>
         {/* Hero Section */}
         <div className="relative mb-6 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 opacity-60 rounded-2xl"></div>
           <div className="relative bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center gap-4">
               <div className="flex-shrink-0 w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
-                <svg className="w-6 h-6 md:w-9 md:h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6 md:w-9 md:h-9 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -364,9 +455,18 @@ function PublicationRatePage() {
           <StatCard
             label="Longest Streak Without Break"
             value={`${stats.longestStreak} ch`}
-            subtitle={stats.longestStreakInfo ? `Ch. ${stats.longestStreakInfo.fromChapter}-${stats.longestStreakInfo.toChapter}` : undefined}
+            subtitle={
+              stats.longestStreakInfo
+                ? `Ch. ${stats.longestStreakInfo.fromChapter}-${stats.longestStreakInfo.toChapter}`
+                : undefined
+            }
             icon={
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -380,10 +480,23 @@ function PublicationRatePage() {
           />
           <StatCard
             label="Least Published Year"
-            value={stats.leastPublishedYear ? String(stats.leastPublishedYear.year) : '-'}
-            subtitle={stats.leastPublishedYear ? `${stats.leastPublishedYear.chapters} published, ${stats.leastPublishedYear.breaks} breaks` : undefined}
+            value={
+              stats.leastPublishedYear
+                ? String(stats.leastPublishedYear.year)
+                : '-'
+            }
+            subtitle={
+              stats.leastPublishedYear
+                ? `${stats.leastPublishedYear.chapters} published, ${stats.leastPublishedYear.breaks} breaks`
+                : undefined
+            }
             icon={
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -399,7 +512,12 @@ function PublicationRatePage() {
             label="Total Break Weeks"
             value={stats.totalBreaks}
             icon={
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -416,7 +534,12 @@ function PublicationRatePage() {
             value={`${stats.averagePublicationRate}% (~${Math.round(stats.averagePublicationRate * 0.48)} ch/yr)`}
             subtitle={`Last 5 years: ${stats.last5YearsRate}% (~${Math.round(stats.last5YearsRate * 0.48)} ch/yr)`}
             icon={
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -449,7 +572,12 @@ function PublicationRatePage() {
                 tick={{ fontSize: 12, fill: '#6b7280' }}
               />
               <YAxis
-                label={{ value: 'Weeks', angle: -90, position: 'insideLeft', style: { fill: '#6b7280' } }}
+                label={{
+                  value: 'Weeks',
+                  angle: -90,
+                  position: 'insideLeft',
+                  style: { fill: '#6b7280' },
+                }}
                 tick={{ fontSize: 12, fill: '#6b7280' }}
               />
               <Tooltip
@@ -468,24 +596,37 @@ function PublicationRatePage() {
                 content={({ active, payload, label }) => {
                   if (active && payload && payload.length) {
                     const data = payload[0].payload
-                    const publicationRate = ((data.chapters / data.availableWeeks) * 100).toFixed(1)
+                    const publicationRate = (
+                      (data.chapters / data.availableWeeks) *
+                      100
+                    ).toFixed(1)
                     return (
                       <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-lg">
-                        <p className="font-semibold text-gray-900 mb-2">Year {label}</p>
+                        <p className="font-semibold text-gray-900 mb-2">
+                          Year {label}
+                        </p>
                         <p className="text-sm text-gray-700">
                           <span className="inline-block w-3 h-3 bg-green-500 rounded mr-2"></span>
-                          Chapters: <span className="font-medium">{data.chapters}</span>
+                          Chapters:{' '}
+                          <span className="font-medium">{data.chapters}</span>
                         </p>
                         <p className="text-sm text-gray-700">
                           <span className="inline-block w-3 h-3 bg-red-500 rounded mr-2"></span>
-                          Breaks: <span className="font-medium">{data.breaks}</span>
+                          Breaks:{' '}
+                          <span className="font-medium">{data.breaks}</span>
                         </p>
                         <div className="border-t border-gray-200 my-2"></div>
                         <p className="text-sm text-gray-700">
-                          Available Weeks: <span className="font-medium">{data.availableWeeks}</span>
+                          Available Weeks:{' '}
+                          <span className="font-medium">
+                            {data.availableWeeks}
+                          </span>
                         </p>
                         <p className="text-sm text-gray-700">
-                          Publication Rate: <span className="font-medium">{publicationRate}%</span>
+                          Publication Rate:{' '}
+                          <span className="font-medium">
+                            {publicationRate}%
+                          </span>
                         </p>
                       </div>
                     )
@@ -501,18 +642,26 @@ function PublicationRatePage() {
                   return value
                 }}
               />
-              <Bar dataKey="chapters" stackId="a" fill="#10b981" name="chapters" />
+              <Bar
+                dataKey="chapters"
+                stackId="a"
+                fill="#10b981"
+                name="chapters"
+              />
               <Bar dataKey="breaks" stackId="a" fill="#ef4444" name="breaks" />
             </BarChart>
           </ResponsiveContainer>
           <p className="text-xs text-gray-500 mt-4">
-            Each bar represents the total available weeks for that year. Green shows weeks with chapters published, red shows break weeks.
+            Each bar represents the total available weeks for that year. Green
+            shows weeks with chapters published, red shows break weeks.
           </p>
         </ChartCard>
 
         {/* Yearly Statistics Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Detailed Yearly Statistics</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Detailed Yearly Statistics
+          </h3>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
@@ -539,32 +688,51 @@ function PublicationRatePage() {
               </thead>
               <tbody>
                 {yearlyStats.map((yearStat, index) => {
-                  const publicationRate = ((yearStat.chapters / yearStat.availableWeeks) * 100).toFixed(1)
+                  const publicationRate = (
+                    (yearStat.chapters / yearStat.availableWeeks) *
+                    100
+                  ).toFixed(1)
 
                   // Find min/max for chapters and breaks (excluding first and last years)
                   const validYearsForComparison = yearlyStats.slice(1, -1)
-                  const maxChapters = validYearsForComparison.length > 0
-                    ? Math.max(...validYearsForComparison.map(y => y.chapters))
-                    : 0
-                  const minChapters = validYearsForComparison.length > 0
-                    ? Math.min(...validYearsForComparison.map(y => y.chapters))
-                    : 0
-                  const maxBreaks = validYearsForComparison.length > 0
-                    ? Math.max(...validYearsForComparison.map(y => y.breaks))
-                    : 0
-                  const minBreaks = validYearsForComparison.length > 0
-                    ? Math.min(...validYearsForComparison.map(y => y.breaks))
-                    : 0
+                  const maxChapters =
+                    validYearsForComparison.length > 0
+                      ? Math.max(
+                          ...validYearsForComparison.map((y) => y.chapters)
+                        )
+                      : 0
+                  const minChapters =
+                    validYearsForComparison.length > 0
+                      ? Math.min(
+                          ...validYearsForComparison.map((y) => y.chapters)
+                        )
+                      : 0
+                  const maxBreaks =
+                    validYearsForComparison.length > 0
+                      ? Math.max(
+                          ...validYearsForComparison.map((y) => y.breaks)
+                        )
+                      : 0
+                  const minBreaks =
+                    validYearsForComparison.length > 0
+                      ? Math.min(
+                          ...validYearsForComparison.map((y) => y.breaks)
+                        )
+                      : 0
 
                   // Check if current year should be highlighted (not first or last)
                   const isFirstYear = index === 0
                   const isLastYear = index === yearlyStats.length - 1
                   const shouldHighlight = !isFirstYear && !isLastYear
 
-                  const isMaxChapters = shouldHighlight && yearStat.chapters === maxChapters
-                  const isMinChapters = shouldHighlight && yearStat.chapters === minChapters
-                  const isMaxBreaks = shouldHighlight && yearStat.breaks === maxBreaks
-                  const isMinBreaks = shouldHighlight && yearStat.breaks === minBreaks
+                  const isMaxChapters =
+                    shouldHighlight && yearStat.chapters === maxChapters
+                  const isMinChapters =
+                    shouldHighlight && yearStat.chapters === minChapters
+                  const isMaxBreaks =
+                    shouldHighlight && yearStat.breaks === maxBreaks
+                  const isMinBreaks =
+                    shouldHighlight && yearStat.breaks === minBreaks
 
                   return (
                     <tr
@@ -575,29 +743,51 @@ function PublicationRatePage() {
                         {yearStat.year}
                       </td>
                       <td className="px-4 py-3 text-sm text-center text-gray-700 border border-gray-200">
-                        {yearStat.firstChapter !== null && yearStat.lastChapter !== null
+                        {yearStat.firstChapter !== null &&
+                        yearStat.lastChapter !== null
                           ? `${yearStat.firstChapter} - ${yearStat.lastChapter}`
                           : '-'}
                       </td>
                       <td className="px-4 py-3 text-sm text-right border border-gray-200">
-                        <span className={isMaxChapters ? 'font-bold text-green-600' : isMinChapters ? 'font-bold text-red-600' : 'text-gray-700'}>
+                        <span
+                          className={
+                            isMaxChapters
+                              ? 'font-bold text-green-600'
+                              : isMinChapters
+                                ? 'font-bold text-red-600'
+                                : 'text-gray-700'
+                          }
+                        >
                           {yearStat.chapters}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm text-right border border-gray-200">
-                        <span className={isMaxBreaks ? 'font-bold text-red-600' : isMinBreaks ? 'font-bold text-green-600' : 'text-gray-700'}>
+                        <span
+                          className={
+                            isMaxBreaks
+                              ? 'font-bold text-red-600'
+                              : isMinBreaks
+                                ? 'font-bold text-green-600'
+                                : 'text-gray-700'
+                          }
+                        >
                           {yearStat.breaks}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm text-right text-gray-700 border border-gray-200">
                         {yearStat.availableWeeks}
                       </td>
-                      <td className="px-4 py-3 text-sm text-right font-semibold border border-gray-200"
+                      <td
+                        className="px-4 py-3 text-sm text-right font-semibold border border-gray-200"
                         style={{
-                          color: parseFloat(publicationRate) === 100 ? '#10b981' : // green
-                                 parseFloat(publicationRate) >= 95 ? '#3b82f6' : // blue
-                                 parseFloat(publicationRate) >= 90 ? '#f59e0b' : // amber
-                                 '#ef4444' // red
+                          color:
+                            parseFloat(publicationRate) === 100
+                              ? '#10b981' // green
+                              : parseFloat(publicationRate) >= 95
+                                ? '#3b82f6' // blue
+                                : parseFloat(publicationRate) >= 90
+                                  ? '#f59e0b' // amber
+                                  : '#ef4444', // red
                         }}
                       >
                         {publicationRate}%
@@ -612,7 +802,9 @@ function PublicationRatePage() {
                     Total
                   </td>
                   <td className="px-4 py-3 text-sm text-center text-gray-900 border border-gray-200">
-                    {yearlyStats.length > 0 && yearlyStats[0].firstChapter !== null && yearlyStats[yearlyStats.length - 1].lastChapter !== null
+                    {yearlyStats.length > 0 &&
+                    yearlyStats[0].firstChapter !== null &&
+                    yearlyStats[yearlyStats.length - 1].lastChapter !== null
                       ? `${yearlyStats[0].firstChapter} - ${yearlyStats[yearlyStats.length - 1].lastChapter}`
                       : '-'}
                   </td>
@@ -623,7 +815,10 @@ function PublicationRatePage() {
                     {yearlyStats.reduce((sum, year) => sum + year.breaks, 0)}
                   </td>
                   <td className="px-4 py-3 text-sm text-right text-gray-900 border border-gray-200">
-                    {yearlyStats.reduce((sum, year) => sum + year.availableWeeks, 0)}
+                    {yearlyStats.reduce(
+                      (sum, year) => sum + year.availableWeeks,
+                      0
+                    )}
                   </td>
                   <td className="px-4 py-3 text-sm text-right text-gray-900 border border-gray-200">
                     {stats.averagePublicationRate}%
@@ -634,30 +829,52 @@ function PublicationRatePage() {
           </div>
           <div className="mt-4 space-y-2">
             <p className="text-xs text-gray-500">
-              <strong>Publication Rate:</strong> (Chapters Published / Available Weeks) × 100%
+              <strong>Publication Rate:</strong> (Chapters Published / Available
+              Weeks) × 100%
             </p>
             <p className="text-xs text-gray-500">
-              <strong>Available Weeks:</strong> The total number of weeks in the publishing period = Chapters Published + Break Weeks. This represents all weeks from the first to last chapter of that year.
+              <strong>Available Weeks:</strong> The total number of weeks in the
+              publishing period = Chapters Published + Break Weeks. This
+              represents all weeks from the first to last chapter of that year.
             </p>
             <p className="text-xs text-gray-500">
-              <strong>Note:</strong> Break weeks account for planned breaks, holidays, and Jump's annual breaks (typically around Issue 4-5 combined issue and year-end combined issues). When there are no breaks, the rate is 100%.
+              <strong>Note:</strong> Break weeks account for planned breaks,
+              holidays, and Jump's annual breaks (typically around Issue 4-5
+              combined issue and year-end combined issues). When there are no
+              breaks, the rate is 100%.
             </p>
             <div className="flex flex-wrap gap-4 mt-3 pt-3 border-t border-gray-200">
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded" style={{ backgroundColor: '#10b981' }}></div>
+                <div
+                  className="w-4 h-4 rounded"
+                  style={{ backgroundColor: '#10b981' }}
+                ></div>
                 <span className="text-xs text-gray-600">100% (Perfect)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded" style={{ backgroundColor: '#3b82f6' }}></div>
-                <span className="text-xs text-gray-600">95-99% (Excellent)</span>
+                <div
+                  className="w-4 h-4 rounded"
+                  style={{ backgroundColor: '#3b82f6' }}
+                ></div>
+                <span className="text-xs text-gray-600">
+                  95-99% (Excellent)
+                </span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded" style={{ backgroundColor: '#f59e0b' }}></div>
+                <div
+                  className="w-4 h-4 rounded"
+                  style={{ backgroundColor: '#f59e0b' }}
+                ></div>
                 <span className="text-xs text-gray-600">90-94% (Good)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded" style={{ backgroundColor: '#ef4444' }}></div>
-                <span className="text-xs text-gray-600">&lt;90% (Many Breaks)</span>
+                <div
+                  className="w-4 h-4 rounded"
+                  style={{ backgroundColor: '#ef4444' }}
+                ></div>
+                <span className="text-xs text-gray-600">
+                  &lt;90% (Many Breaks)
+                </span>
               </div>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { fetchArcs } from '../services/arcService'
 import { fetchSagas } from '../services/sagaService'
@@ -22,7 +23,7 @@ function StoryArcsAnalyticsPage() {
   // Filter arcs by selected saga
   const filteredArcs = useMemo(() => {
     if (!selectedSaga) return arcs
-    return arcs.filter(arc => arc.saga?.title === selectedSaga)
+    return arcs.filter((arc) => arc.saga?.title === selectedSaga)
   }, [arcs, selectedSaga])
 
   // Calculate statistics
@@ -36,7 +37,7 @@ function StoryArcsAnalyticsPage() {
       }
     }
 
-    const arcLengths = filteredArcs.map(arc => ({
+    const arcLengths = filteredArcs.map((arc) => ({
       title: arc.title,
       chapters: arc.end_chapter - arc.start_chapter + 1,
     }))
@@ -47,7 +48,8 @@ function StoryArcsAnalyticsPage() {
     const shortest = arcLengths.reduce((min, arc) =>
       arc.chapters < min.chapters ? arc : min
     )
-    const average = arcLengths.reduce((sum, arc) => sum + arc.chapters, 0) / arcLengths.length
+    const average =
+      arcLengths.reduce((sum, arc) => sum + arc.chapters, 0) / arcLengths.length
 
     return {
       totalArcs: filteredArcs.length,
@@ -57,20 +59,48 @@ function StoryArcsAnalyticsPage() {
     }
   }, [filteredArcs])
 
-
-
   const isLoading = arcsLoading || sagasLoading
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+          <Link
+            to="/analytics"
+            className="hover:text-gray-900 transition-colors"
+          >
+            Analytics
+          </Link>
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+          <span className="text-gray-900 font-medium">
+            Story & Arc Analytics
+          </span>
+        </nav>
         {/* Hero Section */}
         <div className="relative mb-6 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 opacity-60 rounded-2xl"></div>
           <div className="relative bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center gap-4">
               <div className="flex-shrink-0 w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                <svg className="w-6 h-6 md:w-9 md:h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6 md:w-9 md:h-9 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -84,7 +114,8 @@ function StoryArcsAnalyticsPage() {
                   Story & Arc Analytics
                 </h1>
                 <p className="text-gray-600 text-lg mt-2">
-                  Visualize the length and progression of story arcs across the One Piece saga
+                  Visualize the length and progression of story arcs across the
+                  One Piece saga
                 </p>
               </div>
             </div>
@@ -107,7 +138,12 @@ function StoryArcsAnalyticsPage() {
                 label="Total Story Arcs"
                 value={stats.totalArcs}
                 icon={
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -124,7 +160,12 @@ function StoryArcsAnalyticsPage() {
                 value={`${stats.longestArc.chapters} ch`}
                 subtitle={stats.longestArc.title}
                 icon={
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -141,7 +182,12 @@ function StoryArcsAnalyticsPage() {
                 value={`${stats.shortestArc.chapters} ch`}
                 subtitle={stats.shortestArc.title}
                 icon={
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -157,7 +203,12 @@ function StoryArcsAnalyticsPage() {
                 label="Average Length"
                 value={`${stats.averageLength} ch`}
                 icon={
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -176,7 +227,12 @@ function StoryArcsAnalyticsPage() {
               title="Filter by Saga"
               description="Select a saga to focus on specific story arcs, or view all arcs"
               icon={
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -197,7 +253,9 @@ function StoryArcsAnalyticsPage() {
                 All Sagas
               </FilterButton>
               {sagas.map((saga) => {
-                const arcCount = arcs.filter(arc => arc.saga?.title === saga.title).length
+                const arcCount = arcs.filter(
+                  (arc) => arc.saga?.title === saga.title
+                ).length
                 return (
                   <FilterButton
                     key={saga.saga_id}
@@ -222,7 +280,12 @@ function StoryArcsAnalyticsPage() {
               </div>
             ) : (
               <div className="text-center py-20">
-                <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-16 h-16 text-gray-300 mx-auto mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -235,7 +298,6 @@ function StoryArcsAnalyticsPage() {
                 </p>
               </div>
             )}
-
           </>
         )}
       </div>

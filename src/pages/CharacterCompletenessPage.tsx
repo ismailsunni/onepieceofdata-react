@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { fetchCharacters } from '../services/characterService'
 import { StatCard, SectionHeader } from '../components/analytics'
@@ -103,7 +104,9 @@ function CharacterCompletenessPage() {
       }
     }
 
-    const avgCompleteness = completenessData.reduce((sum, d) => sum + d.percentage, 0) / completenessData.length
+    const avgCompleteness =
+      completenessData.reduce((sum, d) => sum + d.percentage, 0) /
+      completenessData.length
     const mostComplete = completenessData[0]
     const leastComplete = completenessData[completenessData.length - 1]
 
@@ -143,13 +146,41 @@ function CharacterCompletenessPage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+          <Link
+            to="/analytics"
+            className="hover:text-gray-900 transition-colors"
+          >
+            Analytics
+          </Link>
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+          <span className="text-gray-900 font-medium">Data Completeness</span>
+        </nav>
         {/* Hero Section */}
         <div className="relative mb-6 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-50 opacity-60 rounded-2xl"></div>
           <div className="relative bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center gap-4">
               <div className="flex-shrink-0 w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                <svg className="w-6 h-6 md:w-9 md:h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6 md:w-9 md:h-9 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -163,7 +194,8 @@ function CharacterCompletenessPage() {
                   Character Data Completeness
                 </h1>
                 <p className="text-gray-600 text-lg mt-2">
-                  Analyze the completeness of character profile attributes in the database
+                  Analyze the completeness of character profile attributes in
+                  the database
                 </p>
               </div>
             </div>
@@ -186,7 +218,12 @@ function CharacterCompletenessPage() {
                 label="Total Characters"
                 value={stats.totalCharacters}
                 icon={
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -202,7 +239,12 @@ function CharacterCompletenessPage() {
                 label="Avg Completeness"
                 value={`${stats.avgCompleteness}%`}
                 icon={
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -220,7 +262,12 @@ function CharacterCompletenessPage() {
                 value={stats.mostComplete}
                 subtitle={`${stats.mostCompletePercent}%`}
                 icon={
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -237,7 +284,12 @@ function CharacterCompletenessPage() {
                 value={stats.leastComplete}
                 subtitle={`${stats.leastCompletePercent}%`}
                 icon={
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -258,7 +310,12 @@ function CharacterCompletenessPage() {
                   title="Attribute Completeness Breakdown"
                   description="Percentage of characters with each attribute filled"
                   icon={
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -336,7 +393,11 @@ function CharacterCompletenessPage() {
                           label={{
                             value: 'Completeness (%)',
                             position: 'bottom',
-                            style: { fontSize: 14, fill: '#374151', fontWeight: 600 },
+                            style: {
+                              fontSize: 14,
+                              fill: '#374151',
+                              fontWeight: 600,
+                            },
                           }}
                         />
                         <YAxis
@@ -357,13 +418,17 @@ function CharacterCompletenessPage() {
                                   </p>
                                   <div className="space-y-1 text-sm">
                                     <p className="text-gray-600">
-                                      <span className="font-medium">Filled:</span>{' '}
+                                      <span className="font-medium">
+                                        Filled:
+                                      </span>{' '}
                                       <span className="text-green-600 font-semibold">
                                         {data.filled} ({data.percentage}%)
                                       </span>
                                     </p>
                                     <p className="text-gray-600">
-                                      <span className="font-medium">Missing:</span>{' '}
+                                      <span className="font-medium">
+                                        Missing:
+                                      </span>{' '}
                                       <span className="text-red-600 font-semibold">
                                         {data.missing}
                                       </span>
@@ -380,7 +445,10 @@ function CharacterCompletenessPage() {
                         />
                         <Bar dataKey="percentage" radius={[0, 8, 8, 0]}>
                           {completenessData.map((_entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={COLORS[index % COLORS.length]}
+                            />
                           ))}
                         </Bar>
                       </BarChart>
@@ -400,7 +468,12 @@ function CharacterCompletenessPage() {
                   title="Detailed Completeness Statistics"
                   description="Comprehensive breakdown of each attribute's data availability"
                   icon={
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -434,14 +507,24 @@ function CharacterCompletenessPage() {
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-100">
                         {completenessData.map((item, index) => (
-                          <tr key={item.attribute} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
+                          <tr
+                            key={item.attribute}
+                            className={
+                              index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
+                            }
+                          >
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
                                 <div
                                   className="w-3 h-3 rounded-full mr-3"
-                                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                                  style={{
+                                    backgroundColor:
+                                      COLORS[index % COLORS.length],
+                                  }}
                                 ></div>
-                                <span className="text-sm font-medium text-gray-900">{item.attribute}</span>
+                                <span className="text-sm font-medium text-gray-900">
+                                  {item.attribute}
+                                </span>
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-green-600 font-semibold">
@@ -459,7 +542,8 @@ function CharacterCompletenessPage() {
                                   className="h-2 rounded-full transition-all duration-300"
                                   style={{
                                     width: `${item.percentage}%`,
-                                    backgroundColor: COLORS[index % COLORS.length],
+                                    backgroundColor:
+                                      COLORS[index % COLORS.length],
                                   }}
                                 ></div>
                               </div>
@@ -476,7 +560,12 @@ function CharacterCompletenessPage() {
             {/* Empty State */}
             {completenessData.length === 0 && (
               <div className="text-center py-20">
-                <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-16 h-16 text-gray-300 mx-auto mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"

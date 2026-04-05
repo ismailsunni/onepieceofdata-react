@@ -2,9 +2,11 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 
 export interface NavItem {
-  to: string
+  to?: string
   label: string
   exact?: boolean // if true, match only exact path (default: startsWith)
+  heading?: boolean // if true, renders as a non-link section header
+  badge?: string // optional badge text (e.g. "soon")
 }
 
 interface DesktopDropdownProps {
@@ -15,8 +17,18 @@ interface DesktopDropdownProps {
 }
 
 const ChevronDown = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M19 9l-7 7-7-7"
+    />
   </svg>
 )
 
@@ -58,18 +70,34 @@ export default function DesktopDropdown({
         className={`absolute left-0 mt-2 ${width} origin-top-left rounded-lg bg-white shadow-lg border border-gray-200 focus:outline-none z-10`}
       >
         <div className="py-1">
-          {items.map((item) => (
-            <MenuItem key={item.to}>
-              {({ focus }) => (
-                <NavLink
-                  to={item.to}
-                  className={getItemClass(focus, item.to, item.exact)}
-                >
-                  {item.label}
-                </NavLink>
-              )}
-            </MenuItem>
-          ))}
+          {items.map((item, idx) =>
+            item.heading ? (
+              <div
+                key={`heading-${idx}`}
+                className="px-4 pt-3 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider"
+              >
+                {item.label}
+              </div>
+            ) : (
+              <MenuItem key={item.to}>
+                {({ focus }) => (
+                  <NavLink
+                    to={item.to!}
+                    className={getItemClass(focus, item.to!, item.exact)}
+                  >
+                    <span className="flex items-center justify-between gap-2">
+                      {item.label}
+                      {item.badge && (
+                        <span className="text-xs text-orange-500 font-medium">
+                          {item.badge}
+                        </span>
+                      )}
+                    </span>
+                  </NavLink>
+                )}
+              </MenuItem>
+            )
+          )}
         </div>
       </MenuItems>
     </Menu>
