@@ -70,9 +70,19 @@ function getCellColor(count: number): string {
   return 'bg-blue-400 text-white'
 }
 
+function getCellColorPercent(pct: number): string {
+  if (pct === 0) return ''
+  if (pct <= 10) return 'bg-blue-50 text-gray-700'
+  if (pct <= 30) return 'bg-blue-100 text-gray-800'
+  if (pct <= 60) return 'bg-blue-200 text-gray-900'
+  if (pct <= 80) return 'bg-blue-300 text-gray-900'
+  return 'bg-blue-400 text-white'
+}
+
 function CharacterSagaMatrixPage() {
   const [hideStrawHats, setHideStrawHats] = useState(false)
   const [nameSearch, setNameSearch] = useState('')
+  const [showPercentage, setShowPercentage] = useState(false)
   const [appearanceRange, setAppearanceRange] = useState<[number, number]>([
     10, 9999,
   ])
@@ -103,6 +113,11 @@ function CharacterSagaMatrixPage() {
       ? Math.max(...characters.map((c) => c.saga_list?.length ?? 0))
       : 11
 
+  const sagaChapterTotals: Record<string, number> = {}
+  for (const saga of sagas) {
+    sagaChapterTotals[saga.saga_id] = saga.end_chapter - saga.start_chapter + 1
+  }
+
   const matrixData = (() => {
     if (!characters.length || !sagas.length) return []
 
@@ -127,10 +142,15 @@ function CharacterSagaMatrixPage() {
     return filtered.map((char) => {
       const chapters = char.chapter_list ?? []
       const sagaCounts: Record<string, number> = {}
+      const sagaPercentages: Record<string, number> = {}
       for (const saga of sagas) {
-        sagaCounts[saga.saga_id] = chapters.filter(
+        const count = chapters.filter(
           (ch) => ch >= saga.start_chapter && ch <= saga.end_chapter
         ).length
+        sagaCounts[saga.saga_id] = count
+        const total = sagaChapterTotals[saga.saga_id] ?? 1
+        sagaPercentages[saga.saga_id] =
+          count > 0 ? Math.round((count / total) * 1000) / 10 : 0
       }
       const sagasAppeared = Object.values(sagaCounts).filter(
         (v) => v > 0
@@ -142,6 +162,7 @@ function CharacterSagaMatrixPage() {
         name: char.name ?? char.id,
         total: char.appearance_count ?? 0,
         sagaCounts,
+        sagaPercentages,
         sagasAppeared,
         avgPerSaga,
       }
@@ -246,6 +267,21 @@ function CharacterSagaMatrixPage() {
           Hide Straw Hat Pirates
         </label>
 
+        <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden text-sm">
+          <button
+            onClick={() => setShowPercentage(false)}
+            className={`px-3 py-1.5 transition-colors ${!showPercentage ? 'bg-blue-600 text-white font-medium' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+          >
+            Count
+          </button>
+          <button
+            onClick={() => setShowPercentage(true)}
+            className={`px-3 py-1.5 transition-colors ${showPercentage ? 'bg-blue-600 text-white font-medium' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+          >
+            % of Saga
+          </button>
+        </div>
+
         <input
           type="text"
           value={nameSearch}
@@ -283,21 +319,43 @@ function CharacterSagaMatrixPage() {
         <span className="inline-flex items-center gap-1">
           <span className="w-5 h-4 rounded border border-gray-200" /> 0
         </span>
-        <span className="inline-flex items-center gap-1">
-          <span className="w-5 h-4 rounded bg-blue-50" /> 1-5
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <span className="w-5 h-4 rounded bg-blue-100" /> 6-20
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <span className="w-5 h-4 rounded bg-blue-200" /> 21-50
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <span className="w-5 h-4 rounded bg-blue-300" /> 51-100
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <span className="w-5 h-4 rounded bg-blue-400" /> 100+
-        </span>
+        {showPercentage ? (
+          <>
+            <span className="inline-flex items-center gap-1">
+              <span className="w-5 h-4 rounded bg-blue-50" /> 1–10%
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <span className="w-5 h-4 rounded bg-blue-100" /> 11–30%
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <span className="w-5 h-4 rounded bg-blue-200" /> 31–60%
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <span className="w-5 h-4 rounded bg-blue-300" /> 61–80%
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <span className="w-5 h-4 rounded bg-blue-400" /> 81–100%
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="inline-flex items-center gap-1">
+              <span className="w-5 h-4 rounded bg-blue-50" /> 1-5
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <span className="w-5 h-4 rounded bg-blue-100" /> 6-20
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <span className="w-5 h-4 rounded bg-blue-200" /> 21-50
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <span className="w-5 h-4 rounded bg-blue-300" /> 51-100
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <span className="w-5 h-4 rounded bg-blue-400" /> 100+
+            </span>
+          </>
+        )}
       </div>
 
       {/* Heatmap Table */}
@@ -358,13 +416,21 @@ function CharacterSagaMatrixPage() {
                   </td>
                   {sagas.map((saga) => {
                     const count = row.sagaCounts[saga.saga_id] ?? 0
+                    const pct = row.sagaPercentages[saga.saga_id] ?? 0
+                    const sagaTotal = sagaChapterTotals[saga.saga_id] ?? 0
                     return (
                       <td
                         key={saga.saga_id}
-                        className={`px-1 py-1.5 text-center text-xs tabular-nums ${getCellColor(count)}`}
-                        title={`${row.name} in ${saga.title}: ${count} chapters`}
+                        className={`px-1 py-1.5 text-center text-xs tabular-nums ${showPercentage ? getCellColorPercent(pct) : getCellColor(count)}`}
+                        title={`${row.name} in ${saga.title}: ${count} / ${sagaTotal} chapters (${pct}%)`}
                       >
-                        {count > 0 ? count : '\u2013'}
+                        {showPercentage
+                          ? pct > 0
+                            ? `${pct}%`
+                            : '\u2013'
+                          : count > 0
+                            ? count
+                            : '\u2013'}
                       </td>
                     )
                   })}
