@@ -378,7 +378,7 @@ function CharacterSagaMatrixPage() {
                     title={`Sort by ${saga.title}`}
                   >
                     <div
-                      className="writing-vertical whitespace-nowrap text-xs"
+                      className="writing-vertical whitespace-nowrap text-xs mx-auto"
                       style={{
                         writingMode: 'vertical-rl',
                         transform: 'rotate(180deg)',
