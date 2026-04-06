@@ -134,6 +134,7 @@ function CharacterSelect({
 }: CharacterSelectProps) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
+  const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const selected = characters.find((c) => c.id === selectedId) ?? null
@@ -144,16 +145,22 @@ function CharacterSelect({
     return characters.filter((c) => c.name?.toLowerCase().includes(q))
   }, [characters, query])
 
+  // Close on outside click
   useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false)
+        setQuery('')
+      }
+    }
     if (open) {
-      document.body.style.overflow = 'hidden'
+      document.addEventListener('mousedown', handleClickOutside)
       setTimeout(() => inputRef.current?.focus(), 50)
-    } else {
-      document.body.style.overflow = ''
     }
-    return () => {
-      document.body.style.overflow = ''
-    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [open])
 
   function handleSelect(id: string) {
@@ -162,13 +169,8 @@ function CharacterSelect({
     setOpen(false)
   }
 
-  function handleClose() {
-    setQuery('')
-    setOpen(false)
-  }
-
   return (
-    <div className="flex-1 min-w-0">
+    <div ref={containerRef} className="flex-1 min-w-0 relative">
       <label className="block text-xs font-semibold text-amber-600 uppercase tracking-wider mb-1">
         {label}
       </label>
@@ -176,7 +178,7 @@ function CharacterSelect({
         <div className="h-11 bg-gray-200 rounded-xl animate-pulse" />
       ) : (
         <button
-          onClick={() => setOpen(true)}
+          onClick={() => setOpen(!open)}
           className="w-full flex items-center gap-2 px-3 py-2.5 bg-white border border-gray-300 rounded-xl shadow-sm text-sm hover:border-amber-400 text-left transition-colors"
         >
           <svg
@@ -239,78 +241,67 @@ function CharacterSelect({
       )}
 
       {open && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-white">
-          <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-gray-200">
-            <div className="relative flex-1">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg
-                  className="w-4 h-4 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
+        <div className="absolute top-full mt-1 left-0 right-0 z-50 bg-white border border-gray-200 rounded-lg shadow-lg">
+          <div className="p-2 border-b border-gray-100">
+            <div className="relative">
+              <svg
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
               <input
                 ref={inputRef}
                 type="text"
                 placeholder={`Search ${label.toLowerCase()}…`}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent text-gray-900 placeholder-gray-400"
+                className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent text-gray-900 placeholder-gray-400"
               />
             </div>
-            <button
-              onClick={handleClose}
-              className="flex-shrink-0 px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              Cancel
-            </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
-            <p className="px-4 py-2 text-xs text-gray-400">
-              {filtered.length} karakter
+          <div className="max-h-64 overflow-y-auto">
+            <p className="px-3 py-1.5 text-xs text-gray-400">
+              {filtered.length} characters
             </p>
-            <ul>
-              {filtered.map((c) => (
-                <li key={c.id}>
-                  <button
-                    onClick={() => handleSelect(c.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
-                      c.id === selectedId
-                        ? 'bg-amber-50 text-amber-700'
-                        : 'text-gray-700 hover:bg-gray-50 active:bg-gray-100'
-                    }`}
+            {filtered.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => handleSelect(c.id)}
+                className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-left text-sm transition-colors ${
+                  c.id === selectedId
+                    ? 'bg-amber-50 text-amber-700'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <span className={c.id === selectedId ? 'font-semibold' : ''}>
+                  {c.name}
+                </span>
+                {c.id === selectedId && (
+                  <svg
+                    className="w-4 h-4 text-amber-500 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    {c.id === selectedId && (
-                      <svg
-                        className="w-4 h-4 text-amber-500 flex-shrink-0"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    )}
-                    <span
-                      className={`text-sm ${c.id === selectedId ? 'font-semibold' : ''}`}
-                    >
-                      {c.name}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                )}
+              </button>
+            ))}
           </div>
         </div>
       )}
