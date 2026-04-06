@@ -208,9 +208,9 @@ function CharacterTimelinePage() {
         {!isLoading && (
           <div className="space-y-6">
             {/* Character Selection Panel */}
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-white border border-gray-200 rounded-xl p-6">
               <div className="mb-4">
-                <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                <h2 className="text-xl font-semibold text-gray-800 mb-1">
                   Select Characters
                 </h2>
                 <p className="text-sm text-gray-600">
@@ -221,18 +221,18 @@ function CharacterTimelinePage() {
 
               {/* Preset Selection */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs font-medium text-gray-600 mb-2">
                   Character Presets
                 </label>
                 <select
                   onChange={(e) =>
                     handlePresetSelect(e.target.value as keyof typeof PRESETS)
                   }
-                  className="w-full md:w-auto px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  className="w-full md:w-auto px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
                   defaultValue=""
                 >
                   <option value="" disabled>
-                    Select a preset...
+                    Select a preset…
                   </option>
                   {Object.entries(PRESETS).map(([key, preset]) => (
                     <option key={key} value={key}>
@@ -242,43 +242,37 @@ function CharacterTimelinePage() {
                 </select>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-wrap gap-2 mb-4">
-                <button
-                  onClick={handleSelectAll}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm"
-                >
-                  Select All
-                </button>
-                <button
-                  onClick={handleClearAll}
-                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm"
-                >
-                  Clear All
-                </button>
-              </div>
-
-              {/* Search Input */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Search Characters
-                </label>
-                <div className="relative">
+              {/* Search + Action Buttons */}
+              <div className="flex flex-wrap items-center gap-3 mb-4">
+                <div className="relative flex-1 min-w-[180px]">
+                  <svg
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
                   <input
                     type="text"
-                    placeholder="Type to filter characters..."
+                    placeholder="Search character name…"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-9 pr-8 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   />
                   {searchTerm && (
                     <button
                       onClick={() => setSearchTerm('')}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                       aria-label="Clear search"
                     >
                       <svg
-                        className="w-5 h-5"
+                        className="w-4 h-4"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -293,16 +287,29 @@ function CharacterTimelinePage() {
                     </button>
                   )}
                 </div>
+
+                <button
+                  onClick={handleSelectAll}
+                  className="px-3 py-1.5 text-sm border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Select All
+                </button>
+                <button
+                  onClick={handleClearAll}
+                  className="px-3 py-1.5 text-sm border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                >
+                  Clear All
+                </button>
+
                 {searchTerm && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    Showing {filteredCharacters.length} of {characters.length}{' '}
-                    characters
-                  </p>
+                  <span className="text-xs text-gray-400">
+                    {filteredCharacters.length} of {characters.length} shown
+                  </span>
                 )}
               </div>
 
               {/* Character Selection Grid */}
-              <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-md p-4">
+              <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-xl p-4">
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
                   {filteredCharacters.map((character) => {
                     if (!character.name) return null
@@ -312,10 +319,10 @@ function CharacterTimelinePage() {
                     return (
                       <label
                         key={character.id}
-                        className={`flex items-center p-2 rounded cursor-pointer transition-colors ${
+                        className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${
                           isSelected
-                            ? 'bg-blue-100 border-2 border-blue-500'
-                            : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
+                            ? 'bg-teal-50 border border-teal-400 text-teal-800'
+                            : 'bg-gray-50 border border-transparent hover:bg-gray-100 text-gray-700'
                         }`}
                       >
                         <input
@@ -324,7 +331,7 @@ function CharacterTimelinePage() {
                           onChange={() =>
                             handleCharacterToggle(character.name as string)
                           }
-                          className="mr-2"
+                          className="accent-teal-600 shrink-0"
                         />
                         <span
                           className="text-sm truncate"
@@ -346,10 +353,10 @@ function CharacterTimelinePage() {
 
             {/* Timeline Chart */}
             {selectedCharactersData.length > 0 ? (
-              <div className="bg-white rounded-lg shadow-md p-6 relative">
+              <div className="bg-white border border-gray-200 rounded-xl p-6 relative">
                 {isPending && (
-                  <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-lg">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                  <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-xl">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
                   </div>
                 )}
                 <h2 className="text-xl font-semibold text-gray-800 mb-4">
@@ -358,7 +365,7 @@ function CharacterTimelinePage() {
                 <CharacterTimelineChart characters={selectedCharactersData} />
               </div>
             ) : (
-              <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="bg-white border border-gray-200 rounded-xl p-6">
                 <p className="text-center text-gray-500 py-8">
                   Please select at least one character to view the timeline
                 </p>
