@@ -1,4 +1,11 @@
-import { useState, useMemo, useCallback, useTransition } from 'react'
+import {
+  useState,
+  useMemo,
+  useCallback,
+  useTransition,
+  useRef,
+  useEffect,
+} from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { fetchCharacters } from '../services/characterService'
@@ -65,7 +72,9 @@ function CharacterTimelinePage() {
   const [selectedCharacters, setSelectedCharacters] =
     useState<string[]>(DEFAULT_CHARACTERS)
   const [searchTerm, setSearchTerm] = useState('')
+  const [dropdownOpen, setDropdownOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const searchRef = useRef<HTMLDivElement>(null)
 
   // Fetch all characters
   const { data: characters = [], isLoading } = useQuery({
@@ -73,12 +82,28 @@ function CharacterTimelinePage() {
     queryFn: fetchCharacters,
   })
 
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
+        setDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   // Filter characters for selection dropdown
   const filteredCharacters = useMemo(() => {
-    if (!searchTerm) return characters
-    return characters.filter((char) =>
-      char.name?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    if (!searchTerm.trim()) return []
+    return characters
+      .filter((char) =>
+        char.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      .slice(0, 30)
   }, [characters, searchTerm])
 
   // Get data for selected characters
@@ -99,15 +124,6 @@ function CharacterTimelinePage() {
       })
     })
   }, [])
-
-  const handleSelectAll = useCallback(() => {
-    startTransition(() => {
-      const allNames = characters
-        .filter((char) => char.name)
-        .map((char) => char.name as string)
-      setSelectedCharacters(allNames)
-    })
-  }, [characters])
 
   const handleClearAll = useCallback(() => {
     startTransition(() => {
@@ -219,16 +235,13 @@ function CharacterTimelinePage() {
                 </p>
               </div>
 
-              {/* Preset Selection */}
-              <div className="mb-4">
-                <label className="block text-xs font-medium text-gray-600 mb-2">
-                  Character Presets
-                </label>
+              {/* Preset + Actions row */}
+              <div className="flex flex-wrap items-center gap-3 mb-4">
                 <select
                   onChange={(e) =>
                     handlePresetSelect(e.target.value as keyof typeof PRESETS)
                   }
-                  className="w-full md:w-auto px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors bg-white"
                   defaultValue=""
                 >
                   <option value="" disabled>
@@ -240,115 +253,149 @@ function CharacterTimelinePage() {
                     </option>
                   ))}
                 </select>
-              </div>
 
-              {/* Search + Action Buttons */}
-              <div className="flex flex-wrap items-center gap-3 mb-4">
-                <div className="relative flex-1 min-w-[180px]">
-                  <svg
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                  <input
-                    type="text"
-                    placeholder="Search character name…"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-8 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  />
-                  {searchTerm && (
-                    <button
-                      onClick={() => setSearchTerm('')}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      aria-label="Clear search"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-
-                <button
-                  onClick={handleSelectAll}
-                  className="px-3 py-1.5 text-sm border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Select All
-                </button>
                 <button
                   onClick={handleClearAll}
                   className="px-3 py-1.5 text-sm border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
                 >
                   Clear All
                 </button>
+              </div>
 
+              {/* Search with dropdown */}
+              <div ref={searchRef} className="relative mb-4">
+                <svg
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Search and add characters…"
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value)
+                    setDropdownOpen(e.target.value.trim().length > 0)
+                  }}
+                  onFocus={() => {
+                    if (searchTerm.trim()) setDropdownOpen(true)
+                  }}
+                  className="w-full pl-9 pr-8 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors"
+                />
                 {searchTerm && (
-                  <span className="text-xs text-gray-400">
-                    {filteredCharacters.length} of {characters.length} shown
-                  </span>
+                  <button
+                    onClick={() => {
+                      setSearchTerm('')
+                      setDropdownOpen(false)
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    aria-label="Clear search"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                )}
+
+                {/* Dropdown results */}
+                {dropdownOpen && searchTerm.trim() && (
+                  <div className="absolute top-full mt-1 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto z-50">
+                    {filteredCharacters.length === 0 ? (
+                      <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                        No characters found for "{searchTerm}"
+                      </div>
+                    ) : (
+                      filteredCharacters.map((character) => {
+                        if (!character.name) return null
+                        const isSelected = selectedCharacters.includes(
+                          character.name
+                        )
+                        return (
+                          <button
+                            key={character.id}
+                            onClick={() =>
+                              handleCharacterToggle(character.name as string)
+                            }
+                            className={`w-full px-4 py-2 text-left text-sm flex items-center justify-between gap-2 transition-colors ${
+                              isSelected
+                                ? 'bg-teal-50 text-teal-800 hover:bg-teal-100'
+                                : 'text-gray-700 hover:bg-gray-50'
+                            }`}
+                          >
+                            <span>{character.name}</span>
+                            {isSelected && (
+                              <svg
+                                className="w-4 h-4 text-teal-600 shrink-0"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                            )}
+                          </button>
+                        )
+                      })
+                    )}
+                  </div>
                 )}
               </div>
 
-              {/* Character Selection Grid */}
-              <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-xl p-4">
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
-                  {filteredCharacters.map((character) => {
-                    if (!character.name) return null
-                    const isSelected = selectedCharacters.includes(
-                      character.name
-                    )
-                    return (
-                      <label
-                        key={character.id}
-                        className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${
-                          isSelected
-                            ? 'bg-teal-50 border border-teal-400 text-teal-800'
-                            : 'bg-gray-50 border border-transparent hover:bg-gray-100 text-gray-700'
-                        }`}
+              {/* Selected characters as chips */}
+              {selectedCharacters.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {selectedCharacters.map((name) => (
+                    <span
+                      key={name}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-teal-50 border border-teal-200 text-teal-800 text-sm rounded-full"
+                    >
+                      {name}
+                      <button
+                        onClick={() => handleCharacterToggle(name)}
+                        className="text-teal-500 hover:text-teal-700 transition-colors"
+                        aria-label={`Remove ${name}`}
                       >
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() =>
-                            handleCharacterToggle(character.name as string)
-                          }
-                          className="accent-teal-600 shrink-0"
-                        />
-                        <span
-                          className="text-sm truncate"
-                          title={character.name}
+                        <svg
+                          className="w-3.5 h-3.5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
                         >
-                          {character.name}
-                        </span>
-                      </label>
-                    )
-                  })}
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </span>
+                  ))}
                 </div>
-                {filteredCharacters.length === 0 && (
-                  <p className="text-center text-gray-500 py-4">
-                    No characters found matching "{searchTerm}"
-                  </p>
-                )}
-              </div>
+              )}
             </div>
 
             {/* Timeline Chart */}
