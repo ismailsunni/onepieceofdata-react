@@ -12,7 +12,7 @@ import { fetchCharacters } from '../services/characterService'
 import CharacterTimelineChart from '../components/CharacterTimelineChart'
 
 // Character presets (using character IDs/slugs for reliable matching)
-const PRESETS = {
+export const PRESETS = {
   default: {
     label: 'Straw Hat Pirates (Original 5)',
     ids: ['Monkey_D._Luffy', 'Nami', 'Roronoa_Zoro', 'Sanji', 'Usopp'],
@@ -40,6 +40,8 @@ const PRESETS = {
       'Charlotte_Linlin',
       'Shanks',
       'Marshall_D._Teach',
+      'Buggy',
+      'Monkey_D._Luffy',
     ],
   },
   shichibukai: {
@@ -52,6 +54,9 @@ const PRESETS = {
       'Boa_Hancock',
       'Jinbe',
       'Gecko_Moria',
+      'Edward_Weevil',
+      'Trafalgar_D._Water_Law',
+      'Buggy',
     ],
   },
   legends: {
