@@ -36,7 +36,7 @@ const PRESETS = {
     label: 'Yonko',
     ids: [
       'Edward_Newgate',
-      'Kaido',
+      'Kaidou',
       'Charlotte_Linlin',
       'Shanks',
       'Marshall_D._Teach',
