@@ -348,7 +348,6 @@ function CharacterComparePage() {
   const char1 = characters.find((c) => c.id === char1Id) ?? null
   const char2 = characters.find((c) => c.id === char2Id) ?? null
 
-  const showTable = char1 !== null || char2 !== null
   const isSolo =
     (char1 !== null && char2 === null) || (char1 === null && char2 !== null)
 
@@ -383,7 +382,7 @@ function CharacterComparePage() {
         <div className="relative mb-8 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
           <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-white" />
           <div className="relative p-6">
-            <div className="flex items-center gap-4 mb-6">
+            <div className="flex items-center gap-4">
               <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-amber-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg text-2xl">
                 ⚔️
               </div>
@@ -396,9 +395,17 @@ function CharacterComparePage() {
                 </p>
               </div>
             </div>
+          </div>
+        </div>
 
-            {/* Selectors */}
-            <div className="flex flex-col gap-4">
+        {/* Comparison table */}
+        <div className="bg-white border border-gray-200 rounded-2xl overflow-visible shadow-sm">
+          {/* Column headers with selectors */}
+          <div className="grid grid-cols-[180px_1fr_1fr] sm:grid-cols-[220px_1fr_1fr] bg-gray-50 border-b border-gray-200 rounded-t-2xl">
+            <div className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-400 self-center">
+              Stat
+            </div>
+            <div className="px-3 py-3 border-l border-gray-200">
               <CharacterSelect
                 characters={characters}
                 selectedId={char1Id}
@@ -406,9 +413,8 @@ function CharacterComparePage() {
                 label="Character 1"
                 loading={isLoading}
               />
-              <div className="flex items-center justify-center text-xl text-gray-400 font-bold select-none py-1">
-                ⚔️ vs ⚔️
-              </div>
+            </div>
+            <div className="px-3 py-3 border-l border-gray-200">
               <CharacterSelect
                 characters={characters}
                 selectedId={char2Id}
@@ -418,102 +424,74 @@ function CharacterComparePage() {
               />
             </div>
           </div>
+
+          {CATEGORIES.map((cat) => (
+            <div key={cat.heading}>
+              {/* Category separator */}
+              <div className="bg-amber-50 px-4 py-2 text-xs font-bold uppercase tracking-widest text-amber-700 border-b border-amber-100">
+                {cat.heading}
+              </div>
+
+              {cat.fields.map((field, fi) => {
+                const isEven = fi % 2 === 0
+
+                // Compute display values
+                let val1 = '—'
+                let val2 = '—'
+                let win1 = false
+                let win2 = false
+
+                if (field.type === 'identity') {
+                  val1 = char1 ? field.getValue(char1) : '—'
+                  val2 = char2 ? field.getValue(char2) : '—'
+                } else {
+                  // numeric
+                  const n1 = char1 ? field.getValue(char1) : null
+                  const n2 = char2 ? field.getValue(char2) : null
+                  val1 = char1
+                    ? field.format
+                      ? field.format(char1)
+                      : n1 !== null
+                        ? n1.toLocaleString()
+                        : '—'
+                    : '—'
+                  val2 = char2
+                    ? field.format
+                      ? field.format(char2)
+                      : n2 !== null
+                        ? n2.toLocaleString()
+                        : '—'
+                    : '—'
+
+                  if (!isSolo && n1 !== null && n2 !== null) {
+                    if (n1 > n2) win1 = true
+                    else if (n2 > n1) win2 = true
+                  }
+                }
+
+                return (
+                  <div
+                    key={field.label}
+                    className={`grid grid-cols-[180px_1fr_1fr] sm:grid-cols-[220px_1fr_1fr] border-b border-gray-100 ${isEven ? 'bg-gray-50' : 'bg-white'}`}
+                  >
+                    <div className="px-4 py-3 text-sm text-gray-500 font-medium">
+                      {field.label}
+                    </div>
+                    <div className="px-4 py-3 border-l border-gray-100">
+                      <Cell value={val1} isWinner={win1} isSolo={isSolo} />
+                    </div>
+                    <div className="px-4 py-3 border-l border-gray-100">
+                      <Cell value={val2} isWinner={win2} isSolo={isSolo} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ))}
         </div>
 
-        {/* No selection state */}
-        {!showTable && (
-          <div className="text-center py-20 text-gray-400">
-            <div className="text-6xl mb-4">⚔️</div>
-            <p className="text-lg">
-              Select at least one character to see their stats
-            </p>
-          </div>
-        )}
-
-        {/* Comparison table */}
-        {showTable && (
-          <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-            {/* Column headers */}
-            <div className="grid grid-cols-[180px_1fr_1fr] sm:grid-cols-[220px_1fr_1fr] bg-gray-50 border-b border-gray-200">
-              <div className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
-                Stat
-              </div>
-              <div className="px-4 py-3 text-sm font-semibold text-amber-600 truncate border-l border-gray-200">
-                {char1?.name ?? <span className="text-gray-400 italic">—</span>}
-              </div>
-              <div className="px-4 py-3 text-sm font-semibold text-blue-600 truncate border-l border-gray-200">
-                {char2?.name ?? <span className="text-gray-400 italic">—</span>}
-              </div>
-            </div>
-
-            {CATEGORIES.map((cat) => (
-              <div key={cat.heading}>
-                {/* Category separator */}
-                <div className="bg-amber-50 px-4 py-2 text-xs font-bold uppercase tracking-widest text-amber-700 border-b border-amber-100">
-                  {cat.heading}
-                </div>
-
-                {cat.fields.map((field, fi) => {
-                  const isEven = fi % 2 === 0
-
-                  // Compute display values
-                  let val1 = '—'
-                  let val2 = '—'
-                  let win1 = false
-                  let win2 = false
-
-                  if (field.type === 'identity') {
-                    val1 = char1 ? field.getValue(char1) : '—'
-                    val2 = char2 ? field.getValue(char2) : '—'
-                  } else {
-                    // numeric
-                    const n1 = char1 ? field.getValue(char1) : null
-                    const n2 = char2 ? field.getValue(char2) : null
-                    val1 = char1
-                      ? field.format
-                        ? field.format(char1)
-                        : n1 !== null
-                          ? n1.toLocaleString()
-                          : '—'
-                      : '—'
-                    val2 = char2
-                      ? field.format
-                        ? field.format(char2)
-                        : n2 !== null
-                          ? n2.toLocaleString()
-                          : '—'
-                      : '—'
-
-                    if (!isSolo && n1 !== null && n2 !== null) {
-                      if (n1 > n2) win1 = true
-                      else if (n2 > n1) win2 = true
-                    }
-                  }
-
-                  return (
-                    <div
-                      key={field.label}
-                      className={`grid grid-cols-[180px_1fr_1fr] sm:grid-cols-[220px_1fr_1fr] border-b border-gray-100 ${isEven ? 'bg-gray-50' : 'bg-white'}`}
-                    >
-                      <div className="px-4 py-3 text-sm text-gray-500 font-medium">
-                        {field.label}
-                      </div>
-                      <div className="px-4 py-3 border-l border-gray-100">
-                        <Cell value={val1} isWinner={win1} isSolo={isSolo} />
-                      </div>
-                      <div className="px-4 py-3 border-l border-gray-100">
-                        <Cell value={val2} isWinner={win2} isSolo={isSolo} />
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            ))}
-          </div>
-        )}
-
         {/* Legend */}
-        {showTable && !isSolo && (
+        {!isSolo && char1 && char2 && (
           <div className="mt-4 flex items-center gap-3 text-xs text-gray-400">
             <span className="inline-block px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-semibold">
               value
