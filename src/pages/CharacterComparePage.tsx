@@ -239,7 +239,7 @@ function CharacterSelect({
           </div>
 
           {open && (
-            <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+            <div className="absolute z-50 w-full bottom-full mb-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
               <ul className="max-h-56 overflow-y-auto py-1">
                 {filtered.length === 0 ? (
                   <li className="px-3 py-2 text-sm text-gray-400 text-center">
@@ -374,7 +374,7 @@ function CharacterComparePage() {
             </div>
 
             {/* Selectors */}
-            <div className="flex flex-col sm:flex-row gap-4 items-start">
+            <div className="flex flex-col gap-4">
               <CharacterSelect
                 characters={characters}
                 selectedId={char1Id}
@@ -382,8 +382,8 @@ function CharacterComparePage() {
                 label="Character 1"
                 loading={isLoading}
               />
-              <div className="hidden sm:flex items-center pt-6 text-2xl text-gray-400 font-bold select-none">
-                vs
+              <div className="flex items-center justify-center text-xl text-gray-400 font-bold select-none py-1">
+                ⚔️ vs ⚔️
               </div>
               <CharacterSelect
                 characters={characters}
