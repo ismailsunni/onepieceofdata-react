@@ -11,22 +11,22 @@ import { useQuery } from '@tanstack/react-query'
 import { fetchCharacters } from '../services/characterService'
 import CharacterTimelineChart from '../components/CharacterTimelineChart'
 
-// Character presets
+// Character presets (using character IDs/slugs for reliable matching)
 const PRESETS = {
   default: {
     label: 'Straw Hat Pirates (Original 5)',
-    characters: ['Luffy', 'Nami', 'Zoro', 'Sanji', 'Usopp'],
+    ids: ['Monkey_D._Luffy', 'Nami', 'Roronoa_Zoro', 'Sanji', 'Usopp'],
   },
   strawhat: {
     label: 'All Straw Hat Pirates',
-    characters: [
-      'Luffy',
-      'Zoro',
+    ids: [
+      'Monkey_D._Luffy',
+      'Roronoa_Zoro',
       'Nami',
       'Usopp',
       'Sanji',
-      'Chopper',
-      'Robin',
+      'Tony_Tony_Chopper',
+      'Nico_Robin',
       'Franky',
       'Brook',
       'Jinbe',
@@ -34,39 +34,45 @@ const PRESETS = {
   },
   yonko: {
     label: 'Yonko',
-    characters: ['Whitebeard', 'Kaido', 'Big Mom', 'Shanks', 'Blackbeard'],
+    ids: [
+      'Edward_Newgate',
+      'Kaido',
+      'Charlotte_Linlin',
+      'Shanks',
+      'Marshall_D._Teach',
+    ],
   },
   shichibukai: {
     label: 'Shichibukai',
-    characters: [
-      'Mihawk',
+    ids: [
+      'Dracule_Mihawk',
       'Crocodile',
-      'Doflamingo',
-      'Kuma',
-      'Boa Hancock',
+      'Donquixote_Doflamingo',
+      'Bartholomew_Kuma',
+      'Boa_Hancock',
       'Jinbe',
-      'Moria',
+      'Gecko_Moria',
     ],
   },
   legends: {
     label: 'Legendary Characters',
-    characters: [
-      'Gol D. Roger',
-      'Whitebeard',
-      'Garp',
+    ids: [
+      'Gol_D._Roger',
+      'Edward_Newgate',
+      'Monkey_D._Garp',
       'Sengoku',
-      'Rayleigh',
-      'Rocks D. Xebec',
+      'Silvers_Rayleigh',
+      'Rocks_D._Xebec',
     ],
   },
   admirals: {
     label: 'Admirals',
-    characters: ['Akainu', 'Kizaru', 'Aokiji', 'Fujitora', 'Ryokugyu'],
+    ids: ['Sakazuki', 'Borsalino', 'Kuzan', 'Issho', 'Aramaki'],
   },
 }
 
-// Default selected characters
-const DEFAULT_CHARACTERS = PRESETS.default.characters
+// Default selected characters (by ID)
+const DEFAULT_CHARACTERS = PRESETS.default.ids
 
 function CharacterTimelinePage() {
   const [selectedCharacters, setSelectedCharacters] =
@@ -108,18 +114,16 @@ function CharacterTimelinePage() {
 
   // Get data for selected characters
   const selectedCharactersData = useMemo(() => {
-    return characters.filter(
-      (char) => char.name && selectedCharacters.includes(char.name)
-    )
+    return characters.filter((char) => selectedCharacters.includes(char.id))
   }, [characters, selectedCharacters])
 
-  const handleCharacterToggle = useCallback((characterName: string) => {
+  const handleCharacterToggle = useCallback((characterId: string) => {
     startTransition(() => {
       setSelectedCharacters((prev) => {
-        if (prev.includes(characterName)) {
-          return prev.filter((name) => name !== characterName)
+        if (prev.includes(characterId)) {
+          return prev.filter((id) => id !== characterId)
         } else {
-          return [...prev, characterName]
+          return [...prev, characterId]
         }
       })
     })
@@ -131,29 +135,12 @@ function CharacterTimelinePage() {
     })
   }, [])
 
-  const handlePresetSelect = useCallback(
-    (presetKey: keyof typeof PRESETS) => {
-      startTransition(() => {
-        const preset = PRESETS[presetKey]
-        // Find characters that match the preset names (case-insensitive and partial match)
-        const matchedCharacters = characters
-          .filter((char) => {
-            if (!char.name) return false
-            return preset.characters.some(
-              (presetName) =>
-                char.name?.toLowerCase().includes(presetName.toLowerCase()) ||
-                presetName
-                  .toLowerCase()
-                  .includes(char.name?.toLowerCase() || '')
-            )
-          })
-          .map((char) => char.name as string)
-
-        setSelectedCharacters(matchedCharacters)
-      })
-    },
-    [characters]
-  )
+  const handlePresetSelect = useCallback((presetKey: keyof typeof PRESETS) => {
+    startTransition(() => {
+      const preset = PRESETS[presetKey]
+      setSelectedCharacters(preset.ids)
+    })
+  }, [])
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
@@ -326,14 +313,12 @@ function CharacterTimelinePage() {
                       filteredCharacters.map((character) => {
                         if (!character.name) return null
                         const isSelected = selectedCharacters.includes(
-                          character.name
+                          character.id
                         )
                         return (
                           <button
                             key={character.id}
-                            onClick={() =>
-                              handleCharacterToggle(character.name as string)
-                            }
+                            onClick={() => handleCharacterToggle(character.id)}
                             className={`w-full px-4 py-2 text-left text-sm flex items-center justify-between gap-2 transition-colors ${
                               isSelected
                                 ? 'bg-teal-50 text-teal-800 hover:bg-teal-100'
@@ -367,33 +352,37 @@ function CharacterTimelinePage() {
               {/* Selected characters as chips */}
               {selectedCharacters.length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {selectedCharacters.map((name) => (
-                    <span
-                      key={name}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-teal-50 border border-teal-200 text-teal-800 text-sm rounded-full"
-                    >
-                      {name}
-                      <button
-                        onClick={() => handleCharacterToggle(name)}
-                        className="text-teal-500 hover:text-teal-700 transition-colors"
-                        aria-label={`Remove ${name}`}
+                  {selectedCharacters.map((id) => {
+                    const char = characters.find((c) => c.id === id)
+                    const displayName = char?.name ?? id
+                    return (
+                      <span
+                        key={id}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-teal-50 border border-teal-200 text-teal-800 text-sm rounded-full"
                       >
-                        <svg
-                          className="w-3.5 h-3.5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                        {displayName}
+                        <button
+                          onClick={() => handleCharacterToggle(id)}
+                          className="text-teal-500 hover:text-teal-700 transition-colors"
+                          aria-label={`Remove ${displayName}`}
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                    </span>
-                  ))}
+                          <svg
+                            className="w-3.5 h-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </span>
+                    )
+                  })}
                 </div>
               )}
             </div>
