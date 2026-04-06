@@ -49,6 +49,7 @@ const CharacterSagaMatrixPage = lazy(
 const DevilFruitsPage = lazy(() => import('./pages/DevilFruitsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 const ChatPage = lazy(() => import('./pages/ChatPage'))
+const CharacterComparePage = lazy(() => import('./pages/CharacterComparePage'))
 
 // Loading fallback component
 const PageLoader = () => (
@@ -140,6 +141,10 @@ function App() {
                     <Route
                       path="/analytics/saga-matrix"
                       element={<CharacterSagaMatrixPage />}
+                    />
+                    <Route
+                      path="/characters/compare"
+                      element={<CharacterComparePage />}
                     />
                     <Route path="/devil-fruits" element={<DevilFruitsPage />} />
                     <Route path="/about" element={<AboutPage />} />

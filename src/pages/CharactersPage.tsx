@@ -21,7 +21,7 @@ function CharactersPage() {
   const globalFilter = searchParams.get('q') || ''
   const setGlobalFilter = (value: string) => {
     setSearchParams(value ? { q: value } : {}, { replace: true })
-    setPagination(p => ({ ...p, pageIndex: 0 }))
+    setPagination((p) => ({ ...p, pageIndex: 0 }))
   }
 
   const { data: characters = [], isLoading } = useQuery({
@@ -41,25 +41,59 @@ function CharactersPage() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-          <Link to="/" className="hover:text-gray-900 transition-colors">Home</Link>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          <Link to="/" className="hover:text-gray-900 transition-colors">
+            Home
+          </Link>
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
           </svg>
           <span className="text-gray-900 font-medium">Characters</span>
         </nav>
 
         {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">Characters</h1>
-          <p className="text-lg text-gray-600">Explore the vast world of One Piece characters</p>
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-3">
+              Characters
+            </h1>
+            <p className="text-lg text-gray-600">
+              Explore the vast world of One Piece characters
+            </p>
+          </div>
+          <Link
+            to="/characters/compare"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm whitespace-nowrap"
+          >
+            ⚔️ Compare Characters
+          </Link>
         </div>
 
         {/* Search Box */}
         <div className="mb-6">
           <div className="relative max-w-md">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <svg
+                className="w-5 h-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
               </svg>
             </div>
             <input
@@ -79,7 +113,17 @@ function CharactersPage() {
               <table className="min-w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    {['Name', 'Origin', 'Region', 'Status', 'Appearances', 'First Appearance', 'Bounty', 'Age', 'Blood Type'].map((header) => (
+                    {[
+                      'Name',
+                      'Origin',
+                      'Region',
+                      'Status',
+                      'Appearances',
+                      'First Appearance',
+                      'Bounty',
+                      'Age',
+                      'Blood Type',
+                    ].map((header) => (
                       <th key={header} className="px-4 py-3 text-left">
                         <div className="h-3 bg-gray-200 rounded w-20 animate-pulse"></div>
                       </th>

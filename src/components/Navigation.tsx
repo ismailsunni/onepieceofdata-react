@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext'
 
 const EXPLORE_ITEMS: NavItem[] = [
   { to: '/characters', label: 'Characters' },
+  { to: '/characters/compare', label: 'Compare Characters', exact: true },
   { to: '/sagas', label: 'Sagas' },
   { to: '/arcs', label: 'Arcs' },
   { to: '/volumes', label: 'Volumes' },
