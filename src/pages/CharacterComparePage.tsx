@@ -141,11 +141,11 @@ function CharacterSelect({
 
   return (
     <div className="flex-1 min-w-0">
-      <label className="block text-xs font-semibold text-amber-400 uppercase tracking-wider mb-1">
+      <label className="block text-xs font-semibold text-amber-600 uppercase tracking-wider mb-1">
         {label}
       </label>
       {loading ? (
-        <div className="h-10 bg-slate-700 rounded-lg animate-pulse" />
+        <div className="h-10 bg-gray-200 rounded-lg animate-pulse" />
       ) : (
         <div className="relative">
           <input
@@ -153,7 +153,7 @@ function CharacterSelect({
             placeholder="Search characters…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-t-lg text-white placeholder-slate-400 text-sm focus:outline-none focus:border-amber-400 transition-colors"
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-t-lg text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:border-amber-400 transition-colors"
           />
           <select
             value={selectedId}
@@ -162,7 +162,7 @@ function CharacterSelect({
               setSearch('')
             }}
             size={Math.min(filtered.length + 1, 8)}
-            className="w-full bg-slate-700 border border-t-0 border-slate-600 rounded-b-lg text-white text-sm focus:outline-none focus:border-amber-400 transition-colors overflow-y-auto"
+            className="w-full bg-white border border-t-0 border-gray-300 rounded-b-lg text-gray-900 text-sm focus:outline-none focus:border-amber-400 transition-colors overflow-y-auto"
           >
             <option value="">— Select character —</option>
             {filtered.map((c) => (
@@ -176,7 +176,7 @@ function CharacterSelect({
       {selectedId && (
         <button
           onClick={() => onChange('')}
-          className="mt-1 text-xs text-slate-400 hover:text-amber-400 transition-colors"
+          className="mt-1 text-xs text-gray-400 hover:text-amber-600 transition-colors"
         >
           ✕ Clear
         </button>
@@ -198,13 +198,13 @@ function Cell({ value, isWinner, isSolo }: CellProps) {
   }
   if (isWinner) {
     return (
-      <span className="inline-block px-3 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-semibold text-sm border border-amber-400/30">
+      <span className="inline-block px-3 py-0.5 rounded-full bg-amber-50 text-amber-700 font-semibold text-sm border border-amber-200">
         {value}
       </span>
     )
   }
   return (
-    <span className={`text-sm ${isSolo ? 'text-white' : 'text-slate-300'}`}>
+    <span className={`text-sm ${isSolo ? 'text-gray-900' : 'text-gray-700'}`}>
       {value}
     </span>
   )
@@ -229,11 +229,14 @@ function CharacterComparePage() {
     (char1 !== null && char2 === null) || (char1 === null && char2 !== null)
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+    <main className="min-h-screen bg-gray-50">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-slate-400 mb-4">
-          <Link to="/characters" className="hover:text-white transition-colors">
+        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+          <Link
+            to="/characters"
+            className="hover:text-gray-900 transition-colors"
+          >
             Characters
           </Link>
           <svg
@@ -249,22 +252,22 @@ function CharacterComparePage() {
               d="M9 5l7 7-7 7"
             />
           </svg>
-          <span className="text-white font-medium">Compare</span>
+          <span className="text-gray-900 font-medium">Compare</span>
         </nav>
 
         {/* Hero */}
-        <div className="relative mb-8 overflow-hidden rounded-2xl border border-slate-700">
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-900/20 via-slate-800 to-blue-900/20" />
+        <div className="relative mb-8 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-white" />
           <div className="relative p-6">
             <div className="flex items-center gap-4 mb-6">
               <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-amber-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg text-2xl">
                 ⚔️
               </div>
               <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-white">
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
                   Character Compare
                 </h1>
-                <p className="text-slate-400 mt-1">
+                <p className="text-gray-500 mt-1">
                   Select two characters to compare their stats side-by-side
                 </p>
               </div>
@@ -279,7 +282,7 @@ function CharacterComparePage() {
                 label="Character 1"
                 loading={isLoading}
               />
-              <div className="hidden sm:flex items-center pt-6 text-2xl text-slate-500 font-bold select-none">
+              <div className="hidden sm:flex items-center pt-6 text-2xl text-gray-400 font-bold select-none">
                 vs
               </div>
               <CharacterSelect
@@ -295,7 +298,7 @@ function CharacterComparePage() {
 
         {/* No selection state */}
         {!showTable && (
-          <div className="text-center py-20 text-slate-500">
+          <div className="text-center py-20 text-gray-400">
             <div className="text-6xl mb-4">⚔️</div>
             <p className="text-lg">
               Select at least one character to see their stats
@@ -305,28 +308,24 @@ function CharacterComparePage() {
 
         {/* Comparison table */}
         {showTable && (
-          <div className="bg-slate-800/60 border border-slate-700 rounded-2xl overflow-hidden">
+          <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
             {/* Column headers */}
-            <div className="grid grid-cols-[180px_1fr_1fr] sm:grid-cols-[220px_1fr_1fr] bg-slate-900/70 border-b border-slate-700">
-              <div className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <div className="grid grid-cols-[180px_1fr_1fr] sm:grid-cols-[220px_1fr_1fr] bg-gray-50 border-b border-gray-200">
+              <div className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
                 Stat
               </div>
-              <div className="px-4 py-3 text-sm font-semibold text-amber-400 truncate border-l border-slate-700">
-                {char1?.name ?? (
-                  <span className="text-slate-600 italic">—</span>
-                )}
+              <div className="px-4 py-3 text-sm font-semibold text-amber-600 truncate border-l border-gray-200">
+                {char1?.name ?? <span className="text-gray-400 italic">—</span>}
               </div>
-              <div className="px-4 py-3 text-sm font-semibold text-blue-400 truncate border-l border-slate-700">
-                {char2?.name ?? (
-                  <span className="text-slate-600 italic">—</span>
-                )}
+              <div className="px-4 py-3 text-sm font-semibold text-blue-600 truncate border-l border-gray-200">
+                {char2?.name ?? <span className="text-gray-400 italic">—</span>}
               </div>
             </div>
 
             {CATEGORIES.map((cat) => (
               <div key={cat.heading}>
                 {/* Category separator */}
-                <div className="bg-slate-700/40 px-4 py-2 text-xs font-bold uppercase tracking-widest text-amber-500 border-b border-slate-700">
+                <div className="bg-amber-50 px-4 py-2 text-xs font-bold uppercase tracking-widest text-amber-700 border-b border-amber-100">
                   {cat.heading}
                 </div>
 
@@ -370,15 +369,15 @@ function CharacterComparePage() {
                   return (
                     <div
                       key={field.label}
-                      className={`grid grid-cols-[180px_1fr_1fr] sm:grid-cols-[220px_1fr_1fr] border-b border-slate-700/50 ${isEven ? 'bg-slate-800/30' : 'bg-transparent'}`}
+                      className={`grid grid-cols-[180px_1fr_1fr] sm:grid-cols-[220px_1fr_1fr] border-b border-gray-100 ${isEven ? 'bg-gray-50' : 'bg-white'}`}
                     >
-                      <div className="px-4 py-3 text-sm text-slate-400 font-medium">
+                      <div className="px-4 py-3 text-sm text-gray-500 font-medium">
                         {field.label}
                       </div>
-                      <div className="px-4 py-3 border-l border-slate-700/50">
+                      <div className="px-4 py-3 border-l border-gray-100">
                         <Cell value={val1} isWinner={win1} isSolo={isSolo} />
                       </div>
-                      <div className="px-4 py-3 border-l border-slate-700/50">
+                      <div className="px-4 py-3 border-l border-gray-100">
                         <Cell value={val2} isWinner={win2} isSolo={isSolo} />
                       </div>
                     </div>
@@ -391,8 +390,8 @@ function CharacterComparePage() {
 
         {/* Legend */}
         {showTable && !isSolo && (
-          <div className="mt-4 flex items-center gap-3 text-xs text-slate-500">
-            <span className="inline-block px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 font-semibold">
+          <div className="mt-4 flex items-center gap-3 text-xs text-gray-400">
+            <span className="inline-block px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-semibold">
               value
             </span>
             <span>= higher (winning) value</span>
