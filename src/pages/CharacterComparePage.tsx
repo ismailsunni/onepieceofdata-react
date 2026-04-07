@@ -18,8 +18,8 @@ function formatBounty(bounty: number | null): string {
 
 function countBounties(bounties: string | null): number | null {
   if (!bounties || bounties.trim() === '') return null
-  // Count comma-separated entries
-  return bounties.split(',').filter((s) => s.trim() !== '').length
+  // Bounties are semicolon-separated (e.g. "3,000,000,000;1,500,000,000;...")
+  return bounties.split(';').filter((s) => s.trim() !== '').length
 }
 
 // ─── comparison row types ─────────────────────────────────────────────────────
