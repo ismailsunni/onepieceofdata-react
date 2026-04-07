@@ -3,6 +3,7 @@ import { useState } from 'react'
 import DesktopDropdown from './navigation/DesktopDropdown'
 import MobileAccordion from './navigation/MobileAccordion'
 import type { NavItem } from './navigation/DesktopDropdown'
+import { useAuth } from '../contexts/AuthContext'
 
 const EXPLORE_ITEMS: NavItem[] = [
   { to: '/characters', label: 'Characters' },
@@ -68,6 +69,7 @@ function Navigation() {
   const isAnalyticsActive = location.pathname.startsWith('/analytics')
 
   const closeMobileMenu = () => setMobileMenuOpen(false)
+  const { user, signOut } = useAuth()
 
   return (
     <>
@@ -96,6 +98,15 @@ function Navigation() {
         <NavLink to="/chat" className={getLinkClass}>
           <span className="inline-flex items-center gap-1">✨ AI Chat</span>
         </NavLink>
+
+        {user ? (
+          <button
+            onClick={signOut}
+            className="ml-2 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            Sign out
+          </button>
+        ) : null}
       </nav>
 
       {/* Mobile Hamburger Button */}
@@ -191,6 +202,18 @@ function Navigation() {
               >
                 ✨ AI Chat
               </NavLink>
+
+              {user ? (
+                <button
+                  onClick={() => {
+                    signOut()
+                    closeMobileMenu()
+                  }}
+                  className="block w-full text-left px-4 py-3 rounded-lg text-base text-gray-700 hover:bg-gray-50 font-medium transition-colors mt-2 border-t border-gray-100"
+                >
+                  Sign out
+                </button>
+              ) : null}
             </nav>
           </div>
         </div>
