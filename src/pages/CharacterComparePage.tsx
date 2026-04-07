@@ -313,40 +313,85 @@ interface CellProps {
   value: string
   isWinner: boolean
   isSolo: boolean
+  linkTo?: string
 }
 
-function Cell({ value, isWinner, isSolo }: CellProps) {
+function Cell({ value, isWinner, isSolo, linkTo }: CellProps) {
   const isEmpty = value === '—'
   if (isEmpty) {
     return <span className="text-slate-500 text-sm">—</span>
   }
-  if (isWinner) {
-    return (
-      <span className="inline-block px-3 py-0.5 rounded-full bg-amber-50 text-amber-700 font-semibold text-sm border border-amber-200">
-        {value}
-      </span>
-    )
-  }
-  return (
+
+  const content = isWinner ? (
+    <span className="inline-block px-3 py-0.5 rounded-full bg-amber-50 text-amber-700 font-semibold text-sm border border-amber-200">
+      {value}
+    </span>
+  ) : (
     <span className={`text-sm ${isSolo ? 'text-gray-900' : 'text-gray-700'}`}>
       {value}
     </span>
   )
+
+  if (linkTo) {
+    return (
+      <Link
+        to={linkTo}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="hover:text-amber-600 hover:underline transition-colors"
+      >
+        {content}
+      </Link>
+    )
+  }
+
+  return content
 }
 
 // ─── main page ────────────────────────────────────────────────────────────────
 
 function CharacterComparePage() {
-  const [char1Id, setChar1Id] = useState('')
-  const [char2Id, setChar2Id] = useState('')
-
   const { data: characters = [], isLoading } = useQuery({
     queryKey: ['characters'],
     queryFn: fetchCharacters,
   })
 
-  const char1 = characters.find((c) => c.id === char1Id) ?? null
-  const char2 = characters.find((c) => c.id === char2Id) ?? null
+  // Compute a stable random pair once characters are loaded
+  const randomPair = useMemo(() => {
+    if (characters.length === 0) return null
+    const sorted = [...characters]
+      .filter((c) => c.appearance_count !== null && c.appearance_count > 0)
+      .sort((a, b) => (b.appearance_count ?? 0) - (a.appearance_count ?? 0))
+    const top = sorted.slice(0, 100)
+    if (top.length < 2) return null
+    const i = Math.floor(Math.random() * top.length)
+    let j = Math.floor(Math.random() * (top.length - 1))
+    if (j >= i) j++
+    return [top[i].id, top[j].id] as const
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [characters.length > 0])
+
+  const [char1Id, setChar1Id] = useState('')
+  const [char2Id, setChar2Id] = useState('')
+  const hasUserInteracted = useRef(false)
+
+  // Derive effective IDs: user selection takes priority, otherwise use random pair
+  const effectiveChar1Id =
+    hasUserInteracted.current || char1Id ? char1Id : (randomPair?.[0] ?? '')
+  const effectiveChar2Id =
+    hasUserInteracted.current || char2Id ? char2Id : (randomPair?.[1] ?? '')
+
+  const handleSetChar1 = (id: string) => {
+    hasUserInteracted.current = true
+    setChar1Id(id)
+  }
+  const handleSetChar2 = (id: string) => {
+    hasUserInteracted.current = true
+    setChar2Id(id)
+  }
+
+  const char1 = characters.find((c) => c.id === effectiveChar1Id) ?? null
+  const char2 = characters.find((c) => c.id === effectiveChar2Id) ?? null
 
   const isSolo =
     (char1 !== null && char2 === null) || (char1 === null && char2 !== null)
@@ -398,96 +443,148 @@ function CharacterComparePage() {
           </div>
         </div>
 
+        {/* Character selectors - stacked on mobile, inline on desktop */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 sm:hidden">
+          <CharacterSelect
+            characters={characters}
+            selectedId={effectiveChar1Id}
+            onChange={handleSetChar1}
+            label="Character 1"
+            loading={isLoading}
+          />
+          <CharacterSelect
+            characters={characters}
+            selectedId={effectiveChar2Id}
+            onChange={handleSetChar2}
+            label="Character 2"
+            loading={isLoading}
+          />
+        </div>
+
         {/* Comparison table */}
-        <div className="bg-white border border-gray-200 rounded-2xl overflow-visible shadow-sm">
-          {/* Column headers with selectors */}
-          <div className="grid grid-cols-[180px_1fr_1fr] sm:grid-cols-[220px_1fr_1fr] bg-gray-50 border-b border-gray-200 rounded-t-2xl">
-            <div className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-400 self-center">
-              Stat
-            </div>
-            <div className="px-3 py-3 border-l border-gray-200">
-              <CharacterSelect
-                characters={characters}
-                selectedId={char1Id}
-                onChange={setChar1Id}
-                label="Character 1"
-                loading={isLoading}
-              />
-            </div>
-            <div className="px-3 py-3 border-l border-gray-200">
-              <CharacterSelect
-                characters={characters}
-                selectedId={char2Id}
-                onChange={setChar2Id}
-                label="Character 2"
-                loading={isLoading}
-              />
-            </div>
-          </div>
-
-          {CATEGORIES.map((cat) => (
-            <div key={cat.heading}>
-              {/* Category separator */}
-              <div className="bg-amber-50 px-4 py-2 text-xs font-bold uppercase tracking-widest text-amber-700 border-b border-amber-100">
-                {cat.heading}
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+          <div>
+            {/* Column headers with selectors (hidden on mobile, shown sm+) */}
+            <div className="hidden sm:grid grid-cols-[220px_1fr_1fr] bg-gray-50 border-b border-gray-200 rounded-t-2xl">
+              <div className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-400 self-center">
+                Stat
               </div>
-
-              {cat.fields.map((field, fi) => {
-                const isEven = fi % 2 === 0
-
-                // Compute display values
-                let val1 = '—'
-                let val2 = '—'
-                let win1 = false
-                let win2 = false
-
-                if (field.type === 'identity') {
-                  val1 = char1 ? field.getValue(char1) : '—'
-                  val2 = char2 ? field.getValue(char2) : '—'
-                } else {
-                  // numeric
-                  const n1 = char1 ? field.getValue(char1) : null
-                  const n2 = char2 ? field.getValue(char2) : null
-                  val1 = char1
-                    ? field.format
-                      ? field.format(char1)
-                      : n1 !== null
-                        ? n1.toLocaleString()
-                        : '—'
-                    : '—'
-                  val2 = char2
-                    ? field.format
-                      ? field.format(char2)
-                      : n2 !== null
-                        ? n2.toLocaleString()
-                        : '—'
-                    : '—'
-
-                  if (!isSolo && n1 !== null && n2 !== null) {
-                    if (n1 > n2) win1 = true
-                    else if (n2 > n1) win2 = true
-                  }
-                }
-
-                return (
-                  <div
-                    key={field.label}
-                    className={`grid grid-cols-[180px_1fr_1fr] sm:grid-cols-[220px_1fr_1fr] border-b border-gray-100 ${isEven ? 'bg-gray-50' : 'bg-white'}`}
-                  >
-                    <div className="px-4 py-3 text-sm text-gray-500 font-medium">
-                      {field.label}
-                    </div>
-                    <div className="px-4 py-3 border-l border-gray-100">
-                      <Cell value={val1} isWinner={win1} isSolo={isSolo} />
-                    </div>
-                    <div className="px-4 py-3 border-l border-gray-100">
-                      <Cell value={val2} isWinner={win2} isSolo={isSolo} />
-                    </div>
-                  </div>
-                )
-              })}
+              <div className="px-3 py-3 border-l border-gray-200">
+                <CharacterSelect
+                  characters={characters}
+                  selectedId={effectiveChar1Id}
+                  onChange={handleSetChar1}
+                  label="Character 1"
+                  loading={isLoading}
+                />
+              </div>
+              <div className="px-3 py-3 border-l border-gray-200">
+                <CharacterSelect
+                  characters={characters}
+                  selectedId={effectiveChar2Id}
+                  onChange={handleSetChar2}
+                  label="Character 2"
+                  loading={isLoading}
+                />
+              </div>
             </div>
-          ))}
+
+            {/* Mobile column headers (labels only) */}
+            <div className="grid grid-cols-[120px_1fr_1fr] sm:hidden bg-gray-50 border-b border-gray-200 rounded-t-2xl">
+              <div className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-400 self-center">
+                Stat
+              </div>
+              <div className="px-3 py-2 border-l border-gray-200 text-xs font-semibold text-amber-600 uppercase tracking-wider truncate self-center min-w-0">
+                {char1?.name ?? 'Char 1'}
+              </div>
+              <div className="px-3 py-2 border-l border-gray-200 text-xs font-semibold text-amber-600 uppercase tracking-wider truncate self-center min-w-0">
+                {char2?.name ?? 'Char 2'}
+              </div>
+            </div>
+
+            {CATEGORIES.map((cat) => (
+              <div key={cat.heading}>
+                {/* Category separator */}
+                <div className="bg-amber-50 px-4 py-2 text-xs font-bold uppercase tracking-widest text-amber-700 border-b border-amber-100">
+                  {cat.heading}
+                </div>
+
+                {cat.fields.map((field, fi) => {
+                  const isEven = fi % 2 === 0
+                  const isNameField = field.label === 'Name'
+
+                  // Compute display values
+                  let val1 = '—'
+                  let val2 = '—'
+                  let win1 = false
+                  let win2 = false
+
+                  if (field.type === 'identity') {
+                    val1 = char1 ? field.getValue(char1) : '—'
+                    val2 = char2 ? field.getValue(char2) : '—'
+                  } else {
+                    // numeric
+                    const n1 = char1 ? field.getValue(char1) : null
+                    const n2 = char2 ? field.getValue(char2) : null
+                    val1 = char1
+                      ? field.format
+                        ? field.format(char1)
+                        : n1 !== null
+                          ? n1.toLocaleString()
+                          : '—'
+                      : '—'
+                    val2 = char2
+                      ? field.format
+                        ? field.format(char2)
+                        : n2 !== null
+                          ? n2.toLocaleString()
+                          : '—'
+                      : '—'
+
+                    if (!isSolo && n1 !== null && n2 !== null) {
+                      if (n1 > n2) win1 = true
+                      else if (n2 > n1) win2 = true
+                    }
+                  }
+
+                  return (
+                    <div
+                      key={field.label}
+                      className={`grid grid-cols-[120px_1fr_1fr] sm:grid-cols-[220px_1fr_1fr] border-b border-gray-100 ${isEven ? 'bg-gray-50' : 'bg-white'}`}
+                    >
+                      <div className="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-500 font-medium">
+                        {field.label}
+                      </div>
+                      <div className="px-3 sm:px-4 py-3 border-l border-gray-100 overflow-hidden break-words min-w-0">
+                        <Cell
+                          value={val1}
+                          isWinner={win1}
+                          isSolo={isSolo}
+                          linkTo={
+                            isNameField && char1
+                              ? `/characters/${char1.id}`
+                              : undefined
+                          }
+                        />
+                      </div>
+                      <div className="px-3 sm:px-4 py-3 border-l border-gray-100 overflow-hidden break-words min-w-0">
+                        <Cell
+                          value={val2}
+                          isWinner={win2}
+                          isSolo={isSolo}
+                          linkTo={
+                            isNameField && char2
+                              ? `/characters/${char2.id}`
+                              : undefined
+                          }
+                        />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Legend */}
