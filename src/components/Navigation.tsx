@@ -3,7 +3,6 @@ import { useState } from 'react'
 import DesktopDropdown from './navigation/DesktopDropdown'
 import MobileAccordion from './navigation/MobileAccordion'
 import type { NavItem } from './navigation/DesktopDropdown'
-import { useAuth } from '../contexts/AuthContext'
 
 const EXPLORE_ITEMS: NavItem[] = [
   { to: '/characters', label: 'Characters' },
@@ -55,7 +54,6 @@ const getMobileLinkClass = ({ isActive }: { isActive: boolean }) => {
 
 function Navigation() {
   const location = useLocation()
-  const { user, signIn, signOut } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [exploreExpanded, setExploreExpanded] = useState(false)
   const [analyticsExpanded, setAnalyticsExpanded] = useState(false)
@@ -193,31 +191,6 @@ function Navigation() {
               >
                 ✨ AI Chat
               </NavLink>
-
-              {/* Mobile Auth */}
-              <div className="border-t border-gray-200 mt-4 pt-4">
-                {user ? (
-                  <button
-                    onClick={() => {
-                      signOut()
-                      closeMobileMenu()
-                    }}
-                    className="block w-full text-left px-4 py-3 rounded-lg text-base text-gray-700 hover:bg-gray-50 font-medium transition-colors"
-                  >
-                    Sign out
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      signIn()
-                      closeMobileMenu()
-                    }}
-                    className="block w-full text-left px-4 py-3 rounded-lg text-base text-blue-600 hover:bg-blue-50 font-medium transition-colors"
-                  >
-                    Sign In
-                  </button>
-                )}
-              </div>
             </nav>
           </div>
         </div>
