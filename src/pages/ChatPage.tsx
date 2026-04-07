@@ -9,7 +9,7 @@ interface Message {
 }
 
 function ChatPage() {
-  const { user, session, profile, loading, signIn } = useAuth()
+  const { user, session, profile, loading, signIn, signOut } = useAuth()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
