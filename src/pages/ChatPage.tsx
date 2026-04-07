@@ -123,15 +123,31 @@ function ChatPage() {
   if (!profile?.ai_enabled) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="bg-white border border-gray-200 rounded-xl p-8 max-w-md text-center">
-          <div className="text-4xl mb-4">🔒</div>
+        <div className="bg-white border border-gray-200 rounded-xl p-8 max-w-md text-center shadow-sm">
+          <div className="text-4xl mb-4">⏳</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            AI Chat Not Enabled
+            Waiting for Approval
           </h1>
-          <p className="text-gray-600">
-            AI chat is not enabled for your account. Contact the administrator
-            to request access.
+          <p className="text-gray-600 mb-4">
+            You&apos;re signed in as{' '}
+            <span className="font-medium text-gray-800">{user.email}</span>, but
+            your account hasn&apos;t been approved yet.
           </p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left mb-5">
+            <p className="text-sm font-semibold text-blue-800 mb-1">
+              What happens next?
+            </p>
+            <p className="text-sm text-blue-700">
+              The admin will review your account and enable AI Chat access. You
+              can try signing in again after you receive approval.
+            </p>
+          </div>
+          <button
+            onClick={signOut}
+            className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            Sign out
+          </button>
         </div>
       </div>
     )
