@@ -19,14 +19,16 @@ export function RangeSlider({
 }: RangeSliderProps) {
   return (
     <div>
-      <div className="flex items-center justify-between mb-1.5">
-        <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-          {label}
-        </label>
-        <span className="text-xs font-semibold text-blue-600">
-          {value[0].toLocaleString()} – {value[1].toLocaleString()}
-        </span>
-      </div>
+      {label && (
+        <div className="flex items-center justify-between mb-1.5">
+          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+            {label}
+          </label>
+          <span className="text-xs font-semibold text-blue-600">
+            {value[0].toLocaleString()} – {value[1].toLocaleString()}
+          </span>
+        </div>
+      )}
       <Slider.Root
         className="relative flex items-center select-none touch-none w-full h-5"
         min={min}

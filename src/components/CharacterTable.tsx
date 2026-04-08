@@ -24,6 +24,7 @@ interface CharacterTableProps {
   onGlobalFilterChange: (filter: string) => void
   pagination: PaginationState
   onPaginationChange: OnChangeFn<PaginationState>
+  isFiltered?: boolean
 }
 
 const columnHelper = createColumnHelper<Character>()
@@ -37,6 +38,7 @@ function CharacterTable({
   onGlobalFilterChange,
   pagination,
   onPaginationChange,
+  isFiltered = false,
 }: CharacterTableProps) {
   const navigate = useNavigate()
 
@@ -58,11 +60,7 @@ function CharacterTable({
           const name = info.getValue()
           if (!name) return '-'
 
-          return (
-            <span className="font-medium text-blue-600">
-              {name}
-            </span>
-          )
+          return <span className="font-medium text-blue-600">{name}</span>
         },
       }),
       columnHelper.accessor('origin', {
@@ -93,7 +91,22 @@ function CharacterTable({
         },
       }),
       columnHelper.accessor('appearance_count', {
-        header: 'Appearances',
+        header: () => (
+          <span
+            className={
+              isFiltered
+                ? 'px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded'
+                : ''
+            }
+            title={
+              isFiltered
+                ? 'Filtered: counts only chapters in selected range'
+                : undefined
+            }
+          >
+            Appearances
+          </span>
+        ),
         cell: (info) => info.getValue() || '-',
       }),
       columnHelper.accessor('saga_list', {
@@ -102,7 +115,9 @@ function CharacterTable({
           const sagas = info.getValue()
           return sagas?.length || '-'
         },
-        sortingFn: (a, b) => (a.original.saga_list?.length ?? 0) - (b.original.saga_list?.length ?? 0),
+        sortingFn: (a, b) =>
+          (a.original.saga_list?.length ?? 0) -
+          (b.original.saga_list?.length ?? 0),
       }),
       columnHelper.accessor('cover_appearance_count', {
         header: 'Cover Appearances',
@@ -112,7 +127,9 @@ function CharacterTable({
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
               {count}
             </span>
-          ) : '-'
+          ) : (
+            '-'
+          )
         },
       }),
       columnHelper.accessor('first_appearance', {
@@ -135,9 +152,7 @@ function CharacterTable({
             <div className="flex flex-col">
               <span>Ch. {chapter}</span>
               {arcName && (
-                <span className="text-xs text-gray-500 mt-0.5">
-                  {arcName}
-                </span>
+                <span className="text-xs text-gray-500 mt-0.5">{arcName}</span>
               )}
             </div>
           )
@@ -159,7 +174,7 @@ function CharacterTable({
         cell: (info) => info.getValue() || '-',
       }),
     ],
-    [arcMap]
+    [arcMap, isFiltered]
   )
 
   // Create table instance
@@ -202,16 +217,41 @@ function CharacterTable({
                       header.getContext()
                     )}
                     {header.column.getIsSorted() ? (
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg
+                        className="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
                         {header.column.getIsSorted() === 'asc' ? (
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 15l7-7 7 7"
+                          />
                         ) : (
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
                         )}
                       </svg>
                     ) : (
-                      <svg className="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+                      <svg
+                        className="w-3 h-3 text-gray-300"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 9l4-4 4 4m0 6l-4 4-4-4"
+                        />
                       </svg>
                     )}
                   </div>
@@ -235,16 +275,15 @@ function CharacterTable({
               <tr
                 key={row.id}
                 className={`cursor-pointer transition-colors ${
-                  index % 2 === 0 ? 'bg-white hover:bg-gray-50' : 'bg-gray-50/50 hover:bg-gray-100/50'
+                  index % 2 === 0
+                    ? 'bg-white hover:bg-gray-50'
+                    : 'bg-gray-50/50 hover:bg-gray-100/50'
                 }`}
                 onClick={() => navigate(`/characters/${row.original.id}`)}
                 title="Click to view details"
               >
                 {row.getVisibleCells().map((cell) => (
-                  <td
-                    key={cell.id}
-                    className="px-4 py-3 text-sm text-gray-700"
-                  >
+                  <td key={cell.id} className="px-4 py-3 text-sm text-gray-700">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
@@ -257,14 +296,25 @@ function CharacterTable({
       {/* Pagination Controls */}
       <div className="px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-200 bg-gray-50">
         <div className="text-sm text-gray-600 text-center sm:text-left">
-          Showing <span className="font-medium">{table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}</span> to{' '}
+          Showing{' '}
+          <span className="font-medium">
+            {table.getState().pagination.pageIndex *
+              table.getState().pagination.pageSize +
+              1}
+          </span>{' '}
+          to{' '}
           <span className="font-medium">
             {Math.min(
-              (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+              (table.getState().pagination.pageIndex + 1) *
+                table.getState().pagination.pageSize,
               table.getFilteredRowModel().rows.length
             )}
           </span>{' '}
-          of <span className="font-medium">{table.getFilteredRowModel().rows.length}</span> characters
+          of{' '}
+          <span className="font-medium">
+            {table.getFilteredRowModel().rows.length}
+          </span>{' '}
+          characters
         </div>
 
         <div className="flex items-center gap-2">
@@ -274,8 +324,18 @@ function CharacterTable({
             className="p-2 border border-gray-300 rounded-lg hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             title="First page"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+              />
             </svg>
           </button>
           <button
@@ -284,13 +344,26 @@ function CharacterTable({
             className="p-2 border border-gray-300 rounded-lg hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             title="Previous page"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
           </button>
           <span className="text-sm text-gray-700 px-3 py-1 bg-white border border-gray-300 rounded-lg min-w-[120px] text-center">
-            Page <span className="font-medium">{table.getState().pagination.pageIndex + 1}</span> of{' '}
-            <span className="font-medium">{table.getPageCount()}</span>
+            Page{' '}
+            <span className="font-medium">
+              {table.getState().pagination.pageIndex + 1}
+            </span>{' '}
+            of <span className="font-medium">{table.getPageCount()}</span>
           </span>
           <button
             onClick={() => table.nextPage()}
@@ -298,8 +371,18 @@ function CharacterTable({
             className="p-2 border border-gray-300 rounded-lg hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             title="Next page"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </button>
           <button
@@ -308,8 +391,18 @@ function CharacterTable({
             className="p-2 border border-gray-300 rounded-lg hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             title="Last page"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 5l7 7-7 7M5 5l7 7-7 7"
+              />
             </svg>
           </button>
         </div>
