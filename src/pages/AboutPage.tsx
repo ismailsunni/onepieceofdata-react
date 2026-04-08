@@ -153,10 +153,8 @@ function AboutPage() {
               Support the Project
             </h3>
             <p className="text-gray-700 leading-relaxed mb-4">
-              Currently, this project runs on free tiers of GitHub Pages and
-              Supabase. If you find this project useful and would like to
-              support its development, you can buy me a coffee or help me
-              subscribe to Agentic AI tools to improve this project!
+              If you find this project useful and would like to support its
+              development, you can buy me a coffee!
             </p>
             <a
               href="https://buymeacoffee.com/ismailsunni"
@@ -169,18 +167,32 @@ function AboutPage() {
               </svg>
               Buy me a coffee
             </a>
-            <p className="text-sm text-gray-600 mt-3">
-              Your support helps keep this project running and enables me to use
-              better AI tools for development. Thank you! 🙏
-            </p>
+            <a
+              href="https://saweria.co/ismailsunni"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-6 py-3 rounded-lg transition-colors duration-300 font-medium ml-3"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              Saweria
+            </a>
           </section>
 
           {/* Contact/Feedback */}
           <section className="bg-blue-50 rounded-lg p-6">
             <h3 className="text-xl font-bold text-gray-800 mb-3">Feedback</h3>
-            <p className="text-gray-700 leading-relaxed mb-4">
-              Found a bug? Have a feature request? We'd love to hear from you!
-            </p>
             <p className="text-gray-700">
               Report bugs or suggest features via{' '}
               <a
