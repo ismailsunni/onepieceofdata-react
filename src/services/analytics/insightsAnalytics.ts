@@ -169,9 +169,11 @@ export function computeTopBountyJumps(characters: Character[]): BountyJump[] {
     const numbers = extractBountyNumbers(c.bounties)
     if (numbers.length < 2) continue
 
-    const first = numbers[0]
-    const last = numbers[numbers.length - 1]
-    if (first <= 0) continue
+    // bounties field lists highest first, so reverse to get chronological order
+    const chronological = [...numbers].reverse()
+    const first = chronological[0]
+    const last = chronological[chronological.length - 1]
+    if (first <= 0 || last <= first) continue
 
     results.push({
       name: c.name || 'Unknown',
