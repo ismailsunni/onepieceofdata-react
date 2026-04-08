@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -20,6 +20,7 @@ import {
   Pie,
 } from 'recharts'
 import { ChartCard } from '../components/common/ChartCard'
+import { STRAW_HAT_IDS } from '../constants/characters'
 import {
   fetchInsightsRawData,
   computeChapterComplexity,
@@ -67,6 +68,7 @@ const SAGA_COLORS = [
 ]
 
 function OnePieceInsightsPage() {
+  const [hideStrawHats, setHideStrawHats] = useState(true)
   const { data: raw, isLoading } = useQuery({
     queryKey: ['insights-raw-data'],
     queryFn: fetchInsightsRawData,
@@ -318,6 +320,18 @@ function OnePieceInsightsPage() {
             title="#2 Bounty vs Appearance Count"
             description="Do high-bounty characters appear more often? Scatter plot of bounty vs chapter appearances"
             downloadFileName="bounty-vs-appearance"
+            filters={
+              <button
+                onClick={() => setHideStrawHats((v) => !v)}
+                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                  hideStrawHats
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                {hideStrawHats ? 'Straw Hats Hidden' : 'Hide Straw Hats'}
+              </button>
+            }
           >
             <ResponsiveContainer width="100%" height={400}>
               <ScatterChart
@@ -340,22 +354,65 @@ function OnePieceInsightsPage() {
                   stroke="#6b7280"
                 />
                 <Tooltip
-                  formatter={(value: number, name: string) =>
-                    name === 'Bounty'
-                      ? [`${formatBounty(value)}`, name]
-                      : [value, name]
-                  }
-                  labelFormatter={(
-                    _: unknown,
-                    payload: ReadonlyArray<{ payload?: { name?: string } }>
-                  ) => payload?.[0]?.payload?.name || ''}
+                  content={({ payload }) => {
+                    if (!payload || payload.length === 0) return null
+                    const d = payload[0]?.payload as
+                      | {
+                          name?: string
+                          bounty?: number
+                          appearances?: number
+                          status?: string
+                        }
+                      | undefined
+                    if (!d) return null
+                    return (
+                      <div className="bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-lg text-sm">
+                        <p className="font-semibold text-gray-900">{d.name}</p>
+                        <p className="text-gray-600">
+                          Bounty:{' '}
+                          <span className="font-medium text-amber-600">
+                            {formatBounty(d.bounty || 0)}
+                          </span>
+                        </p>
+                        <p className="text-gray-600">
+                          Appearances:{' '}
+                          <span className="font-medium text-blue-600">
+                            {d.appearances}
+                          </span>
+                        </p>
+                        <p className="text-gray-600">
+                          Status:{' '}
+                          <span
+                            className={
+                              d.status === 'Alive'
+                                ? 'text-emerald-600'
+                                : 'text-red-600'
+                            }
+                          >
+                            {d.status}
+                          </span>
+                        </p>
+                      </div>
+                    )
+                  }}
                 />
                 <Scatter
-                  data={insights.bountyVsAppearance}
+                  data={
+                    hideStrawHats
+                      ? insights.bountyVsAppearance.filter(
+                          (d) => !STRAW_HAT_IDS.has(d.id)
+                        )
+                      : insights.bountyVsAppearance
+                  }
                   fill="#6366f1"
                   fillOpacity={0.6}
                 >
-                  {insights.bountyVsAppearance.map((entry, i) => (
+                  {(hideStrawHats
+                    ? insights.bountyVsAppearance.filter(
+                        (d) => !STRAW_HAT_IDS.has(d.id)
+                      )
+                    : insights.bountyVsAppearance
+                  ).map((entry, i) => (
                     <Cell
                       key={i}
                       fill={entry.status === 'Alive' ? '#10b981' : '#ef4444'}

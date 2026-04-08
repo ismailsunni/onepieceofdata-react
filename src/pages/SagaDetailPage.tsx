@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { STRAW_HAT_IDS } from '../constants/characters'
 import { logger } from '../utils/logger'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -296,18 +297,6 @@ function SagaDetailPage() {
     },
   ]
 
-  const STRAW_HAT_IDS = new Set([
-    'Monkey_D._Luffy',
-    'Roronoa_Zoro',
-    'Nami',
-    'Usopp',
-    'Sanji',
-    'Tony_Tony_Chopper',
-    'Nico_Robin',
-    'Franky',
-    'Brook',
-    'Jinbe',
-  ])
   const filteredCharacters = hideStrawHats
     ? characters.filter((c) => !STRAW_HAT_IDS.has(c.id))
     : characters

@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../services/supabase'
 import { logger } from '../utils/logger'
 import { SectionHeader } from '../components/analytics'
+import { STRAW_HAT_IDS } from '../constants/characters'
 import type { Saga } from '../types/arc'
 
 interface SagaMatrixCharacter {
@@ -14,19 +15,6 @@ interface SagaMatrixCharacter {
   appearance_count: number | null
   saga_list: string[] | null
 }
-
-const STRAW_HAT_IDS = new Set([
-  'Monkey_D._Luffy',
-  'Roronoa_Zoro',
-  'Nami',
-  'Usopp',
-  'Sanji',
-  'Tony_Tony_Chopper',
-  'Nico_Robin',
-  'Franky',
-  'Brook',
-  'Jinbe',
-])
 
 async function fetchMatrixCharacters(): Promise<SagaMatrixCharacter[]> {
   if (!supabase) {

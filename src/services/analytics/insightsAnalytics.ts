@@ -124,6 +124,7 @@ export function computeChapterComplexity(
 // ── #2 Bounty vs Appearance Count ───────────────────────────────────────────
 
 export interface BountyVsAppearance {
+  id: string
   name: string
   bounty: number
   appearances: number
@@ -139,6 +140,7 @@ export function computeBountyVsAppearance(
         c.bounty && c.bounty > 0 && c.appearance_count && c.appearance_count > 0
     )
     .map((c) => ({
+      id: c.id,
       name: c.name || 'Unknown',
       bounty: c.bounty!,
       appearances: c.appearance_count!,

@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
+import { STRAW_HAT_IDS } from '../constants/characters'
 import {
   fetchAppearanceDistribution,
   fetchSagaAppearanceDistribution,
@@ -52,19 +53,6 @@ async function fetchMatrixCharacters(): Promise<MatrixCharacter[]> {
   }
   return data || []
 }
-
-const STRAW_HAT_IDS = new Set([
-  'Monkey_D._Luffy',
-  'Roronoa_Zoro',
-  'Nami',
-  'Usopp',
-  'Sanji',
-  'Tony_Tony_Chopper',
-  'Nico_Robin',
-  'Franky',
-  'Brook',
-  'Jinbe',
-])
 
 function CharacterAppearancesPage() {
   const scatterChartRef = useRef<HTMLDivElement>(null)
