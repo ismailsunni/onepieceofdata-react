@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   useReactTable,
@@ -11,9 +11,137 @@ import {
   SortingState,
   OnChangeFn,
   PaginationState,
+  ColumnFiltersState,
 } from '@tanstack/react-table'
 import { Character } from '../types/character'
 import { Arc } from '../types/arc'
+
+/* ── Inline filter components ── */
+
+function RangeColumnFilter({
+  min,
+  max,
+  value,
+  onChange,
+}: {
+  min: number
+  max: number
+  value: [number | undefined, number | undefined]
+  onChange: (val: [number | undefined, number | undefined]) => void
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      <input
+        type="number"
+        min={min}
+        max={max}
+        value={value[0] ?? ''}
+        onChange={(e) =>
+          onChange([
+            e.target.value === '' ? undefined : Number(e.target.value),
+            value[1],
+          ])
+        }
+        placeholder="Min"
+        className="w-16 px-1.5 py-1 text-xs border border-gray-300 rounded text-center focus:outline-none focus:ring-1 focus:ring-blue-500"
+        onClick={(e) => e.stopPropagation()}
+      />
+      <span className="text-gray-400 text-xs">–</span>
+      <input
+        type="number"
+        min={min}
+        max={max}
+        value={value[1] ?? ''}
+        onChange={(e) =>
+          onChange([
+            value[0],
+            e.target.value === '' ? undefined : Number(e.target.value),
+          ])
+        }
+        placeholder="Max"
+        className="w-16 px-1.5 py-1 text-xs border border-gray-300 rounded text-center focus:outline-none focus:ring-1 focus:ring-blue-500"
+        onClick={(e) => e.stopPropagation()}
+      />
+    </div>
+  )
+}
+
+function MultiSelectColumnFilter({
+  options,
+  selected,
+  onChange,
+}: {
+  options: string[]
+  selected: string[]
+  onChange: (val: string[]) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const toggle = (opt: string) => {
+    onChange(
+      selected.includes(opt)
+        ? selected.filter((s) => s !== opt)
+        : [...selected, opt]
+    )
+  }
+
+  return (
+    <div ref={ref} className="relative" onClick={(e) => e.stopPropagation()}>
+      <button
+        onClick={() => setOpen(!open)}
+        className={`w-full px-1.5 py-1 text-xs border rounded text-left truncate ${
+          selected.length > 0
+            ? 'border-blue-400 bg-blue-50 text-blue-700'
+            : 'border-gray-300 text-gray-500'
+        } focus:outline-none focus:ring-1 focus:ring-blue-500`}
+      >
+        {selected.length > 0 ? `${selected.length} selected` : 'All'}
+      </button>
+      {open && (
+        <div className="absolute z-30 mt-1 w-40 max-h-48 overflow-auto bg-white border border-gray-200 rounded-lg shadow-lg">
+          {selected.length > 0 && (
+            <button
+              onClick={() => onChange([])}
+              className="w-full px-2 py-1.5 text-xs text-gray-500 hover:bg-gray-50 text-left border-b border-gray-100"
+            >
+              Clear all
+            </button>
+          )}
+          {options.map((opt) => {
+            const isSelected = selected.includes(opt)
+            return (
+              <label
+                key={opt}
+                className={`flex items-center gap-2 px-2 py-1.5 text-xs cursor-pointer ${
+                  isSelected
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => toggle(opt)}
+                  className="w-3 h-3 rounded"
+                />
+                {opt || '(empty)'}
+              </label>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
 
 interface CharacterTableProps {
   characters: Character[]
@@ -29,6 +157,36 @@ interface CharacterTableProps {
 
 const columnHelper = createColumnHelper<Character>()
 
+const rangeFilter = (
+  row: { getValue: (id: string) => unknown },
+  columnId: string,
+  filterValue: [number | undefined, number | undefined]
+): boolean => {
+  const [min, max] = filterValue
+  if (min === undefined && max === undefined) return true
+  const raw = row.getValue(columnId)
+  const val = Array.isArray(raw) ? raw.length : (raw as number | null)
+  if (val == null) return false
+  if (min !== undefined && val < min) return false
+  if (max !== undefined && val > max) return false
+  return true
+}
+
+const multiselectFilter = (
+  row: { getValue: (id: string) => unknown },
+  columnId: string,
+  filterValue: string[]
+): boolean => {
+  if (!filterValue || filterValue.length === 0) return true
+  const val = (row.getValue(columnId) as string | null) ?? ''
+  return filterValue.includes(val)
+}
+
+// Column filter types
+type ColumnFilterMeta = {
+  filterType?: 'range' | 'multiselect'
+}
+
 function CharacterTable({
   characters,
   arcs,
@@ -41,6 +199,7 @@ function CharacterTable({
   isFiltered = false,
 }: CharacterTableProps) {
   const navigate = useNavigate()
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 
   // Create arc lookup map
   const arcMap = useMemo(() => {
@@ -50,6 +209,23 @@ function CharacterTable({
     })
     return map
   }, [arcs])
+
+  // Extract unique values for multiselect columns
+  const uniqueValues = useMemo(() => {
+    const regions = new Set<string>()
+    const statuses = new Set<string>()
+    const bloodTypes = new Set<string>()
+    for (const c of characters) {
+      if (c.origin_region) regions.add(c.origin_region)
+      if (c.status) statuses.add(c.status)
+      if (c.blood_type) bloodTypes.add(c.blood_type)
+    }
+    return {
+      origin_region: Array.from(regions).sort(),
+      status: Array.from(statuses).sort(),
+      blood_type: Array.from(bloodTypes).sort(),
+    }
+  }, [characters])
 
   // Define table columns
   const columns = useMemo(
@@ -70,6 +246,8 @@ function CharacterTable({
       columnHelper.accessor('origin_region', {
         header: 'Region',
         cell: (info) => info.getValue() || '-',
+        filterFn: multiselectFilter as never,
+        meta: { filterType: 'multiselect' } as ColumnFilterMeta,
       }),
       columnHelper.accessor('status', {
         header: 'Status',
@@ -89,6 +267,8 @@ function CharacterTable({
             </span>
           )
         },
+        filterFn: multiselectFilter as never,
+        meta: { filterType: 'multiselect' } as ColumnFilterMeta,
       }),
       columnHelper.accessor('appearance_count', {
         header: () => (
@@ -108,6 +288,8 @@ function CharacterTable({
           </span>
         ),
         cell: (info) => info.getValue() || '-',
+        filterFn: rangeFilter as never,
+        meta: { filterType: 'range' } as ColumnFilterMeta,
       }),
       columnHelper.accessor('saga_list', {
         header: 'Sagas',
@@ -118,9 +300,11 @@ function CharacterTable({
         sortingFn: (a, b) =>
           (a.original.saga_list?.length ?? 0) -
           (b.original.saga_list?.length ?? 0),
+        filterFn: rangeFilter as never,
+        meta: { filterType: 'range' } as ColumnFilterMeta,
       }),
       columnHelper.accessor('cover_appearance_count', {
-        header: 'Cover Appearances',
+        header: 'Cover App.',
         cell: (info) => {
           const count = info.getValue()
           return count ? (
@@ -131,9 +315,11 @@ function CharacterTable({
             '-'
           )
         },
+        filterFn: rangeFilter as never,
+        meta: { filterType: 'range' } as ColumnFilterMeta,
       }),
       columnHelper.accessor('first_appearance', {
-        header: 'First Appearance',
+        header: 'First App.',
         cell: (info) => {
           const chapter = info.getValue()
           const character = info.row.original
@@ -164,14 +350,20 @@ function CharacterTable({
           const bounty = info.getValue()
           return bounty ? `฿${bounty.toLocaleString()}` : '-'
         },
+        filterFn: rangeFilter as never,
+        meta: { filterType: 'range' } as ColumnFilterMeta,
       }),
       columnHelper.accessor('age', {
         header: 'Age',
         cell: (info) => info.getValue() || '-',
+        filterFn: rangeFilter as never,
+        meta: { filterType: 'range' } as ColumnFilterMeta,
       }),
       columnHelper.accessor('blood_type', {
         header: 'Blood Type',
         cell: (info) => info.getValue() || '-',
+        filterFn: multiselectFilter as never,
+        meta: { filterType: 'multiselect' } as ColumnFilterMeta,
       }),
     ],
     [arcMap, isFiltered]
@@ -185,10 +377,12 @@ function CharacterTable({
       sorting,
       globalFilter,
       pagination,
+      columnFilters,
     },
     onSortingChange,
     onGlobalFilterChange,
     onPaginationChange,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -259,6 +453,59 @@ function CharacterTable({
               ))}
             </tr>
           ))}
+          {/* Column filter row */}
+          <tr className="bg-gray-50/80">
+            {table.getHeaderGroups()[0].headers.map((header) => {
+              const meta = header.column.columnDef.meta as
+                | ColumnFilterMeta
+                | undefined
+              const filterType = meta?.filterType
+              return (
+                <th
+                  key={header.id}
+                  className="px-4 py-1.5 border-b border-gray-200"
+                >
+                  {filterType === 'range' ? (
+                    <RangeColumnFilter
+                      min={0}
+                      max={99999}
+                      value={
+                        (header.column.getFilterValue() as [
+                          number | undefined,
+                          number | undefined,
+                        ]) ?? [undefined, undefined]
+                      }
+                      onChange={(val) => {
+                        header.column.setFilterValue(
+                          val[0] === undefined && val[1] === undefined
+                            ? undefined
+                            : val
+                        )
+                        onPaginationChange((p) => ({ ...p, pageIndex: 0 }))
+                      }}
+                    />
+                  ) : filterType === 'multiselect' ? (
+                    <MultiSelectColumnFilter
+                      options={
+                        uniqueValues[
+                          header.column.id as keyof typeof uniqueValues
+                        ] ?? []
+                      }
+                      selected={
+                        (header.column.getFilterValue() as string[]) ?? []
+                      }
+                      onChange={(val) => {
+                        header.column.setFilterValue(
+                          val.length === 0 ? undefined : val
+                        )
+                        onPaginationChange((p) => ({ ...p, pageIndex: 0 }))
+                      }}
+                    />
+                  ) : null}
+                </th>
+              )
+            })}
+          </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
           {table.getRowModel().rows.length === 0 ? (
