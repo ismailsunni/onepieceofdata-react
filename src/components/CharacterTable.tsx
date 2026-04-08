@@ -12,71 +12,23 @@ import {
   OnChangeFn,
   PaginationState,
   ColumnFiltersState,
+  Column,
 } from '@tanstack/react-table'
 import { Character } from '../types/character'
 import { Arc } from '../types/arc'
 
-/* ── Inline filter components ── */
+/* ── Filter popover wrapper ── */
 
-function RangeColumnFilter({
-  min,
-  max,
-  value,
-  onChange,
+function FilterPopover({
+  column,
+  children,
 }: {
-  min: number
-  max: number
-  value: [number | undefined, number | undefined]
-  onChange: (val: [number | undefined, number | undefined]) => void
-}) {
-  return (
-    <div className="flex items-center gap-1">
-      <input
-        type="number"
-        min={min}
-        max={max}
-        value={value[0] ?? ''}
-        onChange={(e) =>
-          onChange([
-            e.target.value === '' ? undefined : Number(e.target.value),
-            value[1],
-          ])
-        }
-        placeholder="Min"
-        className="w-16 px-1.5 py-1 text-xs border border-gray-300 rounded text-center focus:outline-none focus:ring-1 focus:ring-blue-500"
-        onClick={(e) => e.stopPropagation()}
-      />
-      <span className="text-gray-400 text-xs">–</span>
-      <input
-        type="number"
-        min={min}
-        max={max}
-        value={value[1] ?? ''}
-        onChange={(e) =>
-          onChange([
-            value[0],
-            e.target.value === '' ? undefined : Number(e.target.value),
-          ])
-        }
-        placeholder="Max"
-        className="w-16 px-1.5 py-1 text-xs border border-gray-300 rounded text-center focus:outline-none focus:ring-1 focus:ring-blue-500"
-        onClick={(e) => e.stopPropagation()}
-      />
-    </div>
-  )
-}
-
-function MultiSelectColumnFilter({
-  options,
-  selected,
-  onChange,
-}: {
-  options: string[]
-  selected: string[]
-  onChange: (val: string[]) => void
+  column: Column<Character, unknown>
+  children: React.ReactNode
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const isActive = column.getFilterValue() !== undefined
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -86,6 +38,101 @@ function MultiSelectColumnFilter({
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
+  return (
+    <div ref={ref} className="relative inline-flex">
+      <button
+        onClick={(e) => {
+          e.stopPropagation()
+          setOpen(!open)
+        }}
+        className={`p-0.5 rounded transition-colors ${
+          isActive
+            ? 'text-blue-600 hover:text-blue-700'
+            : 'text-gray-300 hover:text-gray-500'
+        }`}
+        title="Filter column"
+        aria-label="Filter column"
+      >
+        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+          <path
+            fillRule="evenodd"
+            d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </button>
+      {open && (
+        <div
+          className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-30 p-3 min-w-[180px]"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {children}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ── Filter content components ── */
+
+function RangeFilterContent({
+  value,
+  onChange,
+}: {
+  value: [number | undefined, number | undefined]
+  onChange: (val: [number | undefined, number | undefined]) => void
+}) {
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-medium text-gray-500 uppercase">Range</p>
+      <div className="flex items-center gap-2">
+        <input
+          type="number"
+          value={value[0] ?? ''}
+          onChange={(e) =>
+            onChange([
+              e.target.value === '' ? undefined : Number(e.target.value),
+              value[1],
+            ])
+          }
+          placeholder="Min"
+          className="w-20 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+        />
+        <span className="text-gray-400 text-sm">-</span>
+        <input
+          type="number"
+          value={value[1] ?? ''}
+          onChange={(e) =>
+            onChange([
+              value[0],
+              e.target.value === '' ? undefined : Number(e.target.value),
+            ])
+          }
+          placeholder="Max"
+          className="w-20 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+        />
+      </div>
+      {(value[0] !== undefined || value[1] !== undefined) && (
+        <button
+          onClick={() => onChange([undefined, undefined])}
+          className="text-xs text-gray-500 hover:text-gray-700"
+        >
+          Clear
+        </button>
+      )}
+    </div>
+  )
+}
+
+function MultiSelectFilterContent({
+  options,
+  selected,
+  onChange,
+}: {
+  options: string[]
+  selected: string[]
+  onChange: (val: string[]) => void
+}) {
   const toggle = (opt: string) => {
     onChange(
       selected.includes(opt)
@@ -95,50 +142,41 @@ function MultiSelectColumnFilter({
   }
 
   return (
-    <div ref={ref} className="relative" onClick={(e) => e.stopPropagation()}>
-      <button
-        onClick={() => setOpen(!open)}
-        className={`w-full px-1.5 py-1 text-xs border rounded text-left truncate ${
-          selected.length > 0
-            ? 'border-blue-400 bg-blue-50 text-blue-700'
-            : 'border-gray-300 text-gray-500'
-        } focus:outline-none focus:ring-1 focus:ring-blue-500`}
-      >
-        {selected.length > 0 ? `${selected.length} selected` : 'All'}
-      </button>
-      {open && (
-        <div className="absolute z-30 mt-1 w-40 max-h-48 overflow-auto bg-white border border-gray-200 rounded-lg shadow-lg">
-          {selected.length > 0 && (
-            <button
-              onClick={() => onChange([])}
-              className="w-full px-2 py-1.5 text-xs text-gray-500 hover:bg-gray-50 text-left border-b border-gray-100"
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-medium text-gray-500 uppercase">Filter</p>
+        {selected.length > 0 && (
+          <button
+            onClick={() => onChange([])}
+            className="text-xs text-gray-500 hover:text-gray-700"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+      <div className="max-h-48 overflow-auto space-y-0.5">
+        {options.map((opt) => {
+          const isSelected = selected.includes(opt)
+          return (
+            <label
+              key={opt}
+              className={`flex items-center gap-2 px-2 py-1.5 rounded text-sm cursor-pointer ${
+                isSelected
+                  ? 'bg-blue-50 text-blue-700'
+                  : 'text-gray-700 hover:bg-gray-50'
+              }`}
             >
-              Clear all
-            </button>
-          )}
-          {options.map((opt) => {
-            const isSelected = selected.includes(opt)
-            return (
-              <label
-                key={opt}
-                className={`flex items-center gap-2 px-2 py-1.5 text-xs cursor-pointer ${
-                  isSelected
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={isSelected}
-                  onChange={() => toggle(opt)}
-                  className="w-3 h-3 rounded"
-                />
-                {opt || '(empty)'}
-              </label>
-            )
-          })}
-        </div>
-      )}
+              <input
+                type="checkbox"
+                checked={isSelected}
+                onChange={() => toggle(opt)}
+                className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              {opt || '(empty)'}
+            </label>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -393,8 +431,95 @@ function CharacterTable({
     },
   })
 
+  const renderFilterPopover = (header: {
+    column: Column<Character, unknown>
+  }) => {
+    const meta = header.column.columnDef.meta as ColumnFilterMeta | undefined
+    if (!meta?.filterType) return null
+
+    return (
+      <FilterPopover column={header.column}>
+        {meta.filterType === 'range' ? (
+          <RangeFilterContent
+            value={
+              (header.column.getFilterValue() as [
+                number | undefined,
+                number | undefined,
+              ]) ?? [undefined, undefined]
+            }
+            onChange={(val) => {
+              header.column.setFilterValue(
+                val[0] === undefined && val[1] === undefined ? undefined : val
+              )
+              onPaginationChange((p) => ({ ...p, pageIndex: 0 }))
+            }}
+          />
+        ) : (
+          <MultiSelectFilterContent
+            options={
+              uniqueValues[header.column.id as keyof typeof uniqueValues] ?? []
+            }
+            selected={(header.column.getFilterValue() as string[]) ?? []}
+            onChange={(val) => {
+              header.column.setFilterValue(val.length === 0 ? undefined : val)
+              onPaginationChange((p) => ({ ...p, pageIndex: 0 }))
+            }}
+          />
+        )}
+      </FilterPopover>
+    )
+  }
+
   return (
     <div className="overflow-x-auto">
+      {/* Active filters summary */}
+      {columnFilters.length > 0 && (
+        <div className="px-4 py-2 bg-blue-50 border-b border-blue-100 flex items-center gap-2 flex-wrap">
+          <span className="text-xs font-medium text-blue-600">
+            Active filters:
+          </span>
+          {columnFilters.map((f) => {
+            const col = table.getColumn(f.id)
+            const headerText =
+              typeof col?.columnDef.header === 'string'
+                ? col.columnDef.header
+                : f.id
+            return (
+              <span
+                key={f.id}
+                className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs"
+              >
+                {headerText}
+                <button
+                  onClick={() => col?.setFilterValue(undefined)}
+                  className="hover:text-blue-900"
+                >
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </span>
+            )
+          })}
+          <button
+            onClick={() => setColumnFilters([])}
+            className="text-xs text-blue-600 hover:text-blue-800 ml-1"
+          >
+            Clear all
+          </button>
+        </div>
+      )}
+
       <table className="min-w-full">
         <thead className="bg-gray-50 sticky top-0 z-10">
           {table.getHeaderGroups().map((headerGroup) => (
@@ -405,7 +530,7 @@ function CharacterTable({
                   className="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors"
                   onClick={header.column.getToggleSortingHandler()}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     {flexRender(
                       header.column.columnDef.header,
                       header.getContext()
@@ -448,64 +573,12 @@ function CharacterTable({
                         />
                       </svg>
                     )}
+                    {renderFilterPopover(header)}
                   </div>
                 </th>
               ))}
             </tr>
           ))}
-          {/* Column filter row */}
-          <tr className="bg-gray-50/80">
-            {table.getHeaderGroups()[0].headers.map((header) => {
-              const meta = header.column.columnDef.meta as
-                | ColumnFilterMeta
-                | undefined
-              const filterType = meta?.filterType
-              return (
-                <th
-                  key={header.id}
-                  className="px-4 py-1.5 border-b border-gray-200"
-                >
-                  {filterType === 'range' ? (
-                    <RangeColumnFilter
-                      min={0}
-                      max={99999}
-                      value={
-                        (header.column.getFilterValue() as [
-                          number | undefined,
-                          number | undefined,
-                        ]) ?? [undefined, undefined]
-                      }
-                      onChange={(val) => {
-                        header.column.setFilterValue(
-                          val[0] === undefined && val[1] === undefined
-                            ? undefined
-                            : val
-                        )
-                        onPaginationChange((p) => ({ ...p, pageIndex: 0 }))
-                      }}
-                    />
-                  ) : filterType === 'multiselect' ? (
-                    <MultiSelectColumnFilter
-                      options={
-                        uniqueValues[
-                          header.column.id as keyof typeof uniqueValues
-                        ] ?? []
-                      }
-                      selected={
-                        (header.column.getFilterValue() as string[]) ?? []
-                      }
-                      onChange={(val) => {
-                        header.column.setFilterValue(
-                          val.length === 0 ? undefined : val
-                        )
-                        onPaginationChange((p) => ({ ...p, pageIndex: 0 }))
-                      }}
-                    />
-                  ) : null}
-                </th>
-              )
-            })}
-          </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
           {table.getRowModel().rows.length === 0 ? (
