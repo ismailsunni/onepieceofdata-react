@@ -46,6 +46,7 @@ const NetworkAnalysisPage = lazy(() => import('./pages/NetworkAnalysisPage'))
 const CharacterSagaMatrixPage = lazy(
   () => import('./pages/CharacterSagaMatrixPage')
 )
+const RegionBountyPage = lazy(() => import('./pages/RegionBountyPage'))
 const DevilFruitsPage = lazy(() => import('./pages/DevilFruitsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 const ChatPage = lazy(() => import('./pages/ChatPage'))
@@ -141,6 +142,10 @@ function App() {
                     <Route
                       path="/analytics/saga-matrix"
                       element={<CharacterSagaMatrixPage />}
+                    />
+                    <Route
+                      path="/analytics/region-bounty"
+                      element={<RegionBountyPage />}
                     />
                     <Route
                       path="/characters/compare"
