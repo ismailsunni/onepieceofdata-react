@@ -152,6 +152,7 @@ export function computeBountyVsAppearance(
 // ── #3 Top Bounty Jumps (parse bounties string for history) ─────────────────
 
 export interface BountyJump {
+  id: string
   name: string
   firstBounty: number
   lastBounty: number
@@ -164,27 +165,25 @@ export function computeTopBountyJumps(characters: Character[]): BountyJump[] {
 
   for (const c of characters) {
     if (!c.bounties) continue
-    // bounties field contains bounty history, e.g. "30,000,000;100,000,000;..."
-    // or "฿30,000,000 → ฿100,000,000" or similar formats
     const numbers = extractBountyNumbers(c.bounties)
     if (numbers.length < 2) continue
 
-    // bounties field lists highest first, so reverse to get chronological order
-    const chronological = [...numbers].reverse()
-    const first = chronological[0]
-    const last = chronological[chronological.length - 1]
-    if (first <= 0 || last <= first) continue
+    // List is newest-first, oldest-last
+    const current = numbers[0]
+    const original = numbers[numbers.length - 1]
+    if (original <= 0 || current === original) continue
 
     results.push({
+      id: c.id,
       name: c.name || 'Unknown',
-      firstBounty: first,
-      lastBounty: last,
-      jump: last - first,
-      multiplier: Math.round((last / first) * 10) / 10,
+      firstBounty: original,
+      lastBounty: current,
+      jump: current - original,
+      multiplier: Math.round((current / original) * 10) / 10,
     })
   }
 
-  return results.sort((a, b) => b.jump - a.jump).slice(0, 10)
+  return results.sort((a, b) => b.jump - a.jump)
 }
 
 function extractBountyNumbers(bounties: string): number[] {

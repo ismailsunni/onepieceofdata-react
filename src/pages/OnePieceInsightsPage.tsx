@@ -20,10 +20,12 @@ import {
   Pie,
 } from 'recharts'
 import { ChartCard } from '../components/common/ChartCard'
+import SortableTable, { Column } from '../components/common/SortableTable'
 import { STRAW_HAT_IDS } from '../constants/characters'
 import {
   fetchInsightsRawData,
   computeChapterComplexity,
+  type BountyJump,
   computeBountyVsAppearance,
   computeTopBountyJumps,
   computeRegionStatus,
@@ -65,6 +67,65 @@ const SAGA_COLORS = [
   '#6366f1',
   '#14b8a6',
   '#e11d48',
+]
+
+const bountyJumpColumns: Column<BountyJump>[] = [
+  {
+    key: 'name',
+    label: 'Character',
+    sortValue: (row) => row.name,
+    render: (row) => (
+      <Link
+        to={`/characters/${row.id}`}
+        className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+      >
+        {row.name}
+      </Link>
+    ),
+  },
+  {
+    key: 'firstBounty',
+    label: 'First Bounty',
+    sortValue: (row) => row.firstBounty,
+    render: (row) => (
+      <span className="text-gray-600">{formatBounty(row.firstBounty)}</span>
+    ),
+  },
+  {
+    key: 'lastBounty',
+    label: 'Last Bounty',
+    sortValue: (row) => row.lastBounty,
+    render: (row) => (
+      <span className="font-medium text-amber-600">
+        {formatBounty(row.lastBounty)}
+      </span>
+    ),
+  },
+  {
+    key: 'jump',
+    label: 'Jump',
+    sortValue: (row) => row.jump,
+    render: (row) => (
+      <span
+        className={`font-medium ${row.jump >= 0 ? 'text-emerald-600' : 'text-red-600'}`}
+      >
+        {row.jump >= 0 ? '+' : '-'}
+        {formatBounty(Math.abs(row.jump))}
+      </span>
+    ),
+  },
+  {
+    key: 'multiplier',
+    label: 'Multiplier',
+    sortValue: (row) => row.multiplier,
+    render: (row) => (
+      <span
+        className={`font-bold ${row.multiplier >= 1 ? 'text-purple-600' : 'text-red-600'}`}
+      >
+        {row.multiplier}x
+      </span>
+    ),
+  },
 ]
 
 function OnePieceInsightsPage() {
@@ -434,65 +495,22 @@ function OnePieceInsightsPage() {
           </ChartCard>
         </div>
 
-        {/* #3 Top Bounty Jumps */}
+        {/* #3 Bounty Jumps */}
         <div className="mb-6">
           <ChartCard
-            title="#3 Top 10 Bounty Jumps"
-            description="Characters whose bounty increased the most from first to last known bounty"
+            title="#3 Bounty Jumps"
+            description="All characters with bounty history — sort by absolute jump or multiplier to explore"
             downloadFileName="bounty-jumps"
           >
             {insights.topBountyJumps.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b-2 border-gray-200">
-                      <th className="text-left py-3 px-3 font-semibold text-gray-900">
-                        #
-                      </th>
-                      <th className="text-left py-3 px-3 font-semibold text-gray-900">
-                        Character
-                      </th>
-                      <th className="text-right py-3 px-3 font-semibold text-gray-900">
-                        First Bounty
-                      </th>
-                      <th className="text-right py-3 px-3 font-semibold text-gray-900">
-                        Last Bounty
-                      </th>
-                      <th className="text-right py-3 px-3 font-semibold text-gray-900">
-                        Jump
-                      </th>
-                      <th className="text-right py-3 px-3 font-semibold text-gray-900">
-                        Multiplier
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {insights.topBountyJumps.map((j, i) => (
-                      <tr
-                        key={j.name}
-                        className={`border-b border-gray-100 ${i % 2 === 0 ? 'bg-gray-50/50' : ''}`}
-                      >
-                        <td className="py-2 px-3 text-gray-400">{i + 1}</td>
-                        <td className="py-2 px-3 font-medium text-gray-900">
-                          {j.name}
-                        </td>
-                        <td className="py-2 px-3 text-right text-gray-600">
-                          {formatBounty(j.firstBounty)}
-                        </td>
-                        <td className="py-2 px-3 text-right font-medium text-amber-600">
-                          {formatBounty(j.lastBounty)}
-                        </td>
-                        <td className="py-2 px-3 text-right font-medium text-emerald-600">
-                          +{formatBounty(j.jump)}
-                        </td>
-                        <td className="py-2 px-3 text-right font-bold text-purple-600">
-                          {j.multiplier}x
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <SortableTable<BountyJump>
+                columns={bountyJumpColumns}
+                data={insights.topBountyJumps}
+                defaultSortField="jump"
+                defaultSortDirection="desc"
+                rowKey={(row) => row.id}
+                maxHeight="500px"
+              />
             ) : (
               <p className="text-gray-500 text-center py-8">
                 No bounty history data available
