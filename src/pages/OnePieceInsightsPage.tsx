@@ -1,0 +1,1253 @@
+import { useMemo } from 'react'
+import { Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  ScatterChart,
+  Scatter,
+  AreaChart,
+  Area,
+  Line,
+  Legend,
+  Cell,
+  PieChart,
+  Pie,
+} from 'recharts'
+import { ChartCard } from '../components/common/ChartCard'
+import {
+  fetchInsightsRawData,
+  computeChapterComplexity,
+  computeBountyVsAppearance,
+  computeTopBountyJumps,
+  computeRegionStatus,
+  computeMostLoyal,
+  computeArcCountDistribution,
+  computeArcIntroRate,
+  computeLongestGaps,
+  computeArcLengths,
+  computePagesPerArc,
+  computeSagaPacing,
+  computeYearlyReleases,
+  computeBloodTypeComparison,
+  computeBirthdayDistribution,
+  computeRegionCounts,
+  computeAgeDistribution,
+  computeCoverStars,
+  computeCoverVsMain,
+  computeArcDensity,
+  computeCompleteness,
+} from '../services/analyticsService'
+
+const formatBounty = (value: number) => {
+  if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(0)}M`
+  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`
+  return value.toLocaleString()
+}
+
+const SAGA_COLORS = [
+  '#3b82f6',
+  '#8b5cf6',
+  '#ec4899',
+  '#f59e0b',
+  '#10b981',
+  '#ef4444',
+  '#06b6d4',
+  '#f97316',
+  '#84cc16',
+  '#6366f1',
+  '#14b8a6',
+  '#e11d48',
+]
+
+function OnePieceInsightsPage() {
+  const { data: raw, isLoading } = useQuery({
+    queryKey: ['insights-raw-data'],
+    queryFn: fetchInsightsRawData,
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const insights = useMemo(() => {
+    if (!raw) return null
+    const { characters, arcs, sagas, chapters } = raw
+    return {
+      chapterComplexity: computeChapterComplexity(
+        characters,
+        arcs,
+        chapters.length > 0 ? Math.max(...chapters.map((c) => c.number)) : 0
+      ),
+      bountyVsAppearance: computeBountyVsAppearance(characters),
+      topBountyJumps: computeTopBountyJumps(characters),
+      regionStatus: computeRegionStatus(characters),
+      mostLoyal: computeMostLoyal(characters),
+      arcCountDist: computeArcCountDistribution(characters),
+      arcIntroRate: computeArcIntroRate(characters, arcs),
+      longestGaps: computeLongestGaps(characters),
+      arcLengths: computeArcLengths(arcs),
+      pagesPerArc: computePagesPerArc(arcs, chapters),
+      sagaPacing: computeSagaPacing(sagas, arcs, characters, chapters),
+      yearlyReleases: computeYearlyReleases(chapters),
+      bloodType: computeBloodTypeComparison(characters),
+      birthdays: computeBirthdayDistribution(characters),
+      regionCounts: computeRegionCounts(characters),
+      ageDistribution: computeAgeDistribution(characters),
+      coverStars: computeCoverStars(characters),
+      coverVsMain: computeCoverVsMain(characters),
+      arcDensity: computeArcDensity(characters, arcs),
+      completeness: computeCompleteness(characters),
+    }
+  }, [raw])
+
+  if (isLoading) {
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+        <div className="flex justify-center items-center py-32">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+        </div>
+      </main>
+    )
+  }
+
+  if (!insights) return null
+
+  // Quick summary stats
+  const oneArcWonders = insights.arcCountDist.find(
+    (d) => d.arcCount === '1 arc'
+  )
+  const totalWithArcs = insights.arcCountDist.reduce(
+    (s, d) => s + d.characterCount,
+    0
+  )
+  const longestArc = [...insights.arcLengths].sort(
+    (a, b) => b.chapters - a.chapters
+  )[0]
+  const mostPages = [...insights.pagesPerArc].sort(
+    (a, b) => b.totalPages - a.totalPages
+  )[0]
+
+  return (
+    <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+          <Link
+            to="/analytics"
+            className="hover:text-gray-900 transition-colors"
+          >
+            Analytics
+          </Link>
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+          <span className="text-gray-900 font-medium">One Piece Insights</span>
+        </nav>
+
+        {/* Hero */}
+        <div className="relative mb-6 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 opacity-60 rounded-2xl"></div>
+          <div className="relative bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0 w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                <svg
+                  className="w-6 h-6 md:w-9 md:h-9 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600">
+                  One Piece Insights
+                </h1>
+                <p className="text-gray-600 text-lg mt-2">
+                  20 interesting facts about the One Piece universe, powered by
+                  data
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick stat row */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <p className="text-sm text-gray-500">One-Arc Wonders</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {oneArcWonders?.characterCount || 0}
+            </p>
+            <p className="text-xs text-gray-400">
+              {totalWithArcs > 0
+                ? `${Math.round(((oneArcWonders?.characterCount || 0) / totalWithArcs) * 100)}% of characters`
+                : ''}
+            </p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <p className="text-sm text-gray-500">Longest Arc</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {longestArc?.chapters || 0} ch.
+            </p>
+            <p className="text-xs text-gray-400">{longestArc?.arc || '-'}</p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <p className="text-sm text-gray-500">Most Pages</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {mostPages?.totalPages.toLocaleString() || 0}
+            </p>
+            <p className="text-xs text-gray-400">{mostPages?.arc || '-'}</p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <p className="text-sm text-gray-500">Top Bounty Jump</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {insights.topBountyJumps[0]
+                ? `${insights.topBountyJumps[0].multiplier}x`
+                : '-'}
+            </p>
+            <p className="text-xs text-gray-400">
+              {insights.topBountyJumps[0]?.name || '-'}
+            </p>
+          </div>
+        </div>
+
+        {/* ─── SECTION: Bounty & Power ─── */}
+        <SectionTitle title="Bounty & Power" number="1-4" />
+
+        {/* #1 Characters per Chapter Over Time */}
+        <div className="mb-6">
+          <ChartCard
+            title="#1 Cast Complexity Over Time"
+            description="How many characters appear in each chapter? The rolling average (20-chapter window) shows how the story's cast grew more complex over time"
+            downloadFileName="cast-complexity"
+          >
+            <ResponsiveContainer width="100%" height={350}>
+              <AreaChart
+                data={insights.chapterComplexity}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  dataKey="chapter"
+                  type="number"
+                  domain={[1, 'dataMax']}
+                  ticks={[
+                    1, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100,
+                  ]}
+                  tick={{ fontSize: 11 }}
+                  stroke="#6b7280"
+                  label={{
+                    value: 'Chapter',
+                    position: 'insideBottom',
+                    offset: -5,
+                    style: { fontSize: 11, fill: '#6b7280' },
+                  }}
+                />
+                <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
+                <Tooltip
+                  labelFormatter={(label: number) => {
+                    const d = insights.chapterComplexity.find(
+                      (p) => p.chapter === label
+                    )
+                    return d
+                      ? `Chapter ${label} (${d.arc})`
+                      : `Chapter ${label}`
+                  }}
+                  formatter={(value: number, name: string) => [
+                    name === 'Characters in Chapter'
+                      ? `${value} characters`
+                      : `${value} avg`,
+                    name,
+                  ]}
+                />
+                <Legend />
+                <Area
+                  type="monotone"
+                  dataKey="characters"
+                  fill="#dbeafe"
+                  stroke="#93c5fd"
+                  strokeWidth={1}
+                  fillOpacity={0.4}
+                  name="Characters in Chapter"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="rollingAvg"
+                  stroke="#2563eb"
+                  strokeWidth={2}
+                  dot={false}
+                  name="Rolling Average (20 ch.)"
+                />
+                <Line
+                  type="linear"
+                  dataKey="trend"
+                  stroke="#ef4444"
+                  strokeWidth={2}
+                  strokeDasharray="8 4"
+                  dot={false}
+                  name="Trendline"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+
+        {/* #2 Bounty vs Appearance Count */}
+        <div className="mb-6">
+          <ChartCard
+            title="#2 Bounty vs Appearance Count"
+            description="Do high-bounty characters appear more often? Scatter plot of bounty vs chapter appearances"
+            downloadFileName="bounty-vs-appearance"
+          >
+            <ResponsiveContainer width="100%" height={400}>
+              <ScatterChart
+                margin={{ top: 10, right: 30, left: 20, bottom: 10 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  type="number"
+                  dataKey="appearances"
+                  name="Appearances"
+                  tick={{ fontSize: 11 }}
+                  stroke="#6b7280"
+                />
+                <YAxis
+                  type="number"
+                  dataKey="bounty"
+                  name="Bounty"
+                  tickFormatter={formatBounty}
+                  tick={{ fontSize: 11 }}
+                  stroke="#6b7280"
+                />
+                <Tooltip
+                  formatter={(value: number, name: string) =>
+                    name === 'Bounty'
+                      ? [`${formatBounty(value)}`, name]
+                      : [value, name]
+                  }
+                  labelFormatter={(
+                    _: unknown,
+                    payload: ReadonlyArray<{ payload?: { name?: string } }>
+                  ) => payload?.[0]?.payload?.name || ''}
+                />
+                <Scatter
+                  data={insights.bountyVsAppearance}
+                  fill="#6366f1"
+                  fillOpacity={0.6}
+                >
+                  {insights.bountyVsAppearance.map((entry, i) => (
+                    <Cell
+                      key={i}
+                      fill={entry.status === 'Alive' ? '#10b981' : '#ef4444'}
+                    />
+                  ))}
+                </Scatter>
+              </ScatterChart>
+            </ResponsiveContainer>
+            <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+              <span className="flex items-center gap-1">
+                <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>{' '}
+                Alive
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-3 h-3 rounded-full bg-red-500 inline-block"></span>{' '}
+                Deceased / Unknown
+              </span>
+            </div>
+          </ChartCard>
+        </div>
+
+        {/* #3 Top Bounty Jumps */}
+        <div className="mb-6">
+          <ChartCard
+            title="#3 Top 10 Bounty Jumps"
+            description="Characters whose bounty increased the most from first to last known bounty"
+            downloadFileName="bounty-jumps"
+          >
+            {insights.topBountyJumps.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b-2 border-gray-200">
+                      <th className="text-left py-3 px-3 font-semibold text-gray-900">
+                        #
+                      </th>
+                      <th className="text-left py-3 px-3 font-semibold text-gray-900">
+                        Character
+                      </th>
+                      <th className="text-right py-3 px-3 font-semibold text-gray-900">
+                        First Bounty
+                      </th>
+                      <th className="text-right py-3 px-3 font-semibold text-gray-900">
+                        Last Bounty
+                      </th>
+                      <th className="text-right py-3 px-3 font-semibold text-gray-900">
+                        Jump
+                      </th>
+                      <th className="text-right py-3 px-3 font-semibold text-gray-900">
+                        Multiplier
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {insights.topBountyJumps.map((j, i) => (
+                      <tr
+                        key={j.name}
+                        className={`border-b border-gray-100 ${i % 2 === 0 ? 'bg-gray-50/50' : ''}`}
+                      >
+                        <td className="py-2 px-3 text-gray-400">{i + 1}</td>
+                        <td className="py-2 px-3 font-medium text-gray-900">
+                          {j.name}
+                        </td>
+                        <td className="py-2 px-3 text-right text-gray-600">
+                          {formatBounty(j.firstBounty)}
+                        </td>
+                        <td className="py-2 px-3 text-right font-medium text-amber-600">
+                          {formatBounty(j.lastBounty)}
+                        </td>
+                        <td className="py-2 px-3 text-right font-medium text-emerald-600">
+                          +{formatBounty(j.jump)}
+                        </td>
+                        <td className="py-2 px-3 text-right font-bold text-purple-600">
+                          {j.multiplier}x
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-8">
+                No bounty history data available
+              </p>
+            )}
+          </ChartCard>
+        </div>
+
+        {/* #4 Dead or Alive by Region */}
+        <div className="mb-6">
+          <ChartCard
+            title="#4 Dead or Alive Ratio by Region"
+            description="Death rate by origin region (regions with 5+ characters). Which regions are the deadliest?"
+            downloadFileName="region-death-rate"
+          >
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart
+                data={insights.regionStatus.slice(0, 15)}
+                layout="vertical"
+                margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis type="number" tick={{ fontSize: 11 }} stroke="#6b7280" />
+                <YAxis
+                  dataKey="region"
+                  type="category"
+                  width={90}
+                  tick={{ fontSize: 10 }}
+                  stroke="#6b7280"
+                />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="alive" stackId="a" fill="#10b981" name="Alive" />
+                <Bar
+                  dataKey="deceased"
+                  stackId="a"
+                  fill="#ef4444"
+                  name="Deceased"
+                />
+                <Bar
+                  dataKey="unknown"
+                  stackId="a"
+                  fill="#9ca3af"
+                  name="Unknown"
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+
+        {/* ─── SECTION: Appearances & Longevity ─── */}
+        <SectionTitle title="Appearances & Longevity" number="5-8" />
+
+        {/* #5 Most Loyal Characters */}
+        <div className="mb-6">
+          <ChartCard
+            title='#5 Most "Loyal" Characters'
+            description="Highest appearance density: appearances / (last chapter - first chapter). Who shows up in nearly every chapter of their active span?"
+            downloadFileName="most-loyal"
+          >
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart
+                data={insights.mostLoyal}
+                layout="vertical"
+                margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  type="number"
+                  tick={{ fontSize: 11 }}
+                  stroke="#6b7280"
+                  label={{
+                    value: 'Density (%)',
+                    position: 'insideBottom',
+                    offset: -5,
+                    style: { fontSize: 11, fill: '#6b7280' },
+                  }}
+                />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  width={110}
+                  tick={{ fontSize: 10 }}
+                  stroke="#6b7280"
+                />
+                <Tooltip
+                  formatter={(value: number) => [`${value}%`, 'Density']}
+                  labelFormatter={(label: string) => {
+                    const c = insights.mostLoyal.find((l) => l.name === label)
+                    return c
+                      ? `${label} — ${c.appearances} appearances over ${c.span} chapters`
+                      : label
+                  }}
+                />
+                <Bar dataKey="density" fill="#6366f1" radius={[0, 8, 8, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+
+        {/* #6 One-Arc Wonders */}
+        <div className="mb-6">
+          <ChartCard
+            title="#6 One-Arc Wonders vs Recurring Cast"
+            description="How many arcs does each character appear in? Most characters are one-arc wonders"
+            downloadFileName="arc-count-distribution"
+          >
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart
+                data={insights.arcCountDist}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  dataKey="arcCount"
+                  tick={{ fontSize: 11 }}
+                  stroke="#6b7280"
+                />
+                <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
+                <Tooltip />
+                <Bar
+                  dataKey="characterCount"
+                  fill="#8b5cf6"
+                  radius={[8, 8, 0, 0]}
+                  name="Characters"
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+
+        {/* #7 Character Introduction Rate per Arc */}
+        <div className="mb-6">
+          <ChartCard
+            title="#7 New Characters per Arc"
+            description="How many new characters debut in each arc? Which arcs explode the cast size?"
+            downloadFileName="arc-intro-rate"
+          >
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart
+                data={insights.arcIntroRate}
+                margin={{ top: 5, right: 30, left: 20, bottom: 80 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  dataKey="arc"
+                  tick={{ fontSize: 9 }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={100}
+                  stroke="#6b7280"
+                />
+                <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
+                <Tooltip
+                  labelFormatter={(label: string) => {
+                    const d = insights.arcIntroRate.find((a) => a.arc === label)
+                    return `${label} (${d?.saga || 'Unknown'})`
+                  }}
+                />
+                <Bar
+                  dataKey="newCharacters"
+                  name="New Characters"
+                  radius={[4, 4, 0, 0]}
+                >
+                  {insights.arcIntroRate.map((entry, i) => {
+                    const sagaNames = [
+                      ...new Set(insights.arcIntroRate.map((a) => a.saga)),
+                    ]
+                    const colorIdx = sagaNames.indexOf(entry.saga)
+                    return (
+                      <Cell
+                        key={i}
+                        fill={SAGA_COLORS[colorIdx % SAGA_COLORS.length]}
+                      />
+                    )
+                  })}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+
+        {/* #8 Gap Analysis */}
+        <div className="mb-6">
+          <ChartCard
+            title="#8 Longest Disappearances"
+            description="Characters with the longest gap between chapter appearances. Who vanished and came back?"
+            downloadFileName="gap-analysis"
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b-2 border-gray-200">
+                    <th className="text-left py-3 px-3 font-semibold text-gray-900">
+                      Character
+                    </th>
+                    <th className="text-right py-3 px-3 font-semibold text-gray-900">
+                      Gap (chapters)
+                    </th>
+                    <th className="text-right py-3 px-3 font-semibold text-gray-900">
+                      From Ch.
+                    </th>
+                    <th className="text-right py-3 px-3 font-semibold text-gray-900">
+                      To Ch.
+                    </th>
+                    <th className="text-right py-3 px-3 font-semibold text-gray-900">
+                      Total Appearances
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {insights.longestGaps.map((g, i) => (
+                    <tr
+                      key={g.name}
+                      className={`border-b border-gray-100 ${i % 2 === 0 ? 'bg-gray-50/50' : ''}`}
+                    >
+                      <td className="py-2 px-3 font-medium text-gray-900">
+                        {g.name}
+                      </td>
+                      <td className="py-2 px-3 text-right font-bold text-red-600">
+                        {g.gapLength}
+                      </td>
+                      <td className="py-2 px-3 text-right text-gray-600">
+                        {g.gapStart}
+                      </td>
+                      <td className="py-2 px-3 text-right text-gray-600">
+                        {g.gapEnd}
+                      </td>
+                      <td className="py-2 px-3 text-right text-gray-600">
+                        {g.totalAppearances}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </ChartCard>
+        </div>
+
+        {/* ─── SECTION: Story Structure ─── */}
+        <SectionTitle title="Story Structure" number="9-12" />
+
+        {/* #9 Arc Length Trend */}
+        <div className="mb-6">
+          <ChartCard
+            title="#9 Arc Length Trend"
+            description="Are arcs getting longer? Chapter count per arc in chronological order"
+            downloadFileName="arc-length-trend"
+          >
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart
+                data={insights.arcLengths}
+                margin={{ top: 5, right: 30, left: 20, bottom: 80 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  dataKey="arc"
+                  tick={{ fontSize: 9 }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={100}
+                  stroke="#6b7280"
+                />
+                <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
+                <Tooltip
+                  labelFormatter={(label: string) => {
+                    const d = insights.arcLengths.find((a) => a.arc === label)
+                    return `${label} (${d?.saga || ''})`
+                  }}
+                />
+                <Bar dataKey="chapters" name="Chapters" radius={[4, 4, 0, 0]}>
+                  {insights.arcLengths.map((entry, i) => {
+                    const sagaNames = [
+                      ...new Set(insights.arcLengths.map((a) => a.saga)),
+                    ]
+                    const colorIdx = sagaNames.indexOf(entry.saga)
+                    return (
+                      <Cell
+                        key={i}
+                        fill={SAGA_COLORS[colorIdx % SAGA_COLORS.length]}
+                      />
+                    )
+                  })}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+
+        {/* #10 Pages per Arc */}
+        <div className="mb-6">
+          <ChartCard
+            title="#10 Total Pages per Arc"
+            description="Actual content volume per arc — not just chapter count but total pages"
+            downloadFileName="pages-per-arc"
+          >
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart
+                data={insights.pagesPerArc}
+                margin={{ top: 5, right: 30, left: 20, bottom: 80 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  dataKey="arc"
+                  tick={{ fontSize: 9 }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={100}
+                  stroke="#6b7280"
+                />
+                <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
+                <Tooltip
+                  formatter={(value: number, name: string) =>
+                    name === 'totalPages'
+                      ? [`${value.toLocaleString()} pages`, 'Total Pages']
+                      : [value, name]
+                  }
+                />
+                <Bar
+                  dataKey="totalPages"
+                  name="Total Pages"
+                  fill="#f59e0b"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+
+        {/* #11 Saga Pacing */}
+        <div className="mb-6">
+          <ChartCard
+            title="#11 Saga Pacing Comparison"
+            description="Compare sagas by chapters, pages, characters, and density"
+            downloadFileName="saga-pacing"
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b-2 border-gray-200">
+                    <th className="text-left py-3 px-3 font-semibold text-gray-900">
+                      Saga
+                    </th>
+                    <th className="text-right py-3 px-3 font-semibold text-gray-900">
+                      Arcs
+                    </th>
+                    <th className="text-right py-3 px-3 font-semibold text-gray-900">
+                      Chapters
+                    </th>
+                    <th className="text-right py-3 px-3 font-semibold text-gray-900">
+                      Pages
+                    </th>
+                    <th className="text-right py-3 px-3 font-semibold text-gray-900">
+                      Active Characters
+                    </th>
+                    <th className="text-right py-3 px-3 font-semibold text-gray-900">
+                      New Characters
+                    </th>
+                    <th className="text-right py-3 px-3 font-semibold text-gray-900">
+                      Chars/Ch.
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {insights.sagaPacing.map((s, i) => (
+                    <tr
+                      key={s.saga}
+                      className={`border-b border-gray-100 ${i % 2 === 0 ? 'bg-gray-50/50' : ''}`}
+                    >
+                      <td className="py-2 px-3 font-medium text-gray-900">
+                        {s.saga}
+                      </td>
+                      <td className="py-2 px-3 text-right text-gray-600">
+                        {s.arcCount}
+                      </td>
+                      <td className="py-2 px-3 text-right text-gray-600">
+                        {s.totalChapters}
+                      </td>
+                      <td className="py-2 px-3 text-right text-gray-600">
+                        {s.totalPages.toLocaleString()}
+                      </td>
+                      <td className="py-2 px-3 text-right font-medium text-blue-600">
+                        {s.characterCount}
+                      </td>
+                      <td className="py-2 px-3 text-right font-medium text-emerald-600">
+                        {s.newCharacters}
+                      </td>
+                      <td className="py-2 px-3 text-right font-medium text-purple-600">
+                        {s.density}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </ChartCard>
+        </div>
+
+        {/* #12 Chapter Release Cadence */}
+        <div className="mb-6">
+          <ChartCard
+            title="#12 Chapters per Year"
+            description="How Oda's publication rate and break patterns have evolved over time"
+            downloadFileName="yearly-releases"
+          >
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart
+                data={insights.yearlyReleases}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  dataKey="year"
+                  tick={{ fontSize: 11 }}
+                  stroke="#6b7280"
+                />
+                <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
+                <Tooltip />
+                <Legend />
+                <Bar
+                  dataKey="chapters"
+                  fill="#3b82f6"
+                  name="Chapters Released"
+                  radius={[4, 4, 0, 0]}
+                />
+                <Bar
+                  dataKey="breaks"
+                  fill="#fbbf24"
+                  name="Estimated Breaks"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+
+        {/* ─── SECTION: Demographics ─── */}
+        <SectionTitle title="Demographics & World-Building" number="13-16" />
+
+        {/* #13 Blood Type Distribution */}
+        <div className="mb-6">
+          <ChartCard
+            title="#13 Blood Type: One Piece vs Japan"
+            description="Does Oda follow real-world Japanese blood type distribution?"
+            downloadFileName="blood-type-comparison"
+          >
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart
+                data={insights.bloodType}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  dataKey="bloodType"
+                  tick={{ fontSize: 12 }}
+                  stroke="#6b7280"
+                />
+                <YAxis
+                  tick={{ fontSize: 11 }}
+                  stroke="#6b7280"
+                  label={{
+                    value: '%',
+                    position: 'insideTopLeft',
+                    style: { fontSize: 11, fill: '#6b7280' },
+                  }}
+                />
+                <Tooltip formatter={(value: number) => [`${value}%`]} />
+                <Legend />
+                <Bar
+                  dataKey="opPercent"
+                  fill="#3b82f6"
+                  name="One Piece"
+                  radius={[4, 4, 0, 0]}
+                />
+                <Bar
+                  dataKey="japanPercent"
+                  fill="#f59e0b"
+                  name="Japan (Real)"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+
+        {/* #14 Birthday Distribution */}
+        <div className="mb-6">
+          <ChartCard
+            title="#14 Birthday Calendar by Month"
+            description="Which months have the most character birthdays?"
+            downloadFileName="birthday-distribution"
+          >
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart
+                data={insights.birthdays}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  dataKey="month"
+                  tick={{ fontSize: 12 }}
+                  stroke="#6b7280"
+                />
+                <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
+                <Tooltip />
+                <Bar
+                  dataKey="count"
+                  fill="#ec4899"
+                  name="Birthdays"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+
+        {/* #15 Origin Region */}
+        <div className="mb-6">
+          <ChartCard
+            title="#15 Origin Region Bubble Chart"
+            description="Which regions of the One Piece world are most represented?"
+            downloadFileName="origin-regions"
+          >
+            <ResponsiveContainer width="100%" height={350}>
+              <PieChart>
+                <Pie
+                  data={insights.regionCounts.slice(0, 15).map((r) => ({
+                    ...r,
+                    [r.region]: r.count,
+                  }))}
+                  dataKey="count"
+                  nameKey="region"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={120}
+                  label={(props: {
+                    region?: string
+                    count?: number
+                    name?: string
+                    value?: number
+                  }) =>
+                    `${props.region || props.name || ''} (${props.count ?? props.value ?? 0})`
+                  }
+                  labelLine={{ stroke: '#6b7280', strokeWidth: 1 }}
+                >
+                  {insights.regionCounts.slice(0, 15).map((_, i) => (
+                    <Cell key={i} fill={SAGA_COLORS[i % SAGA_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+
+        {/* #16 Age Distribution by Status */}
+        <div className="mb-6">
+          <ChartCard
+            title="#16 Age Distribution by Status"
+            description="Histogram of character ages colored by alive/deceased. Is there an 'age of death' cluster?"
+            downloadFileName="age-distribution"
+          >
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart
+                data={insights.ageDistribution}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  dataKey="ageRange"
+                  tick={{ fontSize: 11 }}
+                  stroke="#6b7280"
+                />
+                <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="alive" stackId="a" fill="#10b981" name="Alive" />
+                <Bar
+                  dataKey="deceased"
+                  stackId="a"
+                  fill="#ef4444"
+                  name="Deceased"
+                />
+                <Bar
+                  dataKey="unknown"
+                  stackId="a"
+                  fill="#9ca3af"
+                  name="Unknown"
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+
+        {/* ─── SECTION: Cover Stories & Meta ─── */}
+        <SectionTitle title="Cover Stories & Meta" number="17-20" />
+
+        {/* #17 Cover Page Stars */}
+        <div className="mb-6">
+          <ChartCard
+            title="#17 Cover Page Stars"
+            description="Top 20 characters by cover story appearances"
+            downloadFileName="cover-stars"
+          >
+            <ResponsiveContainer width="100%" height={500}>
+              <BarChart
+                data={insights.coverStars}
+                layout="vertical"
+                margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis type="number" tick={{ fontSize: 11 }} stroke="#6b7280" />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  width={110}
+                  tick={{ fontSize: 10 }}
+                  stroke="#6b7280"
+                />
+                <Tooltip />
+                <Bar
+                  dataKey="coverAppearances"
+                  fill="#f59e0b"
+                  name="Cover Appearances"
+                  radius={[0, 8, 8, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+
+        {/* #18 Cover vs Main */}
+        <div className="mb-6">
+          <ChartCard
+            title="#18 Cover vs Main Story Appearances"
+            description="Some characters live mostly in cover stories. Scatter plot comparing both appearance types"
+            downloadFileName="cover-vs-main"
+          >
+            <ResponsiveContainer width="100%" height={400}>
+              <ScatterChart
+                margin={{ top: 10, right: 30, left: 20, bottom: 10 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  type="number"
+                  dataKey="main"
+                  name="Main Story"
+                  tick={{ fontSize: 11 }}
+                  stroke="#6b7280"
+                />
+                <YAxis
+                  type="number"
+                  dataKey="cover"
+                  name="Cover"
+                  tick={{ fontSize: 11 }}
+                  stroke="#6b7280"
+                />
+                <Tooltip
+                  labelFormatter={(
+                    _: unknown,
+                    payload: ReadonlyArray<{ payload?: { name?: string } }>
+                  ) => payload?.[0]?.payload?.name || ''}
+                />
+                <Scatter
+                  data={insights.coverVsMain}
+                  fill="#8b5cf6"
+                  fillOpacity={0.5}
+                />
+              </ScatterChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+
+        {/* #19 Arc Density */}
+        <div className="mb-6">
+          <ChartCard
+            title="#19 Character Cast Size per Arc"
+            description="Which arcs have the most characters active in them?"
+            downloadFileName="arc-density"
+          >
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart
+                data={insights.arcDensity}
+                margin={{ top: 5, right: 30, left: 20, bottom: 80 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  dataKey="arc"
+                  tick={{ fontSize: 9 }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={100}
+                  stroke="#6b7280"
+                />
+                <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
+                <Tooltip
+                  formatter={(value: number, name: string) =>
+                    name === 'uniqueCharacters'
+                      ? [value, 'Unique Characters']
+                      : [value, name]
+                  }
+                />
+                <Bar
+                  dataKey="uniqueCharacters"
+                  fill="#06b6d4"
+                  name="Unique Characters"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+
+        {/* #20 Data Completeness */}
+        <div className="mb-6">
+          <ChartCard
+            title="#20 The Completeness Gap"
+            description="What percentage of characters have each attribute filled? A meta-visualization about the dataset itself"
+            downloadFileName="data-completeness"
+          >
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart
+                data={insights.completeness}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  dataKey="field"
+                  tick={{ fontSize: 11 }}
+                  stroke="#6b7280"
+                />
+                <YAxis
+                  tick={{ fontSize: 11 }}
+                  stroke="#6b7280"
+                  domain={[0, 100]}
+                  label={{
+                    value: '%',
+                    position: 'insideTopLeft',
+                    style: { fontSize: 11, fill: '#6b7280' },
+                  }}
+                />
+                <Tooltip
+                  formatter={(
+                    value: number,
+                    _name: string,
+                    props: { payload?: CompletenessField }
+                  ) => [
+                    `${value}% (${props.payload?.filled || 0}/${props.payload?.total || 0})`,
+                    'Completeness',
+                  ]}
+                />
+                <Bar
+                  dataKey="percent"
+                  name="Completeness"
+                  radius={[4, 4, 0, 0]}
+                >
+                  {insights.completeness.map((entry, i) => (
+                    <Cell
+                      key={i}
+                      fill={
+                        entry.percent >= 80
+                          ? '#10b981'
+                          : entry.percent >= 50
+                            ? '#f59e0b'
+                            : '#ef4444'
+                      }
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+            <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+              <span className="flex items-center gap-1">
+                <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>{' '}
+                {'>='}80%
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-3 h-3 rounded-full bg-amber-500 inline-block"></span>{' '}
+                50-80%
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-3 h-3 rounded-full bg-red-500 inline-block"></span>{' '}
+                {'<'}50%
+              </span>
+            </div>
+          </ChartCard>
+        </div>
+      </div>
+    </main>
+  )
+}
+
+// ── Section divider component ───────────────────────────────────────────────
+
+function SectionTitle({ title, number }: { title: string; number: string }) {
+  return (
+    <div className="mt-10 mb-6 flex items-center gap-3">
+      <span className="text-xs font-bold text-white bg-gray-900 rounded-full px-3 py-1">
+        #{number}
+      </span>
+      <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+      <div className="flex-1 h-px bg-gray-200"></div>
+    </div>
+  )
+}
+
+// Type import for tooltip
+interface CompletenessField {
+  field: string
+  filled: number
+  total: number
+  percent: number
+}
+
+export default OnePieceInsightsPage

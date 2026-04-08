@@ -51,6 +51,7 @@ const DevilFruitsPage = lazy(() => import('./pages/DevilFruitsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 const ChatPage = lazy(() => import('./pages/ChatPage'))
 const CharacterComparePage = lazy(() => import('./pages/CharacterComparePage'))
+const OnePieceInsightsPage = lazy(() => import('./pages/OnePieceInsightsPage'))
 
 // Loading fallback component
 const PageLoader = () => (
@@ -146,6 +147,10 @@ function App() {
                     <Route
                       path="/analytics/region-bounty"
                       element={<RegionBountyPage />}
+                    />
+                    <Route
+                      path="/analytics/insights"
+                      element={<OnePieceInsightsPage />}
                     />
                     <Route
                       path="/characters/compare"
