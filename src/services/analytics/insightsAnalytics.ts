@@ -323,33 +323,101 @@ export interface ArcCountDistribution {
 }
 
 export function computeArcCountDistribution(
-  characters: Character[]
+  characters: Character[],
+  arcs: Arc[],
+  minChapters = 2
 ): ArcCountDistribution[] {
   const countMap = new Map<number, number>()
 
   for (const c of characters) {
-    const arcCount = c.arc_list?.length || 0
-    if (arcCount === 0) continue
-    countMap.set(arcCount, (countMap.get(arcCount) || 0) + 1)
+    if (!c.chapter_list || c.chapter_list.length === 0) continue
+    const chapterSet = new Set(c.chapter_list)
+    const qualifiedArcs = arcs.filter((arc) => {
+      let count = 0
+      for (let ch = arc.start_chapter; ch <= arc.end_chapter; ch++) {
+        if (chapterSet.has(ch)) count++
+        if (count >= minChapters) return true
+      }
+      return false
+    })
+    if (qualifiedArcs.length === 0) continue
+    countMap.set(
+      qualifiedArcs.length,
+      (countMap.get(qualifiedArcs.length) || 0) + 1
+    )
   }
 
   const maxArcs = Math.max(...Array.from(countMap.keys()))
   const result: ArcCountDistribution[] = []
 
-  for (let i = 1; i <= Math.min(maxArcs, 10); i++) {
+  for (let i = 1; i <= Math.min(maxArcs, 4); i++) {
     result.push({
       arcCount: i === 1 ? '1 arc' : `${i} arcs`,
       characterCount: countMap.get(i) || 0,
     })
   }
 
-  // Group 11+ together
-  let elevenPlus = 0
-  for (let i = 11; i <= maxArcs; i++) {
-    elevenPlus += countMap.get(i) || 0
+  // Group 5+ together
+  let fivePlus = 0
+  for (let i = 5; i <= maxArcs; i++) {
+    fivePlus += countMap.get(i) || 0
   }
-  if (elevenPlus > 0) {
-    result.push({ arcCount: '11+ arcs', characterCount: elevenPlus })
+  if (fivePlus > 0) {
+    result.push({ arcCount: '5+ arcs', characterCount: fivePlus })
+  }
+
+  return result
+}
+
+// ── #6b One-Saga Wonders vs Recurring Cast ──────────────────────────────────
+
+export interface SagaCountDistribution {
+  sagaCount: string
+  characterCount: number
+}
+
+export function computeSagaCountDistribution(
+  characters: Character[],
+  sagas: Saga[],
+  minChapters = 2
+): SagaCountDistribution[] {
+  const countMap = new Map<number, number>()
+
+  for (const c of characters) {
+    if (!c.chapter_list || c.chapter_list.length === 0) continue
+    const chapterSet = new Set(c.chapter_list)
+    const qualifiedSagas = sagas.filter((saga) => {
+      let count = 0
+      for (let ch = saga.start_chapter; ch <= saga.end_chapter; ch++) {
+        if (chapterSet.has(ch)) count++
+        if (count >= minChapters) return true
+      }
+      return false
+    })
+    if (qualifiedSagas.length === 0) continue
+    countMap.set(
+      qualifiedSagas.length,
+      (countMap.get(qualifiedSagas.length) || 0) + 1
+    )
+  }
+
+  const maxSagas = Math.max(...Array.from(countMap.keys()))
+  const result: SagaCountDistribution[] = []
+
+  for (let i = 1; i <= Math.min(maxSagas, 4); i++) {
+    result.push({
+      sagaCount: i === 1 ? '1 saga' : `${i} sagas`,
+      characterCount: countMap.get(i) || 0,
+    })
+  }
+
+  // Group 5+ together
+  let fivePlus = 0
+  for (let i = 5; i <= maxSagas; i++) {
+    fivePlus += countMap.get(i) || 0
+  }
+  if (fivePlus > 0) {
+    result.push({ sagaCount: '5+ sagas', characterCount: fivePlus })
   }
 
   return result

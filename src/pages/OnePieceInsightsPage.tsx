@@ -32,6 +32,7 @@ import {
   BOUNTY_TIER_LABELS,
   computeMostLoyal,
   computeArcCountDistribution,
+  computeSagaCountDistribution,
   computeArcIntroRate,
   computeLongestGaps,
   computeArcLengths,
@@ -132,6 +133,7 @@ const bountyJumpColumns: Column<BountyJump>[] = [
 function OnePieceInsightsPage() {
   const [hideStrawHats, setHideStrawHats] = useState(true)
   const [bountyTierPercent, setBountyTierPercent] = useState(true)
+  const [minChapters, setMinChapters] = useState(2)
   const { data: raw, isLoading } = useQuery({
     queryKey: ['insights-raw-data'],
     queryFn: fetchInsightsRawData,
@@ -151,7 +153,6 @@ function OnePieceInsightsPage() {
       topBountyJumps: computeTopBountyJumps(characters),
       regionBountyTier: computeRegionBountyTier(characters),
       mostLoyal: computeMostLoyal(characters),
-      arcCountDist: computeArcCountDistribution(characters),
       arcIntroRate: computeArcIntroRate(characters, arcs),
       longestGaps: computeLongestGaps(characters),
       arcLengths: computeArcLengths(arcs),
@@ -168,6 +169,21 @@ function OnePieceInsightsPage() {
       completeness: computeCompleteness(characters),
     }
   }, [raw])
+
+  const arcCountDist = useMemo(
+    () =>
+      raw
+        ? computeArcCountDistribution(raw.characters, raw.arcs, minChapters)
+        : [],
+    [raw, minChapters]
+  )
+  const sagaCountDist = useMemo(
+    () =>
+      raw
+        ? computeSagaCountDistribution(raw.characters, raw.sagas, minChapters)
+        : [],
+    [raw, minChapters]
+  )
 
   const regionBountyTierCount = useMemo(
     () => insights?.regionBountyTier.slice(0, 15) ?? [],
@@ -212,13 +228,10 @@ function OnePieceInsightsPage() {
   if (!insights) return null
 
   // Quick summary stats
-  const oneArcWonders = insights.arcCountDist.find(
-    (d) => d.arcCount === '1 arc'
-  )
-  const totalWithArcs = insights.arcCountDist.reduce(
-    (s, d) => s + d.characterCount,
-    0
-  )
+  const oneArcWonders = arcCountDist.find((d) => d.arcCount === '1 arc')
+  const totalWithArcs = arcCountDist.reduce((s, d) => s + d.characterCount, 0)
+  const oneSagaWonders = sagaCountDist.find((d) => d.sagaCount === '1 saga')
+  const totalWithSagas = sagaCountDist.reduce((s, d) => s + d.characterCount, 0)
   const longestArc = [...insights.arcLengths].sort(
     (a, b) => b.chapters - a.chapters
   )[0]
@@ -287,7 +300,7 @@ function OnePieceInsightsPage() {
         </div>
 
         {/* Quick stat row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
           <div className="bg-white border border-gray-200 rounded-xl p-4">
             <p className="text-sm text-gray-500">One-Arc Wonders</p>
             <p className="text-2xl font-bold text-gray-900">
@@ -296,6 +309,17 @@ function OnePieceInsightsPage() {
             <p className="text-xs text-gray-400">
               {totalWithArcs > 0
                 ? `${Math.round(((oneArcWonders?.characterCount || 0) / totalWithArcs) * 100)}% of characters`
+                : ''}
+            </p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <p className="text-sm text-gray-500">One-Saga Wonders</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {oneSagaWonders?.characterCount || 0}
+            </p>
+            <p className="text-xs text-gray-400">
+              {totalWithSagas > 0
+                ? `${Math.round(((oneSagaWonders?.characterCount || 0) / totalWithSagas) * 100)}% of characters`
                 : ''}
             </p>
           </div>
@@ -677,6 +701,25 @@ function OnePieceInsightsPage() {
           </ChartCard>
         </div>
 
+        {/* Min chapters control for #6 and #6b */}
+        <div className="flex items-center gap-3 mb-3 text-sm text-gray-600">
+          <label htmlFor="minChapters">
+            Min chapters to count as appearing:
+          </label>
+          <input
+            id="minChapters"
+            type="number"
+            min={1}
+            max={20}
+            value={minChapters}
+            onChange={(e) => {
+              const v = parseInt(e.target.value, 10)
+              if (!isNaN(v) && v >= 1 && v <= 20) setMinChapters(v)
+            }}
+            className="w-16 px-2 py-1 border border-gray-300 rounded-lg text-center text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+          />
+        </div>
+
         {/* #6 One-Arc Wonders */}
         <div className="mb-6">
           <ChartCard
@@ -686,8 +729,8 @@ function OnePieceInsightsPage() {
           >
             <ResponsiveContainer width="100%" height={350}>
               <BarChart
-                data={insights.arcCountDist}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                data={arcCountDist}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis
@@ -702,6 +745,79 @@ function OnePieceInsightsPage() {
                   fill="#8b5cf6"
                   radius={[8, 8, 0, 0]}
                   name="Characters"
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  label={(props: any) => {
+                    const { x, y, width, value } = props
+                    const total = arcCountDist.reduce(
+                      (s, d) => s + d.characterCount,
+                      0
+                    )
+                    const pct =
+                      total > 0 ? Math.round((value / total) * 100) : 0
+                    return (
+                      <text
+                        x={x + width / 2}
+                        y={y - 5}
+                        textAnchor="middle"
+                        fontSize={11}
+                        fill="#374151"
+                      >
+                        {value} ({pct}%)
+                      </text>
+                    )
+                  }}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+
+        {/* #6b One-Saga Wonders */}
+        <div className="mb-6">
+          <ChartCard
+            title="#6b One-Saga Wonders vs Recurring Cast"
+            description="How many sagas does each character appear in? Even more characters are one-saga wonders"
+            downloadFileName="saga-count-distribution"
+          >
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart
+                data={sagaCountDist}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  dataKey="sagaCount"
+                  tick={{ fontSize: 11 }}
+                  stroke="#6b7280"
+                />
+                <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
+                <Tooltip />
+                <Bar
+                  dataKey="characterCount"
+                  fill="#ec4899"
+                  radius={[8, 8, 0, 0]}
+                  name="Characters"
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  label={(props: any) => {
+                    const { x, y, width, value } = props
+                    const total = sagaCountDist.reduce(
+                      (s, d) => s + d.characterCount,
+                      0
+                    )
+                    const pct =
+                      total > 0 ? Math.round((value / total) * 100) : 0
+                    return (
+                      <text
+                        x={x + width / 2}
+                        y={y - 5}
+                        textAnchor="middle"
+                        fontSize={11}
+                        fill="#374151"
+                      >
+                        {value} ({pct}%)
+                      </text>
+                    )
+                  }}
                 />
               </BarChart>
             </ResponsiveContainer>
