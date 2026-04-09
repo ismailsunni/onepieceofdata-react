@@ -196,51 +196,87 @@ function extractBountyNumbers(bounties: string): number[] {
     .filter((n) => !isNaN(n) && n > 0)
 }
 
-// ── #4 Dead or Alive Ratio by Region ────────────────────────────────────────
+// ── #4 Bounty Tier Distribution by Region ──────────────────────────────────
 
-export interface RegionStatusData {
+const BOUNTY_TIERS = [
+  { min: 0, max: 100000, label: 'Cute Pirates', color: '#94a3b8' },
+  {
+    min: 100000,
+    max: 1000000,
+    label: 'Fodder / Warrant Officer',
+    color: '#60a5fa',
+  },
+  {
+    min: 1000000,
+    max: 100000000,
+    label: 'Common / Commander',
+    color: '#34d399',
+  },
+  {
+    min: 100000000,
+    max: 500000000,
+    label: 'Supernova / Rear Admiral',
+    color: '#a78bfa',
+  },
+  {
+    min: 500000000,
+    max: 1000000000,
+    label: 'Shichibukai / Yonkou Members',
+    color: '#f472b6',
+  },
+  {
+    min: 1000000000,
+    max: 3000000000,
+    label: 'Yonkou Cmdr / Vice Admiral',
+    color: '#fbbf24',
+  },
+  {
+    min: 3000000000,
+    max: 5000000000,
+    label: 'Yonkou / Admiral',
+    color: '#f97316',
+  },
+  { min: 5000000000, max: Infinity, label: 'Legends', color: '#ef4444' },
+] as const
+
+export interface RegionBountyTierData {
   region: string
-  alive: number
-  deceased: number
-  unknown: number
   total: number
-  deathRate: number
+  [tier: string]: string | number // tier labels as dynamic keys
 }
 
-export function computeRegionStatus(
+export const BOUNTY_TIER_LABELS = BOUNTY_TIERS.map((t) => ({
+  label: t.label,
+  color: t.color,
+}))
+
+function getBountyTierLabel(bounty: number): string {
+  for (const tier of BOUNTY_TIERS) {
+    if (bounty >= tier.min && bounty < tier.max) return tier.label
+  }
+  return BOUNTY_TIERS[BOUNTY_TIERS.length - 1].label
+}
+
+export function computeRegionBountyTier(
   characters: Character[]
-): RegionStatusData[] {
-  const regionMap = new Map<
-    string,
-    { alive: number; deceased: number; unknown: number }
-  >()
+): RegionBountyTierData[] {
+  const regionMap = new Map<string, Record<string, number>>()
 
   for (const c of characters) {
-    if (!c.origin_region) continue
-    const entry = regionMap.get(c.origin_region) || {
-      alive: 0,
-      deceased: 0,
-      unknown: 0,
-    }
-    if (c.status === 'Alive') entry.alive++
-    else if (c.status === 'Deceased') entry.deceased++
-    else entry.unknown++
+    if (!c.origin_region || c.bounty == null || c.bounty <= 0) continue
+    const tier = getBountyTierLabel(c.bounty)
+    const entry = regionMap.get(c.origin_region) || {}
+    entry[tier] = (entry[tier] || 0) + 1
     regionMap.set(c.origin_region, entry)
   }
 
   return Array.from(regionMap.entries())
-    .map(([region, counts]) => {
-      const total = counts.alive + counts.deceased + counts.unknown
-      return {
-        region,
-        ...counts,
-        total,
-        deathRate:
-          total > 0 ? Math.round((counts.deceased / total) * 1000) / 10 : 0,
-      }
+    .map(([region, tiers]) => {
+      const total = Object.values(tiers).reduce((s, v) => s + v, 0)
+      return { region, total, ...tiers } as RegionBountyTierData
     })
-    .filter((r) => r.total >= 5)
-    .sort((a, b) => b.deathRate - a.deathRate)
+    .filter((r) => r.total >= 3)
+    .sort((a, b) => b.total - a.total)
 }
 
 // ── #5 Most Loyal Characters ────────────────────────────────────────────────

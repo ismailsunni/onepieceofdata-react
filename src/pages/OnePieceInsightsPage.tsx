@@ -28,7 +28,8 @@ import {
   type BountyJump,
   computeBountyVsAppearance,
   computeTopBountyJumps,
-  computeRegionStatus,
+  computeRegionBountyTier,
+  BOUNTY_TIER_LABELS,
   computeMostLoyal,
   computeArcCountDistribution,
   computeArcIntroRate,
@@ -130,6 +131,7 @@ const bountyJumpColumns: Column<BountyJump>[] = [
 
 function OnePieceInsightsPage() {
   const [hideStrawHats, setHideStrawHats] = useState(true)
+  const [bountyTierPercent, setBountyTierPercent] = useState(true)
   const { data: raw, isLoading } = useQuery({
     queryKey: ['insights-raw-data'],
     queryFn: fetchInsightsRawData,
@@ -147,7 +149,7 @@ function OnePieceInsightsPage() {
       ),
       bountyVsAppearance: computeBountyVsAppearance(characters),
       topBountyJumps: computeTopBountyJumps(characters),
-      regionStatus: computeRegionStatus(characters),
+      regionBountyTier: computeRegionBountyTier(characters),
       mostLoyal: computeMostLoyal(characters),
       arcCountDist: computeArcCountDistribution(characters),
       arcIntroRate: computeArcIntroRate(characters, arcs),
@@ -166,6 +168,36 @@ function OnePieceInsightsPage() {
       completeness: computeCompleteness(characters),
     }
   }, [raw])
+
+  const regionBountyTierCount = useMemo(
+    () => insights?.regionBountyTier.slice(0, 15) ?? [],
+    [insights]
+  )
+  const regionBountyTierPct = useMemo(
+    () =>
+      regionBountyTierCount.map((r) => {
+        const row: Record<string, string | number> = { region: r.region }
+        if (r.total <= 0) {
+          for (const { label } of BOUNTY_TIER_LABELS) row[label] = 0
+          return row
+        }
+        // Round each tier, then adjust the largest to ensure sum === 100
+        const raw: { label: string; pct: number }[] = BOUNTY_TIER_LABELS.map(
+          ({ label }) => {
+            const v = (r[label] as number) || 0
+            return { label, pct: Math.round((v / r.total) * 1000) / 10 }
+          }
+        )
+        const sum = raw.reduce((s, t) => s + t.pct, 0)
+        if (sum !== 100) {
+          const largest = raw.reduce((a, b) => (b.pct > a.pct ? b : a))
+          largest.pct = Math.round((largest.pct + (100 - sum)) * 10) / 10
+        }
+        for (const t of raw) row[t.label] = t.pct
+        return row
+      }),
+    [regionBountyTierCount]
+  )
 
   if (isLoading) {
     return (
@@ -519,21 +551,40 @@ function OnePieceInsightsPage() {
           </ChartCard>
         </div>
 
-        {/* #4 Dead or Alive by Region */}
+        {/* #4 Bounty Tier Distribution by Region */}
         <div className="mb-6">
           <ChartCard
-            title="#4 Dead or Alive Ratio by Region"
-            description="Death rate by origin region (regions with 5+ characters). Which regions are the deadliest?"
-            downloadFileName="region-death-rate"
+            title="#4 Bounty Tier Distribution by Region"
+            description="Bounty power-tier breakdown by origin region (regions with 3+ bounty holders). Which regions produce the strongest pirates?"
+            downloadFileName="region-bounty-tier"
           >
+            <div className="flex justify-end mb-2">
+              <button
+                onClick={() => setBountyTierPercent((v) => !v)}
+                className="px-3 py-1 text-xs font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                {bountyTierPercent ? 'Show counts' : 'Show %'}
+              </button>
+            </div>
             <ResponsiveContainer width="100%" height={400}>
               <BarChart
-                data={insights.regionStatus.slice(0, 15)}
+                data={
+                  bountyTierPercent
+                    ? regionBountyTierPct
+                    : regionBountyTierCount
+                }
                 layout="vertical"
                 margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis type="number" tick={{ fontSize: 11 }} stroke="#6b7280" />
+                <XAxis
+                  type="number"
+                  tick={{ fontSize: 11 }}
+                  stroke="#6b7280"
+                  domain={bountyTierPercent ? [0, 100] : [0, 'auto']}
+                  allowDataOverflow={bountyTierPercent}
+                  tickFormatter={bountyTierPercent ? (v) => `${v}%` : undefined}
+                />
                 <YAxis
                   dataKey="region"
                   type="category"
@@ -541,21 +592,36 @@ function OnePieceInsightsPage() {
                   tick={{ fontSize: 10 }}
                   stroke="#6b7280"
                 />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="alive" stackId="a" fill="#10b981" name="Alive" />
-                <Bar
-                  dataKey="deceased"
-                  stackId="a"
-                  fill="#ef4444"
-                  name="Deceased"
+                <Tooltip
+                  formatter={(value: number) =>
+                    bountyTierPercent ? `${value}%` : value
+                  }
                 />
-                <Bar
-                  dataKey="unknown"
-                  stackId="a"
-                  fill="#9ca3af"
-                  name="Unknown"
+                <Legend
+                  content={() => (
+                    <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-2 text-xs text-gray-700">
+                      {BOUNTY_TIER_LABELS.map(({ label, color }) => (
+                        <span key={label} className="flex items-center gap-1">
+                          <span
+                            className="inline-block w-3 h-3 rounded-sm"
+                            style={{ backgroundColor: color }}
+                          />
+                          {label}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 />
+                {BOUNTY_TIER_LABELS.map(({ label, color }) => (
+                  <Bar
+                    key={label}
+                    dataKey={label}
+                    stackId="a"
+                    fill={color}
+                    name={label}
+                    isAnimationActive={false}
+                  />
+                ))}
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
