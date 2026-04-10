@@ -53,6 +53,13 @@ const ChatPage = lazy(() => import('./pages/ChatPage'))
 const CharacterComparePage = lazy(() => import('./pages/CharacterComparePage'))
 const OnePieceInsightsPage = lazy(() => import('./pages/OnePieceInsightsPage'))
 const EmbedInsightPage = lazy(() => import('./pages/EmbedInsightPage'))
+const AffiliationsPage = lazy(() => import('./pages/AffiliationsPage'))
+const AffiliationDetailPage = lazy(
+  () => import('./pages/AffiliationDetailPage')
+)
+const AffiliationNetworkPage = lazy(
+  () => import('./pages/AffiliationNetworkPage')
+)
 
 // Loading fallback component
 const PageLoader = () => (
@@ -183,6 +190,18 @@ function App() {
                             <Route
                               path="/characters/compare"
                               element={<CharacterComparePage />}
+                            />
+                            <Route
+                              path="/affiliations"
+                              element={<AffiliationsPage />}
+                            />
+                            <Route
+                              path="/affiliations/:groupName"
+                              element={<AffiliationDetailPage />}
+                            />
+                            <Route
+                              path="/analytics/affiliation-network"
+                              element={<AffiliationNetworkPage />}
                             />
                             <Route
                               path="/devil-fruits"

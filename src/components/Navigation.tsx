@@ -12,6 +12,7 @@ const EXPLORE_ITEMS: NavItem[] = [
   { to: '/arcs', label: 'Arcs' },
   { to: '/volumes', label: 'Volumes' },
   { to: '/chapters', label: 'Chapters' },
+  { to: '/affiliations', label: 'Affiliations' },
   { to: '/devil-fruits', label: 'Devil Fruits', badge: 'soon' },
 ]
 
@@ -41,6 +42,11 @@ const ANALYTICS_ITEMS: NavItem[] = [
   { to: '/analytics/chapter-releases', label: 'Chapter Releases', exact: true },
   { to: '/analytics/publication-rate', label: 'Publication Rate', exact: true },
   { to: '/analytics/network', label: 'Character Network', exact: true },
+  {
+    to: '/analytics/affiliation-network',
+    label: 'Affiliation Network',
+    exact: true,
+  },
   { label: 'Insights', heading: true },
   { to: '/analytics/insights', label: 'One Piece Insights', exact: true },
 ]
@@ -67,6 +73,7 @@ function Navigation() {
     location.pathname.startsWith('/sagas') ||
     location.pathname.startsWith('/chapters') ||
     location.pathname.startsWith('/volumes') ||
+    location.pathname.startsWith('/affiliations') ||
     location.pathname.startsWith('/devil-fruits')
   const isAnalyticsActive = location.pathname.startsWith('/analytics')
 

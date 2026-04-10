@@ -3,6 +3,7 @@ import { logger } from '../../utils/logger'
 import { Character } from '../../types/character'
 import { Arc, Saga } from '../../types/arc'
 import { Chapter } from '../../types/chapter'
+import { CharacterAffiliation } from '../../types/affiliation'
 
 // ── Raw data loader ─────────────────────────────────────────────────────────
 
@@ -11,15 +12,22 @@ export interface InsightsRawData {
   arcs: Arc[]
   sagas: Saga[]
   chapters: (Chapter & { date: string | null; num_page: number | null })[]
+  affiliations: CharacterAffiliation[]
 }
 
 export async function fetchInsightsRawData(): Promise<InsightsRawData> {
   if (!supabase) {
     logger.error('Supabase client not initialized')
-    return { characters: [], arcs: [], sagas: [], chapters: [] }
+    return {
+      characters: [],
+      arcs: [],
+      sagas: [],
+      chapters: [],
+      affiliations: [],
+    }
   }
 
-  const [charRes, arcRes, sagaRes, chapterRes] = await Promise.all([
+  const [charRes, arcRes, sagaRes, chapterRes, affRes] = await Promise.all([
     supabase.from('character').select('*').order('name'),
     supabase
       .from('arc')
@@ -33,6 +41,7 @@ export async function fetchInsightsRawData(): Promise<InsightsRawData> {
       .from('chapter')
       .select('number, volume, title, num_page, date, jump')
       .order('number', { ascending: true }),
+    supabase.from('character_affiliation').select('*').order('group_name'),
   ])
 
   // Match arcs to sagas
@@ -53,6 +62,7 @@ export async function fetchInsightsRawData(): Promise<InsightsRawData> {
     arcs,
     sagas,
     chapters: chapterRes.data || [],
+    affiliations: affRes.data || [],
   }
 }
 
@@ -1085,4 +1095,91 @@ export function computeTopCharactersPerSaga(
       characters: charCounts.slice(0, maxPerSaga),
     }
   })
+}
+
+// ── #23 Largest Crews / Organizations ──────────────────────────────────────
+
+export interface GroupSize {
+  groupName: string
+  totalMembers: number
+  currentMembers: number
+  formerMembers: number
+}
+
+export function computeLargestGroups(
+  affiliations: CharacterAffiliation[]
+): GroupSize[] {
+  const map = new Map<
+    string,
+    { total: number; current: number; former: number }
+  >()
+
+  for (const a of affiliations) {
+    const entry = map.get(a.group_name) || { total: 0, current: 0, former: 0 }
+    entry.total++
+    if (a.status === 'current') entry.current++
+    if (a.status === 'former' || a.status === 'defected') entry.former++
+    map.set(a.group_name, entry)
+  }
+
+  return Array.from(map.entries())
+    .map(([groupName, counts]) => ({
+      groupName,
+      totalMembers: counts.total,
+      currentMembers: counts.current,
+      formerMembers: counts.former,
+    }))
+    .sort((a, b) => b.totalMembers - a.totalMembers)
+    .slice(0, 30)
+}
+
+// ── #24 Crew Loyalty vs Turnover ──────────────────────────────────────────
+
+export interface CrewLoyalty {
+  groupName: string
+  current: number
+  former: number
+  defected: number
+  other: number
+  total: number
+  retentionRate: number
+}
+
+export function computeCrewLoyalty(
+  affiliations: CharacterAffiliation[]
+): CrewLoyalty[] {
+  const map = new Map<
+    string,
+    { current: number; former: number; defected: number; other: number }
+  >()
+
+  for (const a of affiliations) {
+    const entry = map.get(a.group_name) || {
+      current: 0,
+      former: 0,
+      defected: 0,
+      other: 0,
+    }
+    if (a.status === 'current') entry.current++
+    else if (a.status === 'former') entry.former++
+    else if (a.status === 'defected') entry.defected++
+    else entry.other++
+    map.set(a.group_name, entry)
+  }
+
+  return Array.from(map.entries())
+    .map(([groupName, counts]) => {
+      const total =
+        counts.current + counts.former + counts.defected + counts.other
+      return {
+        groupName,
+        ...counts,
+        total,
+        retentionRate:
+          total > 0 ? Math.round((counts.current / total) * 1000) / 10 : 0,
+      }
+    })
+    .filter((g) => g.total >= 5)
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 25)
 }
