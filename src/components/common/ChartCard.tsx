@@ -1,4 +1,5 @@
-import React, { useRef } from 'react'
+import React, { useRef, useState, useCallback } from 'react'
+import { useLocation } from 'react-router-dom'
 import { DownloadChartButton } from './DownloadChartButton'
 
 interface ChartCardProps {
@@ -16,6 +17,13 @@ interface ChartCardProps {
   loading?: boolean
   isEmpty?: boolean
   emptyMessage?: string
+  // Permalink & embed support
+  chartId?: string
+  embedPath?: string
+}
+
+function getBaseUrl(): string {
+  return window.location.origin + window.location.pathname
 }
 
 export function ChartCard({
@@ -31,12 +39,42 @@ export function ChartCard({
   loading = false,
   isEmpty = false,
   emptyMessage = 'No data available',
+  chartId,
+  embedPath,
 }: ChartCardProps) {
   const chartRef = useRef<HTMLDivElement>(null)
   const fileName = downloadFileName || title.toLowerCase().replace(/\s+/g, '-')
+  const location = useLocation()
+  const [showEmbed, setShowEmbed] = useState(false)
+  const [copied, setCopied] = useState<'link' | 'embed' | null>(null)
+
+  const permalinkUrl = chartId
+    ? `${getBaseUrl()}#${location.pathname}#${chartId}`
+    : null
+
+  const embedUrl = embedPath ? `${getBaseUrl()}#${embedPath}` : null
+
+  const embedCode = embedUrl
+    ? `<iframe src="${embedUrl}" width="100%" height="500" frameborder="0" style="border:1px solid #e5e7eb;border-radius:12px;" loading="lazy"></iframe>`
+    : null
+
+  const handleCopyLink = useCallback(async () => {
+    if (!permalinkUrl) return
+    await navigator.clipboard.writeText(permalinkUrl)
+    setCopied('link')
+    setTimeout(() => setCopied(null), 2000)
+  }, [permalinkUrl])
+
+  const handleCopyEmbed = useCallback(async () => {
+    if (!embedCode) return
+    await navigator.clipboard.writeText(embedCode)
+    setCopied('embed')
+    setTimeout(() => setCopied(null), 2000)
+  }, [embedCode])
 
   return (
     <section
+      id={chartId}
       className={`bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow relative ${className}`}
       aria-label={title}
     >
@@ -52,6 +90,116 @@ export function ChartCard({
 
           {/* Actions area */}
           <div className="flex items-center gap-2 ml-4">
+            {/* Permalink button */}
+            {permalinkUrl && (
+              <button
+                onClick={handleCopyLink}
+                className="p-2 rounded-lg transition-colors text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                title={copied === 'link' ? 'Copied!' : 'Copy permalink'}
+                aria-label="Copy permalink"
+              >
+                {copied === 'link' ? (
+                  <svg
+                    className="w-4 h-4 text-green-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                    />
+                  </svg>
+                )}
+              </button>
+            )}
+
+            {/* Embed button */}
+            {embedCode && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowEmbed((v) => !v)}
+                  className="p-2 rounded-lg transition-colors text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                  title="Get embed code"
+                  aria-label="Get embed code"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                    />
+                  </svg>
+                </button>
+                {showEmbed && (
+                  <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-700">
+                        Embed Code
+                      </span>
+                      <button
+                        onClick={() => setShowEmbed(false)}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                    <textarea
+                      readOnly
+                      value={embedCode}
+                      className="w-full h-20 text-xs font-mono bg-gray-50 border border-gray-200 rounded p-2 resize-none text-gray-600"
+                      onClick={(e) =>
+                        (e.target as HTMLTextAreaElement).select()
+                      }
+                    />
+                    <button
+                      onClick={handleCopyEmbed}
+                      className="mt-2 w-full px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      {copied === 'embed' ? 'Copied!' : 'Copy to clipboard'}
+                    </button>
+                    <p className="mt-2 text-[10px] text-gray-400">
+                      Works on blogs and sites that allow iframes. Not supported
+                      on Substack or Medium.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
             {actions}
             {/* Prefer ref-based download when downloadFileName is given */}
             {downloadFileName ? (

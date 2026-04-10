@@ -52,6 +52,7 @@ const AboutPage = lazy(() => import('./pages/AboutPage'))
 const ChatPage = lazy(() => import('./pages/ChatPage'))
 const CharacterComparePage = lazy(() => import('./pages/CharacterComparePage'))
 const OnePieceInsightsPage = lazy(() => import('./pages/OnePieceInsightsPage'))
+const EmbedInsightPage = lazy(() => import('./pages/EmbedInsightPage'))
 
 // Loading fallback component
 const PageLoader = () => (
@@ -78,91 +79,125 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <HashRouter>
           <ErrorBoundary>
-            <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
-              <Header />
-              <div id="main-content" className="flex-1 overflow-y-auto">
-                <Suspense fallback={<PageLoader />}>
-                  <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/characters" element={<CharactersPage />} />
-                    <Route
-                      path="/characters/:id"
-                      element={<CharacterDetailPage />}
-                    />
-                    <Route path="/arcs" element={<ArcsPage />} />
-                    <Route path="/arcs/:id" element={<ArcDetailPage />} />
-                    <Route path="/sagas" element={<SagasPage />} />
-                    <Route path="/sagas/:id" element={<SagaDetailPage />} />
-                    <Route path="/chapters" element={<ChaptersPage />} />
-                    <Route
-                      path="/chapters/:number"
-                      element={<ChapterDetailPage />}
-                    />
-                    <Route path="/volumes" element={<VolumesPage />} />
-                    <Route
-                      path="/volumes/:number"
-                      element={<VolumeDetailPage />}
-                    />
-                    <Route path="/analytics" element={<AnalyticsPage />} />
-                    <Route
-                      path="/analytics/character-stats"
-                      element={<CharacterStatsPage />}
-                    />
-                    <Route
-                      path="/analytics/character-appearances"
-                      element={<CharacterAppearancesPage />}
-                    />
-                    <Route
-                      path="/analytics/character-completeness"
-                      element={<CharacterCompletenessPage />}
-                    />
-                    <Route
-                      path="/analytics/story-arcs"
-                      element={<StoryArcsAnalyticsPage />}
-                    />
-                    <Route
-                      path="/analytics/character-timeline"
-                      element={<CharacterTimelinePage />}
-                    />
-                    <Route
-                      path="/analytics/birthdays"
-                      element={<CharacterBirthdayPage />}
-                    />
-                    <Route
-                      path="/analytics/chapter-releases"
-                      element={<ChapterReleaseCalendarPage />}
-                    />
-                    <Route
-                      path="/analytics/publication-rate"
-                      element={<PublicationRatePage />}
-                    />
-                    <Route
-                      path="/analytics/network"
-                      element={<NetworkAnalysisPage />}
-                    />
-                    <Route
-                      path="/analytics/saga-matrix"
-                      element={<CharacterSagaMatrixPage />}
-                    />
-                    <Route
-                      path="/analytics/region-bounty"
-                      element={<RegionBountyPage />}
-                    />
-                    <Route
-                      path="/analytics/insights"
-                      element={<OnePieceInsightsPage />}
-                    />
-                    <Route
-                      path="/characters/compare"
-                      element={<CharacterComparePage />}
-                    />
-                    <Route path="/devil-fruits" element={<DevilFruitsPage />} />
-                    <Route path="/about" element={<AboutPage />} />
-                    <Route path="/chat" element={<ChatPage />} />
-                  </Routes>
-                </Suspense>
-              </div>
-            </div>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                {/* Embed routes — no header, no page chrome */}
+                <Route
+                  path="/embed/insights/:chartId"
+                  element={<EmbedInsightPage />}
+                />
+
+                {/* Main app routes with header */}
+                <Route
+                  path="/*"
+                  element={
+                    <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
+                      <Header />
+                      <div id="main-content" className="flex-1 overflow-y-auto">
+                        <Suspense fallback={<PageLoader />}>
+                          <Routes>
+                            <Route path="/" element={<HomePage />} />
+                            <Route
+                              path="/characters"
+                              element={<CharactersPage />}
+                            />
+                            <Route
+                              path="/characters/:id"
+                              element={<CharacterDetailPage />}
+                            />
+                            <Route path="/arcs" element={<ArcsPage />} />
+                            <Route
+                              path="/arcs/:id"
+                              element={<ArcDetailPage />}
+                            />
+                            <Route path="/sagas" element={<SagasPage />} />
+                            <Route
+                              path="/sagas/:id"
+                              element={<SagaDetailPage />}
+                            />
+                            <Route
+                              path="/chapters"
+                              element={<ChaptersPage />}
+                            />
+                            <Route
+                              path="/chapters/:number"
+                              element={<ChapterDetailPage />}
+                            />
+                            <Route path="/volumes" element={<VolumesPage />} />
+                            <Route
+                              path="/volumes/:number"
+                              element={<VolumeDetailPage />}
+                            />
+                            <Route
+                              path="/analytics"
+                              element={<AnalyticsPage />}
+                            />
+                            <Route
+                              path="/analytics/character-stats"
+                              element={<CharacterStatsPage />}
+                            />
+                            <Route
+                              path="/analytics/character-appearances"
+                              element={<CharacterAppearancesPage />}
+                            />
+                            <Route
+                              path="/analytics/character-completeness"
+                              element={<CharacterCompletenessPage />}
+                            />
+                            <Route
+                              path="/analytics/story-arcs"
+                              element={<StoryArcsAnalyticsPage />}
+                            />
+                            <Route
+                              path="/analytics/character-timeline"
+                              element={<CharacterTimelinePage />}
+                            />
+                            <Route
+                              path="/analytics/birthdays"
+                              element={<CharacterBirthdayPage />}
+                            />
+                            <Route
+                              path="/analytics/chapter-releases"
+                              element={<ChapterReleaseCalendarPage />}
+                            />
+                            <Route
+                              path="/analytics/publication-rate"
+                              element={<PublicationRatePage />}
+                            />
+                            <Route
+                              path="/analytics/network"
+                              element={<NetworkAnalysisPage />}
+                            />
+                            <Route
+                              path="/analytics/saga-matrix"
+                              element={<CharacterSagaMatrixPage />}
+                            />
+                            <Route
+                              path="/analytics/region-bounty"
+                              element={<RegionBountyPage />}
+                            />
+                            <Route
+                              path="/analytics/insights"
+                              element={<OnePieceInsightsPage />}
+                            />
+                            <Route
+                              path="/characters/compare"
+                              element={<CharacterComparePage />}
+                            />
+                            <Route
+                              path="/devil-fruits"
+                              element={<DevilFruitsPage />}
+                            />
+                            <Route path="/about" element={<AboutPage />} />
+                            <Route path="/chat" element={<ChatPage />} />
+                          </Routes>
+                        </Suspense>
+                      </div>
+                    </div>
+                  }
+                />
+              </Routes>
+            </Suspense>
           </ErrorBoundary>
           <Toaster position="bottom-right" toastOptions={{ duration: 3000 }} />
         </HashRouter>

@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useMemo, useState, useEffect } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   BarChart,
@@ -134,6 +134,25 @@ const bountyJumpColumns: Column<BountyJump>[] = [
 ]
 
 function OnePieceInsightsPage() {
+  const location = useLocation()
+
+  // Scroll to chart anchor after data loads
+  useEffect(() => {
+    // HashRouter puts the route in window.location.hash as #/path
+    // A permalink anchor is appended as #/path#chart-id
+    const fullHash = window.location.hash
+    const anchorMatch = fullHash.match(/#([^/][^#]*)$/)
+    if (anchorMatch) {
+      const el = document.getElementById(anchorMatch[1])
+      if (el) {
+        setTimeout(
+          () => el.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+          300
+        )
+      }
+    }
+  }, [location])
+
   const [hideStrawHats, setHideStrawHats] = useState(true)
   const [bountyTierPercent, setBountyTierPercent] = useState(true)
   const [minChapters, setMinChapters] = useState(2)
@@ -1604,6 +1623,8 @@ function OnePieceInsightsPage() {
             title="#21 Top Characters per Saga"
             description="Who are the main characters of each saga? Characters ranked by chapter appearances within each saga"
             downloadFileName="top-characters-per-saga"
+            chartId="top-characters-per-saga"
+            embedPath="/embed/insights/top-characters-per-saga"
             filters={
               <div className="flex items-center gap-2">
                 <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden text-sm">
@@ -1747,6 +1768,8 @@ function OnePieceInsightsPage() {
             title="#22 Top Characters per Arc"
             description="Who are the main characters of each arc? Characters ranked by chapter appearances within each arc"
             downloadFileName="top-characters-per-arc"
+            chartId="top-characters-per-arc"
+            embedPath="/embed/insights/top-characters-per-arc"
             filters={
               <div className="flex items-center gap-2">
                 <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden text-sm">
