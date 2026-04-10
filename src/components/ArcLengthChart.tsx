@@ -23,7 +23,13 @@ interface ChartDataPoint {
   totalChapters: number
   era?: 'Paradise' | 'New World'
   arcOrder: Array<{ name: string; chapters: number; startChapter: number }>
-  [arcName: string]: number | string | Array<{ name: string; chapters: number; startChapter: number }> | 'Paradise' | 'New World' | undefined
+  [arcName: string]:
+    | number
+    | string
+    | Array<{ name: string; chapters: number; startChapter: number }>
+    | 'Paradise'
+    | 'New World'
+    | undefined
 }
 
 interface PayloadItem {
@@ -48,7 +54,9 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
     const arcOrder = chartData?.arcOrder || []
 
     // Sort arcs by their start chapter to show in chronological order
-    const sortedArcs = [...arcOrder].sort((a, b) => a.startChapter - b.startChapter)
+    const sortedArcs = [...arcOrder].sort(
+      (a, b) => a.startChapter - b.startChapter
+    )
 
     return (
       <div
@@ -61,17 +69,20 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
           overflow: 'auto',
         }}
       >
-        <p style={{ fontWeight: 'bold', color: '#1f2937', marginBottom: '8px' }}>
+        <p
+          style={{ fontWeight: 'bold', color: '#1f2937', marginBottom: '8px' }}
+        >
           {label} ({totalChapters})
         </p>
         <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '8px' }}>
           {sortedArcs.map((arc, index) => {
             // Find the corresponding payload item to get the color
-            const payloadItem = payload.find(p => p.name === arc.name)
+            const payloadItem = payload.find((p) => p.name === arc.name)
             return (
               <div key={index} style={{ marginBottom: '4px' }}>
-                <span style={{ color: payloadItem?.color || '#6b7280' }}>●</span>
-                {' '}
+                <span style={{ color: payloadItem?.color || '#6b7280' }}>
+                  ●
+                </span>{' '}
                 <span style={{ fontSize: '13px' }}>
                   {arc.name} ({arc.chapters})
                 </span>
@@ -85,21 +96,47 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   return null
 }
 
-function ArcLengthChart({ arcs, showSeparateBars = false, allArcs }: ArcLengthChartProps) {
+function ArcLengthChart({
+  arcs,
+  showSeparateBars = false,
+  allArcs,
+}: ArcLengthChartProps) {
   // Define color palette at the top level so it's consistent across both views
   const colors = [
-    '#1e40af', '#dc2626', '#059669', '#d97706', '#7c3aed',
-    '#db2777', '#0891b2', '#ea580c', '#4f46e5', '#65a30d',
-    '#0284c7', '#e11d48', '#16a34a', '#ca8a04', '#9333ea',
-    '#c026d3', '#0369a1', '#f97316', '#6366f1', '#84cc16',
-    '#0e7490', '#be123c', '#15803d', '#a16207', '#7e22ce',
+    '#1e40af',
+    '#dc2626',
+    '#059669',
+    '#d97706',
+    '#7c3aed',
+    '#db2777',
+    '#0891b2',
+    '#ea580c',
+    '#4f46e5',
+    '#65a30d',
+    '#0284c7',
+    '#e11d48',
+    '#16a34a',
+    '#ca8a04',
+    '#9333ea',
+    '#c026d3',
+    '#0369a1',
+    '#f97316',
+    '#6366f1',
+    '#84cc16',
+    '#0e7490',
+    '#be123c',
+    '#15803d',
+    '#a16207',
+    '#7e22ce',
   ]
 
   // First, build a consistent mapping of arc names to colors
   // Use allArcs if provided (for filtered views), otherwise use arcs
   // This ensures the same arc always has the same color in both views
   const arcsForColorMapping = allArcs || arcs
-  const sortedArcs = [...arcsForColorMapping].sort((a, b) => a.start_chapter - b.start_chapter)
+  const sortedArcs = [...arcsForColorMapping].sort(
+    (a, b) => a.start_chapter - b.start_chapter
+  )
   const arcColorMap = new Map<string, string>()
   sortedArcs.forEach((arc, index) => {
     arcColorMap.set(arc.title, colors[index % colors.length])
@@ -108,18 +145,22 @@ function ArcLengthChart({ arcs, showSeparateBars = false, allArcs }: ArcLengthCh
   // When showing separate bars, create one data point per arc
   if (showSeparateBars) {
     // Sort arcs chronologically for display
-    const sortedFilteredArcs = [...arcs].sort((a, b) => a.start_chapter - b.start_chapter)
+    const sortedFilteredArcs = [...arcs].sort(
+      (a, b) => a.start_chapter - b.start_chapter
+    )
 
     const chartData: ChartDataPoint[] = sortedFilteredArcs.map((arc) => {
       const chapters = arc.end_chapter - arc.start_chapter + 1
       return {
         saga: arc.title, // Use arc title as the x-axis label
         totalChapters: chapters,
-        arcOrder: [{
-          name: arc.title,
-          chapters: chapters,
-          startChapter: arc.start_chapter,
-        }],
+        arcOrder: [
+          {
+            name: arc.title,
+            chapters: chapters,
+            startChapter: arc.start_chapter,
+          },
+        ],
         [arc.title]: chapters,
         color: arcColorMap.get(arc.title) || colors[0], // Store color for this arc
       }
@@ -129,6 +170,7 @@ function ArcLengthChart({ arcs, showSeparateBars = false, allArcs }: ArcLengthCh
       <ChartCard
         title="Arc Lengths in Chapters"
         downloadFileName="arc-lengths"
+        chartId="arc-lengths"
       >
         <ResponsiveContainer width="100%" height={500}>
           <BarChart
@@ -163,11 +205,7 @@ function ArcLengthChart({ arcs, showSeparateBars = false, allArcs }: ArcLengthCh
               stroke="#6b7280"
             />
             <Tooltip content={<CustomTooltip />} />
-            <Bar
-              dataKey="totalChapters"
-              fill="#059669"
-              radius={[4, 4, 0, 0]}
-            >
+            <Bar dataKey="totalChapters" fill="#059669" radius={[4, 4, 0, 0]}>
               {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color as string} />
               ))}
@@ -195,10 +233,17 @@ function ArcLengthChart({ arcs, showSeparateBars = false, allArcs }: ArcLengthCh
   const arcNamesSet = new Set<string>()
 
   sagaMap.forEach((saga) => {
-    const arcOrder: Array<{ name: string; chapters: number; startChapter: number }> = []
+    const arcOrder: Array<{
+      name: string
+      chapters: number
+      startChapter: number
+    }> = []
     const dataPoint: ChartDataPoint = {
       saga: saga.title,
-      totalChapters: saga.arcs.reduce((sum, arc) => sum + (arc.end_chapter - arc.start_chapter + 1), 0),
+      totalChapters: saga.arcs.reduce(
+        (sum, arc) => sum + (arc.end_chapter - arc.start_chapter + 1),
+        0
+      ),
       arcOrder: arcOrder,
     }
 
@@ -218,13 +263,16 @@ function ArcLengthChart({ arcs, showSeparateBars = false, allArcs }: ArcLengthCh
 
   // Sort arc names by their chronological order (matching the color map)
   const arcNames = sortedArcs
-    .map(arc => arc.title)
-    .filter(title => arcNamesSet.has(title))
+    .map((arc) => arc.title)
+    .filter((title) => arcNamesSet.has(title))
 
   // Find the index to split Paradise and New World
   // Summit War is the last saga in Paradise, Fish-Man Island is first in New World
-  const splitIndex = chartData.findIndex((d) =>
-    d.saga === 'Fish-Man Island' || d.saga === 'Fishman Island' || d.saga === 'Fish Man Island'
+  const splitIndex = chartData.findIndex(
+    (d) =>
+      d.saga === 'Fish-Man Island' ||
+      d.saga === 'Fishman Island' ||
+      d.saga === 'Fish Man Island'
   )
 
   // Add era information to each data point
@@ -235,17 +283,22 @@ function ArcLengthChart({ arcs, showSeparateBars = false, allArcs }: ArcLengthCh
   })
 
   // Calculate total chapters for Paradise and New World
-  const paradiseChapters = splitIndex > 0
-    ? chartData.slice(0, splitIndex).reduce((sum, d) => sum + d.totalChapters, 0)
-    : 0
-  const newWorldChapters = splitIndex > 0 && splitIndex < chartData.length
-    ? chartData.slice(splitIndex).reduce((sum, d) => sum + d.totalChapters, 0)
-    : 0
+  const paradiseChapters =
+    splitIndex > 0
+      ? chartData
+          .slice(0, splitIndex)
+          .reduce((sum, d) => sum + d.totalChapters, 0)
+      : 0
+  const newWorldChapters =
+    splitIndex > 0 && splitIndex < chartData.length
+      ? chartData.slice(splitIndex).reduce((sum, d) => sum + d.totalChapters, 0)
+      : 0
 
   return (
     <ChartCard
       title="Arc and Saga Lengths in Chapters"
       downloadFileName="arc-saga-lengths"
+      chartId="arc-saga-lengths"
     >
       <ResponsiveContainer width="100%" height={500}>
         <BarChart
@@ -321,7 +374,9 @@ function ArcLengthChart({ arcs, showSeparateBars = false, allArcs }: ArcLengthCh
               dataKey={arcName}
               stackId="saga"
               fill={arcColorMap.get(arcName) || colors[index % colors.length]}
-              radius={index === arcNames.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+              radius={
+                index === arcNames.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]
+              }
             />
           ))}
         </BarChart>

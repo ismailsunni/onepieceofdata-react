@@ -13,7 +13,8 @@
     "test:coverage": "vitest run --coverage",
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
-    "prepare": "husky"
+    "prepare": "husky",
+    "update-chart-index": "tsx src/scripts/updateEmbedChartIndex.ts"
   },
   "keywords": [
     "one-piece",

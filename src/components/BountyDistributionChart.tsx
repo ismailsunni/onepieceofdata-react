@@ -17,11 +17,15 @@ interface BountyDistributionChartProps {
 
 import { ChartCard } from './common/ChartCard'
 
-function BountyDistributionChart({ data, stats }: BountyDistributionChartProps) {
+function BountyDistributionChart({
+  data,
+  stats,
+}: BountyDistributionChartProps) {
   return (
     <ChartCard
       title="Bounty Distribution by Power Tier"
       downloadFileName="bounty-distribution"
+      chartId="bounty-distribution"
     >
       <div className="mb-4">
         <p className="text-sm text-gray-600">
@@ -30,8 +34,8 @@ function BountyDistributionChart({ data, stats }: BountyDistributionChartProps) 
         {stats && (
           <p className="text-sm text-gray-500 mt-2">
             {stats.charactersWithBounty.toLocaleString()} of{' '}
-            {stats.totalCharacters.toLocaleString()} characters have a bounty
-            ({stats.percentage}%)
+            {stats.totalCharacters.toLocaleString()} characters have a bounty (
+            {stats.percentage}%)
           </p>
         )}
       </div>
@@ -88,10 +92,22 @@ function BountyDistributionChart({ data, stats }: BountyDistributionChartProps) 
           <Legend
             verticalAlign="top"
             height={36}
-            formatter={(value) => value === 'alive' ? 'Alive' : 'Deceased/Unknown'}
+            formatter={(value) =>
+              value === 'alive' ? 'Alive' : 'Deceased/Unknown'
+            }
           />
-          <Bar dataKey="alive" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} />
-          <Bar dataKey="notAlive" stackId="a" fill="#ef4444" radius={[8, 8, 0, 0]} />
+          <Bar
+            dataKey="alive"
+            stackId="a"
+            fill="#10b981"
+            radius={[0, 0, 0, 0]}
+          />
+          <Bar
+            dataKey="notAlive"
+            stackId="a"
+            fill="#ef4444"
+            radius={[8, 8, 0, 0]}
+          />
         </BarChart>
       </ResponsiveContainer>
     </ChartCard>

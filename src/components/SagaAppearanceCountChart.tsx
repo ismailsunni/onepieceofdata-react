@@ -25,10 +25,11 @@ export function SagaAppearanceCountChart({
     <ChartCard
       title="Character Saga Appearance Distribution"
       downloadFileName="saga-appearance-count"
+      chartId="saga-appearance-count"
     >
       <p className="mb-4 text-sm text-gray-600">
-        Shows how many characters appear across different numbers of sagas (e.g.,
-        Doflamingo in 4 sagas, Mihawk in 7 sagas)
+        Shows how many characters appear across different numbers of sagas
+        (e.g., Doflamingo in 4 sagas, Mihawk in 7 sagas)
       </p>
       <ResponsiveContainer width="100%" height={400}>
         <BarChart

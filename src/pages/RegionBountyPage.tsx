@@ -255,6 +255,7 @@ function RegionBountyPage() {
               <ChartCard
                 title={`Top ${topN} Regions by Total Bounty`}
                 downloadFileName="region-bounty-chart"
+                chartId="region-bounty-chart"
               >
                 <p className="text-sm text-gray-600 mb-4">
                   Total combined bounty per origin region
@@ -316,6 +317,7 @@ function RegionBountyPage() {
               <ChartCard
                 title={`Top ${topN} Regions — Bounty Breakdown`}
                 downloadFileName="region-bounty-table"
+                chartId="region-bounty-table"
               >
                 <p className="text-sm text-gray-600 mb-4">
                   Highest-bounty characters per region

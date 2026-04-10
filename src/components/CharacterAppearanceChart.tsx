@@ -19,6 +19,7 @@ function CharacterAppearanceChart({ data }: CharacterAppearanceChartProps) {
     <ChartCard
       title="Character Appearances Distribution"
       downloadFileName="character-appearances"
+      chartId="character-appearances"
     >
       <p className="text-sm text-gray-600 mb-4">
         Number of characters by their chapter appearance count
@@ -61,11 +62,7 @@ function CharacterAppearanceChart({ data }: CharacterAppearanceChartProps) {
             }}
             formatter={(value: number) => [`${value} characters`, 'Count']}
           />
-          <Bar
-            dataKey="characterCount"
-            fill="#8b5cf6"
-            radius={[8, 8, 0, 0]}
-          />
+          <Bar dataKey="characterCount" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </ChartCard>

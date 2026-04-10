@@ -44,6 +44,7 @@ function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
     <ChartCard
       title="Top 10 Highest Bounties"
       downloadFileName="top-bounties"
+      chartId="top-bounties"
     >
       <div className="flex justify-between items-start mb-4">
         <div>
@@ -52,11 +53,17 @@ function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
           </p>
           <div className="flex items-center gap-4 mt-2">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded" style={{ backgroundColor: '#10b981' }}></div>
+              <div
+                className="w-4 h-4 rounded"
+                style={{ backgroundColor: '#10b981' }}
+              ></div>
               <span className="text-xs text-gray-600">Alive</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded" style={{ backgroundColor: '#ef4444' }}></div>
+              <div
+                className="w-4 h-4 rounded"
+                style={{ backgroundColor: '#ef4444' }}
+              ></div>
               <span className="text-xs text-gray-600">Deceased/Unknown</span>
             </div>
           </div>
@@ -65,19 +72,21 @@ function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
           <span className="text-sm text-gray-600">Filter:</span>
           <button
             onClick={() => setShowAliveOnly(false)}
-            className={`px-3 py-1 text-sm rounded-md transition-colors ${!showAliveOnly
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
+            className={`px-3 py-1 text-sm rounded-md transition-colors ${
+              !showAliveOnly
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
           >
             All
           </button>
           <button
             onClick={() => setShowAliveOnly(true)}
-            className={`px-3 py-1 text-sm rounded-md transition-colors ${showAliveOnly
-              ? 'bg-green-600 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
+            className={`px-3 py-1 text-sm rounded-md transition-colors ${
+              showAliveOnly
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
           >
             Alive Only
           </button>
@@ -114,8 +123,10 @@ function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
               'Bounty',
             ]}
             labelFormatter={(label: string) => {
-              const character = data.find(d => d.name === label)
-              const statusText = character?.status ? ` - ${character.status}` : ''
+              const character = data.find((d) => d.name === label)
+              const statusText = character?.status
+                ? ` - ${character.status}`
+                : ''
               return character?.origin
                 ? `${label} (${character.origin})${statusText}`
                 : `${label}${statusText}`

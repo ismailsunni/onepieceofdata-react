@@ -9,17 +9,21 @@ function TimeSkipVennDiagram({ data }: TimeSkipVennDiagramProps) {
   const { preTimeSkipOnly, postTimeSkipOnly, both, total } = data
 
   // Calculate percentages
-  const prePercentage = total > 0 ? ((preTimeSkipOnly / total) * 100).toFixed(1) : '0'
-  const postPercentage = total > 0 ? ((postTimeSkipOnly / total) * 100).toFixed(1) : '0'
+  const prePercentage =
+    total > 0 ? ((preTimeSkipOnly / total) * 100).toFixed(1) : '0'
+  const postPercentage =
+    total > 0 ? ((postTimeSkipOnly / total) * 100).toFixed(1) : '0'
   const bothPercentage = total > 0 ? ((both / total) * 100).toFixed(1) : '0'
 
   return (
     <ChartCard
       title="Pre/Post Time Skip Characters"
       downloadFileName="time-skip-venn-diagram"
+      chartId="time-skip-venn-diagram"
     >
       <p className="text-sm text-gray-600 mb-6">
-        Distribution of characters before and after the 2-year time skip (Chapter 598)
+        Distribution of characters before and after the 2-year time skip
+        (Chapter 598)
       </p>
 
       <div className="flex flex-col lg:flex-row items-center justify-center gap-8">
@@ -113,11 +117,15 @@ function TimeSkipVennDiagram({ data }: TimeSkipVennDiagramProps) {
           <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
             <div className="flex items-center justify-between gap-8">
               <div>
-                <p className="text-sm text-blue-700 font-medium">Pre-Time Skip Only</p>
+                <p className="text-sm text-blue-700 font-medium">
+                  Pre-Time Skip Only
+                </p>
                 <p className="text-xs text-blue-600 mt-1">Before Chapter 598</p>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-blue-700">{preTimeSkipOnly}</p>
+                <p className="text-2xl font-bold text-blue-700">
+                  {preTimeSkipOnly}
+                </p>
                 <p className="text-xs text-blue-600">{prePercentage}%</p>
               </div>
             </div>
@@ -126,8 +134,12 @@ function TimeSkipVennDiagram({ data }: TimeSkipVennDiagramProps) {
           <div className="bg-purple-50 border-l-4 border-purple-500 p-4 rounded">
             <div className="flex items-center justify-between gap-8">
               <div>
-                <p className="text-sm text-purple-700 font-medium">Both Periods</p>
-                <p className="text-xs text-purple-600 mt-1">Appeared in both eras</p>
+                <p className="text-sm text-purple-700 font-medium">
+                  Both Periods
+                </p>
+                <p className="text-xs text-purple-600 mt-1">
+                  Appeared in both eras
+                </p>
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-purple-700">{both}</p>
@@ -139,11 +151,17 @@ function TimeSkipVennDiagram({ data }: TimeSkipVennDiagramProps) {
           <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
             <div className="flex items-center justify-between gap-8">
               <div>
-                <p className="text-sm text-green-700 font-medium">Post-Time Skip Only</p>
-                <p className="text-xs text-green-600 mt-1">From Chapter 598 onwards</p>
+                <p className="text-sm text-green-700 font-medium">
+                  Post-Time Skip Only
+                </p>
+                <p className="text-xs text-green-600 mt-1">
+                  From Chapter 598 onwards
+                </p>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-green-700">{postTimeSkipOnly}</p>
+                <p className="text-2xl font-bold text-green-700">
+                  {postTimeSkipOnly}
+                </p>
                 <p className="text-xs text-green-600">{postPercentage}%</p>
               </div>
             </div>
@@ -152,7 +170,9 @@ function TimeSkipVennDiagram({ data }: TimeSkipVennDiagramProps) {
           <div className="bg-gray-100 border-l-4 border-gray-500 p-4 rounded">
             <div className="flex items-center justify-between gap-8">
               <div>
-                <p className="text-sm text-gray-700 font-medium">Total Characters</p>
+                <p className="text-sm text-gray-700 font-medium">
+                  Total Characters
+                </p>
                 <p className="text-xs text-gray-600 mt-1">With chapter data</p>
               </div>
               <div className="text-right">
@@ -166,8 +186,10 @@ function TimeSkipVennDiagram({ data }: TimeSkipVennDiagramProps) {
 
       <div className="mt-6 p-4 bg-blue-50 rounded-lg">
         <p className="text-sm text-gray-700">
-          <span className="font-semibold">Note:</span> The time skip occurs between chapters 597 and 598,
-          after the Summit War of Marineford. The Straw Hat Pirates train separately for 2 years before reuniting at Sabaody Archipelago.
+          <span className="font-semibold">Note:</span> The time skip occurs
+          between chapters 597 and 598, after the Summit War of Marineford. The
+          Straw Hat Pirates train separately for 2 years before reuniting at
+          Sabaody Archipelago.
         </p>
       </div>
     </ChartCard>

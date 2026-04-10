@@ -54,6 +54,7 @@ function CharacterStatusChart({ data }: CharacterStatusChartProps) {
     <ChartCard
       title="Character Status Distribution"
       downloadFileName="character-status"
+      chartId="character-status"
     >
       <p className="text-sm text-gray-600 mb-4">
         Breakdown of character statuses in the series
@@ -90,7 +91,7 @@ function CharacterStatusChart({ data }: CharacterStatusChartProps) {
             verticalAlign="bottom"
             height={36}
             formatter={(value: string) => {
-              const item = data.find(d => d.status === value)
+              const item = data.find((d) => d.status === value)
               return `${value} (${item?.count || 0})`
             }}
           />

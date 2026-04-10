@@ -44,6 +44,7 @@ export function SagaAppearanceChart({ data }: SagaAppearanceChartProps) {
     <ChartCard
       title="Character Appearances by Saga"
       downloadFileName="saga-appearances"
+      chartId="saga-appearances"
     >
       <ResponsiveContainer width="100%" height={400}>
         <BarChart
@@ -75,7 +76,9 @@ export function SagaAppearanceChart({ data }: SagaAppearanceChartProps) {
                 }
                 return (
                   <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
-                    <p className="font-semibold text-gray-900">{data.sagaName}</p>
+                    <p className="font-semibold text-gray-900">
+                      {data.sagaName}
+                    </p>
                     <p className="text-sm text-gray-600">
                       Characters: {data.characterCount}
                     </p>
@@ -90,7 +93,10 @@ export function SagaAppearanceChart({ data }: SagaAppearanceChartProps) {
           />
           <Bar dataKey="characterCount" radius={[8, 8, 0, 0]}>
             {chartData.map((_entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              <Cell
+                key={`cell-${index}`}
+                fill={COLORS[index % COLORS.length]}
+              />
             ))}
           </Bar>
         </BarChart>

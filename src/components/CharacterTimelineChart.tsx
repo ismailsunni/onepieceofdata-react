@@ -205,6 +205,7 @@ const CharacterTimelineChart = memo(
       <ChartCard
         title="Character Appearance Timeline"
         downloadFileName="character-timeline"
+        chartId="character-timeline"
         className="w-full"
       >
         <ResponsiveContainer

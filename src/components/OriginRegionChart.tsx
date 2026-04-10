@@ -23,14 +23,22 @@ function OriginRegionChart({ data }: OriginRegionChartProps) {
       title="Characters by Origin Region"
       description="Number of characters from each region of the One Piece world"
       downloadFileName="origin-region-distribution"
+      chartId="origin-region-distribution"
     >
-      <ResponsiveContainer width="100%" height={Math.max(300, data.length * 36)}>
+      <ResponsiveContainer
+        width="100%"
+        height={Math.max(300, data.length * 36)}
+      >
         <BarChart
           data={data}
           layout="vertical"
           margin={{ top: 4, right: 40, left: 8, bottom: 4 }}
         >
-          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f3f4f6" />
+          <CartesianGrid
+            strokeDasharray="3 3"
+            horizontal={false}
+            stroke="#f3f4f6"
+          />
           <XAxis
             type="number"
             tick={{ fontSize: 12, fill: '#6b7280' }}

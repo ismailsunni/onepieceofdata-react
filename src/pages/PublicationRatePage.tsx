@@ -557,6 +557,7 @@ function PublicationRatePage() {
         <ChartCard
           title="Yearly Publication Statistics"
           downloadFileName="publication-rate-by-year"
+          chartId="publication-rate-by-year"
         >
           <ResponsiveContainer width="100%" height={400}>
             <BarChart

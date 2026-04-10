@@ -1250,6 +1250,7 @@ function ChapterReleaseCalendarPage() {
         <ChartCard
           title="Calendar Visualization"
           downloadFileName={`one-piece-calendar-${theme}`}
+          chartId="chapter-release-calendar"
         >
           {/* Legend */}
           <div className="mb-8">

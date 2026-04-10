@@ -398,6 +398,8 @@ function OnePieceInsightsPage() {
             title="#1 Cast Complexity Over Time"
             description="How many characters appear in each chapter? The rolling average (20-chapter window) shows how the story's cast grew more complex over time"
             downloadFileName="cast-complexity"
+            chartId="cast-complexity"
+            embedPath="/embed/insights/cast-complexity"
           >
             <ResponsiveContainer width="100%" height={350}>
               <AreaChart
@@ -476,6 +478,8 @@ function OnePieceInsightsPage() {
             title="#2 Bounty vs Appearance Count"
             description="Do high-bounty characters appear more often? Scatter plot of bounty vs chapter appearances"
             downloadFileName="bounty-vs-appearance"
+            chartId="bounty-vs-appearance"
+            embedPath="/embed/insights/bounty-vs-appearance"
             filters={
               <button
                 onClick={() => setHideStrawHats((v) => !v)}
@@ -596,6 +600,8 @@ function OnePieceInsightsPage() {
             title="#3 Bounty Jumps"
             description="All characters with bounty history — sort by absolute jump or multiplier to explore"
             downloadFileName="bounty-jumps"
+            chartId="bounty-jumps"
+            embedPath="/embed/insights/bounty-jumps"
           >
             {insights.topBountyJumps.length > 0 ? (
               <SortableTable<BountyJump>
@@ -620,6 +626,8 @@ function OnePieceInsightsPage() {
             title="#4 Bounty Tier Distribution by Region"
             description="Bounty power-tier breakdown by origin region (regions with 3+ bounty holders). Which regions produce the strongest pirates?"
             downloadFileName="region-bounty-tier"
+            chartId="region-bounty-tier"
+            embedPath="/embed/insights/region-bounty-tier"
           >
             <div className="flex justify-end mb-2">
               <button
@@ -699,6 +707,8 @@ function OnePieceInsightsPage() {
             title='#5 Most "Loyal" Characters'
             description="Highest appearance density: appearances / (last chapter - first chapter). Who shows up in nearly every chapter of their active span?"
             downloadFileName="most-loyal"
+            chartId="most-loyal"
+            embedPath="/embed/insights/most-loyal"
           >
             <ResponsiveContainer width="100%" height={400}>
               <BarChart
@@ -765,6 +775,8 @@ function OnePieceInsightsPage() {
             title="#6 One-Arc Wonders vs Recurring Cast"
             description="How many arcs does each character appear in? Most characters are one-arc wonders"
             downloadFileName="arc-count-distribution"
+            chartId="arc-count-distribution"
+            embedPath="/embed/insights/arc-count-distribution"
           >
             <ResponsiveContainer width="100%" height={350}>
               <BarChart
@@ -817,6 +829,8 @@ function OnePieceInsightsPage() {
             title="#6b One-Saga Wonders vs Recurring Cast"
             description="How many sagas does each character appear in? Even more characters are one-saga wonders"
             downloadFileName="saga-count-distribution"
+            chartId="saga-count-distribution"
+            embedPath="/embed/insights/saga-count-distribution"
           >
             <ResponsiveContainer width="100%" height={350}>
               <BarChart
@@ -869,6 +883,8 @@ function OnePieceInsightsPage() {
             title="#7 Characters per Arc (New vs Returning)"
             description="How many characters appear in each arc? The stacked bars show new debuts vs returning characters."
             downloadFileName="arc-intro-rate"
+            chartId="arc-intro-rate"
+            embedPath="/embed/insights/arc-intro-rate"
             filters={
               <div className="flex items-center gap-2">
                 {(['both', 'new', 'returning'] as const).map((mode) => (
@@ -944,6 +960,8 @@ function OnePieceInsightsPage() {
             title="#7b Characters per Saga (New vs Returning)"
             description="How many characters appear in each saga? A higher-level view of new debuts vs returning cast."
             downloadFileName="saga-intro-rate"
+            chartId="saga-intro-rate"
+            embedPath="/embed/insights/saga-intro-rate"
             filters={
               <div className="flex items-center gap-2">
                 {(['both', 'new', 'returning'] as const).map((mode) => (
@@ -1014,6 +1032,8 @@ function OnePieceInsightsPage() {
             title="#8 Longest Disappearances"
             description="Characters with the longest gap between chapter appearances. Who vanished and came back?"
             downloadFileName="gap-analysis"
+            chartId="gap-analysis"
+            embedPath="/embed/insights/gap-analysis"
           >
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -1074,6 +1094,8 @@ function OnePieceInsightsPage() {
             title="#9 Arc Length Trend"
             description="Are arcs getting longer? Chapter count per arc in chronological order"
             downloadFileName="arc-length-trend"
+            chartId="arc-length-trend"
+            embedPath="/embed/insights/arc-length-trend"
           >
             <ResponsiveContainer width="100%" height={400}>
               <BarChart
@@ -1121,6 +1143,8 @@ function OnePieceInsightsPage() {
             title="#10 Total Pages per Arc"
             description="Actual content volume per arc — not just chapter count but total pages"
             downloadFileName="pages-per-arc"
+            chartId="pages-per-arc"
+            embedPath="/embed/insights/pages-per-arc"
           >
             <ResponsiveContainer width="100%" height={400}>
               <BarChart
@@ -1161,6 +1185,8 @@ function OnePieceInsightsPage() {
             title="#11 Saga Pacing Comparison"
             description="Compare sagas by chapters, pages, characters, and density"
             downloadFileName="saga-pacing"
+            chartId="saga-pacing"
+            embedPath="/embed/insights/saga-pacing"
           >
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -1230,6 +1256,8 @@ function OnePieceInsightsPage() {
             title="#12 Chapters per Year"
             description="How Oda's publication rate and break patterns have evolved over time"
             downloadFileName="yearly-releases"
+            chartId="yearly-releases"
+            embedPath="/embed/insights/yearly-releases"
           >
             <ResponsiveContainer width="100%" height={350}>
               <BarChart
@@ -1271,6 +1299,8 @@ function OnePieceInsightsPage() {
             title="#13 Blood Type: One Piece vs Japan"
             description="Does Oda follow real-world Japanese blood type distribution?"
             downloadFileName="blood-type-comparison"
+            chartId="blood-type-comparison"
+            embedPath="/embed/insights/blood-type-comparison"
           >
             <ResponsiveContainer width="100%" height={300}>
               <BarChart
@@ -1317,6 +1347,8 @@ function OnePieceInsightsPage() {
             title="#14 Birthday Calendar by Month"
             description="Which months have the most character birthdays?"
             downloadFileName="birthday-distribution"
+            chartId="birthday-distribution"
+            embedPath="/embed/insights/birthday-distribution"
           >
             <ResponsiveContainer width="100%" height={300}>
               <BarChart
@@ -1348,6 +1380,8 @@ function OnePieceInsightsPage() {
             title="#15 Origin Region Bubble Chart"
             description="Which regions of the One Piece world are most represented?"
             downloadFileName="origin-regions"
+            chartId="origin-regions"
+            embedPath="/embed/insights/origin-regions"
           >
             <ResponsiveContainer width="100%" height={350}>
               <PieChart>
@@ -1387,6 +1421,8 @@ function OnePieceInsightsPage() {
             title="#16 Age Distribution by Status"
             description="Histogram of character ages colored by alive/deceased. Is there an 'age of death' cluster?"
             downloadFileName="age-distribution"
+            chartId="age-distribution"
+            embedPath="/embed/insights/age-distribution"
           >
             <ResponsiveContainer width="100%" height={350}>
               <BarChart
@@ -1429,6 +1465,8 @@ function OnePieceInsightsPage() {
             title="#17 Cover Page Stars"
             description="Top 20 characters by cover story appearances"
             downloadFileName="cover-stars"
+            chartId="cover-stars"
+            embedPath="/embed/insights/cover-stars"
           >
             <ResponsiveContainer width="100%" height={500}>
               <BarChart
@@ -1463,6 +1501,8 @@ function OnePieceInsightsPage() {
             title="#18 Cover vs Main Story Appearances"
             description="Some characters live mostly in cover stories. Scatter plot comparing both appearance types"
             downloadFileName="cover-vs-main"
+            chartId="cover-vs-main"
+            embedPath="/embed/insights/cover-vs-main"
           >
             <ResponsiveContainer width="100%" height={400}>
               <ScatterChart
@@ -1505,6 +1545,8 @@ function OnePieceInsightsPage() {
             title="#19 Character Cast Size per Arc"
             description="Which arcs have the most characters active in them?"
             downloadFileName="arc-density"
+            chartId="arc-density"
+            embedPath="/embed/insights/arc-density"
           >
             <ResponsiveContainer width="100%" height={400}>
               <BarChart
@@ -1545,6 +1587,8 @@ function OnePieceInsightsPage() {
             title="#20 The Completeness Gap"
             description="What percentage of characters have each attribute filled? A meta-visualization about the dataset itself"
             downloadFileName="data-completeness"
+            chartId="data-completeness"
+            embedPath="/embed/insights/data-completeness"
           >
             <ResponsiveContainer width="100%" height={300}>
               <BarChart
