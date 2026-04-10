@@ -41,6 +41,8 @@ const ANALYTICS_ITEMS: NavItem[] = [
   { to: '/analytics/chapter-releases', label: 'Chapter Releases', exact: true },
   { to: '/analytics/publication-rate', label: 'Publication Rate', exact: true },
   { to: '/analytics/network', label: 'Character Network', exact: true },
+  { label: 'Insights', heading: true },
+  { to: '/analytics/insights', label: 'One Piece Insights', exact: true },
 ]
 
 const getLinkClass = ({ isActive }: { isActive: boolean }) => {

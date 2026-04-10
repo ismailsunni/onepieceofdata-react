@@ -143,9 +143,13 @@ function OnePieceInsightsPage() {
   const [sagaCharMode, setSagaCharMode] = useState<
     'both' | 'new' | 'returning'
   >('both')
-  const [hideSHPTopPerSaga, setHideSHPTopPerSaga] = useState(true)
+  const [shpFilterSaga, setSHPFilterSaga] = useState<'all' | 'hide' | 'only'>(
+    'hide'
+  )
   const [showPctPerSaga, setShowPctPerSaga] = useState(false)
-  const [hideSHPTopPerArc, setHideSHPTopPerArc] = useState(true)
+  const [shpFilterArc, setSHPFilterArc] = useState<'all' | 'hide' | 'only'>(
+    'hide'
+  )
   const [showPctPerArc, setShowPctPerArc] = useState(false)
   const { data: raw, isLoading } = useQuery({
     queryKey: ['insights-raw-data'],
@@ -1602,16 +1606,26 @@ function OnePieceInsightsPage() {
             downloadFileName="top-characters-per-saga"
             filters={
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setHideSHPTopPerSaga((v) => !v)}
-                  className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                    hideSHPTopPerSaga
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  {hideSHPTopPerSaga ? 'Straw Hats Hidden' : 'Hide Straw Hats'}
-                </button>
+                <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden text-sm">
+                  <button
+                    onClick={() => setSHPFilterSaga('all')}
+                    className={`px-3 py-1.5 transition-colors ${shpFilterSaga === 'all' ? 'bg-blue-600 text-white font-medium' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => setSHPFilterSaga('hide')}
+                    className={`px-3 py-1.5 transition-colors ${shpFilterSaga === 'hide' ? 'bg-blue-600 text-white font-medium' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                  >
+                    Hide SHP
+                  </button>
+                  <button
+                    onClick={() => setSHPFilterSaga('only')}
+                    className={`px-3 py-1.5 transition-colors ${shpFilterSaga === 'only' ? 'bg-blue-600 text-white font-medium' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                  >
+                    Only SHP
+                  </button>
+                </div>
                 <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden text-sm">
                   <button
                     onClick={() => setShowPctPerSaga(false)}
@@ -1660,11 +1674,15 @@ function OnePieceInsightsPage() {
                     const filteredSagas = insights.topCharactersPerSaga.map(
                       (saga) => ({
                         ...saga,
-                        characters: (hideSHPTopPerSaga
+                        characters: (shpFilterSaga === 'hide'
                           ? saga.characters.filter(
                               (c) => !STRAW_HAT_IDS.has(c.id)
                             )
-                          : saga.characters
+                          : shpFilterSaga === 'only'
+                            ? saga.characters.filter((c) =>
+                                STRAW_HAT_IDS.has(c.id)
+                              )
+                            : saga.characters
                         ).slice(0, displayRows),
                       })
                     )
@@ -1731,16 +1749,26 @@ function OnePieceInsightsPage() {
             downloadFileName="top-characters-per-arc"
             filters={
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setHideSHPTopPerArc((v) => !v)}
-                  className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                    hideSHPTopPerArc
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  {hideSHPTopPerArc ? 'Straw Hats Hidden' : 'Hide Straw Hats'}
-                </button>
+                <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden text-sm">
+                  <button
+                    onClick={() => setSHPFilterArc('all')}
+                    className={`px-3 py-1.5 transition-colors ${shpFilterArc === 'all' ? 'bg-blue-600 text-white font-medium' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => setSHPFilterArc('hide')}
+                    className={`px-3 py-1.5 transition-colors ${shpFilterArc === 'hide' ? 'bg-blue-600 text-white font-medium' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                  >
+                    Hide SHP
+                  </button>
+                  <button
+                    onClick={() => setSHPFilterArc('only')}
+                    className={`px-3 py-1.5 transition-colors ${shpFilterArc === 'only' ? 'bg-blue-600 text-white font-medium' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                  >
+                    Only SHP
+                  </button>
+                </div>
                 <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden text-sm">
                   <button
                     onClick={() => setShowPctPerArc(false)}
@@ -1789,11 +1817,15 @@ function OnePieceInsightsPage() {
                     const filteredArcs = insights.topCharactersPerArc.map(
                       (arc) => ({
                         ...arc,
-                        characters: (hideSHPTopPerArc
+                        characters: (shpFilterArc === 'hide'
                           ? arc.characters.filter(
                               (c) => !STRAW_HAT_IDS.has(c.id)
                             )
-                          : arc.characters
+                          : shpFilterArc === 'only'
+                            ? arc.characters.filter((c) =>
+                                STRAW_HAT_IDS.has(c.id)
+                              )
+                            : arc.characters
                         ).slice(0, displayRows),
                       })
                     )

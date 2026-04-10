@@ -253,12 +253,6 @@ const CharacterTimelineChart = memo(
               domain={[0, characters.length - 1]}
               tick={yAxisTick}
               ticks={characters.map((_, index) => index)}
-              label={{
-                value: 'Character',
-                angle: -90,
-                position: 'insideLeft',
-                style: { fontSize: 14, fontWeight: 'bold' },
-              }}
             />
             <Tooltip content={<CustomTooltip />} />
 
@@ -306,44 +300,6 @@ const CharacterTimelineChart = memo(
             ))}
           </div>
         )}
-
-        {/* Summary Statistics */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {characters.map((character, index) => {
-            const appearances = character.chapter_list?.length || 0
-            const firstChapter = character.first_appearance || 'N/A'
-            const lastChapter = character.last_appearance || 'N/A'
-
-            return (
-              <div
-                key={character.id}
-                className="p-4 border-l-4 bg-gray-50 rounded"
-                style={{ borderLeftColor: COLORS[index % COLORS.length] }}
-              >
-                <h3
-                  className="font-semibold text-gray-800 mb-2 truncate"
-                  title={character.name || undefined}
-                >
-                  {character.name}
-                </h3>
-                <div className="text-sm text-gray-600 space-y-1">
-                  <p>
-                    Appearances:{' '}
-                    <span className="font-medium">{appearances}</span>
-                  </p>
-                  <p>
-                    First:{' '}
-                    <span className="font-medium">Chapter {firstChapter}</span>
-                  </p>
-                  <p>
-                    Last:{' '}
-                    <span className="font-medium">Chapter {lastChapter}</span>
-                  </p>
-                </div>
-              </div>
-            )
-          })}
-        </div>
       </ChartCard>
     )
   }

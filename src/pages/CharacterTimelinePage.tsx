@@ -9,7 +9,10 @@ import {
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { fetchCharacters } from '../services/characterService'
+import { fetchArcs } from '../services/arcService'
+import { fetchSagas } from '../services/sagaService'
 import CharacterTimelineChart from '../components/CharacterTimelineChart'
+import { CACHE } from '../constants/cache'
 
 // Character presets (using character IDs/slugs for reliable matching)
 export const PRESETS = {
@@ -91,6 +94,18 @@ function CharacterTimelinePage() {
   const { data: characters = [], isLoading } = useQuery({
     queryKey: ['characters'],
     queryFn: fetchCharacters,
+  })
+
+  const { data: arcs = [] } = useQuery({
+    queryKey: ['arcs'],
+    queryFn: fetchArcs,
+    staleTime: CACHE.REFERENCE_STALE,
+  })
+
+  const { data: sagas = [] } = useQuery({
+    queryKey: ['sagas'],
+    queryFn: fetchSagas,
+    staleTime: CACHE.REFERENCE_STALE,
   })
 
   // Close dropdown on outside click
@@ -354,57 +369,125 @@ function CharacterTimelinePage() {
                 )}
               </div>
 
-              {/* Selected characters as chips */}
-              {selectedCharacters.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {selectedCharacters.map((id) => {
-                    const char = characters.find((c) => c.id === id)
-                    const displayName = char?.name ?? id
-                    return (
-                      <span
-                        key={id}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-teal-50 border border-teal-200 text-teal-800 text-sm rounded-full"
-                      >
-                        {displayName}
-                        <button
-                          onClick={() => handleCharacterToggle(id)}
-                          className="text-teal-500 hover:text-teal-700 transition-colors"
-                          aria-label={`Remove ${displayName}`}
+              {/* Selected characters table */}
+              {selectedCharactersData.length > 0 && (
+                <div className="overflow-x-auto border border-gray-200 rounded-lg">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">
+                          Name
+                        </th>
+                        <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">
+                          Status
+                        </th>
+                        <th className="px-3 py-2 text-right text-xs font-semibold text-gray-500 uppercase">
+                          Appearances
+                        </th>
+                        <th className="px-3 py-2 text-right text-xs font-semibold text-gray-500 uppercase">
+                          First App.
+                        </th>
+                        <th className="px-3 py-2 text-right text-xs font-semibold text-gray-500 uppercase">
+                          Bounty
+                        </th>
+                        <th className="px-3 py-2 text-center text-xs font-semibold text-gray-500 uppercase">
+                          Remove
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {selectedCharactersData.map((char, idx) => (
+                        <tr
+                          key={char.id}
+                          className={`transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} hover:bg-gray-50`}
                         >
-                          <svg
-                            className="w-3.5 h-3.5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
-                      </span>
-                    )
-                  })}
+                          <td className="px-3 py-2">
+                            <Link
+                              to={`/characters/${char.id}`}
+                              className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                            >
+                              {char.name || char.id}
+                            </Link>
+                          </td>
+                          <td className="px-3 py-2">
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                char.status === 'Alive'
+                                  ? 'bg-green-100 text-green-700'
+                                  : char.status === 'Deceased'
+                                    ? 'bg-red-100 text-red-700'
+                                    : 'bg-gray-100 text-gray-700'
+                              }`}
+                            >
+                              {char.status || 'Unknown'}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 text-right tabular-nums">
+                            {char.appearance_count || '-'}
+                          </td>
+                          <td className="px-3 py-2 text-right tabular-nums">
+                            {char.first_appearance
+                              ? `Ch. ${char.first_appearance}`
+                              : '-'}
+                          </td>
+                          <td className="px-3 py-2 text-right tabular-nums">
+                            {char.bounty
+                              ? `฿${char.bounty.toLocaleString()}`
+                              : '-'}
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            <button
+                              onClick={() => handleCharacterToggle(char.id)}
+                              className="text-red-400 hover:text-red-600 transition-colors"
+                              aria-label={`Remove ${char.name}`}
+                            >
+                              <svg
+                                className="w-4 h-4 mx-auto"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
+                              </svg>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
 
             {/* Timeline Chart */}
             {selectedCharactersData.length > 0 ? (
-              <div className="bg-white border border-gray-200 rounded-xl p-6 relative">
-                {isPending && (
-                  <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-xl">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
-                  </div>
+              <>
+                <div className="bg-white border border-gray-200 rounded-xl p-6 relative">
+                  {isPending && (
+                    <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-xl">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+                    </div>
+                  )}
+                  <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                    Character Appearance Timeline
+                  </h2>
+                  <CharacterTimelineChart characters={selectedCharactersData} />
+                </div>
+
+                {/* Co-appearance Stats */}
+                {selectedCharactersData.length >= 2 && (
+                  <CoAppearanceStats
+                    characters={selectedCharactersData}
+                    arcs={arcs}
+                    sagas={sagas}
+                  />
                 )}
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                  Character Appearance Timeline
-                </h2>
-                <CharacterTimelineChart characters={selectedCharactersData} />
-              </div>
+              </>
             ) : (
               <div className="bg-white border border-gray-200 rounded-xl p-6">
                 <p className="text-center text-gray-500 py-8">
@@ -416,6 +499,180 @@ function CharacterTimelinePage() {
         )}
       </div>
     </main>
+  )
+}
+
+function CoAppearanceStats({
+  characters,
+  arcs,
+  sagas,
+}: {
+  characters: {
+    id: string
+    name: string | null
+    chapter_list: number[] | null
+  }[]
+  arcs: {
+    arc_id: string
+    title: string
+    start_chapter: number
+    end_chapter: number
+  }[]
+  sagas: {
+    saga_id: string
+    title: string
+    start_chapter: number
+    end_chapter: number
+  }[]
+}) {
+  const stats = useMemo(() => {
+    // Find chapters where ALL selected characters appear together
+    const chapterSets = characters.map((c) => new Set(c.chapter_list || []))
+    if (chapterSets.length === 0) return null
+
+    const sharedChapters: number[] = []
+    const firstSet = chapterSets[0]
+    for (const ch of firstSet) {
+      if (chapterSets.every((s) => s.has(ch))) {
+        sharedChapters.push(ch)
+      }
+    }
+    sharedChapters.sort((a, b) => a - b)
+
+    // Find arcs that contain at least one shared chapter
+    const sharedArcs = arcs.filter((arc) =>
+      sharedChapters.some(
+        (ch) => ch >= arc.start_chapter && ch <= arc.end_chapter
+      )
+    )
+
+    // Find sagas that contain at least one shared chapter
+    const sharedSagas = sagas.filter((saga) =>
+      sharedChapters.some(
+        (ch) => ch >= saga.start_chapter && ch <= saga.end_chapter
+      )
+    )
+
+    return { sharedChapters, sharedArcs, sharedSagas }
+  }, [characters, arcs, sagas])
+
+  if (!stats) return null
+
+  const { sharedChapters, sharedArcs, sharedSagas } = stats
+  const exampleChapters = sharedChapters.slice(0, 10)
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl p-6">
+      <h2 className="text-xl font-semibold text-gray-800 mb-1">
+        Co-appearances
+      </h2>
+      <p className="text-sm text-gray-500 mb-4">
+        Chapters, arcs, and sagas where all {characters.length} selected
+        characters appear together
+      </p>
+
+      {sharedChapters.length === 0 ? (
+        <p className="text-gray-500 text-sm py-4">
+          These characters never appear together in the same chapter.
+        </p>
+      ) : (
+        <>
+          {/* Summary stats */}
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="bg-teal-50 border border-teal-100 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-teal-700">
+                {sharedChapters.length}
+              </p>
+              <p className="text-sm text-teal-600">Shared Chapters</p>
+            </div>
+            <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-blue-700">
+                {sharedArcs.length}
+              </p>
+              <p className="text-sm text-blue-600">Shared Arcs</p>
+            </div>
+            <div className="bg-purple-50 border border-purple-100 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-purple-700">
+                {sharedSagas.length}
+              </p>
+              <p className="text-sm text-purple-600">Shared Sagas</p>
+            </div>
+          </div>
+
+          {/* Example chapters */}
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-2">
+              Example Chapters{' '}
+              <span className="font-normal text-gray-400">
+                (showing {exampleChapters.length} of {sharedChapters.length})
+              </span>
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {exampleChapters.map((ch) => {
+                const arc = arcs.find(
+                  (a) => ch >= a.start_chapter && ch <= a.end_chapter
+                )
+                return (
+                  <Link
+                    key={ch}
+                    to={`/chapters/${ch}`}
+                    className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm rounded-lg transition-colors"
+                    title={arc ? `Ch. ${ch} (${arc.title})` : `Ch. ${ch}`}
+                  >
+                    Ch. {ch}
+                  </Link>
+                )
+              })}
+              {sharedChapters.length > 10 && (
+                <span className="px-2.5 py-1 text-gray-400 text-sm">
+                  …and {sharedChapters.length - 10} more
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Shared arcs */}
+          {sharedArcs.length > 0 && (
+            <div className="mb-4">
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">
+                Shared Arcs
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {sharedArcs.map((arc) => (
+                  <Link
+                    key={arc.arc_id}
+                    to={`/arcs/${arc.arc_id}`}
+                    className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm rounded-lg border border-blue-200 transition-colors"
+                  >
+                    {arc.title}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Shared sagas */}
+          {sharedSagas.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">
+                Shared Sagas
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {sharedSagas.map((saga) => (
+                  <Link
+                    key={saga.saga_id}
+                    to={`/sagas/${saga.saga_id}`}
+                    className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 text-sm rounded-lg border border-purple-200 transition-colors"
+                  >
+                    {saga.title}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
   )
 }
 
