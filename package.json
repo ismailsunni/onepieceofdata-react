@@ -50,6 +50,14 @@
     "vis-network": "^10.0.2"
   },
   "lint-staged": {
+    "src/pages/OnePieceInsightsPage.tsx": [
+      "tsx src/scripts/updateEmbedChartIndex.ts",
+      "git add src/pages/EmbedInsightPage.tsx"
+    ],
+    "src/pages/EmbedInsightPage.tsx": [
+      "tsx src/scripts/updateEmbedChartIndex.ts",
+      "git add src/pages/EmbedInsightPage.tsx"
+    ],
     "*.{ts,tsx}": [
       "eslint --fix",
       "prettier --write"
@@ -83,6 +91,7 @@
     "postcss": "^8.5.6",
     "prettier": "^3.6.2",
     "tailwindcss": "^4.1.17",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.2",
