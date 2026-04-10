@@ -34,6 +34,7 @@ import {
   computeArcCountDistribution,
   computeSagaCountDistribution,
   computeArcIntroRate,
+  computeSagaIntroRate,
   computeLongestGaps,
   computeArcLengths,
   computePagesPerArc,
@@ -47,6 +48,8 @@ import {
   computeCoverVsMain,
   computeArcDensity,
   computeCompleteness,
+  computeTopCharactersPerSaga,
+  computeTopCharactersPerArc,
 } from '../services/analyticsService'
 
 const formatBounty = (value: number) => {
@@ -134,6 +137,16 @@ function OnePieceInsightsPage() {
   const [hideStrawHats, setHideStrawHats] = useState(true)
   const [bountyTierPercent, setBountyTierPercent] = useState(true)
   const [minChapters, setMinChapters] = useState(2)
+  const [arcCharMode, setArcCharMode] = useState<'both' | 'new' | 'returning'>(
+    'both'
+  )
+  const [sagaCharMode, setSagaCharMode] = useState<
+    'both' | 'new' | 'returning'
+  >('both')
+  const [hideSHPTopPerSaga, setHideSHPTopPerSaga] = useState(true)
+  const [showPctPerSaga, setShowPctPerSaga] = useState(false)
+  const [hideSHPTopPerArc, setHideSHPTopPerArc] = useState(true)
+  const [showPctPerArc, setShowPctPerArc] = useState(false)
   const { data: raw, isLoading } = useQuery({
     queryKey: ['insights-raw-data'],
     queryFn: fetchInsightsRawData,
@@ -154,6 +167,7 @@ function OnePieceInsightsPage() {
       regionBountyTier: computeRegionBountyTier(characters),
       mostLoyal: computeMostLoyal(characters),
       arcIntroRate: computeArcIntroRate(characters, arcs),
+      sagaIntroRate: computeSagaIntroRate(characters, sagas),
       longestGaps: computeLongestGaps(characters),
       arcLengths: computeArcLengths(arcs),
       pagesPerArc: computePagesPerArc(arcs, chapters),
@@ -167,6 +181,8 @@ function OnePieceInsightsPage() {
       coverVsMain: computeCoverVsMain(characters),
       arcDensity: computeArcDensity(characters, arcs),
       completeness: computeCompleteness(characters),
+      topCharactersPerSaga: computeTopCharactersPerSaga(characters, sagas, 31),
+      topCharactersPerArc: computeTopCharactersPerArc(characters, arcs, 31),
     }
   }, [raw])
 
@@ -827,9 +843,30 @@ function OnePieceInsightsPage() {
         {/* #7 Character Introduction Rate per Arc */}
         <div className="mb-6">
           <ChartCard
-            title="#7 New Characters per Arc"
-            description="How many new characters debut in each arc? Which arcs explode the cast size?"
+            title="#7 Characters per Arc (New vs Returning)"
+            description="How many characters appear in each arc? The stacked bars show new debuts vs returning characters."
             downloadFileName="arc-intro-rate"
+            filters={
+              <div className="flex items-center gap-2">
+                {(['both', 'new', 'returning'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setArcCharMode(mode)}
+                    className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                      arcCharMode === mode
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    {mode === 'both'
+                      ? 'Both'
+                      : mode === 'new'
+                        ? 'New'
+                        : 'Returning'}
+                  </button>
+                ))}
+              </div>
+            }
           >
             <ResponsiveContainer width="100%" height={400}>
               <BarChart
@@ -852,24 +889,97 @@ function OnePieceInsightsPage() {
                     return `${label} (${d?.saga || 'Unknown'})`
                   }}
                 />
-                <Bar
-                  dataKey="newCharacters"
-                  name="New Characters"
-                  radius={[4, 4, 0, 0]}
-                >
-                  {insights.arcIntroRate.map((entry, i) => {
-                    const sagaNames = [
-                      ...new Set(insights.arcIntroRate.map((a) => a.saga)),
-                    ]
-                    const colorIdx = sagaNames.indexOf(entry.saga)
-                    return (
-                      <Cell
-                        key={i}
-                        fill={SAGA_COLORS[colorIdx % SAGA_COLORS.length]}
-                      />
-                    )
-                  })}
-                </Bar>
+                <Legend />
+                {(arcCharMode === 'both' || arcCharMode === 'returning') && (
+                  <Bar
+                    dataKey="returningCharacters"
+                    name="Returning Characters"
+                    stackId="characters"
+                    fill="#f59e0b"
+                    radius={
+                      arcCharMode === 'returning' ? [4, 4, 0, 0] : undefined
+                    }
+                  />
+                )}
+                {(arcCharMode === 'both' || arcCharMode === 'new') && (
+                  <Bar
+                    dataKey="newCharacters"
+                    name="New Characters"
+                    stackId="characters"
+                    fill="#3b82f6"
+                    radius={[4, 4, 0, 0]}
+                  />
+                )}
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+
+        {/* #7b Character Introduction Rate per Saga */}
+        <div className="mb-6">
+          <ChartCard
+            title="#7b Characters per Saga (New vs Returning)"
+            description="How many characters appear in each saga? A higher-level view of new debuts vs returning cast."
+            downloadFileName="saga-intro-rate"
+            filters={
+              <div className="flex items-center gap-2">
+                {(['both', 'new', 'returning'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setSagaCharMode(mode)}
+                    className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                      sagaCharMode === mode
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    {mode === 'both'
+                      ? 'Both'
+                      : mode === 'new'
+                        ? 'New'
+                        : 'Returning'}
+                  </button>
+                ))}
+              </div>
+            }
+          >
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart
+                data={insights.sagaIntroRate}
+                margin={{ top: 5, right: 30, left: 20, bottom: 80 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  dataKey="saga"
+                  tick={{ fontSize: 10 }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={100}
+                  stroke="#6b7280"
+                />
+                <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
+                <Tooltip />
+                <Legend />
+                {(sagaCharMode === 'both' || sagaCharMode === 'returning') && (
+                  <Bar
+                    dataKey="returningCharacters"
+                    name="Returning Characters"
+                    stackId="characters"
+                    fill="#f59e0b"
+                    radius={
+                      sagaCharMode === 'returning' ? [4, 4, 0, 0] : undefined
+                    }
+                  />
+                )}
+                {(sagaCharMode === 'both' || sagaCharMode === 'new') && (
+                  <Bar
+                    dataKey="newCharacters"
+                    name="New Characters"
+                    stackId="characters"
+                    fill="#3b82f6"
+                    radius={[4, 4, 0, 0]}
+                  />
+                )}
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -1477,6 +1587,267 @@ function OnePieceInsightsPage() {
                 <span className="w-3 h-3 rounded-full bg-red-500 inline-block"></span>{' '}
                 {'<'}50%
               </span>
+            </div>
+          </ChartCard>
+        </div>
+
+        {/* ─── SECTION: Character Rankings ─── */}
+        <SectionTitle title="Character Rankings" number="21-22" />
+
+        {/* #21 Top Characters per Saga */}
+        <div className="mb-6">
+          <ChartCard
+            title="#21 Top Characters per Saga"
+            description="Who are the main characters of each saga? Characters ranked by chapter appearances within each saga"
+            downloadFileName="top-characters-per-saga"
+            filters={
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setHideSHPTopPerSaga((v) => !v)}
+                  className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                    hideSHPTopPerSaga
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  {hideSHPTopPerSaga ? 'Straw Hats Hidden' : 'Hide Straw Hats'}
+                </button>
+                <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden text-sm">
+                  <button
+                    onClick={() => setShowPctPerSaga(false)}
+                    className={`px-3 py-1.5 transition-colors ${!showPctPerSaga ? 'bg-blue-600 text-white font-medium' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                  >
+                    Count
+                  </button>
+                  <button
+                    onClick={() => setShowPctPerSaga(true)}
+                    className={`px-3 py-1.5 transition-colors ${showPctPerSaga ? 'bg-blue-600 text-white font-medium' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                  >
+                    %
+                  </button>
+                </div>
+              </div>
+            }
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="sticky left-0 z-20 bg-gray-50 px-3 py-2 text-left font-semibold text-gray-700 min-w-[40px] border-r border-gray-200">
+                      #
+                    </th>
+                    {insights.topCharactersPerSaga.map((saga) => (
+                      <th
+                        key={saga.sagaId}
+                        className="bg-gray-50 px-2 py-2 text-center font-medium text-gray-600 min-w-[140px]"
+                      >
+                        <Link
+                          to={`/sagas/${saga.sagaId}`}
+                          className="hover:text-blue-600 transition-colors text-xs"
+                        >
+                          <div>{saga.sagaTitle}</div>
+                          <div className="text-[10px] text-gray-400 font-normal">
+                            {saga.totalChapters} chapters
+                          </div>
+                        </Link>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {(() => {
+                    const displayRows = 20
+                    const filteredSagas = insights.topCharactersPerSaga.map(
+                      (saga) => ({
+                        ...saga,
+                        characters: (hideSHPTopPerSaga
+                          ? saga.characters.filter(
+                              (c) => !STRAW_HAT_IDS.has(c.id)
+                            )
+                          : saga.characters
+                        ).slice(0, displayRows),
+                      })
+                    )
+                    return Array.from({ length: displayRows }, (_, rowIdx) => (
+                      <tr
+                        key={rowIdx}
+                        className={`border-b border-gray-100 hover:bg-gray-50/50 transition-colors ${rowIdx % 2 === 0 ? '' : 'bg-gray-50/30'}`}
+                      >
+                        <td className="sticky left-0 z-10 bg-white px-3 py-1.5 text-center font-medium text-gray-400 border-r border-gray-200 tabular-nums">
+                          {rowIdx + 1}
+                        </td>
+                        {filteredSagas.map((saga) => {
+                          const char = saga.characters[rowIdx]
+                          if (!char) {
+                            return (
+                              <td
+                                key={saga.sagaId}
+                                className="px-2 py-1.5 text-center text-gray-300"
+                              >
+                                &ndash;
+                              </td>
+                            )
+                          }
+                          const isSHP = STRAW_HAT_IDS.has(char.id)
+                          const pct =
+                            Math.round(
+                              (char.count / saga.totalChapters) * 1000
+                            ) / 10
+                          const isOver50 = pct > 50
+                          return (
+                            <td
+                              key={saga.sagaId}
+                              className={`px-2 py-1.5 text-xs ${isSHP ? 'bg-amber-50' : ''}`}
+                              title={`${char.name}: ${char.count} / ${saga.totalChapters} chapters in ${saga.sagaTitle} (${pct}%)`}
+                            >
+                              <Link
+                                to={`/characters/${char.id}`}
+                                className={`hover:text-blue-600 transition-colors ${isSHP ? 'font-medium text-amber-700' : ''} ${isOver50 ? 'font-bold' : ''}`}
+                              >
+                                {char.name}
+                              </Link>
+                              <span
+                                className={`ml-1 tabular-nums ${isOver50 ? 'font-bold text-gray-600' : 'text-gray-400'}`}
+                              >
+                                ({showPctPerSaga ? `${pct}%` : char.count})
+                              </span>
+                            </td>
+                          )
+                        })}
+                      </tr>
+                    ))
+                  })()}
+                </tbody>
+              </table>
+            </div>
+          </ChartCard>
+        </div>
+
+        {/* #22 Top Characters per Arc */}
+        <div className="mb-6">
+          <ChartCard
+            title="#22 Top Characters per Arc"
+            description="Who are the main characters of each arc? Characters ranked by chapter appearances within each arc"
+            downloadFileName="top-characters-per-arc"
+            filters={
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setHideSHPTopPerArc((v) => !v)}
+                  className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                    hideSHPTopPerArc
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  {hideSHPTopPerArc ? 'Straw Hats Hidden' : 'Hide Straw Hats'}
+                </button>
+                <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden text-sm">
+                  <button
+                    onClick={() => setShowPctPerArc(false)}
+                    className={`px-3 py-1.5 transition-colors ${!showPctPerArc ? 'bg-blue-600 text-white font-medium' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                  >
+                    Count
+                  </button>
+                  <button
+                    onClick={() => setShowPctPerArc(true)}
+                    className={`px-3 py-1.5 transition-colors ${showPctPerArc ? 'bg-blue-600 text-white font-medium' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                  >
+                    %
+                  </button>
+                </div>
+              </div>
+            }
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="sticky left-0 z-20 bg-gray-50 px-3 py-2 text-left font-semibold text-gray-700 min-w-[40px] border-r border-gray-200">
+                      #
+                    </th>
+                    {insights.topCharactersPerArc.map((arc) => (
+                      <th
+                        key={arc.arcId}
+                        className="bg-gray-50 px-2 py-2 text-center font-medium text-gray-600 min-w-[140px]"
+                      >
+                        <Link
+                          to={`/arcs/${arc.arcId}`}
+                          className="hover:text-blue-600 transition-colors text-xs"
+                        >
+                          <div>{arc.arcTitle}</div>
+                          <div className="text-[10px] text-gray-400 font-normal">
+                            {arc.totalChapters} chapters
+                          </div>
+                        </Link>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {(() => {
+                    const displayRows = 20
+                    const filteredArcs = insights.topCharactersPerArc.map(
+                      (arc) => ({
+                        ...arc,
+                        characters: (hideSHPTopPerArc
+                          ? arc.characters.filter(
+                              (c) => !STRAW_HAT_IDS.has(c.id)
+                            )
+                          : arc.characters
+                        ).slice(0, displayRows),
+                      })
+                    )
+                    return Array.from({ length: displayRows }, (_, rowIdx) => (
+                      <tr
+                        key={rowIdx}
+                        className={`border-b border-gray-100 hover:bg-gray-50/50 transition-colors ${rowIdx % 2 === 0 ? '' : 'bg-gray-50/30'}`}
+                      >
+                        <td className="sticky left-0 z-10 bg-white px-3 py-1.5 text-center font-medium text-gray-400 border-r border-gray-200 tabular-nums">
+                          {rowIdx + 1}
+                        </td>
+                        {filteredArcs.map((arc) => {
+                          const char = arc.characters[rowIdx]
+                          if (!char) {
+                            return (
+                              <td
+                                key={arc.arcId}
+                                className="px-2 py-1.5 text-center text-gray-300"
+                              >
+                                &ndash;
+                              </td>
+                            )
+                          }
+                          const isSHP = STRAW_HAT_IDS.has(char.id)
+                          const pct =
+                            Math.round(
+                              (char.count / arc.totalChapters) * 1000
+                            ) / 10
+                          const isOver50 = pct > 50
+                          return (
+                            <td
+                              key={arc.arcId}
+                              className={`px-2 py-1.5 text-xs ${isSHP ? 'bg-amber-50' : ''}`}
+                              title={`${char.name}: ${char.count} / ${arc.totalChapters} chapters in ${arc.arcTitle} (${pct}%)`}
+                            >
+                              <Link
+                                to={`/characters/${char.id}`}
+                                className={`hover:text-blue-600 transition-colors ${isSHP ? 'font-medium text-amber-700' : ''} ${isOver50 ? 'font-bold' : ''}`}
+                              >
+                                {char.name}
+                              </Link>
+                              <span
+                                className={`ml-1 tabular-nums ${isOver50 ? 'font-bold text-gray-600' : 'text-gray-400'}`}
+                              >
+                                ({showPctPerArc ? `${pct}%` : char.count})
+                              </span>
+                            </td>
+                          )
+                        })}
+                      </tr>
+                    ))
+                  })()}
+                </tbody>
+              </table>
             </div>
           </ChartCard>
         </div>

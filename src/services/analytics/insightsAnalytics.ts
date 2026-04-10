@@ -428,6 +428,7 @@ export function computeSagaCountDistribution(
 export interface ArcIntroRate {
   arc: string
   newCharacters: number
+  returningCharacters: number
   saga: string
   arcOrder: number
 }
@@ -437,18 +438,79 @@ export function computeArcIntroRate(
   arcs: Arc[]
 ): ArcIntroRate[] {
   return arcs.map((arc) => {
-    const newChars = characters.filter(
-      (c) =>
+    let newChars = 0
+    let returningChars = 0
+
+    for (const c of characters) {
+      const appearsInArc =
+        c.chapter_list &&
+        c.chapter_list.some(
+          (ch) => ch >= arc.start_chapter && ch <= arc.end_chapter
+        )
+      if (!appearsInArc) continue
+
+      if (
         c.first_appearance !== null &&
         c.first_appearance >= arc.start_chapter &&
         c.first_appearance <= arc.end_chapter
-    ).length
+      ) {
+        newChars++
+      } else {
+        returningChars++
+      }
+    }
 
     return {
       arc: arc.title,
       newCharacters: newChars,
+      returningCharacters: returningChars,
       saga: arc.saga?.title || 'Unknown',
       arcOrder: arc.start_chapter,
+    }
+  })
+}
+
+// ── #7b Character Introduction Rate per Saga ────────────────────────────────
+
+export interface SagaIntroRate {
+  saga: string
+  newCharacters: number
+  returningCharacters: number
+  sagaOrder: number
+}
+
+export function computeSagaIntroRate(
+  characters: Character[],
+  sagas: Saga[]
+): SagaIntroRate[] {
+  return sagas.map((saga) => {
+    let newChars = 0
+    let returningChars = 0
+
+    for (const c of characters) {
+      const appearsInSaga =
+        c.chapter_list &&
+        c.chapter_list.some(
+          (ch) => ch >= saga.start_chapter && ch <= saga.end_chapter
+        )
+      if (!appearsInSaga) continue
+
+      if (
+        c.first_appearance !== null &&
+        c.first_appearance >= saga.start_chapter &&
+        c.first_appearance <= saga.end_chapter
+      ) {
+        newChars++
+      } else {
+        returningChars++
+      }
+    }
+
+    return {
+      saga: saga.title,
+      newCharacters: newChars,
+      returningCharacters: returningChars,
+      sagaOrder: saga.start_chapter,
     }
   })
 }
@@ -937,6 +999,90 @@ export function computeCompleteness(
       filled,
       total,
       percent: Math.round((filled / total) * 1000) / 10,
+    }
+  })
+}
+
+// ── #21 Top Characters per Saga ────────────────────────────────────────────
+
+export interface SagaTopCharacter {
+  name: string
+  id: string
+  count: number
+}
+
+export interface SagaTopCharacters {
+  sagaId: string
+  sagaTitle: string
+  totalChapters: number
+  characters: SagaTopCharacter[]
+}
+
+// ── #22 Top Characters per Arc ─────────────────────────────────────────────
+
+export interface ArcTopCharacters {
+  arcId: string
+  arcTitle: string
+  totalChapters: number
+  saga: string
+  characters: SagaTopCharacter[]
+}
+
+export function computeTopCharactersPerArc(
+  characters: Character[],
+  arcs: Arc[],
+  maxPerArc = 20
+): ArcTopCharacters[] {
+  return arcs.map((arc) => {
+    const charCounts: { id: string; name: string; count: number }[] = []
+
+    for (const c of characters) {
+      if (!c.chapter_list || c.chapter_list.length === 0) continue
+      const count = c.chapter_list.filter(
+        (ch) => ch >= arc.start_chapter && ch <= arc.end_chapter
+      ).length
+      if (count > 0) {
+        charCounts.push({ id: c.id, name: c.name || 'Unknown', count })
+      }
+    }
+
+    charCounts.sort((a, b) => b.count - a.count)
+
+    return {
+      arcId: arc.arc_id,
+      arcTitle: arc.title,
+      totalChapters: arc.end_chapter - arc.start_chapter + 1,
+      saga: arc.saga?.title || 'Unknown',
+      characters: charCounts.slice(0, maxPerArc),
+    }
+  })
+}
+
+export function computeTopCharactersPerSaga(
+  characters: Character[],
+  sagas: Saga[],
+  maxPerSaga = 20
+): SagaTopCharacters[] {
+  return sagas.map((saga) => {
+    const charCounts: { id: string; name: string; count: number }[] = []
+
+    for (const c of characters) {
+      if (!c.chapter_list || c.chapter_list.length === 0) continue
+      const count = c.chapter_list.filter(
+        (ch) => ch >= saga.start_chapter && ch <= saga.end_chapter
+      ).length
+      if (count > 0) {
+        charCounts.push({ id: c.id, name: c.name || 'Unknown', count })
+      }
+    }
+
+    charCounts.sort((a, b) => b.count - a.count)
+
+    return {
+      sagaId: saga.saga_id,
+      sagaTitle: saga.title,
+      totalChapters: saga.end_chapter - saga.start_chapter + 1,
+      characters: charCounts.slice(0, maxPerSaga),
     }
   })
 }
