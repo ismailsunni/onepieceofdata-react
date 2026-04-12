@@ -528,6 +528,7 @@ export function computeSagaIntroRate(
 // ── #8 Gap Analysis ─────────────────────────────────────────────────────────
 
 export interface CharacterGap {
+  id: string
   name: string
   gapStart: number
   gapEnd: number
@@ -557,6 +558,7 @@ export function computeLongestGaps(characters: Character[]): CharacterGap[] {
 
     if (maxGap > 50) {
       results.push({
+        id: c.id,
         name: c.name || 'Unknown',
         gapStart,
         gapEnd,

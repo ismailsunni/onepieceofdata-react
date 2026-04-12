@@ -349,8 +349,14 @@ export function EmbedGapAnalysis({ data }: { data: CharacterGap[] }) {
                 key={g.name}
                 className={`border-b border-gray-100 ${i % 2 === 0 ? 'bg-gray-50/50' : ''}`}
               >
-                <td className="py-2 px-3 font-medium text-gray-900">
-                  {g.name}
+                <td className="py-2 px-3 font-medium">
+                  <a
+                    href={`/#/characters/${g.id}`}
+                    target="_top"
+                    className="text-blue-600 hover:text-blue-800 hover:underline"
+                  >
+                    {g.name}
+                  </a>
                 </td>
                 <td className="py-2 px-3 text-right font-bold text-red-600">
                   {g.gapLength}

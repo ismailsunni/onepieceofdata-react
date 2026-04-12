@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts'
+import { Link } from 'react-router-dom'
 import { ChartCard } from '../common/ChartCard'
 import {
   type LoyalCharacter,
@@ -409,8 +410,13 @@ export function AppearancesSection({
                     key={g.name}
                     className={`border-b border-gray-100 ${i % 2 === 0 ? 'bg-gray-50/50' : ''}`}
                   >
-                    <td className="py-2 px-3 font-medium text-gray-900">
-                      {g.name}
+                    <td className="py-2 px-3 font-medium">
+                      <Link
+                        to={`/characters/${g.id}`}
+                        className="text-blue-600 hover:text-blue-800 hover:underline"
+                      >
+                        {g.name}
+                      </Link>
                     </td>
                     <td className="py-2 px-3 text-right font-bold text-red-600">
                       {g.gapLength}
