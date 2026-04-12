@@ -34,7 +34,7 @@ function AnalyticsPage() {
     {
       title: 'One Piece Insights',
       description:
-        '20 interesting facts about the One Piece universe — bounty inflation, one-arc wonders, deadliest regions, and more',
+        '26 charts exploring the One Piece universe — bounty inflation, one-arc wonders, crew loyalty, affiliation networks, and more',
       path: '/analytics/insights',
       icon: (
         <svg

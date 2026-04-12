@@ -5,13 +5,13 @@
  *
  * Usage:  npx tsx src/scripts/updateEmbedChartIndex.ts
  */
-import { readFileSync, writeFileSync } from 'fs'
+import { readFileSync, writeFileSync, readdirSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PAGES_DIR = resolve(__dirname, '..', 'pages')
-const INSIGHTS_FILE = resolve(PAGES_DIR, 'OnePieceInsightsPage.tsx')
+const INSIGHTS_DIR = resolve(__dirname, '..', 'components', 'insights')
 const EMBED_FILE = resolve(PAGES_DIR, 'EmbedInsightPage.tsx')
 
 interface ChartEntry {
@@ -23,42 +23,52 @@ interface ChartEntry {
 // ── Parse ChartCard blocks from OnePieceInsightsPage ────────────────────────
 
 function extractCharts(): ChartEntry[] {
-  const src = readFileSync(INSIGHTS_FILE, 'utf-8')
+  // Scan all *Section.tsx files in the insights components directory
+  const sectionFiles = readdirSync(INSIGHTS_DIR)
+    .filter((f) => f.endsWith('Section.tsx'))
+    .map((f) => resolve(INSIGHTS_DIR, f))
+
+  // Also check the main page in case ChartCards are still there
+  const mainPage = resolve(PAGES_DIR, 'OnePieceInsightsPage.tsx')
+  const filesToScan = [...sectionFiles, mainPage]
+
   const entries: ChartEntry[] = []
 
-  // Match <ChartCard blocks that span multiple lines until the closing >
-  // Use a simpler approach: find all chartId values and their nearest title
-  const chartIdRegex = /chartId="([^"]+)"/g
-  let m: RegExpExecArray | null
+  for (const file of filesToScan) {
+    let src: string
+    try {
+      src = readFileSync(file, 'utf-8')
+    } catch {
+      continue
+    }
 
-  while ((m = chartIdRegex.exec(src)) !== null) {
-    const slug = m[1]
-    const pos = m.index
+    const chartIdRegex = /chartId="([^"]+)"/g
+    let m: RegExpExecArray | null
 
-    // Look backwards from chartId to find the enclosing <ChartCard
-    const before = src.slice(Math.max(0, pos - 500), pos)
-    const chartCardStart = before.lastIndexOf('<ChartCard')
-    if (chartCardStart === -1) continue
+    while ((m = chartIdRegex.exec(src)) !== null) {
+      const slug = m[1]
+      const pos = m.index
 
-    // Get the full block from <ChartCard to the chartId position + some extra
-    const blockStart = Math.max(0, pos - 500) + chartCardStart
-    const block = src.slice(blockStart, pos + m[0].length + 10)
+      const before = src.slice(Math.max(0, pos - 500), pos)
+      const chartCardStart = before.lastIndexOf('<ChartCard')
+      if (chartCardStart === -1) continue
 
-    // Extract title — handles both double-quoted and single-quoted
-    const titleMatch =
-      block.match(/title="([^"]*)"/) || block.match(/title='([^']*)'/)
-    if (!titleMatch) continue
+      const blockStart = Math.max(0, pos - 500) + chartCardStart
+      const block = src.slice(blockStart, pos + m[0].length + 10)
 
-    const rawTitle = titleMatch[1]
+      const titleMatch =
+        block.match(/title="([^"]*)"/) || block.match(/title='([^']*)'/)
+      if (!titleMatch) continue
 
-    // Extract chart number from title like "#1 Cast..." or "#6b One-Saga..."
-    const numMatch = rawTitle.match(/^#([\d]+\w?)\s+/)
-    const number = numMatch ? numMatch[1] : '?'
+      const rawTitle = titleMatch[1]
+      const numMatch = rawTitle.match(/^#([\d]+\w?)\s+/)
+      const number = numMatch ? numMatch[1] : '?'
+      const cleanTitle = numMatch
+        ? rawTitle.slice(numMatch[0].length)
+        : rawTitle
 
-    // Clean title: remove the "#N " prefix
-    const cleanTitle = numMatch ? rawTitle.slice(numMatch[0].length) : rawTitle
-
-    entries.push({ number, title: cleanTitle, slug })
+      entries.push({ number, title: cleanTitle, slug })
+    }
   }
 
   return entries
@@ -67,31 +77,34 @@ function extractCharts(): ChartEntry[] {
 // ── Detect interactive filters from EmbedInsightPage ────────────────────────
 
 function detectFilters(): Map<string, string> {
-  const src = readFileSync(EMBED_FILE, 'utf-8')
+  const embedSrc = readFileSync(EMBED_FILE, 'utf-8')
   const filters = new Map<string, string>()
+
+  // Collect all Embed*Charts.tsx source files
+  const embedChartFiles = readdirSync(INSIGHTS_DIR)
+    .filter((f) => f.startsWith('Embed') && f.endsWith('.tsx'))
+    .map((f) => readFileSync(resolve(INSIGHTS_DIR, f), 'utf-8'))
+  const allEmbedSrc = embedChartFiles.join('\n')
 
   // Find chartMap entries like: 'slug': <EmbedComponent ... /> or 'slug': (\n<EmbedComponent
   const mapRegex = /'([a-z][\w-]*)'\s*:\s*(?:\(\s*)?<(\w+)/g
   let m: RegExpExecArray | null
-  while ((m = mapRegex.exec(src)) !== null) {
+  while ((m = mapRegex.exec(embedSrc)) !== null) {
     const slug = m[1]
     const component = m[2]
 
-    // Find the component function body — look from "function Component(" to the next top-level "function " or "export "
-    const funcStart = src.indexOf(`function ${component}(`)
+    // Find the component function body in the embed chart files
+    const funcStart = allEmbedSrc.indexOf(`function ${component}(`)
     if (funcStart === -1) {
       filters.set(slug, '\u2014')
       continue
     }
 
-    // Find the end: next "function " at start of line, or "export " at start of line
-    const rest = src.slice(funcStart)
+    const rest = allEmbedSrc.slice(funcStart)
     const endMatch = rest.match(/\n(?=function\s|export\s)/)
     const body = endMatch ? rest.slice(0, endMatch.index!) : rest
 
-    // Check for useState (interactive filters)
     if (!/useState/.test(body)) {
-      // No state — but check for SortableTable
       if (/SortableTable/.test(body)) {
         filters.set(slug, 'Sortable table')
       } else {
@@ -100,7 +113,6 @@ function detectFilters(): Map<string, string> {
       continue
     }
 
-    // Summarise filter types
     const parts: string[] = []
     if (/shpFilter|hideStrawHats|SHPFilter/.test(body)) {
       if (/['"]all['"][\s\S]*?['"]hide['"][\s\S]*?['"]only['"]/.test(body)) {
@@ -164,7 +176,7 @@ function buildComment(
     ' * 1. Add the compute function call in the `insights` useMemo block'
   )
   lines.push(
-    ' * 2. Create an Embed* component that renders the chart with EmbedFooter'
+    ' * 2. Create an Embed* component in src/components/insights/Embed*Charts.tsx'
   )
   lines.push(' * 3. Add the slug \u2192 component mapping in `chartMap`')
   lines.push(
@@ -182,7 +194,13 @@ function buildComment(
 // ── Main ────────────────────────────────────────────────────────────────────
 
 function main() {
-  const charts = extractCharts()
+  const charts = extractCharts().sort((a, b) => {
+    // Sort by numeric part, then by suffix (e.g. 6 < 6b < 7)
+    const numA = parseInt(a.number)
+    const numB = parseInt(b.number)
+    if (numA !== numB) return numA - numB
+    return a.number.localeCompare(b.number)
+  })
   if (charts.length === 0) {
     console.error('No ChartCard entries found in OnePieceInsightsPage.tsx')
     process.exit(1)
