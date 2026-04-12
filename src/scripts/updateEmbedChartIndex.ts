@@ -1,6 +1,6 @@
 #!/usr/bin/env npx tsx
 /**
- * Parses OnePieceInsightsPage.tsx for ChartCard usages and updates the
+ * Parses insight section components for ChartCard usages and updates the
  * chart-index comment block at the top of EmbedInsightPage.tsx.
  *
  * Usage:  npx tsx src/scripts/updateEmbedChartIndex.ts
@@ -20,7 +20,7 @@ interface ChartEntry {
   slug: string
 }
 
-// ── Parse ChartCard blocks from OnePieceInsightsPage ────────────────────────
+// ── Parse ChartCard blocks from insight section components ──────────────────
 
 function extractCharts(): ChartEntry[] {
   // Scan all *Section.tsx files in the insights components directory
@@ -28,9 +28,7 @@ function extractCharts(): ChartEntry[] {
     .filter((f) => f.endsWith('Section.tsx'))
     .map((f) => resolve(INSIGHTS_DIR, f))
 
-  // Also check the main page in case ChartCards are still there
-  const mainPage = resolve(PAGES_DIR, 'OnePieceInsightsPage.tsx')
-  const filesToScan = [...sectionFiles, mainPage]
+  const filesToScan = [...sectionFiles]
 
   const entries: ChartEntry[] = []
 
@@ -157,7 +155,7 @@ function buildComment(
     ' * Embed renderers for all insight charts.',
     ' *',
     ' * Each chart is accessible at: /#/embed/insights/<slug>',
-    ' * Permalink on the main page:  /#/analytics/insights#<slug>',
+    ' * Permalink on the main page:  /#/analytics/<topic>#<slug>',
     ' *',
     ` * ${hr('┌', '┬', '┐')}`,
     ` * ${row('#', 'Title', 'Slug', 'Interactive Filters')}`,
@@ -180,7 +178,7 @@ function buildComment(
   )
   lines.push(' * 3. Add the slug \u2192 component mapping in `chartMap`')
   lines.push(
-    ' * 4. Add chartId and embedPath props to the ChartCard on OnePieceInsightsPage'
+    ' * 4. Add chartId and embedPath props to the ChartCard in the relevant insight section'
   )
   lines.push(' *')
   lines.push(
@@ -202,7 +200,7 @@ function main() {
     return a.number.localeCompare(b.number)
   })
   if (charts.length === 0) {
-    console.error('No ChartCard entries found in OnePieceInsightsPage.tsx')
+    console.error('No ChartCard entries found in insight section components')
     process.exit(1)
   }
 
