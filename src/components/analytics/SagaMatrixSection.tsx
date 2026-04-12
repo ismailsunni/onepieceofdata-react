@@ -2,11 +2,11 @@ import { useState } from 'react'
 import * as Slider from '@radix-ui/react-slider'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { supabase } from '../services/supabase'
-import { logger } from '../utils/logger'
-import { SectionHeader } from '../components/analytics'
-import { STRAW_HAT_IDS } from '../constants/characters'
-import type { Saga } from '../types/arc'
+import { supabase } from '../../services/supabase'
+import { logger } from '../../utils/logger'
+import { SectionHeader } from '.'
+import { STRAW_HAT_IDS } from '../../constants/characters'
+import type { Saga } from '../../types/arc'
 
 interface SagaMatrixCharacter {
   id: string
@@ -67,7 +67,7 @@ function getCellColorPercent(pct: number): string {
   return 'bg-blue-400 text-white'
 }
 
-function CharacterSagaMatrixPage() {
+export function SagaMatrixSection() {
   const [hideStrawHats, setHideStrawHats] = useState(false)
   const [nameSearch, setNameSearch] = useState('')
   const [showPercentage, setShowPercentage] = useState(false)
@@ -189,40 +189,14 @@ function CharacterSagaMatrixPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/3" />
-          <div className="h-4 bg-gray-200 rounded w-2/3" />
-          <div className="h-96 bg-gray-200 rounded" />
-        </div>
+      <div className="flex justify-center items-center py-20">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-        <Link to="/analytics" className="hover:text-gray-900 transition-colors">
-          Analytics
-        </Link>
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 5l7 7-7 7"
-          />
-        </svg>
-        <span className="text-gray-900 font-medium">
-          Saga Appearance Matrix
-        </span>
-      </nav>
+    <>
       <SectionHeader
         icon={
           <svg
@@ -441,7 +415,7 @@ function CharacterSagaMatrixPage() {
           </table>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
@@ -484,5 +458,3 @@ function RangeSlider({
     </div>
   )
 }
-
-export default CharacterSagaMatrixPage
