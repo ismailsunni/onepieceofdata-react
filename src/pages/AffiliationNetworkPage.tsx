@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo } from 'react'
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Network, DataSet } from 'vis-network/standalone'
@@ -89,6 +89,9 @@ function AffiliationNetworkPage() {
   const [selectedEdge, setSelectedEdge] = useState<SharedEdge | null>(null)
   const [selectedNode, setSelectedNode] = useState<string | null>(null)
   const [hideIsolated, setHideIsolated] = useState(false)
+  const [search, setSearch] = useState('')
+  const [searchOpen, setSearchOpen] = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
 
   const { data: affiliations = [], isLoading } = useQuery({
     queryKey: ['all-affiliations'],
@@ -182,6 +185,37 @@ function AffiliationNetworkPage() {
     return () => network.destroy()
   }, [nodes, edges])
 
+  const searchResults = useMemo(() => {
+    if (!search.trim()) return []
+    const q = search.toLowerCase()
+    return nodes
+      .filter((n) => n.label.toLowerCase().includes(q))
+      .sort((a, b) => b.memberCount - a.memberCount)
+      .slice(0, 10)
+  }, [search, nodes])
+
+  const focusNode = useCallback((nodeId: string) => {
+    const net = networkRef.current
+    if (!net) return
+    net.selectNodes([nodeId])
+    net.focus(nodeId, { scale: 1.5, animation: true })
+    setSelectedNode(nodeId)
+    setSelectedEdge(null)
+    setSearch('')
+    setSearchOpen(false)
+  }, [])
+
+  // Close search dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setSearchOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
   const selectedNodeInfo = useMemo(() => {
     if (!selectedNode) return null
     const node = nodes.find((n) => n.id === selectedNode)
@@ -227,6 +261,35 @@ function AffiliationNetworkPage() {
 
         {/* Controls */}
         <div className="bg-white border border-gray-200 rounded-xl p-4 mb-6 flex flex-wrap items-center gap-6">
+          <div ref={searchRef} className="relative">
+            <input
+              type="text"
+              placeholder="Search group..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value)
+                setSearchOpen(true)
+              }}
+              onFocus={() => search.trim() && setSearchOpen(true)}
+              className="w-48 px-3 py-1 border border-gray-300 rounded-lg text-sm placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            />
+            {searchOpen && searchResults.length > 0 && (
+              <div className="absolute z-10 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                {searchResults.map((n) => (
+                  <button
+                    key={n.id}
+                    onClick={() => focusNode(n.id)}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition-colors flex items-center justify-between"
+                  >
+                    <span className="truncate text-gray-900">{n.label}</span>
+                    <span className="ml-2 text-xs text-gray-400 flex-shrink-0">
+                      {n.memberCount}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="flex items-center gap-3">
             <label className="text-sm font-medium text-gray-700">
               Min group size:

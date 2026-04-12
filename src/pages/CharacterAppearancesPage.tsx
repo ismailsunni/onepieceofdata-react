@@ -239,7 +239,7 @@ function CharacterAppearancesPage() {
       link.href = dataUrl
       link.click()
     } catch (error) {
-      console.error('Error exporting chart:', error)
+      logger.error('Error exporting chart:', error)
     } finally {
       setIsExporting(false)
     }

@@ -47,6 +47,7 @@ const ANALYTICS_ITEMS: NavItem[] = [
     label: 'Affiliation Network',
     exact: true,
   },
+  { to: '/analytics/region-bounty', label: 'Region Bounty', exact: true },
   { label: 'Insights', heading: true },
   { to: '/analytics/insights', label: 'One Piece Insights', exact: true },
 ]

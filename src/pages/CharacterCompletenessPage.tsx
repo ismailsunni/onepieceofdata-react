@@ -14,6 +14,7 @@ import {
   Cell,
 } from 'recharts'
 import { toPng } from 'html-to-image'
+import { logger } from '../utils/logger'
 
 // Define important attributes to track
 const IMPORTANT_ATTRIBUTES = [
@@ -137,7 +138,7 @@ function CharacterCompletenessPage() {
       link.href = dataUrl
       link.click()
     } catch (error) {
-      console.error('Error exporting chart:', error)
+      logger.error('Error exporting chart:', error)
     } finally {
       setIsExporting(false)
     }
