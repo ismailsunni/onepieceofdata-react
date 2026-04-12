@@ -723,7 +723,7 @@ function SagaDetailPage() {
             Explore in Analytics:
           </span>
           <Link
-            to="/analytics/saga-matrix"
+            to="/analytics/appearances"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-indigo-200 text-indigo-700 text-sm font-medium rounded-lg hover:bg-indigo-50 transition-colors"
           >
             <svg
@@ -742,7 +742,7 @@ function SagaDetailPage() {
             Saga Appearance Matrix
           </Link>
           <Link
-            to="/analytics/story-arcs"
+            to="/analytics/story"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-indigo-200 text-indigo-700 text-sm font-medium rounded-lg hover:bg-indigo-50 transition-colors"
           >
             <svg

@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { lazy, Suspense } from 'react'
 import { Toaster } from 'react-hot-toast'
@@ -22,43 +22,40 @@ const SagasPage = lazy(() => import('./pages/SagasPage'))
 const VolumeDetailPage = lazy(() => import('./pages/VolumeDetailPage'))
 const VolumesPage = lazy(() => import('./pages/VolumesPage'))
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
-const CharacterStatsPage = lazy(() => import('./pages/CharacterStatsPage'))
-const CharacterAppearancesPage = lazy(
-  () => import('./pages/CharacterAppearancesPage')
-)
-const StoryArcsAnalyticsPage = lazy(
-  () => import('./pages/StoryArcsAnalyticsPage')
-)
 const CharacterTimelinePage = lazy(
   () => import('./pages/CharacterTimelinePage')
-)
-const CharacterBirthdayPage = lazy(
-  () => import('./pages/CharacterBirthdayPage')
 )
 const ChapterReleaseCalendarPage = lazy(
   () => import('./pages/ChapterReleaseCalendarPage')
 )
-const PublicationRatePage = lazy(() => import('./pages/PublicationRatePage'))
-const CharacterCompletenessPage = lazy(
-  () => import('./pages/CharacterCompletenessPage')
-)
 const NetworkAnalysisPage = lazy(() => import('./pages/NetworkAnalysisPage'))
-const CharacterSagaMatrixPage = lazy(
-  () => import('./pages/CharacterSagaMatrixPage')
-)
-const RegionBountyPage = lazy(() => import('./pages/RegionBountyPage'))
 const DevilFruitsPage = lazy(() => import('./pages/DevilFruitsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 const ChatPage = lazy(() => import('./pages/ChatPage'))
 const CharacterComparePage = lazy(() => import('./pages/CharacterComparePage'))
-const OnePieceInsightsPage = lazy(() => import('./pages/OnePieceInsightsPage'))
 const EmbedInsightPage = lazy(() => import('./pages/EmbedInsightPage'))
 const AffiliationsPage = lazy(() => import('./pages/AffiliationsPage'))
 const AffiliationDetailPage = lazy(
   () => import('./pages/AffiliationDetailPage')
 )
-const AffiliationNetworkPage = lazy(
-  () => import('./pages/AffiliationNetworkPage')
+// Topic-based analytics pages
+const BountyTopicPage = lazy(
+  () => import('./pages/analytics/BountyTopicPage')
+)
+const AppearancesTopicPage = lazy(
+  () => import('./pages/analytics/AppearancesTopicPage')
+)
+const StoryTopicPage = lazy(
+  () => import('./pages/analytics/StoryTopicPage')
+)
+const DemographicsTopicPage = lazy(
+  () => import('./pages/analytics/DemographicsTopicPage')
+)
+const CharactersTopicPage = lazy(
+  () => import('./pages/analytics/CharactersTopicPage')
+)
+const AffiliationsTopicPage = lazy(
+  () => import('./pages/analytics/AffiliationsTopicPage')
 )
 
 // Loading fallback component
@@ -139,53 +136,84 @@ function App() {
                               path="/analytics"
                               element={<AnalyticsPage />}
                             />
+                            {/* Topic-based analytics pages */}
                             <Route
-                              path="/analytics/character-stats"
-                              element={<CharacterStatsPage />}
+                              path="/analytics/bounty"
+                              element={<BountyTopicPage />}
                             />
                             <Route
-                              path="/analytics/character-appearances"
-                              element={<CharacterAppearancesPage />}
+                              path="/analytics/appearances"
+                              element={<AppearancesTopicPage />}
                             />
                             <Route
-                              path="/analytics/character-completeness"
-                              element={<CharacterCompletenessPage />}
+                              path="/analytics/story"
+                              element={<StoryTopicPage />}
                             />
                             <Route
-                              path="/analytics/story-arcs"
-                              element={<StoryArcsAnalyticsPage />}
+                              path="/analytics/demographics"
+                              element={<DemographicsTopicPage />}
+                            />
+                            <Route
+                              path="/analytics/characters"
+                              element={<CharactersTopicPage />}
+                            />
+                            <Route
+                              path="/analytics/affiliations"
+                              element={<AffiliationsTopicPage />}
+                            />
+                            {/* Standalone interactive tools */}
+                            <Route
+                              path="/analytics/network"
+                              element={<NetworkAnalysisPage />}
                             />
                             <Route
                               path="/analytics/character-timeline"
                               element={<CharacterTimelinePage />}
                             />
                             <Route
-                              path="/analytics/birthdays"
-                              element={<CharacterBirthdayPage />}
-                            />
-                            <Route
                               path="/analytics/chapter-releases"
                               element={<ChapterReleaseCalendarPage />}
                             />
+                            {/* Redirects from old routes */}
                             <Route
-                              path="/analytics/publication-rate"
-                              element={<PublicationRatePage />}
-                            />
-                            <Route
-                              path="/analytics/network"
-                              element={<NetworkAnalysisPage />}
-                            />
-                            <Route
-                              path="/analytics/saga-matrix"
-                              element={<CharacterSagaMatrixPage />}
+                              path="/analytics/character-stats"
+                              element={<Navigate to="/analytics/bounty" replace />}
                             />
                             <Route
                               path="/analytics/region-bounty"
-                              element={<RegionBountyPage />}
+                              element={<Navigate to="/analytics/bounty" replace />}
+                            />
+                            <Route
+                              path="/analytics/character-appearances"
+                              element={<Navigate to="/analytics/appearances" replace />}
+                            />
+                            <Route
+                              path="/analytics/saga-matrix"
+                              element={<Navigate to="/analytics/appearances" replace />}
+                            />
+                            <Route
+                              path="/analytics/story-arcs"
+                              element={<Navigate to="/analytics/story" replace />}
+                            />
+                            <Route
+                              path="/analytics/publication-rate"
+                              element={<Navigate to="/analytics/story" replace />}
+                            />
+                            <Route
+                              path="/analytics/birthdays"
+                              element={<Navigate to="/analytics/demographics" replace />}
+                            />
+                            <Route
+                              path="/analytics/character-completeness"
+                              element={<Navigate to="/analytics/characters" replace />}
                             />
                             <Route
                               path="/analytics/insights"
-                              element={<OnePieceInsightsPage />}
+                              element={<Navigate to="/analytics/bounty" replace />}
+                            />
+                            <Route
+                              path="/analytics/affiliation-network"
+                              element={<Navigate to="/analytics/affiliations" replace />}
                             />
                             <Route
                               path="/characters/compare"
@@ -198,10 +226,6 @@ function App() {
                             <Route
                               path="/affiliations/:groupName"
                               element={<AffiliationDetailPage />}
-                            />
-                            <Route
-                              path="/analytics/affiliation-network"
-                              element={<AffiliationNetworkPage />}
                             />
                             <Route
                               path="/devil-fruits"
