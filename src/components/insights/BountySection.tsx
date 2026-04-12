@@ -53,12 +53,12 @@ export function BountySection({
   return (
     <>
       {/* ─── SECTION: Bounty & Power ─── */}
-      <SectionTitle title="Bounty & Power" number="1-4" />
+      <SectionTitle title="Bounty & Power" />
 
       {/* #1 Characters per Chapter Over Time */}
       <div className="mb-6">
         <ChartCard
-          title="#1 Cast Complexity Over Time"
+          title="Cast Complexity Over Time"
           description="How many characters appear in each chapter? The rolling average (20-chapter window) shows how the story's cast grew more complex over time"
           downloadFileName="cast-complexity"
           chartId="cast-complexity"
@@ -136,7 +136,7 @@ export function BountySection({
       {/* #2 Bounty vs Appearance Count */}
       <div className="mb-6">
         <ChartCard
-          title="#2 Bounty vs Appearance Count"
+          title="Bounty vs Appearance Count"
           description="Do high-bounty characters appear more often? Scatter plot of bounty vs chapter appearances"
           downloadFileName="bounty-vs-appearance"
           chartId="bounty-vs-appearance"
@@ -256,7 +256,7 @@ export function BountySection({
       {/* #3 Bounty Jumps */}
       <div className="mb-6">
         <ChartCard
-          title="#3 Bounty Jumps"
+          title="Bounty Jumps"
           description="All characters with bounty history — sort by absolute jump or multiplier to explore"
           downloadFileName="bounty-jumps"
           chartId="bounty-jumps"
@@ -282,7 +282,7 @@ export function BountySection({
       {/* #4 Bounty Tier Distribution by Region */}
       <div className="mb-6">
         <ChartCard
-          title="#4 Bounty Tier Distribution by Region"
+          title="Bounty Tier Distribution by Region"
           description="Bounty power-tier breakdown by origin region (regions with 3+ bounty holders). Which regions produce the strongest pirates?"
           downloadFileName="region-bounty-tier"
           chartId="region-bounty-tier"

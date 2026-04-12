@@ -51,12 +51,12 @@ export function AppearancesSection({
   return (
     <>
       {/* ─── SECTION: Appearances & Longevity ─── */}
-      <SectionTitle title="Appearances & Longevity" number="5-8" />
+      <SectionTitle title="Appearances & Longevity" />
 
       {/* #5 Most Loyal Characters */}
       <div className="mb-6">
         <ChartCard
-          title='#5 Most "Loyal" Characters'
+          title='Most "Loyal" Characters'
           description="Highest appearance density: appearances / (last chapter - first chapter). Who shows up in nearly every chapter of their active span?"
           downloadFileName="most-loyal"
           chartId="most-loyal"
@@ -122,7 +122,7 @@ export function AppearancesSection({
       {/* #6 One-Arc Wonders */}
       <div className="mb-6">
         <ChartCard
-          title="#6 One-Arc Wonders vs Recurring Cast"
+          title="One-Arc Wonders vs Recurring Cast"
           description="How many arcs does each character appear in? Most characters are one-arc wonders"
           downloadFileName="arc-count-distribution"
           chartId="arc-count-distribution"
@@ -175,7 +175,7 @@ export function AppearancesSection({
       {/* #6b One-Saga Wonders */}
       <div className="mb-6">
         <ChartCard
-          title="#6b One-Saga Wonders vs Recurring Cast"
+          title="One-Saga Wonders vs Recurring Cast"
           description="How many sagas does each character appear in? Even more characters are one-saga wonders"
           downloadFileName="saga-count-distribution"
           chartId="saga-count-distribution"
@@ -228,7 +228,7 @@ export function AppearancesSection({
       {/* #7 Character Introduction Rate per Arc */}
       <div className="mb-6">
         <ChartCard
-          title="#7 Characters per Arc (New vs Returning)"
+          title="Characters per Arc (New vs Returning)"
           description="How many characters appear in each arc? The stacked bars show new debuts vs returning characters."
           downloadFileName="arc-intro-rate"
           chartId="arc-intro-rate"
@@ -305,7 +305,7 @@ export function AppearancesSection({
       {/* #7b Character Introduction Rate per Saga */}
       <div className="mb-6">
         <ChartCard
-          title="#7b Characters per Saga (New vs Returning)"
+          title="Characters per Saga (New vs Returning)"
           description="How many characters appear in each saga? A higher-level view of new debuts vs returning cast."
           downloadFileName="saga-intro-rate"
           chartId="saga-intro-rate"
@@ -377,7 +377,7 @@ export function AppearancesSection({
       {/* #8 Gap Analysis */}
       <div className="mb-6">
         <ChartCard
-          title="#8 Longest Disappearances"
+          title="Longest Disappearances"
           description="Characters with the longest gap between chapter appearances. Who vanished and came back?"
           downloadFileName="gap-analysis"
           chartId="gap-analysis"

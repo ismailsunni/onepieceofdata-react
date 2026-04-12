@@ -37,12 +37,12 @@ export function DemographicsSection({
   return (
     <>
       {/* ─── SECTION: Demographics ─── */}
-      <SectionTitle title="Demographics & World-Building" number="13-16" />
+      <SectionTitle title="Demographics & World-Building" />
 
       {/* #13 Blood Type Distribution */}
       <div className="mb-6">
         <ChartCard
-          title="#13 Blood Type: One Piece vs Japan"
+          title="Blood Type: One Piece vs Japan"
           description="Does Oda follow real-world Japanese blood type distribution?"
           downloadFileName="blood-type-comparison"
           chartId="blood-type-comparison"
@@ -90,7 +90,7 @@ export function DemographicsSection({
       {/* #14 Birthday Distribution */}
       <div className="mb-6">
         <ChartCard
-          title="#14 Birthday Calendar by Month"
+          title="Birthday Calendar by Month"
           description="Which months have the most character birthdays?"
           downloadFileName="birthday-distribution"
           chartId="birthday-distribution"
@@ -119,7 +119,7 @@ export function DemographicsSection({
       {/* #15 Origin Region */}
       <div className="mb-6">
         <ChartCard
-          title="#15 Origin Region Bubble Chart"
+          title="Origin Region Bubble Chart"
           description="Which regions of the One Piece world are most represented?"
           downloadFileName="origin-regions"
           chartId="origin-regions"
@@ -160,7 +160,7 @@ export function DemographicsSection({
       {/* #16 Age Distribution by Status */}
       <div className="mb-6">
         <ChartCard
-          title="#16 Age Distribution by Status"
+          title="Age Distribution by Status"
           description="Histogram of character ages colored by alive/deceased. Is there an 'age of death' cluster?"
           downloadFileName="age-distribution"
           chartId="age-distribution"

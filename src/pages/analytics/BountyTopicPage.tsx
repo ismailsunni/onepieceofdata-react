@@ -139,6 +139,8 @@ function BountyTopicPage() {
           </div>
         </div>
 
+        <BountyStatsSection />
+
         <BountySection
           insights={insights}
           hideStrawHats={hideStrawHats}
@@ -148,8 +150,6 @@ function BountyTopicPage() {
           regionBountyTierCount={regionBountyTierCount}
           regionBountyTierPct={regionBountyTierPct}
         />
-
-        <BountyStatsSection />
 
         <RegionBountySection />
       </div>

@@ -35,12 +35,12 @@ export function CoverMetaSection({
   return (
     <>
       {/* ─── SECTION: Cover Stories & Meta ─── */}
-      <SectionTitle title="Cover Stories & Meta" number="17-20" />
+      <SectionTitle title="Cover Stories & Meta" />
 
       {/* #17 Cover Page Stars */}
       <div className="mb-6">
         <ChartCard
-          title="#17 Cover Page Stars"
+          title="Cover Page Stars"
           description="Top 20 characters by cover story appearances"
           downloadFileName="cover-stars"
           chartId="cover-stars"
@@ -76,7 +76,7 @@ export function CoverMetaSection({
       {/* #18 Cover vs Main */}
       <div className="mb-6">
         <ChartCard
-          title="#18 Cover vs Main Story Appearances"
+          title="Cover vs Main Story Appearances"
           description="Some characters live mostly in cover stories. Scatter plot comparing both appearance types"
           downloadFileName="cover-vs-main"
           chartId="cover-vs-main"
@@ -114,7 +114,7 @@ export function CoverMetaSection({
       {/* #19 Arc Density */}
       <div className="mb-6">
         <ChartCard
-          title="#19 Character Cast Size per Arc"
+          title="Character Cast Size per Arc"
           description="Which arcs have the most characters active in them?"
           downloadFileName="arc-density"
           chartId="arc-density"
@@ -156,7 +156,7 @@ export function CoverMetaSection({
       {/* #20 Data Completeness */}
       <div className="mb-6">
         <ChartCard
-          title="#20 The Completeness Gap"
+          title="The Completeness Gap"
           description="What percentage of characters have each attribute filled? A meta-visualization about the dataset itself"
           downloadFileName="data-completeness"
           chartId="data-completeness"

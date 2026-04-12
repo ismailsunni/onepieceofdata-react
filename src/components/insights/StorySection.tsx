@@ -35,12 +35,12 @@ export function StorySection({
   return (
     <>
       {/* ─── SECTION: Story Structure ─── */}
-      <SectionTitle title="Story Structure" number="9-12" />
+      <SectionTitle title="Story Structure" />
 
       {/* #9 Arc Length Trend */}
       <div className="mb-6">
         <ChartCard
-          title="#9 Arc Length Trend"
+          title="Arc Length Trend"
           description="Are arcs getting longer? Chapter count per arc in chronological order"
           downloadFileName="arc-length-trend"
           chartId="arc-length-trend"
@@ -87,7 +87,7 @@ export function StorySection({
       {/* #10 Pages per Arc */}
       <div className="mb-6">
         <ChartCard
-          title="#10 Total Pages per Arc"
+          title="Total Pages per Arc"
           description="Actual content volume per arc — not just chapter count but total pages"
           downloadFileName="pages-per-arc"
           chartId="pages-per-arc"
@@ -129,7 +129,7 @@ export function StorySection({
       {/* #11 Saga Pacing */}
       <div className="mb-6">
         <ChartCard
-          title="#11 Saga Pacing Comparison"
+          title="Saga Pacing Comparison"
           description="Compare sagas by chapters, pages, characters, and density"
           downloadFileName="saga-pacing"
           chartId="saga-pacing"
@@ -200,7 +200,7 @@ export function StorySection({
       {/* #12 Chapter Release Cadence */}
       <div className="mb-6">
         <ChartCard
-          title="#12 Chapters per Year"
+          title="Chapters per Year"
           description="How Oda's publication rate and break patterns have evolved over time"
           downloadFileName="yearly-releases"
           chartId="yearly-releases"

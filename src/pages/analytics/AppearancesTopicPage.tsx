@@ -129,6 +129,8 @@ function AppearancesTopicPage() {
           </div>
         </div>
 
+        <AppearanceChartsSection />
+
         <AppearancesSection
           insights={insights}
           minChapters={minChapters}
@@ -140,8 +142,6 @@ function AppearancesTopicPage() {
           arcCountDist={arcCountDist}
           sagaCountDist={sagaCountDist}
         />
-
-        <AppearanceChartsSection />
 
         <SagaMatrixSection />
       </div>

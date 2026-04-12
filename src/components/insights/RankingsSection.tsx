@@ -35,12 +35,12 @@ export function RankingsSection({
   return (
     <>
       {/* ─── SECTION: Character Rankings ─── */}
-      <SectionTitle title="Character Rankings" number="21-22" />
+      <SectionTitle title="Character Rankings" />
 
       {/* #21 Top Characters per Saga */}
       <div className="mb-6">
         <ChartCard
-          title="#21 Top Characters per Saga"
+          title="Top Characters per Saga"
           description="Who are the main characters of each saga? Characters ranked by chapter appearances within each saga"
           downloadFileName="top-characters-per-saga"
           chartId="top-characters-per-saga"
@@ -178,7 +178,7 @@ export function RankingsSection({
       {/* #22 Top Characters per Arc */}
       <div className="mb-6">
         <ChartCard
-          title="#22 Top Characters per Arc"
+          title="Top Characters per Arc"
           description="Who are the main characters of each arc? Characters ranked by chapter appearances within each arc"
           downloadFileName="top-characters-per-arc"
           chartId="top-characters-per-arc"

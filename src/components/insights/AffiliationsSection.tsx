@@ -27,12 +27,12 @@ export function AffiliationsSection({
   return (
     <>
       {/* ─── SECTION: Affiliations ─── */}
-      <SectionTitle title="Affiliations & Organizations" number="23-24" />
+      <SectionTitle title="Affiliations & Organizations" />
 
       {/* #23 Largest Crews / Organizations */}
       <div className="mb-6">
         <ChartCard
-          title="#23 Largest Crews & Organizations"
+          title="Largest Crews & Organizations"
           description="Top 30 groups by total member count (current + former). Which organizations dominate the One Piece world?"
           downloadFileName="largest-groups"
           chartId="largest-groups"
@@ -83,7 +83,7 @@ export function AffiliationsSection({
       {/* #24 Crew Loyalty vs Turnover */}
       <div className="mb-6">
         <ChartCard
-          title="#24 Crew Loyalty vs Turnover"
+          title="Crew Loyalty vs Turnover"
           description="Membership breakdown for major groups (5+ members). How loyal are the members? Sorted by total size"
           downloadFileName="crew-loyalty"
           chartId="crew-loyalty"
