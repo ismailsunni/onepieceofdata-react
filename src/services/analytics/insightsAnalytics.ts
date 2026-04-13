@@ -723,43 +723,50 @@ export function computeYearlyReleases(
 
 // ── #13 Blood Type Distribution ─────────────────────────────────────────────
 
-export interface BloodTypeComparison {
+export interface BloodTypeDistribution {
   bloodType: string
-  opPercent: number
-  japanPercent: number
   count: number
+  percent: number
 }
 
-export function computeBloodTypeComparison(
-  characters: Character[]
-): BloodTypeComparison[] {
-  // Real-world Japanese population blood type distribution
-  const japanDistribution: Record<string, number> = {
-    A: 40,
-    B: 20,
-    O: 30,
-    AB: 10,
-  }
+// Normalize a blood type string by stripping Rh suffixes (e.g. "F RH+" → "F").
+// Preserves the fictional One Piece types (X, F, XF, S, etc.) as distinct groups.
+function normalizeBloodType(raw: string | null | undefined): string | null {
+  if (!raw) return null
+  const s = raw.trim().toUpperCase()
+  if (!s) return null
+  // Strip Rh suffix: "A RH+", "O-", "XF Rh-" → base letter(s)
+  const match = s.match(/^([A-Z]+)/)
+  if (!match) return null
+  const base = match[1]
+  // Drop trailing +/− that may have been attached without a space (e.g. "O+")
+  return base.replace(/[+\-]$/, '')
+}
 
+export function computeBloodTypeDistribution(
+  characters: Character[]
+): BloodTypeDistribution[] {
   const bloodTypeMap = new Map<string, number>()
   let total = 0
   for (const c of characters) {
-    if (!c.blood_type_group) continue
-    const bt = c.blood_type_group.toUpperCase()
-    if (['A', 'B', 'O', 'AB'].includes(bt)) {
-      bloodTypeMap.set(bt, (bloodTypeMap.get(bt) || 0) + 1)
-      total++
-    }
+    // Prefer blood_type_group; fall back to blood_type (which may include "F RH+", etc.)
+    const bt =
+      normalizeBloodType(c.blood_type_group) ??
+      normalizeBloodType(c.blood_type)
+    if (!bt) continue
+    bloodTypeMap.set(bt, (bloodTypeMap.get(bt) || 0) + 1)
+    total++
   }
 
   if (total === 0) return []
 
-  return ['A', 'B', 'O', 'AB'].map((bt) => ({
-    bloodType: bt,
-    opPercent: Math.round(((bloodTypeMap.get(bt) || 0) / total) * 1000) / 10,
-    japanPercent: japanDistribution[bt],
-    count: bloodTypeMap.get(bt) || 0,
-  }))
+  return Array.from(bloodTypeMap.entries())
+    .map(([bloodType, count]) => ({
+      bloodType,
+      count,
+      percent: Math.round((count / total) * 1000) / 10,
+    }))
+    .sort((a, b) => b.count - a.count)
 }
 
 // ── #14 Birthday Heatmap ────────────────────────────────────────────────────

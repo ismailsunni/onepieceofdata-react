@@ -3,17 +3,16 @@ import { Link, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   fetchInsightsRawData,
-  fetchStatusDistribution,
-  fetchOriginRegionDistribution,
-  computeBloodTypeComparison,
-  computeBirthdayDistribution,
+  computeBloodTypeDistribution,
   computeRegionCounts,
   computeAgeDistribution,
 } from '../../services/analyticsService'
-import { DemographicsSection } from '../../components/insights/DemographicsSection'
+import {
+  DemographicsSection,
+  OriginRegionBubble,
+} from '../../components/insights/DemographicsSection'
 import { BirthdayCalendarSection } from '../../components/analytics/BirthdayCalendarSection'
-import CharacterStatusChart from '../../components/CharacterStatusChart'
-import OriginRegionChart from '../../components/OriginRegionChart'
+import { SectionTitle } from '../../components/insights/SectionTitle'
 
 function DemographicsTopicPage() {
   const location = useLocation()
@@ -39,22 +38,11 @@ function DemographicsTopicPage() {
     staleTime: 10 * 60 * 1000,
   })
 
-  const { data: statusData = [] } = useQuery({
-    queryKey: ['analytics', 'status-distribution'],
-    queryFn: fetchStatusDistribution,
-  })
-
-  const { data: originRegionData = [] } = useQuery({
-    queryKey: ['analytics', 'origin-region-distribution'],
-    queryFn: fetchOriginRegionDistribution,
-  })
-
   const insights = useMemo(() => {
     if (!raw) return null
     const { characters } = raw
     return {
-      bloodType: computeBloodTypeComparison(characters),
-      birthdays: computeBirthdayDistribution(characters),
+      bloodType: computeBloodTypeDistribution(characters),
       regionCounts: computeRegionCounts(characters),
       ageDistribution: computeAgeDistribution(characters),
     }
@@ -134,24 +122,18 @@ function DemographicsTopicPage() {
           </div>
         </div>
 
-        {/* Status & Region Overview */}
-        {(statusData.length > 0 || originRegionData.length > 0) && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {statusData.length > 0 && (
-              <CharacterStatusChart data={statusData} />
-            )}
-            {originRegionData.length > 0 && (
-              <OriginRegionChart data={originRegionData} />
-            )}
-          </div>
-        )}
+        {/* Section 1: Who They Are */}
+        <SectionTitle title="Who They Are" />
 
         <DemographicsSection
           bloodType={insights.bloodType}
-          birthdays={insights.birthdays}
-          regionCounts={insights.regionCounts}
           ageDistribution={insights.ageDistribution}
         />
+
+        {/* Section 2: Where & When */}
+        <SectionTitle title="Where & When" />
+
+        <OriginRegionBubble regionCounts={insights.regionCounts} />
 
         <BirthdayCalendarSection />
       </div>

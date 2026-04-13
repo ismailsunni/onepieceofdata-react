@@ -14,23 +14,23 @@ import {
 import { EmbedFooter } from './EmbedFooter'
 import { SAGA_COLORS } from './constants'
 import type {
-  BloodTypeComparison,
+  BloodTypeDistribution,
   BirthdayMonth,
   RegionCount,
   AgeStatusBucket,
 } from '../../services/analytics/insightsAnalytics'
 
-// ── #13 Blood Type Comparison ───────────────────────────────────────────────
+// ── #13 Blood Type Distribution ─────────────────────────────────────────────
 
 export function EmbedBloodTypeComparison({
   data,
 }: {
-  data: BloodTypeComparison[]
+  data: BloodTypeDistribution[]
 }) {
   return (
     <div className="p-4 font-sans">
       <h2 className="text-lg font-semibold text-gray-900 mb-3">
-        Blood Type: One Piece vs Japan
+        Blood Type Distribution
       </h2>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart
@@ -43,23 +43,23 @@ export function EmbedBloodTypeComparison({
             tick={{ fontSize: 11 }}
             stroke="#6b7280"
             label={{
-              value: '%',
-              position: 'insideTopLeft',
-              style: { fontSize: 11, fill: '#6b7280' },
+              value: 'Characters',
+              angle: -90,
+              position: 'insideLeft',
+              style: { fontSize: 11, fill: '#6b7280', textAnchor: 'middle' },
             }}
           />
-          <Tooltip formatter={(value: number) => [`${value}%`]} />
+          <Tooltip
+            formatter={(value: number, _name: string, props: { payload?: { percent?: number } }) => [
+              `${value} (${props?.payload?.percent ?? 0}%)`,
+              'Characters',
+            ]}
+          />
           <Legend />
           <Bar
-            dataKey="opPercent"
+            dataKey="count"
             fill="#3b82f6"
-            name="One Piece"
-            radius={[4, 4, 0, 0]}
-          />
-          <Bar
-            dataKey="japanPercent"
-            fill="#f59e0b"
-            name="Japan (Real)"
+            name="Characters"
             radius={[4, 4, 0, 0]}
           />
         </BarChart>
