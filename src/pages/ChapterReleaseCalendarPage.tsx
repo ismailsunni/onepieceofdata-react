@@ -266,10 +266,10 @@ function ChapterPredictor({
 
   // Special dates - show actual data for past dates, predictions for future
   const specialDateDefs = [
-    { label: 'New Year 2027', date: '2027-01-01' },
-    { label: 'OP Anniversary (Jul 22, 2027)', date: '2027-07-22' },
-    { label: 'New Year 2028', date: '2028-01-01' },
-    { label: 'New Year 2030', date: '2030-01-01' },
+    { label: "Oda's 52nd Birthday (Jan 1, 2027)", date: '2027-01-01' },
+    { label: "OP 30th Anniversary (Jul 22, 2027)", date: '2027-07-22' },
+    { label: "Oda's 53rd Birthday (Jan 1, 2028)", date: '2028-01-01' },
+    { label: "Oda's 55th Birthday (Jan 1, 2030)", date: '2030-01-01' },
     { label: 'OP 33rd Anniversary (Jul 22, 2030)', date: '2030-07-22' },
   ]
   type SpecialDateRow =
@@ -320,6 +320,157 @@ function ChapterPredictor({
         {cadenceStats.avgDaysPerChapter.toFixed(1)} days/chapter). Past chapters
         and dates show actual data.
       </p>
+
+      {/* Custom Prediction Tools */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        {/* Predict by Chapter */}
+        <div className="bg-gray-50 rounded-lg p-4">
+          <h4 className="text-sm font-semibold text-gray-700 mb-3">
+            When will chapter X be released?
+          </h4>
+          <div className="flex gap-2 mb-3">
+            <input
+              id="chapter-predict"
+              type="number"
+              min={1}
+              placeholder={`e.g. ${cadenceStats.latestChapterNumber + 10}`}
+              value={chapterInput}
+              onChange={(e) => setChapterInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleChapterPredict()}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-colors"
+            />
+            <button
+              onClick={handleChapterPredict}
+              className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              Look up
+            </button>
+          </div>
+          {chapterResult?.type === 'actual' && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm font-medium text-blue-900 mb-1">
+                Chapter {chapterResult.chapter}
+                <span className="ml-2 inline-block px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
+                  Already released
+                </span>
+              </p>
+              <p className="text-sm text-blue-800">
+                Released on{' '}
+                <span className="font-semibold">
+                  {formatDate(new Date(chapterResult.date))}
+                </span>
+                {chapterResult.jump && (
+                  <span className="text-blue-600 ml-1">
+                    ({chapterResult.jump})
+                  </span>
+                )}
+              </p>
+            </div>
+          )}
+          {chapterResult?.type === 'prediction' && (
+            <div className="bg-white border border-amber-200 rounded-lg p-3">
+              <p className="text-sm font-medium text-gray-900 mb-2">
+                Chapter {chapterResult.data.chapter}{' '}
+                <span className="text-gray-500">
+                  (+{chapterResult.data.chaptersAway})
+                </span>
+              </p>
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                <div className="text-center">
+                  <p className="text-green-600 font-medium">Earliest</p>
+                  <p className="text-green-800">
+                    {formatDate(chapterResult.data.earliestDate)}
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-amber-600 font-medium">Estimated</p>
+                  <p className="font-semibold text-amber-900">
+                    {formatDate(chapterResult.data.estimatedDate)}
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-red-600 font-medium">Latest</p>
+                  <p className="text-red-800">
+                    {formatDate(chapterResult.data.latestDate)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Predict by Date */}
+        <div className="bg-gray-50 rounded-lg p-4">
+          <h4 className="text-sm font-semibold text-gray-700 mb-3">
+            What chapter will be out by a date?
+          </h4>
+          <div className="flex gap-2 mb-3">
+            <input
+              type="date"
+              value={dateInput}
+              onChange={(e) => setDateInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleDatePredict()}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-colors"
+            />
+            <button
+              onClick={handleDatePredict}
+              className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              Look up
+            </button>
+          </div>
+          {dateResult?.type === 'actual' && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm font-medium text-blue-900 mb-1">
+                {formatDate(dateResult.date)}
+                <span className="ml-2 inline-block px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
+                  Already passed
+                </span>
+              </p>
+              <p className="text-sm text-blue-800">
+                Latest chapter by that date:{' '}
+                <span className="font-semibold">
+                  Ch. {dateResult.latestChapter.number}
+                </span>
+                <span className="text-blue-600 ml-1">
+                  (released{' '}
+                  {formatDate(new Date(dateResult.latestChapter.date!))})
+                </span>
+              </p>
+            </div>
+          )}
+          {dateResult?.type === 'prediction' && (
+            <div className="bg-white border border-amber-200 rounded-lg p-3">
+              <p className="text-sm font-medium text-gray-900 mb-2">
+                By {formatDate(dateResult.data.date)}{' '}
+                <span className="text-gray-500">
+                  ({dateResult.data.daysAway} days away)
+                </span>
+              </p>
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                <div className="text-center">
+                  <p className="text-green-600 font-medium">Min</p>
+                  <p className="text-green-800 font-semibold text-base">
+                    {dateResult.data.earliestChapter}
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-amber-600 font-medium">Estimated</p>
+                  <p className="font-bold text-amber-900 text-base">
+                    {dateResult.data.estimatedChapter}
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-red-600 font-medium">Max</p>
+                  <p className="text-red-800 font-semibold text-base">
+                    {dateResult.data.latestChapter}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Milestone Chapters Table */}
       {milestoneRows.length > 0 && (
@@ -487,157 +638,6 @@ function ChapterPredictor({
           </div>
         </div>
       )}
-
-      {/* Custom Prediction Tools */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Predict by Chapter */}
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h4 className="text-sm font-semibold text-gray-700 mb-3">
-            When will chapter X be released?
-          </h4>
-          <div className="flex gap-2 mb-3">
-            <input
-              id="chapter-predict"
-              type="number"
-              min={1}
-              placeholder={`e.g. ${cadenceStats.latestChapterNumber + 10}`}
-              value={chapterInput}
-              onChange={(e) => setChapterInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleChapterPredict()}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-colors"
-            />
-            <button
-              onClick={handleChapterPredict}
-              className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors"
-            >
-              Look up
-            </button>
-          </div>
-          {chapterResult?.type === 'actual' && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-sm font-medium text-blue-900 mb-1">
-                Chapter {chapterResult.chapter}
-                <span className="ml-2 inline-block px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
-                  Already released
-                </span>
-              </p>
-              <p className="text-sm text-blue-800">
-                Released on{' '}
-                <span className="font-semibold">
-                  {formatDate(new Date(chapterResult.date))}
-                </span>
-                {chapterResult.jump && (
-                  <span className="text-blue-600 ml-1">
-                    ({chapterResult.jump})
-                  </span>
-                )}
-              </p>
-            </div>
-          )}
-          {chapterResult?.type === 'prediction' && (
-            <div className="bg-white border border-amber-200 rounded-lg p-3">
-              <p className="text-sm font-medium text-gray-900 mb-2">
-                Chapter {chapterResult.data.chapter}{' '}
-                <span className="text-gray-500">
-                  (+{chapterResult.data.chaptersAway})
-                </span>
-              </p>
-              <div className="grid grid-cols-3 gap-2 text-xs">
-                <div className="text-center">
-                  <p className="text-green-600 font-medium">Earliest</p>
-                  <p className="text-green-800">
-                    {formatDate(chapterResult.data.earliestDate)}
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-amber-600 font-medium">Estimated</p>
-                  <p className="font-semibold text-amber-900">
-                    {formatDate(chapterResult.data.estimatedDate)}
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-red-600 font-medium">Latest</p>
-                  <p className="text-red-800">
-                    {formatDate(chapterResult.data.latestDate)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Predict by Date */}
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h4 className="text-sm font-semibold text-gray-700 mb-3">
-            What chapter will be out by a date?
-          </h4>
-          <div className="flex gap-2 mb-3">
-            <input
-              type="date"
-              value={dateInput}
-              onChange={(e) => setDateInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleDatePredict()}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-colors"
-            />
-            <button
-              onClick={handleDatePredict}
-              className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors"
-            >
-              Look up
-            </button>
-          </div>
-          {dateResult?.type === 'actual' && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-sm font-medium text-blue-900 mb-1">
-                {formatDate(dateResult.date)}
-                <span className="ml-2 inline-block px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
-                  Already passed
-                </span>
-              </p>
-              <p className="text-sm text-blue-800">
-                Latest chapter by that date:{' '}
-                <span className="font-semibold">
-                  Ch. {dateResult.latestChapter.number}
-                </span>
-                <span className="text-blue-600 ml-1">
-                  (released{' '}
-                  {formatDate(new Date(dateResult.latestChapter.date!))})
-                </span>
-              </p>
-            </div>
-          )}
-          {dateResult?.type === 'prediction' && (
-            <div className="bg-white border border-amber-200 rounded-lg p-3">
-              <p className="text-sm font-medium text-gray-900 mb-2">
-                By {formatDate(dateResult.data.date)}{' '}
-                <span className="text-gray-500">
-                  ({dateResult.data.daysAway} days away)
-                </span>
-              </p>
-              <div className="grid grid-cols-3 gap-2 text-xs">
-                <div className="text-center">
-                  <p className="text-green-600 font-medium">Min</p>
-                  <p className="text-green-800 font-semibold text-base">
-                    {dateResult.data.earliestChapter}
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-amber-600 font-medium">Estimated</p>
-                  <p className="font-bold text-amber-900 text-base">
-                    {dateResult.data.estimatedChapter}
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-red-600 font-medium">Max</p>
-                  <p className="text-red-800 font-semibold text-base">
-                    {dateResult.data.latestChapter}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
 
       <p className="text-xs text-gray-400 mt-4 text-center">
         Based on Ch. {cadenceStats.latestChapterNumber} released{' '}
@@ -1186,6 +1186,9 @@ function ChapterReleaseCalendarPage() {
           />
         </div>
 
+        {/* Chapter Release Predictor */}
+        <ChapterPredictor releases={releases} />
+
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Filters</h3>
@@ -1571,9 +1574,6 @@ function ChapterReleaseCalendarPage() {
             </table>
           </div>
         </ChartCard>
-
-        {/* Chapter Release Predictor */}
-        <ChapterPredictor releases={releases} />
 
         {/* Footer */}
         <div className="mt-8 text-center text-sm text-gray-500">
