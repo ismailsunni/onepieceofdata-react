@@ -45,6 +45,7 @@ function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
       title="Top 10 Highest Bounties"
       downloadFileName="top-bounties"
       chartId="top-bounties"
+      embedPath="/embed/insights/top-bounties"
     >
       <div className="flex justify-between items-start mb-4">
         <div>

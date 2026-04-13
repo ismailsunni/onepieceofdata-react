@@ -8,6 +8,7 @@ export interface BountyRange {
   powerTier: string // Store the power tier name separately
   alive: number // Count of alive characters
   notAlive: number // Count of deceased/unknown characters
+  examples: { name: string; bounty: number }[] // Top 3 example characters
 }
 
 export interface BountyStats {
@@ -49,7 +50,7 @@ export async function fetchBountyDistribution(): Promise<BountyRange[]> {
 
     const { data, error } = await supabase
       .from('character')
-      .select('bounty, status')
+      .select('name, bounty, status')
       .not('bounty', 'is', null)
       .gt('bounty', 0)
 
@@ -118,6 +119,12 @@ export async function fetchBountyDistribution(): Promise<BountyRange[]> {
         (char) => char.status !== 'Alive'
       ).length
 
+      // Top 3 characters by bounty as examples
+      const examples = [...charsInRange]
+        .sort((a, b) => b.bounty - a.bounty)
+        .slice(0, 3)
+        .map((c) => ({ name: c.name, bounty: c.bounty }))
+
       return {
         range: formatBountyRange(range.min, range.max),
         count: charsInRange.length,
@@ -125,6 +132,7 @@ export async function fetchBountyDistribution(): Promise<BountyRange[]> {
         powerTier: range.powerTier,
         alive,
         notAlive,
+        examples,
       }
     })
 

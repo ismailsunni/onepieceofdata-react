@@ -12,9 +12,18 @@ type SortKey =
   | 'totalBounty'
   | 'averageBounty'
   | 'medianBounty'
-  | 'avgTop5Bounty'
-  | 'medianTop5Bounty'
+  | 'avgTopN'
 type SortDir = 'asc' | 'desc'
+
+interface RegionRow {
+  region: string
+  characterCount: number
+  totalBounty: number
+  averageBounty: number
+  medianBounty: number
+  avgTopN: number
+  topCharacters: RegionBountyStats['topCharacters']
+}
 
 export function RegionBountySection() {
   const [excludeDead, setExcludeDead] = useState(false)
@@ -28,8 +37,27 @@ export function RegionBountySection() {
   })
 
   const tableRegions = useMemo(() => {
-    const sliced = regionStats.slice(0, topN)
-    return [...sliced].sort((a, b) => {
+    // Compute avgTopN client-side from topCharacters (already sorted by bounty desc)
+    const rows: RegionRow[] = regionStats.map((r) => {
+      const topSlice = r.topCharacters.slice(0, topN)
+      const avgTopN =
+        topSlice.length > 0
+          ? Math.round(
+              topSlice.reduce((s, c) => s + c.bounty, 0) / topSlice.length
+            )
+          : 0
+      return {
+        region: r.region,
+        characterCount: r.characterCount,
+        totalBounty: r.totalBounty,
+        averageBounty: r.averageBounty,
+        medianBounty: r.medianBounty,
+        avgTopN,
+        topCharacters: r.topCharacters,
+      }
+    })
+
+    return [...rows].sort((a, b) => {
       const mul = sortDir === 'asc' ? 1 : -1
       return (a[sortKey] - b[sortKey]) * mul
     })
@@ -114,178 +142,171 @@ export function RegionBountySection() {
   if (regionStats.length === 0) return null
 
   return (
-    <>
-      {/* Controls */}
-      <div className="flex flex-wrap items-center gap-4 mb-6">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700">
-            Include deceased:
-          </span>
-          <button
-            onClick={() => setExcludeDead(false)}
-            className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-              !excludeDead
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            Yes
-          </button>
-          <button
-            onClick={() => setExcludeDead(true)}
-            className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-              excludeDead
-                ? 'bg-green-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            Alive Only
-          </button>
-        </div>
+    <div className="mb-6">
+      <ChartCard
+        title="Region Bounty Breakdown"
+        downloadFileName="region-bounty-table"
+        chartId="region-bounty-table"
+        embedPath="/embed/insights/region-bounty-table"
+        filters={
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">
+                Include deceased:
+              </span>
+              <button
+                onClick={() => setExcludeDead(false)}
+                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                  !excludeDead
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Yes
+              </button>
+              <button
+                onClick={() => setExcludeDead(true)}
+                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                  excludeDead
+                    ? 'bg-green-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Alive Only
+              </button>
+            </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700">Show:</span>
-          <button
-            onClick={() => setTopN(5)}
-            className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-              topN === 5
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            Top 5
-          </button>
-          <button
-            onClick={() => setTopN(10)}
-            className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-              topN === 10
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            Top 10
-          </button>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="mb-6">
-        <ChartCard
-          title={`Top ${topN} Regions — Bounty Breakdown`}
-          downloadFileName="region-bounty-table"
-          chartId="region-bounty-table"
-        >
-          <p className="text-sm text-gray-600 mb-4">
-            Highest-bounty characters per region
-            {excludeDead ? ' (alive only)' : ''}. Click column headers to sort.
-          </p>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b-2 border-gray-200">
-                  <th className="text-left py-3 px-3 font-semibold text-gray-900">
-                    Region
-                  </th>
-                  <th
-                    className={sortableThClass}
-                    onClick={() => handleSort('characterCount')}
-                  >
-                    Characters
-                    {renderSortIcon('characterCount')}
-                  </th>
-                  <th
-                    className={sortableThClass}
-                    onClick={() => handleSort('totalBounty')}
-                  >
-                    Total Bounty
-                    {renderSortIcon('totalBounty')}
-                  </th>
-                  <th
-                    className={sortableThClass}
-                    onClick={() => handleSort('averageBounty')}
-                  >
-                    Average Bounty
-                    {renderSortIcon('averageBounty')}
-                  </th>
-                  <th
-                    className={sortableThClass}
-                    onClick={() => handleSort('medianBounty')}
-                  >
-                    Median Bounty
-                    {renderSortIcon('medianBounty')}
-                  </th>
-                  <th
-                    className={sortableThClass}
-                    onClick={() => handleSort('avgTop5Bounty')}
-                  >
-                    Avg Top 5{renderSortIcon('avgTop5Bounty')}
-                  </th>
-                  <th
-                    className={sortableThClass}
-                    onClick={() => handleSort('medianTop5Bounty')}
-                  >
-                    Median Top 5{renderSortIcon('medianTop5Bounty')}
-                  </th>
-                  <th className="text-left py-3 px-3 font-semibold text-gray-900">
-                    Top Characters
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {tableRegions.map((region: RegionBountyStats, idx: number) => (
-                  <tr
-                    key={region.region}
-                    className={`border-b border-gray-100 ${idx % 2 === 0 ? 'bg-gray-50/50' : ''}`}
-                  >
-                    <td className="py-3 px-3 font-semibold text-gray-900">
-                      {region.region}
-                    </td>
-                    <td className="py-3 px-3 text-right text-gray-700">
-                      {region.characterCount}
-                    </td>
-                    <td className="py-3 px-3 text-right font-medium text-amber-600">
-                      ฿{region.totalBounty.toLocaleString()}
-                    </td>
-                    <td className="py-3 px-3 text-right font-medium text-purple-600">
-                      ฿{region.averageBounty.toLocaleString()}
-                    </td>
-                    <td className="py-3 px-3 text-right font-medium text-blue-600">
-                      ฿{region.medianBounty.toLocaleString()}
-                    </td>
-                    <td className="py-3 px-3 text-right font-medium text-emerald-600">
-                      ฿{region.avgTop5Bounty.toLocaleString()}
-                    </td>
-                    <td className="py-3 px-3 text-right font-medium text-teal-600">
-                      ฿{region.medianTop5Bounty.toLocaleString()}
-                    </td>
-                    <td className="py-3 px-3 text-gray-700">
-                      <div className="flex flex-wrap gap-1">
-                        {region.topCharacters.slice(0, 3).map((c) => (
-                          <span
-                            key={c.name}
-                            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                              c.status === 'Alive'
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-red-100 text-red-800'
-                            }`}
-                          >
-                            {c.name} (฿{formatBounty(c.bounty)})
-                          </span>
-                        ))}
-                        {region.topCharacters.length > 3 && (
-                          <span className="text-xs text-gray-400">
-                            +{region.topCharacters.length - 3} more
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">
+                Top N for avg:
+              </span>
+              <button
+                onClick={() => setTopN(5)}
+                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                  topN === 5
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Top 5
+              </button>
+              <button
+                onClick={() => setTopN(10)}
+                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                  topN === 10
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Top 10
+              </button>
+            </div>
           </div>
-        </ChartCard>
-      </div>
-    </>
+        }
+      >
+        <p className="text-sm text-gray-600 mb-4">
+          Bounty stats per region{excludeDead ? ' (alive only)' : ''}. "Avg Top{' '}
+          {topN}" uses only the {topN} highest-bounty characters to avoid
+          low-bounty outliers dragging down the average. Click headers to sort.
+        </p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b-2 border-gray-200">
+                <th className="text-left py-3 px-3 font-semibold text-gray-900">
+                  Region
+                </th>
+                <th
+                  className={sortableThClass}
+                  onClick={() => handleSort('characterCount')}
+                >
+                  Characters
+                  {renderSortIcon('characterCount')}
+                </th>
+                <th
+                  className={sortableThClass}
+                  onClick={() => handleSort('totalBounty')}
+                >
+                  Total Bounty
+                  {renderSortIcon('totalBounty')}
+                </th>
+                <th
+                  className={sortableThClass}
+                  onClick={() => handleSort('averageBounty')}
+                >
+                  Average
+                  {renderSortIcon('averageBounty')}
+                </th>
+                <th
+                  className={sortableThClass}
+                  onClick={() => handleSort('medianBounty')}
+                >
+                  Median
+                  {renderSortIcon('medianBounty')}
+                </th>
+                <th
+                  className={sortableThClass}
+                  onClick={() => handleSort('avgTopN')}
+                >
+                  Avg Top {topN}
+                  {renderSortIcon('avgTopN')}
+                </th>
+                <th className="text-left py-3 px-3 font-semibold text-gray-900">
+                  Top Characters
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {tableRegions.map((region, idx) => (
+                <tr
+                  key={region.region}
+                  className={`border-b border-gray-100 ${idx % 2 === 0 ? 'bg-gray-50/50' : ''}`}
+                >
+                  <td className="py-3 px-3 font-semibold text-gray-900">
+                    {region.region}
+                  </td>
+                  <td className="py-3 px-3 text-right text-gray-700">
+                    {region.characterCount}
+                  </td>
+                  <td className="py-3 px-3 text-right font-medium text-amber-600">
+                    ฿{region.totalBounty.toLocaleString()}
+                  </td>
+                  <td className="py-3 px-3 text-right font-medium text-purple-600">
+                    ฿{region.averageBounty.toLocaleString()}
+                  </td>
+                  <td className="py-3 px-3 text-right font-medium text-blue-600">
+                    ฿{region.medianBounty.toLocaleString()}
+                  </td>
+                  <td className="py-3 px-3 text-right font-medium text-emerald-600">
+                    ฿{region.avgTopN.toLocaleString()}
+                  </td>
+                  <td className="py-3 px-3 text-gray-700">
+                    <div className="flex flex-wrap gap-1">
+                      {region.topCharacters.slice(0, 3).map((c) => (
+                        <span
+                          key={c.name}
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                            c.status === 'Alive'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          {c.name} (฿{formatBounty(c.bounty)})
+                        </span>
+                      ))}
+                      {region.topCharacters.length > 3 && (
+                        <span className="text-xs text-gray-400">
+                          +{region.topCharacters.length - 3} more
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </ChartCard>
+    </div>
   )
 }
