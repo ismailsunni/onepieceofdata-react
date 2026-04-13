@@ -28,7 +28,8 @@ const ANALYTICS_ITEMS: NavItem[] = [
   { to: '/analytics/character-compare', label: 'Character Comparison', exact: true },
   { to: '/analytics/network', label: 'Character Network', exact: true },
   { to: '/analytics/character-timeline', label: 'Character Timeline', exact: true },
-  { to: '/analytics/chapter-releases', label: 'Chapter Releases', exact: true },
+  { to: '/analytics/release-predictor', label: 'Release Predictor', exact: true },
+  { to: '/analytics/chapter-releases', label: 'Release History', exact: true },
 ]
 
 const getLinkClass = ({ isActive }: { isActive: boolean }) => {

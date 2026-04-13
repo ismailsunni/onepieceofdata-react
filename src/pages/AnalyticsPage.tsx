@@ -257,9 +257,34 @@ function AnalyticsPage() {
       iconColor: 'text-teal-600',
     },
     {
-      title: 'Chapter Release Calendar',
+      title: 'Chapter Release Predictor',
       description:
-        'View chapter release schedule by year and Weekly Shonen Jump issue',
+        'Estimate future chapter release dates and milestones based on recent cadence',
+      path: '/analytics/release-predictor',
+      icon: (
+        <svg
+          className="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+          />
+        </svg>
+      ),
+      gradient: 'from-amber-500 to-orange-600',
+      bgColor: 'bg-amber-50',
+      borderColor: 'border-amber-200',
+      iconColor: 'text-amber-600',
+    },
+    {
+      title: 'Release History by Jump Issue',
+      description:
+        'Chapter release schedule by year and Weekly Shonen Jump issue with break analysis',
       path: '/analytics/chapter-releases',
       icon: (
         <svg

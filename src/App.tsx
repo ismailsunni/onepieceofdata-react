@@ -28,6 +28,9 @@ const CharacterTimelinePage = lazy(
 const ChapterReleaseCalendarPage = lazy(
   () => import('./pages/ChapterReleaseCalendarPage')
 )
+const ChapterReleasePredictorPage = lazy(
+  () => import('./pages/ChapterReleasePredictorPage')
+)
 const NetworkAnalysisPage = lazy(() => import('./pages/NetworkAnalysisPage'))
 const DevilFruitsPage = lazy(() => import('./pages/DevilFruitsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
@@ -173,6 +176,10 @@ function App() {
                             <Route
                               path="/analytics/chapter-releases"
                               element={<ChapterReleaseCalendarPage />}
+                            />
+                            <Route
+                              path="/analytics/release-predictor"
+                              element={<ChapterReleasePredictorPage />}
                             />
                             {/* Redirects from old routes */}
                             <Route
