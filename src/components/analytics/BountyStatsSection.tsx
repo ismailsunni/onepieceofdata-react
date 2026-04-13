@@ -1,17 +1,13 @@
-import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   fetchBountyDistribution,
   fetchBountyStats,
-  fetchStatusDistribution,
   fetchTopBounties,
-  fetchOriginRegionDistribution,
 } from '../../services/analyticsService'
 import BountyDistributionChart from '../BountyDistributionChart'
-import CharacterStatusChart from '../CharacterStatusChart'
 import TopBountiesChart from '../TopBountiesChart'
-import OriginRegionChart from '../OriginRegionChart'
 import { StatCard } from './index'
+import { formatBounty } from '../insights/constants'
 
 export function BountyStatsSection() {
   const { data: bountyData = [], isLoading: bountyLoading } = useQuery({
@@ -22,11 +18,6 @@ export function BountyStatsSection() {
   const { data: bountyStats, isLoading: bountyStatsLoading } = useQuery({
     queryKey: ['analytics', 'bounty-stats'],
     queryFn: fetchBountyStats,
-  })
-
-  const { data: statusData = [], isLoading: statusLoading } = useQuery({
-    queryKey: ['analytics', 'status-distribution'],
-    queryFn: fetchStatusDistribution,
   })
 
   const { data: topBountiesAll = [], isLoading: topBountiesLoadingAll } =
@@ -41,26 +32,11 @@ export function BountyStatsSection() {
       queryFn: () => fetchTopBounties(10, true),
     })
 
-  const { data: originRegionData = [], isLoading: originRegionLoading } =
-    useQuery({
-      queryKey: ['analytics', 'origin-region-distribution'],
-      queryFn: fetchOriginRegionDistribution,
-    })
-
   const isLoading =
     bountyLoading ||
     bountyStatsLoading ||
-    statusLoading ||
     topBountiesLoadingAll ||
-    topBountiesLoadingAlive ||
-    originRegionLoading
-
-  const stats = useMemo(() => {
-    const total = bountyStats?.totalCharacters || 0
-    const aliveCount = statusData.find((s) => s.status === 'Alive')?.count || 0
-    const charactersWithBounty = bountyStats?.charactersWithBounty || 0
-    return { totalCharacters: total, charactersWithBounty, aliveCount }
-  }, [bountyStats, statusData])
+    topBountiesLoadingAlive
 
   if (isLoading) {
     return (
@@ -70,33 +46,15 @@ export function BountyStatsSection() {
     )
   }
 
+  const highestBounty = topBountiesAll[0]
+
   return (
     <>
       {/* KPI Cards Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
-        <StatCard
-          label="Total Characters"
-          value={stats.totalCharacters}
-          icon={
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-              />
-            </svg>
-          }
-          color="blue"
-        />
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
         <StatCard
           label="Characters with Bounty"
-          value={stats.charactersWithBounty}
+          value={bountyStats?.charactersWithBounty || 0}
           icon={
             <svg
               className="w-5 h-5"
@@ -115,8 +73,9 @@ export function BountyStatsSection() {
           color="purple"
         />
         <StatCard
-          label="Living Characters"
-          value={stats.aliveCount}
+          label="Highest Bounty"
+          value={highestBounty ? formatBounty(highestBounty.bounty) : '—'}
+          subtitle={highestBounty?.name}
           icon={
             <svg
               className="w-5 h-5"
@@ -128,41 +87,45 @@ export function BountyStatsSection() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-              />
-            </svg>
-          }
-          color="green"
-        />
-        <StatCard
-          label="Devil Fruit Users"
-          value="Coming Soon"
-          icon={
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
               />
             </svg>
           }
           color="amber"
         />
+        <StatCard
+          label="Bounty Coverage"
+          value={bountyStats ? `${bountyStats.percentage}%` : '—'}
+          subtitle={
+            bountyStats
+              ? `${bountyStats.charactersWithBounty} of ${bountyStats.totalCharacters} characters`
+              : undefined
+          }
+          icon={
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              />
+            </svg>
+          }
+          color="blue"
+        />
       </div>
 
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {bountyData.length > 0 && (
+      {/* Bounty Distribution Chart */}
+      {bountyData.length > 0 && (
+        <div className="mb-6">
           <BountyDistributionChart data={bountyData} stats={bountyStats} />
-        )}
-        {statusData.length > 0 && <CharacterStatusChart data={statusData} />}
-      </div>
+        </div>
+      )}
 
       {/* Top Bounties */}
       {topBountiesAll.length > 0 && (
@@ -171,63 +134,6 @@ export function BountyStatsSection() {
             dataAll={topBountiesAll}
             dataAlive={topBountiesAlive}
           />
-        </div>
-      )}
-
-      {/* Origin Region Distribution */}
-      {originRegionData.length > 0 && (
-        <div className="mb-6">
-          <OriginRegionChart data={originRegionData} />
-        </div>
-      )}
-
-      {/* Insights Panel */}
-      {bountyStats && (
-        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border border-blue-200 p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <svg
-              className="w-6 h-6 text-blue-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-              />
-            </svg>
-            <h3 className="text-xl font-semibold text-gray-900">
-              Key Insights
-            </h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4">
-              <p className="text-sm text-gray-600 mb-1">Bounty Coverage</p>
-              <p className="text-2xl font-bold text-blue-600">
-                {bountyStats.percentage}%
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                {bountyStats.charactersWithBounty} of{' '}
-                {bountyStats.totalCharacters} characters have bounties
-              </p>
-            </div>
-            <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4">
-              <p className="text-sm text-gray-600 mb-1">Survival Rate</p>
-              <p className="text-2xl font-bold text-green-600">
-                {bountyStats.totalCharacters
-                  ? Math.round(
-                      (stats.aliveCount / bountyStats.totalCharacters) * 100
-                    )
-                  : 0}
-                %
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                {stats.aliveCount} characters are confirmed alive
-              </p>
-            </div>
-          </div>
         </div>
       )}
     </>

@@ -7,6 +7,7 @@ import {
   computePagesPerArc,
   computeSagaPacing,
   computeYearlyReleases,
+  computeChapterComplexity,
 } from '../../services/analyticsService'
 import { StorySection } from '../../components/insights/StorySection'
 import { ArcLengthSection } from '../../components/analytics/ArcLengthSection'
@@ -44,6 +45,11 @@ function StoryTopicPage() {
       pagesPerArc: computePagesPerArc(arcs, chapters),
       sagaPacing: computeSagaPacing(sagas, arcs, characters, chapters),
       yearlyReleases: computeYearlyReleases(chapters),
+      chapterComplexity: computeChapterComplexity(
+        characters,
+        arcs,
+        chapters.length > 0 ? Math.max(...chapters.map((c) => c.number)) : 0
+      ),
     }
   }, [raw])
 
@@ -125,6 +131,7 @@ function StoryTopicPage() {
           pagesPerArc={insights.pagesPerArc}
           sagaPacing={insights.sagaPacing}
           yearlyReleases={insights.yearlyReleases}
+          chapterComplexity={insights.chapterComplexity}
         />
 
         <ArcLengthSection />

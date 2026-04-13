@@ -1,15 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts'
-import {
   fetchRegionBountyData,
   RegionBountyStats,
 } from '../../services/analyticsService'
@@ -35,15 +26,6 @@ export function RegionBountySection() {
     queryKey: ['analytics', 'region-bounty', excludeDead],
     queryFn: () => fetchRegionBountyData(excludeDead),
   })
-
-  const chartData = useMemo(() => {
-    return regionStats.slice(0, topN).map((r) => ({
-      region: r.region,
-      averageBounty: r.averageBounty,
-      totalBounty: r.totalBounty,
-      characterCount: r.characterCount,
-    }))
-  }, [regionStats, topN])
 
   const tableRegions = useMemo(() => {
     const sliced = regionStats.slice(0, topN)
@@ -184,65 +166,6 @@ export function RegionBountySection() {
             Top 10
           </button>
         </div>
-      </div>
-
-      {/* Chart */}
-      <div className="mb-6">
-        <ChartCard
-          title={`Top ${topN} Regions by Total Bounty`}
-          downloadFileName="region-bounty-chart"
-          chartId="region-bounty-chart"
-        >
-          <p className="text-sm text-gray-600 mb-4">
-            Total combined bounty per origin region
-            {excludeDead ? ' (alive characters only)' : ''}
-          </p>
-          <ResponsiveContainer width="100%" height={topN === 5 ? 300 : 450}>
-            <BarChart
-              data={chartData}
-              layout="vertical"
-              margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis
-                type="number"
-                tick={{ fontSize: 12 }}
-                stroke="#6b7280"
-                tickFormatter={formatBounty}
-              />
-              <YAxis
-                dataKey="region"
-                type="category"
-                width={110}
-                tick={{ fontSize: 11 }}
-                stroke="#6b7280"
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#ffffff',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '0.375rem',
-                }}
-                formatter={(value: number, name: string) => {
-                  if (name === 'totalBounty')
-                    return [`฿${value.toLocaleString()}`, 'Total Bounty']
-                  return [value, name]
-                }}
-                labelFormatter={(label: string) => {
-                  const region = chartData.find((r) => r.region === label)
-                  return region
-                    ? `${label} (${region.characterCount} characters, Avg: ฿${formatBounty(region.averageBounty)})`
-                    : label
-                }}
-              />
-              <Bar
-                dataKey="totalBounty"
-                fill="#f59e0b"
-                radius={[0, 8, 8, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
       </div>
 
       {/* Table */}

@@ -3,6 +3,8 @@ import { Link, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   fetchInsightsRawData,
+  fetchStatusDistribution,
+  fetchOriginRegionDistribution,
   computeBloodTypeComparison,
   computeBirthdayDistribution,
   computeRegionCounts,
@@ -10,6 +12,8 @@ import {
 } from '../../services/analyticsService'
 import { DemographicsSection } from '../../components/insights/DemographicsSection'
 import { BirthdayCalendarSection } from '../../components/analytics/BirthdayCalendarSection'
+import CharacterStatusChart from '../../components/CharacterStatusChart'
+import OriginRegionChart from '../../components/OriginRegionChart'
 
 function DemographicsTopicPage() {
   const location = useLocation()
@@ -33,6 +37,16 @@ function DemographicsTopicPage() {
     queryKey: ['insights-raw-data'],
     queryFn: fetchInsightsRawData,
     staleTime: 10 * 60 * 1000,
+  })
+
+  const { data: statusData = [] } = useQuery({
+    queryKey: ['analytics', 'status-distribution'],
+    queryFn: fetchStatusDistribution,
+  })
+
+  const { data: originRegionData = [] } = useQuery({
+    queryKey: ['analytics', 'origin-region-distribution'],
+    queryFn: fetchOriginRegionDistribution,
   })
 
   const insights = useMemo(() => {
@@ -119,6 +133,18 @@ function DemographicsTopicPage() {
             </div>
           </div>
         </div>
+
+        {/* Status & Region Overview */}
+        {(statusData.length > 0 || originRegionData.length > 0) && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            {statusData.length > 0 && (
+              <CharacterStatusChart data={statusData} />
+            )}
+            {originRegionData.length > 0 && (
+              <OriginRegionChart data={originRegionData} />
+            )}
+          </div>
+        )}
 
         <DemographicsSection
           bloodType={insights.bloodType}

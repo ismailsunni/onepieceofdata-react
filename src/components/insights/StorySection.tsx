@@ -8,6 +8,9 @@ import {
   Legend,
   ResponsiveContainer,
   Cell,
+  AreaChart,
+  Area,
+  Line,
 } from 'recharts'
 import { ChartCard } from '../common/ChartCard'
 import { SectionTitle } from './SectionTitle'
@@ -17,6 +20,7 @@ import type {
   ArcPages,
   SagaPacing,
   YearlyRelease,
+  ChapterComplexityPoint,
 } from '../../services/analytics/insightsAnalytics'
 
 interface StorySectionProps {
@@ -24,6 +28,7 @@ interface StorySectionProps {
   pagesPerArc: ArcPages[]
   sagaPacing: SagaPacing[]
   yearlyReleases: YearlyRelease[]
+  chapterComplexity?: ChapterComplexityPoint[]
 }
 
 export function StorySection({
@@ -31,13 +36,94 @@ export function StorySection({
   pagesPerArc,
   sagaPacing,
   yearlyReleases,
+  chapterComplexity,
 }: StorySectionProps) {
   return (
     <>
       {/* ─── SECTION: Story Structure ─── */}
       <SectionTitle title="Story Structure" />
 
-      {/* #9 Arc Length Trend */}
+      {/* Cast Complexity Over Time */}
+      {chapterComplexity && chapterComplexity.length > 0 && (
+        <div className="mb-6">
+          <ChartCard
+            title="Cast Complexity Over Time"
+            description="How many characters appear in each chapter? The rolling average (20-chapter window) shows how the story's cast grew more complex over time"
+            downloadFileName="cast-complexity"
+            chartId="cast-complexity"
+            embedPath="/embed/insights/cast-complexity"
+          >
+            <ResponsiveContainer width="100%" height={350}>
+              <AreaChart
+                data={chapterComplexity}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  dataKey="chapter"
+                  type="number"
+                  domain={[1, 'dataMax']}
+                  ticks={[
+                    1, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100,
+                  ]}
+                  tick={{ fontSize: 11 }}
+                  stroke="#6b7280"
+                  label={{
+                    value: 'Chapter',
+                    position: 'insideBottom',
+                    offset: -5,
+                    style: { fontSize: 11, fill: '#6b7280' },
+                  }}
+                />
+                <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
+                <Tooltip
+                  labelFormatter={(label: number) => {
+                    const d = chapterComplexity.find(
+                      (p) => p.chapter === label
+                    )
+                    return d ? `Chapter ${label} (${d.arc})` : `Chapter ${label}`
+                  }}
+                  formatter={(value: number, name: string) => [
+                    name === 'Characters in Chapter'
+                      ? `${value} characters`
+                      : `${value} avg`,
+                    name,
+                  ]}
+                />
+                <Legend />
+                <Area
+                  type="monotone"
+                  dataKey="characters"
+                  fill="#dbeafe"
+                  stroke="#93c5fd"
+                  strokeWidth={1}
+                  fillOpacity={0.4}
+                  name="Characters in Chapter"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="rollingAvg"
+                  stroke="#2563eb"
+                  strokeWidth={2}
+                  dot={false}
+                  name="Rolling Average (20 ch.)"
+                />
+                <Line
+                  type="linear"
+                  dataKey="trend"
+                  stroke="#ef4444"
+                  strokeWidth={2}
+                  strokeDasharray="8 4"
+                  dot={false}
+                  name="Trendline"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+      )}
+
+      {/* Arc Length Trend */}
       <div className="mb-6">
         <ChartCard
           title="Arc Length Trend"

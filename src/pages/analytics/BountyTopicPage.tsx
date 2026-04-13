@@ -3,7 +3,6 @@ import { Link, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   fetchInsightsRawData,
-  computeChapterComplexity,
   computeBountyVsAppearance,
   computeTopBountyJumps,
   computeRegionBountyTier,
@@ -41,13 +40,8 @@ function BountyTopicPage() {
 
   const insights = useMemo(() => {
     if (!raw) return null
-    const { characters, arcs, chapters } = raw
+    const { characters } = raw
     return {
-      chapterComplexity: computeChapterComplexity(
-        characters,
-        arcs,
-        chapters.length > 0 ? Math.max(...chapters.map((c) => c.number)) : 0
-      ),
       bountyVsAppearance: computeBountyVsAppearance(characters),
       topBountyJumps: computeTopBountyJumps(characters),
       regionBountyTier: computeRegionBountyTier(characters),
