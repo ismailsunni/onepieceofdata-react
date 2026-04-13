@@ -25,7 +25,7 @@ export function EmbedMostLoyal({ data }: { data: LoyalCharacter[] }) {
   return (
     <div className="p-4 font-sans">
       <h2 className="text-lg font-semibold text-gray-900 mb-3">
-        Most &quot;Loyal&quot; Characters
+        Most Consistent Presence
       </h2>
       <ResponsiveContainer width="100%" height={400}>
         <BarChart

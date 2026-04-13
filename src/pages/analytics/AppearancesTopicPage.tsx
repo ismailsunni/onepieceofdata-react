@@ -16,6 +16,7 @@ import { AppearanceChartsSection } from '../../components/analytics/AppearanceCh
 import { SagaMatrixSection } from '../../components/analytics/SagaMatrixSection'
 import { SectionTitle } from '../../components/insights/SectionTitle'
 import { ChartCard } from '../../components/common/ChartCard'
+import { STRAW_HAT_IDS } from '../../constants/characters'
 import {
   ScatterChart,
   Scatter,
@@ -52,6 +53,7 @@ function AppearancesTopicPage() {
     'both' | 'new' | 'returning'
   >('both')
   const [wondersMode, setWondersMode] = useState<'arc' | 'saga'>('arc')
+  const [hideStrawHatsScatter, setHideStrawHatsScatter] = useState(true)
 
   const { data: raw, isLoading } = useQuery({
     queryKey: ['insights-raw-data'],
@@ -97,14 +99,16 @@ function AppearancesTopicPage() {
           char.cover_appearance_count &&
           char.cover_appearance_count > 0 &&
           char.appearance_count &&
-          char.appearance_count > 0
+          char.appearance_count > 0 &&
+          (!hideStrawHatsScatter || !STRAW_HAT_IDS.has(char.id))
       )
       .map((char) => ({
+        id: char.id,
         name: char.name || 'Unknown',
         chapterAppearances: char.appearance_count || 0,
         coverAppearances: char.cover_appearance_count || 0,
       }))
-  }, [allCharacters])
+  }, [allCharacters, hideStrawHatsScatter])
 
   if (isLoading) {
     return (
@@ -208,11 +212,22 @@ function AppearancesTopicPage() {
         {coverAppearanceScatterData.length > 0 && (
           <div className="mb-6">
             <ChartCard
-              title="Cover Appearances vs Chapter Appearances"
-              description="Relationship between volume cover appearances and total chapter appearances for characters featured on covers"
+              title="Volume Cover Appearances vs Chapter Appearances"
+              description="Relationship between tankōbon (volume) cover appearances and total chapter appearances for characters featured on volume covers"
               downloadFileName="cover-vs-chapter-appearances"
               chartId="cover-vs-chapter-appearances"
               embedPath="/embed/insights/cover-vs-chapter-appearances"
+              filters={
+                <label className="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={hideStrawHatsScatter}
+                    onChange={(e) => setHideStrawHatsScatter(e.target.checked)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  Hide Straw Hat Pirates
+                </label>
+              }
             >
               <style>
                 {`
@@ -251,7 +266,7 @@ function AppearancesTopicPage() {
                     tick={{ fill: '#6b7280', fontSize: 12 }}
                   >
                     <Label
-                      value="Cover Appearances"
+                      value="Volume Cover Appearances"
                       angle={-90}
                       position="left"
                       offset={40}

@@ -222,7 +222,7 @@ export function AppearanceChartsSection({
       {mostLoyal.length > 0 && (
         <div className="mb-8">
           <ChartCard
-            title='Most "Loyal" Characters'
+            title="Most Consistent Presence"
             description="Highest appearance density: appearances / (last chapter - first chapter). Who shows up in nearly every chapter of their active span?"
             downloadFileName="most-loyal"
             chartId="most-loyal"
