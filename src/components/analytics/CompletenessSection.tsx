@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { fetchCharacters } from '../../services/characterService'
-import { StatCard, SectionHeader } from './'
+import { StatCard } from './'
+import { ChartCard } from '../common/ChartCard'
 
 // Define important attributes to track
 const IMPORTANT_ATTRIBUTES = [
@@ -209,27 +210,14 @@ export function CompletenessSection() {
 
       {/* Detailed Table */}
       {completenessData.length > 0 && (
-        <>
-          <SectionHeader
+        <div className="mb-8">
+          <ChartCard
             title="Detailed Completeness Statistics"
             description="Comprehensive breakdown of each attribute's data availability"
-            icon={
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                />
-              </svg>
-            }
-          />
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-8">
+            downloadFileName="completeness"
+            chartId="completeness"
+            embedPath="/embed/insights/completeness"
+          >
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -255,17 +243,14 @@ export function CompletenessSection() {
                   {completenessData.map((item, index) => (
                     <tr
                       key={item.attribute}
-                      className={
-                        index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
-                      }
+                      className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div
                             className="w-3 h-3 rounded-full mr-3"
                             style={{
-                              backgroundColor:
-                                COLORS[index % COLORS.length],
+                              backgroundColor: COLORS[index % COLORS.length],
                             }}
                           ></div>
                           <span className="text-sm font-medium text-gray-900">
@@ -288,8 +273,7 @@ export function CompletenessSection() {
                             className="h-2 rounded-full transition-all duration-300"
                             style={{
                               width: `${item.percentage}%`,
-                              backgroundColor:
-                                COLORS[index % COLORS.length],
+                              backgroundColor: COLORS[index % COLORS.length],
                             }}
                           ></div>
                         </div>
@@ -299,8 +283,8 @@ export function CompletenessSection() {
                 </tbody>
               </table>
             </div>
-          </div>
-        </>
+          </ChartCard>
+        </div>
       )}
 
       {/* Empty State */}

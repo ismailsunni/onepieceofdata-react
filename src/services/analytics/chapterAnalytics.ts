@@ -177,3 +177,144 @@ export async function fetchChapterReleases(): Promise<ChapterRelease[]> {
     return []
   }
 }
+
+// ── Yearly publication statistics ───────────────────────────────────────────
+
+export interface YearlyPublicationStat {
+  year: number
+  chapters: number
+  breaks: number
+  availableWeeks: number
+  firstChapter: number | null
+  lastChapter: number | null
+}
+
+/**
+ * Compute per-year chapter and break counts from chapter release data.
+ * Handles double issues, year transitions, and the conventional issue 53
+ * exclusion. Used by both the Story Topic page and the embed.
+ */
+export function computeYearlyPublicationStats(
+  releases: ChapterRelease[]
+): YearlyPublicationStat[] {
+  if (!releases || releases.length === 0) return []
+
+  const sortedReleases = [...releases].sort((a, b) => a.number - b.number)
+  const yearlyData = new Map<
+    number,
+    {
+      chapters: number
+      breaks: number
+      firstIssue: number
+      lastIssue: number
+      issuesWithChapters: Set<number>
+      firstChapter: number | null
+      lastChapter: number | null
+    }
+  >()
+
+  // Initialize all years and track first/last chapter numbers
+  sortedReleases.forEach((release) => {
+    if (release.year && release.issue !== null) {
+      if (!yearlyData.has(release.year)) {
+        yearlyData.set(release.year, {
+          chapters: 0,
+          breaks: 0,
+          firstIssue: release.issue,
+          lastIssue: release.issue,
+          issuesWithChapters: new Set(),
+          firstChapter: null,
+          lastChapter: null,
+        })
+      }
+      const yearData = yearlyData.get(release.year)!
+      yearData.chapters++
+      yearData.firstIssue = Math.min(yearData.firstIssue, release.issue)
+      yearData.lastIssue = Math.max(yearData.lastIssue, release.issue)
+
+      if (
+        yearData.firstChapter === null ||
+        release.number < yearData.firstChapter
+      ) {
+        yearData.firstChapter = release.number
+      }
+      if (
+        yearData.lastChapter === null ||
+        release.number > yearData.lastChapter
+      ) {
+        yearData.lastChapter = release.number
+      }
+
+      yearData.issuesWithChapters.add(release.issue)
+      if (release.issueEnd !== null && release.issueEnd > release.issue) {
+        for (let i = release.issue + 1; i <= release.issueEnd; i++) {
+          yearData.issuesWithChapters.add(i)
+        }
+      }
+    }
+  })
+
+  // Compute breaks per year
+  for (let i = 1; i < sortedReleases.length; i++) {
+    const current = sortedReleases[i]
+    const previous = sortedReleases[i - 1]
+
+    if (
+      !current.year ||
+      !previous.year ||
+      current.issue === null ||
+      previous.issue === null
+    ) {
+      continue
+    }
+
+    if (current.year === previous.year) {
+      let weeksBetween = current.issue - previous.issue
+      if (previous.issueEnd !== null && previous.issueEnd > previous.issue) {
+        weeksBetween -= previous.issueEnd - previous.issue
+      }
+      weeksBetween -= 1 // expected next issue
+      if (previous.issue < 53 && current.issue > 53) {
+        weeksBetween -= 1 // skip issue 53
+      }
+      if (weeksBetween > 0) {
+        yearlyData.get(current.year)!.breaks += weeksBetween
+      }
+    } else if (current.year === previous.year + 1) {
+      // Year transition — split breaks across both years
+      let totalWeeksBetween = 52 - previous.issue + current.issue
+      if (previous.issueEnd !== null && previous.issueEnd > previous.issue) {
+        totalWeeksBetween -= previous.issueEnd - previous.issue
+      }
+      totalWeeksBetween -= 1 // expected next issue
+      totalWeeksBetween -= 1 // skip issue 53
+
+      if (totalWeeksBetween > 0) {
+        const breaksInPreviousYear =
+          52 -
+          previous.issue -
+          (previous.issueEnd ? previous.issueEnd - previous.issue : 0) -
+          1
+        const breaksInCurrentYear = current.issue - 1
+
+        if (breaksInPreviousYear > 0 && yearlyData.has(previous.year)) {
+          yearlyData.get(previous.year)!.breaks += breaksInPreviousYear
+        }
+        if (breaksInCurrentYear > 0 && yearlyData.has(current.year)) {
+          yearlyData.get(current.year)!.breaks += breaksInCurrentYear
+        }
+      }
+    }
+  }
+
+  return Array.from(yearlyData.entries())
+    .map(([year, data]) => ({
+      year,
+      chapters: data.chapters,
+      breaks: data.breaks,
+      availableWeeks: data.chapters + data.breaks,
+      firstChapter: data.firstChapter,
+      lastChapter: data.lastChapter,
+    }))
+    .sort((a, b) => a.year - b.year)
+}

@@ -17,6 +17,7 @@
  * │ Characters per Arc (New vs Returning)          │ arc-intro-rate             │ Both / New / Returning     │
  * │ Characters per Saga (New vs Returning)         │ saga-intro-rate            │ Both / New / Returning     │
  * │ Crew Loyalty vs Turnover                       │ crew-loyalty               │ —                          │
+ * │ Detailed Completeness Statistics               │ completeness               │ —                          │
  * │ Largest Crews & Organizations                  │ largest-groups             │ —                          │
  * │ Longest Disappearances                         │ gap-analysis               │ Sortable table             │
  * │ Most Consistent Presence                       │ most-loyal                 │ —                          │
@@ -29,6 +30,7 @@
  * │ Top Characters per Saga                        │ top-characters-per-saga    │ SHP 3-way + Count / %      │
  * │ Top Volume Cover Stars                         │ cover-stars                │ —                          │
  * │ Volume Cover vs Main Story Appearances         │ cover-vs-main              │ —                          │
+ * │ Yearly Publication Statistics                  │ publication-rate-by-year   │ —                          │
  * └────────────────────────────────────────────────┴────────────────────────────┴────────────────────────────┘
  *
  * To add a new embed:
@@ -99,6 +101,10 @@ import {
   EmbedLargestGroups,
   EmbedCrewLoyalty,
 } from '../components/insights/EmbedAffiliationsCharts'
+import {
+  EmbedPublicationRate,
+  EmbedCompleteness,
+} from '../components/insights/EmbedAnalyticsCharts'
 
 function EmbedInsightPage() {
   const { chartId } = useParams<{ chartId: string }>()
@@ -192,6 +198,8 @@ function EmbedInsightPage() {
     ),
     'largest-groups': <EmbedLargestGroups data={insights.largestGroups} />,
     'crew-loyalty': <EmbedCrewLoyalty data={insights.crewLoyalty} />,
+    'publication-rate-by-year': <EmbedPublicationRate />,
+    completeness: <EmbedCompleteness />,
   }
 
   const chart = chartId ? chartMap[chartId] : null

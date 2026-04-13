@@ -3,6 +3,7 @@ import {
   fetchChapterReleases,
   ChapterRelease,
 } from '../../services/analyticsService'
+import { computeYearlyPublicationStats } from '../../services/analytics/chapterAnalytics'
 import { useMemo } from 'react'
 import { StatCard } from '.'
 import { ChartCard } from '../common/ChartCard'
@@ -29,165 +30,10 @@ export function PublicationRateSection() {
   })
 
   // Calculate yearly statistics (chapters and breaks per year)
-  const yearlyStats = useMemo(() => {
-    if (!releases) return []
-
-    const sortedReleases = [...releases].sort((a, b) => a.number - b.number)
-    const yearlyData = new Map<
-      number,
-      {
-        chapters: number
-        breaks: number
-        firstIssue: number
-        lastIssue: number
-        issuesWithChapters: Set<number> // Track unique issues that had chapters
-        firstChapter: number | null
-        lastChapter: number | null
-      }
-    >()
-
-    // Initialize all years with chapter count and track first/last issues
-    sortedReleases.forEach((release) => {
-      if (release.year && release.issue !== null) {
-        if (!yearlyData.has(release.year)) {
-          yearlyData.set(release.year, {
-            chapters: 0,
-            breaks: 0,
-            firstIssue: release.issue,
-            lastIssue: release.issue,
-            issuesWithChapters: new Set(),
-            firstChapter: null,
-            lastChapter: null,
-          })
-        }
-        const yearData = yearlyData.get(release.year)!
-        yearData.chapters++
-        // Update first and last issue numbers
-        yearData.firstIssue = Math.min(yearData.firstIssue, release.issue)
-        yearData.lastIssue = Math.max(yearData.lastIssue, release.issue)
-
-        // Track first and last chapter numbers
-        if (
-          yearData.firstChapter === null ||
-          release.number < yearData.firstChapter
-        ) {
-          yearData.firstChapter = release.number
-        }
-        if (
-          yearData.lastChapter === null ||
-          release.number > yearData.lastChapter
-        ) {
-          yearData.lastChapter = release.number
-        }
-
-        // Track which issues had chapters (for calculating weeks)
-        // For double issues, mark all spanned issue numbers
-        yearData.issuesWithChapters.add(release.issue)
-        if (release.issueEnd !== null && release.issueEnd > release.issue) {
-          for (let i = release.issue + 1; i <= release.issueEnd; i++) {
-            yearData.issuesWithChapters.add(i)
-          }
-        }
-      }
-    })
-
-    // Calculate breaks per year using the same logic as total breaks
-    for (let i = 1; i < sortedReleases.length; i++) {
-      const current = sortedReleases[i]
-      const previous = sortedReleases[i - 1]
-
-      if (
-        current.year &&
-        previous.year &&
-        current.issue !== null &&
-        previous.issue !== null
-      ) {
-        let weeksBetween = 0
-
-        if (current.year === previous.year) {
-          // Calculate weeks in same year
-          weeksBetween = current.issue - previous.issue
-
-          // Adjust for double issues
-          if (
-            previous.issueEnd !== null &&
-            previous.issueEnd > previous.issue
-          ) {
-            weeksBetween -= previous.issueEnd - previous.issue
-          }
-
-          // Subtract 1 for the expected next issue
-          weeksBetween -= 1
-
-          // Check if there's an issue 53 in between and subtract it
-          if (previous.issue < 53 && current.issue > 53) {
-            weeksBetween -= 1
-          }
-
-          // Add breaks to the current year
-          if (weeksBetween > 0) {
-            yearlyData.get(current.year)!.breaks += weeksBetween
-          }
-        } else if (current.year === previous.year + 1) {
-          // Year transition - distribute breaks between years
-          // Calculate total weeks between
-          let totalWeeksBetween = 52 - previous.issue + current.issue
-
-          // Adjust for double issues
-          if (
-            previous.issueEnd !== null &&
-            previous.issueEnd > previous.issue
-          ) {
-            totalWeeksBetween -= previous.issueEnd - previous.issue
-          }
-
-          // Subtract 1 for expected next issue
-          totalWeeksBetween -= 1
-
-          // Issue 53 is always excluded
-          totalWeeksBetween -= 1
-
-          if (totalWeeksBetween > 0) {
-            // Calculate breaks before end of previous year
-            const breaksInPreviousYear =
-              52 -
-              previous.issue -
-              (previous.issueEnd ? previous.issueEnd - previous.issue : 0) -
-              1
-
-            // Calculate breaks in current year
-            const breaksInCurrentYear = current.issue - 1
-
-            // Add breaks to respective years
-            if (breaksInPreviousYear > 0 && yearlyData.has(previous.year)) {
-              yearlyData.get(previous.year)!.breaks += breaksInPreviousYear
-            }
-            if (breaksInCurrentYear > 0 && yearlyData.has(current.year)) {
-              yearlyData.get(current.year)!.breaks += breaksInCurrentYear
-            }
-          }
-        }
-      }
-    }
-
-    // Convert to array and sort by year
-    return Array.from(yearlyData.entries())
-      .map(([year, data]) => {
-        // Calculate available weeks = chapters + breaks
-        // This is the simplest and most accurate way
-        const availableWeeks = data.chapters + data.breaks
-
-        return {
-          year,
-          chapters: data.chapters,
-          breaks: data.breaks,
-          availableWeeks,
-          firstChapter: data.firstChapter,
-          lastChapter: data.lastChapter,
-        }
-      })
-      .sort((a, b) => a.year - b.year)
-  }, [releases])
+  const yearlyStats = useMemo(
+    () => computeYearlyPublicationStats(releases ?? []),
+    [releases]
+  )
 
   // Calculate overall statistics
   const stats = useMemo(() => {
@@ -493,6 +339,7 @@ export function PublicationRateSection() {
         title="Yearly Publication Statistics"
         downloadFileName="publication-rate-by-year"
         chartId="publication-rate-by-year"
+        embedPath="/embed/insights/publication-rate-by-year"
       >
         <ResponsiveContainer width="100%" height={400}>
           <BarChart
@@ -560,9 +407,7 @@ export function PublicationRateSection() {
                       </p>
                       <p className="text-sm text-gray-700">
                         Publication Rate:{' '}
-                        <span className="font-medium">
-                          {publicationRate}%
-                        </span>
+                        <span className="font-medium">{publicationRate}%</span>
                       </p>
                     </div>
                   )
@@ -645,15 +490,11 @@ export function PublicationRateSection() {
                     : 0
                 const maxBreaks =
                   validYearsForComparison.length > 0
-                    ? Math.max(
-                        ...validYearsForComparison.map((y) => y.breaks)
-                      )
+                    ? Math.max(...validYearsForComparison.map((y) => y.breaks))
                     : 0
                 const minBreaks =
                   validYearsForComparison.length > 0
-                    ? Math.min(
-                        ...validYearsForComparison.map((y) => y.breaks)
-                      )
+                    ? Math.min(...validYearsForComparison.map((y) => y.breaks))
                     : 0
 
                 // Check if current year should be highlighted (not first or last)
@@ -792,9 +633,7 @@ export function PublicationRateSection() {
                 className="w-4 h-4 rounded"
                 style={{ backgroundColor: '#3b82f6' }}
               ></div>
-              <span className="text-xs text-gray-600">
-                95-99% (Excellent)
-              </span>
+              <span className="text-xs text-gray-600">95-99% (Excellent)</span>
             </div>
             <div className="flex items-center gap-2">
               <div
