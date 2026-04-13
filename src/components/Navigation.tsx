@@ -7,7 +7,6 @@ import { useAuth } from '../contexts/AuthContext'
 
 const EXPLORE_ITEMS: NavItem[] = [
   { to: '/characters', label: 'Characters' },
-  { to: '/characters/compare', label: 'Compare Characters', exact: true },
   { to: '/sagas', label: 'Sagas' },
   { to: '/arcs', label: 'Arcs' },
   { to: '/volumes', label: 'Volumes' },
@@ -26,6 +25,7 @@ const ANALYTICS_ITEMS: NavItem[] = [
   { to: '/analytics/characters', label: 'Character Rankings & Meta', exact: true },
   { to: '/analytics/affiliations', label: 'Affiliations', exact: true },
   { label: 'Interactive Tools', heading: true },
+  { to: '/analytics/character-compare', label: 'Character Comparison', exact: true },
   { to: '/analytics/network', label: 'Character Network', exact: true },
   { to: '/analytics/character-timeline', label: 'Character Timeline', exact: true },
   { to: '/analytics/chapter-releases', label: 'Chapter Releases', exact: true },

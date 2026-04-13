@@ -182,6 +182,31 @@ function AnalyticsPage() {
       iconColor: 'text-rose-600',
     },
     {
+      title: 'Character Comparison',
+      description:
+        'Compare chapter appearance timelines for multiple characters side by side with preset groups',
+      path: '/analytics/character-compare',
+      icon: (
+        <svg
+          className="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+          />
+        </svg>
+      ),
+      gradient: 'from-sky-500 to-blue-600',
+      bgColor: 'bg-sky-50',
+      borderColor: 'border-sky-200',
+      iconColor: 'text-sky-600',
+    },
+    {
       title: 'Character Network',
       description:
         'Interactive graph of character co-appearances across arcs, sagas, and chapters',

@@ -216,7 +216,7 @@ function App() {
                               element={<Navigate to="/analytics/affiliations" replace />}
                             />
                             <Route
-                              path="/characters/compare"
+                              path="/analytics/character-compare"
                               element={<CharacterComparePage />}
                             />
                             <Route
