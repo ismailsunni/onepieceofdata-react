@@ -15,7 +15,6 @@ const INSIGHTS_DIR = resolve(__dirname, '..', 'components', 'insights')
 const EMBED_FILE = resolve(PAGES_DIR, 'EmbedInsightPage.tsx')
 
 interface ChartEntry {
-  number: string
   title: string
   slug: string
 }
@@ -58,14 +57,7 @@ function extractCharts(): ChartEntry[] {
         block.match(/title="([^"]*)"/) || block.match(/title='([^']*)'/)
       if (!titleMatch) continue
 
-      const rawTitle = titleMatch[1]
-      const numMatch = rawTitle.match(/^#([\d]+\w?)\s+/)
-      const number = numMatch ? numMatch[1] : '?'
-      const cleanTitle = numMatch
-        ? rawTitle.slice(numMatch[0].length)
-        : rawTitle
-
-      entries.push({ number, title: cleanTitle, slug })
+      entries.push({ title: titleMatch[1], slug })
     }
   }
 
@@ -139,16 +131,15 @@ function buildComment(
   charts: ChartEntry[],
   filters: Map<string, string>
 ): string {
-  const COL_NUM = 5
-  const COL_TITLE = 40
+  const COL_TITLE = 48
   const COL_SLUG = 28
   const COL_FILTER = 28
 
   const hr = (left: string, mid: string, right: string) =>
-    `${left}${'─'.repeat(COL_NUM)}${mid}${'─'.repeat(COL_TITLE)}${mid}${'─'.repeat(COL_SLUG)}${mid}${'─'.repeat(COL_FILTER)}${right}`
+    `${left}${'─'.repeat(COL_TITLE)}${mid}${'─'.repeat(COL_SLUG)}${mid}${'─'.repeat(COL_FILTER)}${right}`
 
-  const row = (num: string, title: string, slug: string, filter: string) =>
-    `│ ${padRight(num, COL_NUM - 2)} │ ${padRight(title, COL_TITLE - 2)} │ ${padRight(slug, COL_SLUG - 2)} │ ${padRight(filter, COL_FILTER - 2)} │`
+  const row = (title: string, slug: string, filter: string) =>
+    `│ ${padRight(title, COL_TITLE - 2)} │ ${padRight(slug, COL_SLUG - 2)} │ ${padRight(filter, COL_FILTER - 2)} │`
 
   const lines = [
     '/**',
@@ -158,13 +149,13 @@ function buildComment(
     ' * Permalink on the main page:  /#/analytics/<topic>#<slug>',
     ' *',
     ` * ${hr('┌', '┬', '┐')}`,
-    ` * ${row('#', 'Title', 'Slug', 'Interactive Filters')}`,
+    ` * ${row('Title', 'Slug', 'Interactive Filters')}`,
     ` * ${hr('├', '┼', '┤')}`,
   ]
 
   for (const chart of charts) {
     const filter = filters.get(chart.slug) || '\u2014'
-    lines.push(` * ${row(chart.number, chart.title, chart.slug, filter)}`)
+    lines.push(` * ${row(chart.title, chart.slug, filter)}`)
   }
 
   lines.push(` * ${hr('└', '┴', '┘')}`)
@@ -192,13 +183,7 @@ function buildComment(
 // ── Main ────────────────────────────────────────────────────────────────────
 
 function main() {
-  const charts = extractCharts().sort((a, b) => {
-    // Sort by numeric part, then by suffix (e.g. 6 < 6b < 7)
-    const numA = parseInt(a.number)
-    const numB = parseInt(b.number)
-    if (numA !== numB) return numA - numB
-    return a.number.localeCompare(b.number)
-  })
+  const charts = extractCharts().sort((a, b) => a.title.localeCompare(b.title))
   if (charts.length === 0) {
     console.error('No ChartCard entries found in insight section components')
     process.exit(1)
