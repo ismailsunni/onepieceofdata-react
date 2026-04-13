@@ -740,7 +740,7 @@ function normalizeBloodType(raw: string | null | undefined): string | null {
   if (!match) return null
   const base = match[1]
   // Drop trailing +/− that may have been attached without a space (e.g. "O+")
-  return base.replace(/[+\-]$/, '')
+  return base.replace(/[-+]$/, '')
 }
 
 export function computeBloodTypeDistribution(
