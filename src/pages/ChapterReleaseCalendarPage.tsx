@@ -1189,71 +1189,65 @@ function ChapterReleaseCalendarPage() {
         {/* Chapter Release Predictor */}
         <ChapterPredictor releases={releases} />
 
-        {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Filters</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Theme Selection */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Color Theme:
-              </label>
-              <div className="flex flex-wrap gap-2">
-                <FilterButton
-                  active={theme === 'jump'}
-                  onClick={() => setTheme('jump')}
-                >
-                  Jump Issue
-                </FilterButton>
-                <FilterButton
-                  active={theme === 'saga'}
-                  onClick={() => setTheme('saga')}
-                >
-                  Saga
-                </FilterButton>
-                <FilterButton
-                  active={theme === 'arc'}
-                  onClick={() => setTheme('arc')}
-                >
-                  Arc
-                </FilterButton>
-                <FilterButton
-                  active={theme === 'luffy'}
-                  onClick={() => setTheme('luffy')}
-                >
-                  Luffy
-                </FilterButton>
-              </div>
-            </div>
-
-            {/* Display Mode */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Display Mode:
-              </label>
-              <div className="flex gap-2">
-                <FilterButton
-                  active={!isCompact}
-                  onClick={() => setIsCompact(false)}
-                >
-                  Detail
-                </FilterButton>
-                <FilterButton
-                  active={isCompact}
-                  onClick={() => setIsCompact(true)}
-                >
-                  Compact
-                </FilterButton>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Chart Card */}
         <ChartCard
-          title="Calendar Visualization"
-          downloadFileName={`one-piece-calendar-${theme}`}
+          title="Release History by Jump Issue"
+          downloadFileName={`one-piece-release-history-${theme}`}
           chartId="chapter-release-calendar"
+          filters={
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Color Theme:
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  <FilterButton
+                    active={theme === 'jump'}
+                    onClick={() => setTheme('jump')}
+                  >
+                    Jump Issue
+                  </FilterButton>
+                  <FilterButton
+                    active={theme === 'saga'}
+                    onClick={() => setTheme('saga')}
+                  >
+                    Saga
+                  </FilterButton>
+                  <FilterButton
+                    active={theme === 'arc'}
+                    onClick={() => setTheme('arc')}
+                  >
+                    Arc
+                  </FilterButton>
+                  <FilterButton
+                    active={theme === 'luffy'}
+                    onClick={() => setTheme('luffy')}
+                  >
+                    Luffy
+                  </FilterButton>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Display Mode:
+                </label>
+                <div className="flex gap-2">
+                  <FilterButton
+                    active={!isCompact}
+                    onClick={() => setIsCompact(false)}
+                  >
+                    Detail
+                  </FilterButton>
+                  <FilterButton
+                    active={isCompact}
+                    onClick={() => setIsCompact(true)}
+                  >
+                    Compact
+                  </FilterButton>
+                </div>
+              </div>
+            </div>
+          }
         >
           {/* Legend */}
           <div className="mb-8">
