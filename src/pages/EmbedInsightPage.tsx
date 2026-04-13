@@ -9,6 +9,7 @@
  * ├────────────────────────────────────────────────┼────────────────────────────┼────────────────────────────┤
  * │ Age Distribution by Status                     │ age-distribution           │ —                          │
  * │ Blood Type Distribution                        │ blood-type-comparison      │ —                          │
+ * │ Bounty Distribution by Power Tier              │ bounty-distribution        │ —                          │
  * │ Bounty Jumps                                   │ bounty-jumps               │ Sortable table             │
  * │ Bounty Tier Distribution by Region             │ region-bounty-tier         │ Count / %                  │
  * │ Bounty vs Appearance Count                     │ bounty-vs-appearance       │ SHP toggle                 │
@@ -17,9 +18,13 @@
  * │ Characters per Saga (New vs Returning)         │ saga-intro-rate            │ Both / New / Returning     │
  * │ Crew Loyalty vs Turnover                       │ crew-loyalty               │ —                          │
  * │ Largest Crews & Organizations                  │ largest-groups             │ —                          │
- * │ One-Arc / One-Saga Wonders vs Recurring Cast   │ wonders-distribution       │ —                          │
+ * │ Longest Disappearances                         │ gap-analysis               │ Sortable table             │
+ * │ Most Consistent Presence                       │ most-loyal                 │ —                          │
+ * │ One-Arc / One-Saga Wonders vs Recurring Cast   │ wonders-distribution       │ Arcs / Sagas               │
  * │ Origin Region Distribution                     │ origin-regions             │ —                          │
+ * │ Region Bounty Breakdown                        │ region-bounty-table        │ All / Alive Only           │
  * │ Saga Pacing Comparison                         │ saga-pacing                │ —                          │
+ * │ Top 10 Highest Bounties                        │ top-bounties               │ All / Alive Only           │
  * │ Top Characters per Arc                         │ top-characters-per-arc     │ SHP 3-way + Count / %      │
  * │ Top Characters per Saga                        │ top-characters-per-saga    │ SHP 3-way + Count / %      │
  * │ Top Volume Cover Stars                         │ cover-stars                │ —                          │
@@ -49,18 +54,12 @@ import {
   computeArcIntroRate,
   computeSagaIntroRate,
   computeLongestGaps,
-  computeArcLengths,
-  computePagesPerArc,
   computeSagaPacing,
-  computeYearlyReleases,
   computeBloodTypeDistribution,
-  computeBirthdayDistribution,
   computeRegionCounts,
   computeAgeDistribution,
   computeCoverStars,
   computeCoverVsMain,
-  computeArcDensity,
-  computeCompleteness,
   computeTopCharactersPerSaga,
   computeTopCharactersPerArc,
   computeLargestGroups,
@@ -71,32 +70,26 @@ import {
   EmbedBountyVsAppearance,
   EmbedBountyJumps,
   EmbedRegionBountyTier,
+  EmbedBountyDistribution,
+  EmbedTopBounties,
+  EmbedRegionBountyTable,
 } from '../components/insights/EmbedBountyCharts'
 import {
   EmbedMostLoyal,
-  EmbedArcCountDistribution,
-  EmbedSagaCountDistribution,
+  EmbedWondersDistribution,
   EmbedArcIntroRate,
   EmbedSagaIntroRate,
   EmbedGapAnalysis,
 } from '../components/insights/EmbedAppearancesCharts'
-import {
-  EmbedArcLengthTrend,
-  EmbedPagesPerArc,
-  EmbedSagaPacing,
-  EmbedYearlyReleases,
-} from '../components/insights/EmbedStoryCharts'
+import { EmbedSagaPacing } from '../components/insights/EmbedStoryCharts'
 import {
   EmbedBloodTypeComparison,
-  EmbedBirthdayDistribution,
   EmbedOriginRegions,
   EmbedAgeDistribution,
 } from '../components/insights/EmbedDemographicsCharts'
 import {
   EmbedCoverStars,
   EmbedCoverVsMain,
-  EmbedArcDensity,
-  EmbedDataCompleteness,
 } from '../components/insights/EmbedCoverMetaCharts'
 import {
   EmbedTopCharactersPerSaga,
@@ -134,18 +127,12 @@ function EmbedInsightPage() {
       arcIntroRate: computeArcIntroRate(characters, arcs),
       sagaIntroRate: computeSagaIntroRate(characters, sagas),
       longestGaps: computeLongestGaps(characters),
-      arcLengths: computeArcLengths(arcs),
-      pagesPerArc: computePagesPerArc(arcs, chapters),
       sagaPacing: computeSagaPacing(sagas, arcs, characters, chapters),
-      yearlyReleases: computeYearlyReleases(chapters),
       bloodType: computeBloodTypeDistribution(characters),
-      birthdays: computeBirthdayDistribution(characters),
       regionCounts: computeRegionCounts(characters),
       ageDistribution: computeAgeDistribution(characters),
       coverStars: computeCoverStars(characters),
       coverVsMain: computeCoverVsMain(characters),
-      arcDensity: computeArcDensity(characters, arcs),
-      completeness: computeCompleteness(characters),
       topCharactersPerSaga: computeTopCharactersPerSaga(characters, sagas, 31),
       topCharactersPerArc: computeTopCharactersPerArc(characters, arcs, 31),
       largestGroups: computeLargestGroups(raw.affiliations),
@@ -171,28 +158,25 @@ function EmbedInsightPage() {
       <EmbedBountyVsAppearance data={insights.bountyVsAppearance} />
     ),
     'bounty-jumps': <EmbedBountyJumps data={insights.topBountyJumps} />,
+    'bounty-distribution': <EmbedBountyDistribution />,
+    'top-bounties': <EmbedTopBounties />,
+    'region-bounty-table': <EmbedRegionBountyTable />,
     'region-bounty-tier': (
       <EmbedRegionBountyTier data={insights.regionBountyTier.slice(0, 15)} />
     ),
     'most-loyal': <EmbedMostLoyal data={insights.mostLoyal} />,
-    'arc-count-distribution': (
-      <EmbedArcCountDistribution data={insights.arcCountDistribution} />
-    ),
-    'saga-count-distribution': (
-      <EmbedSagaCountDistribution data={insights.sagaCountDistribution} />
+    'wonders-distribution': (
+      <EmbedWondersDistribution
+        arcData={insights.arcCountDistribution}
+        sagaData={insights.sagaCountDistribution}
+      />
     ),
     'arc-intro-rate': <EmbedArcIntroRate data={insights.arcIntroRate} />,
     'saga-intro-rate': <EmbedSagaIntroRate data={insights.sagaIntroRate} />,
     'gap-analysis': <EmbedGapAnalysis data={insights.longestGaps} />,
-    'arc-length-trend': <EmbedArcLengthTrend data={insights.arcLengths} />,
-    'pages-per-arc': <EmbedPagesPerArc data={insights.pagesPerArc} />,
     'saga-pacing': <EmbedSagaPacing data={insights.sagaPacing} />,
-    'yearly-releases': <EmbedYearlyReleases data={insights.yearlyReleases} />,
     'blood-type-comparison': (
       <EmbedBloodTypeComparison data={insights.bloodType} />
-    ),
-    'birthday-distribution': (
-      <EmbedBirthdayDistribution data={insights.birthdays} />
     ),
     'origin-regions': <EmbedOriginRegions data={insights.regionCounts} />,
     'age-distribution': (
@@ -200,8 +184,6 @@ function EmbedInsightPage() {
     ),
     'cover-stars': <EmbedCoverStars data={insights.coverStars} />,
     'cover-vs-main': <EmbedCoverVsMain data={insights.coverVsMain} />,
-    'arc-density': <EmbedArcDensity data={insights.arcDensity} />,
-    'data-completeness': <EmbedDataCompleteness data={insights.completeness} />,
     'top-characters-per-saga': (
       <EmbedTopCharactersPerSaga data={insights.topCharactersPerSaga} />
     ),

@@ -5,13 +5,14 @@
  *
  * Usage:  npx tsx src/scripts/updateEmbedChartIndex.ts
  */
-import { readFileSync, writeFileSync, readdirSync } from 'fs'
-import { resolve, dirname } from 'path'
+import { readFileSync, writeFileSync, readdirSync, statSync } from 'fs'
+import { resolve, dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const PAGES_DIR = resolve(__dirname, '..', 'pages')
-const INSIGHTS_DIR = resolve(__dirname, '..', 'components', 'insights')
+const SRC_DIR = resolve(__dirname, '..')
+const PAGES_DIR = resolve(SRC_DIR, 'pages')
+const INSIGHTS_DIR = resolve(SRC_DIR, 'components', 'insights')
 const EMBED_FILE = resolve(PAGES_DIR, 'EmbedInsightPage.tsx')
 
 interface ChartEntry {
@@ -19,19 +20,31 @@ interface ChartEntry {
   slug: string
 }
 
-// ── Parse ChartCard blocks from insight section components ──────────────────
+// ── Recursively walk src/ and collect .tsx files (excluding scripts dir) ────
+
+function walkTsxFiles(dir: string, out: string[] = []): string[] {
+  for (const name of readdirSync(dir)) {
+    const full = join(dir, name)
+    const stat = statSync(full)
+    if (stat.isDirectory()) {
+      if (name === 'scripts' || name === '__tests__' || name === 'node_modules')
+        continue
+      walkTsxFiles(full, out)
+    } else if (name.endsWith('.tsx')) {
+      out.push(full)
+    }
+  }
+  return out
+}
+
+// ── Parse ChartCard blocks with both chartId AND embedPath ──────────────────
 
 function extractCharts(): ChartEntry[] {
-  // Scan all *Section.tsx files in the insights components directory
-  const sectionFiles = readdirSync(INSIGHTS_DIR)
-    .filter((f) => f.endsWith('Section.tsx'))
-    .map((f) => resolve(INSIGHTS_DIR, f))
-
-  const filesToScan = [...sectionFiles]
-
+  const files = walkTsxFiles(SRC_DIR)
   const entries: ChartEntry[] = []
+  const seen = new Set<string>()
 
-  for (const file of filesToScan) {
+  for (const file of files) {
     let src: string
     try {
       src = readFileSync(file, 'utf-8')
@@ -46,17 +59,22 @@ function extractCharts(): ChartEntry[] {
       const slug = m[1]
       const pos = m.index
 
-      const before = src.slice(Math.max(0, pos - 500), pos)
+      const before = src.slice(Math.max(0, pos - 600), pos)
       const chartCardStart = before.lastIndexOf('<ChartCard')
       if (chartCardStart === -1) continue
 
-      const blockStart = Math.max(0, pos - 500) + chartCardStart
-      const block = src.slice(blockStart, pos + m[0].length + 10)
+      const blockStart = Math.max(0, pos - 600) + chartCardStart
+      const block = src.slice(blockStart, pos + m[0].length + 200)
+
+      // Only include charts that are actually embeddable
+      if (!/embedPath=/.test(block)) continue
 
       const titleMatch =
         block.match(/title="([^"]*)"/) || block.match(/title='([^']*)'/)
       if (!titleMatch) continue
 
+      if (seen.has(slug)) continue
+      seen.add(slug)
       entries.push({ title: titleMatch[1], slug })
     }
   }
@@ -112,8 +130,15 @@ function detectFilters(): Map<string, string> {
       }
     }
     if (/showPct|Percent|setPct/.test(body)) parts.push('Count / %')
-    if (/setMode\b/.test(body)) parts.push('Both / New / Returning')
+    if (/setMode\b/.test(body)) {
+      if (/['"]arc['"][\s\S]*?['"]saga['"]|['"]saga['"][\s\S]*?['"]arc['"]/.test(body)) {
+        parts.push('Arcs / Sagas')
+      } else {
+        parts.push('Both / New / Returning')
+      }
+    }
     if (/SortableTable/.test(body)) parts.push('Sortable table')
+    if (/aliveOnly|excludeDead/.test(body)) parts.push('All / Alive Only')
 
     filters.set(slug, parts.length > 0 ? parts.join(' + ') : '\u2014')
   }

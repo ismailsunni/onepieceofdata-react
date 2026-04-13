@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import {
   BarChart,
   Bar,
@@ -22,7 +23,12 @@ import {
   type BountyVsAppearance,
   type BountyJump,
   type RegionBountyTierData,
+  type BountyRange,
+  type TopBounty,
   BOUNTY_TIER_LABELS,
+  fetchBountyDistribution,
+  fetchTopBounties,
+  fetchRegionBountyData,
 } from '../../services/analyticsService'
 import { formatBounty, bountyJumpColumns } from './constants'
 import { EmbedFooter } from './EmbedFooter'
@@ -345,6 +351,268 @@ export function EmbedRegionBountyTier({
           ))}
         </BarChart>
       </ResponsiveContainer>
+      <EmbedFooter />
+    </div>
+  )
+}
+
+// ── Loading / Empty helpers ─────────────────────────────────────────────────
+
+function EmbedLoading() {
+  return (
+    <div className="flex justify-center items-center p-8">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    </div>
+  )
+}
+
+// ── Bounty Distribution by Power Tier ───────────────────────────────────────
+
+export function EmbedBountyDistribution() {
+  const { data, isLoading } = useQuery<BountyRange[]>({
+    queryKey: ['embed', 'bounty-distribution'],
+    queryFn: fetchBountyDistribution,
+    staleTime: 10 * 60 * 1000,
+  })
+
+  if (isLoading) return <EmbedLoading />
+  const rows = data ?? []
+
+  return (
+    <div className="p-4 font-sans">
+      <h2 className="text-lg font-semibold text-gray-900 mb-3">
+        Bounty Distribution by Power Tier
+      </h2>
+      <ResponsiveContainer width="100%" height={350}>
+        <BarChart
+          data={rows}
+          margin={{ top: 10, right: 20, left: 10, bottom: 70 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <XAxis
+            dataKey="range"
+            angle={-45}
+            textAnchor="end"
+            height={80}
+            tick={{ fontSize: 10 }}
+            stroke="#6b7280"
+            interval={0}
+          />
+          <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
+          <Tooltip
+            formatter={(value: number, name: string) => [
+              `${value} characters`,
+              name === 'alive' ? 'Alive' : 'Deceased/Unknown',
+            ]}
+            labelFormatter={(label, payload) => {
+              if (payload && payload[0]) {
+                const tier = (payload[0].payload as BountyRange).powerTier
+                return `${tier} (${label})`
+              }
+              return label
+            }}
+          />
+          <Legend
+            verticalAlign="top"
+            height={28}
+            formatter={(v) => (v === 'alive' ? 'Alive' : 'Deceased/Unknown')}
+          />
+          <Bar dataKey="alive" stackId="a" fill="#10b981" />
+          <Bar dataKey="notAlive" stackId="a" fill="#ef4444" radius={[6, 6, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+      <EmbedFooter />
+    </div>
+  )
+}
+
+// ── Top 10 Highest Bounties ─────────────────────────────────────────────────
+
+export function EmbedTopBounties() {
+  const [aliveOnly, setAliveOnly] = useState(false)
+  const { data, isLoading } = useQuery<TopBounty[]>({
+    queryKey: ['embed', 'top-bounties', aliveOnly],
+    queryFn: () => fetchTopBounties(10, aliveOnly),
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const rows = data ?? []
+  const statusColor = (s: string | null) =>
+    s === 'Alive' ? '#10b981' : '#ef4444'
+
+  return (
+    <div className="p-4 font-sans">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-semibold text-gray-900">
+          Top 10 Highest Bounties
+        </h2>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setAliveOnly(false)}
+            className={`px-2 py-1 text-xs rounded-md transition-colors ${
+              !aliveOnly
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setAliveOnly(true)}
+            className={`px-2 py-1 text-xs rounded-md transition-colors ${
+              aliveOnly
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Alive Only
+          </button>
+        </div>
+      </div>
+      {isLoading ? (
+        <EmbedLoading />
+      ) : (
+        <ResponsiveContainer width="100%" height={420}>
+          <BarChart
+            data={rows}
+            layout="vertical"
+            margin={{ top: 5, right: 20, left: 110, bottom: 5 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis
+              type="number"
+              tick={{ fontSize: 11 }}
+              stroke="#6b7280"
+              tickFormatter={formatBounty}
+            />
+            <YAxis
+              dataKey="name"
+              type="category"
+              width={100}
+              tick={{ fontSize: 10 }}
+              stroke="#6b7280"
+            />
+            <Tooltip
+              formatter={(value: number) => [
+                `฿${value.toLocaleString()}`,
+                'Bounty',
+              ]}
+              labelFormatter={(label: string) => {
+                const c = rows.find((d) => d.name === label)
+                const status = c?.status ? ` - ${c.status}` : ''
+                return c?.origin ? `${label} (${c.origin})${status}` : `${label}${status}`
+              }}
+            />
+            <Bar dataKey="bounty" radius={[0, 8, 8, 0]}>
+              {rows.map((entry, i) => (
+                <Cell key={i} fill={statusColor(entry.status)} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      )}
+      <EmbedFooter />
+    </div>
+  )
+}
+
+// ── Region Bounty Breakdown Table ───────────────────────────────────────────
+
+export function EmbedRegionBountyTable() {
+  const [excludeDead, setExcludeDead] = useState(false)
+  const { data, isLoading } = useQuery({
+    queryKey: ['embed', 'region-bounty', excludeDead],
+    queryFn: () => fetchRegionBountyData(excludeDead),
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const rows = useMemo(() => {
+    return [...(data ?? [])].sort((a, b) => b.totalBounty - a.totalBounty)
+  }, [data])
+
+  return (
+    <div className="p-4 font-sans">
+      <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+        <h2 className="text-lg font-semibold text-gray-900">
+          Region Bounty Breakdown
+        </h2>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-gray-600">
+            Include deceased:
+          </span>
+          <button
+            onClick={() => setExcludeDead(false)}
+            className={`px-2 py-1 text-xs rounded-md transition-colors ${
+              !excludeDead
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Yes
+          </button>
+          <button
+            onClick={() => setExcludeDead(true)}
+            className={`px-2 py-1 text-xs rounded-md transition-colors ${
+              excludeDead
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Alive Only
+          </button>
+        </div>
+      </div>
+      {isLoading ? (
+        <EmbedLoading />
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b-2 border-gray-200">
+                <th className="text-left py-2 px-3 font-semibold text-gray-900">
+                  Region
+                </th>
+                <th className="text-right py-2 px-3 font-semibold text-gray-900">
+                  Characters
+                </th>
+                <th className="text-right py-2 px-3 font-semibold text-gray-900">
+                  Total Bounty
+                </th>
+                <th className="text-right py-2 px-3 font-semibold text-gray-900">
+                  Average
+                </th>
+                <th className="text-right py-2 px-3 font-semibold text-gray-900">
+                  Median
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r, i) => (
+                <tr
+                  key={r.region}
+                  className={`border-b border-gray-100 ${i % 2 === 0 ? 'bg-gray-50/50' : ''}`}
+                >
+                  <td className="py-2 px-3 font-medium text-gray-900">
+                    {r.region}
+                  </td>
+                  <td className="py-2 px-3 text-right text-gray-700">
+                    {r.characterCount}
+                  </td>
+                  <td className="py-2 px-3 text-right font-medium text-amber-600">
+                    ฿{formatBounty(r.totalBounty)}
+                  </td>
+                  <td className="py-2 px-3 text-right font-medium text-purple-600">
+                    ฿{formatBounty(r.averageBounty)}
+                  </td>
+                  <td className="py-2 px-3 text-right font-medium text-blue-600">
+                    ฿{formatBounty(r.medianBounty)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       <EmbedFooter />
     </div>
   )

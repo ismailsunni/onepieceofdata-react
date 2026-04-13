@@ -15,7 +15,6 @@ import { EmbedFooter } from './EmbedFooter'
 import { SAGA_COLORS } from './constants'
 import type {
   BloodTypeDistribution,
-  BirthdayMonth,
   RegionCount,
   AgeStatusBucket,
 } from '../../services/analytics/insightsAnalytics'
@@ -60,36 +59,6 @@ export function EmbedBloodTypeComparison({
             dataKey="count"
             fill="#3b82f6"
             name="Characters"
-            radius={[4, 4, 0, 0]}
-          />
-        </BarChart>
-      </ResponsiveContainer>
-      <EmbedFooter />
-    </div>
-  )
-}
-
-// ── #14 Birthday Distribution ───────────────────────────────────────────────
-
-export function EmbedBirthdayDistribution({ data }: { data: BirthdayMonth[] }) {
-  return (
-    <div className="p-4 font-sans">
-      <h2 className="text-lg font-semibold text-gray-900 mb-3">
-        Birthday Calendar by Month
-      </h2>
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart
-          data={data}
-          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#6b7280" />
-          <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
-          <Tooltip />
-          <Bar
-            dataKey="count"
-            fill="#ec4899"
-            name="Birthdays"
             radius={[4, 4, 0, 0]}
           />
         </BarChart>
