@@ -30,7 +30,7 @@ function AnalyticsPage() {
     },
   })
 
-  const analyticsCategories = [
+  const topicCategories = [
     {
       title: 'Bounty & Power',
       description:
@@ -206,10 +206,13 @@ function AnalyticsPage() {
       borderColor: 'border-slate-200',
       iconColor: 'text-slate-600',
     },
+  ]
+
+  const interactiveTools = [
     {
       title: 'Character Comparison',
       description:
-        'Compare chapter appearance timelines for multiple characters side by side with preset groups',
+        'Side-by-side spec sheet comparing identity, bounty, and key stats across multiple characters',
       path: '/analytics/character-compare',
       icon: (
         <svg
@@ -461,19 +464,16 @@ function AnalyticsPage() {
           />
         </div>
 
-        {/* Section Title */}
+        {/* Topics */}
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Analytics Categories
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Topics</h2>
           <p className="text-gray-600">
-            Choose a category to explore detailed visualizations and insights
+            Curated deep-dives — each page bundles related charts and tables
           </p>
         </div>
 
-        {/* Analytics Categories Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {analyticsCategories.map((category) => (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+          {topicCategories.map((category) => (
             <Link
               key={category.path}
               to={category.path}
@@ -494,6 +494,63 @@ function AnalyticsPage() {
                   </h3>
                   <p className="text-gray-600 text-sm leading-relaxed">
                     {category.description}
+                  </p>
+                </div>
+
+                {/* Arrow */}
+                <div className="text-gray-400 group-hover:text-gray-600 transition-all duration-200 group-hover:translate-x-1 flex-shrink-0">
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* Interactive Tools */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Interactive Tools
+          </h2>
+          <p className="text-gray-600">
+            Build your own view — pick characters, adjust parameters, explore
+            relationships
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {interactiveTools.map((tool) => (
+            <Link
+              key={tool.path}
+              to={tool.path}
+              className="group block bg-white border-2 border-gray-200 rounded-xl p-6 transition-all duration-200 hover:shadow-lg hover:border-gray-300 hover:-translate-y-1"
+            >
+              <div className="flex items-start gap-4">
+                {/* Icon */}
+                <div
+                  className={`${tool.bgColor} ${tool.iconColor} p-3 rounded-lg flex-shrink-0 transition-transform duration-200 group-hover:scale-110`}
+                >
+                  {tool.icon}
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all">
+                    {tool.title}
+                  </h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    {tool.description}
                   </p>
                 </div>
 
