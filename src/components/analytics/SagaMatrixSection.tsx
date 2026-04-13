@@ -72,7 +72,7 @@ export function SagaMatrixSection() {
   const [nameSearch, setNameSearch] = useState('')
   const [showPercentage, setShowPercentage] = useState(false)
   const [appearanceRange, setAppearanceRange] = useState<[number, number]>([
-    10, 9999,
+    50, 9999,
   ])
   const [sagaCountRange, setSagaCountRange] = useState<[number, number]>([
     2, 99,

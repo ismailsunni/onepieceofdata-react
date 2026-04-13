@@ -1,7 +1,8 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { fetchCharacters } from '../../services/characterService'
 import { StatCard, SectionHeader } from './'
+import { ChartCard } from '../common/ChartCard'
 import {
   BarChart,
   Bar,
@@ -12,8 +13,6 @@ import {
   ResponsiveContainer,
   Cell,
 } from 'recharts'
-import { toPng } from 'html-to-image'
-import { logger } from '../../utils/logger'
 
 // Define important attributes to track
 const IMPORTANT_ATTRIBUTES = [
@@ -41,9 +40,6 @@ const COLORS = [
 ]
 
 export function CompletenessSection() {
-  const chartRef = useRef<HTMLDivElement>(null)
-  const [isExporting, setIsExporting] = useState(false)
-
   // Fetch all characters
   const { data: allCharacters = [], isLoading } = useQuery({
     queryKey: ['characters'],
@@ -119,29 +115,6 @@ export function CompletenessSection() {
       totalCharacters: completenessData[0]?.total || 0,
     }
   }, [completenessData])
-
-  // Download chart handler
-  const handleDownloadChart = async () => {
-    if (!chartRef.current) return
-
-    setIsExporting(true)
-    try {
-      const dataUrl = await toPng(chartRef.current, {
-        cacheBust: true,
-        backgroundColor: '#ffffff',
-        pixelRatio: 2,
-      })
-
-      const link = document.createElement('a')
-      link.download = 'character-attribute-completeness.png'
-      link.href = dataUrl
-      link.click()
-    } catch (error) {
-      logger.error('Error exporting chart:', error)
-    } finally {
-      setIsExporting(false)
-    }
-  }
 
   // Loading State
   if (isLoading) {
@@ -247,160 +220,89 @@ export function CompletenessSection() {
 
       {/* Completeness Chart */}
       {completenessData.length > 0 && (
-        <>
-          <SectionHeader
+        <div className="mb-8">
+          <ChartCard
             title="Attribute Completeness Breakdown"
             description="Percentage of characters with each attribute filled"
-            icon={
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            downloadFileName="character-attribute-completeness"
+            chartId="attribute-completeness"
+          >
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart
+                data={completenessData}
+                margin={{ top: 20, right: 80, left: 120, bottom: 20 }}
+                layout="vertical"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  type="number"
+                  domain={[0, 100]}
+                  tick={{ fontSize: 12, fill: '#6b7280' }}
+                  stroke="#6b7280"
+                  label={{
+                    value: 'Completeness (%)',
+                    position: 'bottom',
+                    style: {
+                      fontSize: 14,
+                      fill: '#374151',
+                      fontWeight: 600,
+                    },
+                  }}
                 />
-              </svg>
-            }
-          />
-          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm mb-8 relative">
-            {/* Download Button */}
-            <div className="absolute right-6 top-6 z-10">
-              <button
-                onClick={handleDownloadChart}
-                disabled={isExporting}
-                className={`p-2 rounded-lg transition-colors ${
-                  isExporting
-                    ? 'text-gray-400 bg-gray-50 cursor-wait'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`}
-                title="Download chart"
-              >
-                {isExporting ? (
-                  <svg
-                    className="w-5 h-5 animate-spin"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                ) : (
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                    />
-                  </svg>
-                )}
-              </button>
-            </div>
-
-            {/* Chart Content */}
-            <div ref={chartRef} className="bg-white p-2">
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart
-                  data={completenessData}
-                  margin={{ top: 20, right: 80, left: 120, bottom: 20 }}
-                  layout="vertical"
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis
-                    type="number"
-                    domain={[0, 100]}
-                    tick={{ fontSize: 12, fill: '#6b7280' }}
-                    stroke="#6b7280"
-                    label={{
-                      value: 'Completeness (%)',
-                      position: 'bottom',
-                      style: {
-                        fontSize: 14,
-                        fill: '#374151',
-                        fontWeight: 600,
-                      },
-                    }}
-                  />
-                  <YAxis
-                    type="category"
-                    dataKey="attribute"
-                    tick={{ fontSize: 12, fill: '#6b7280' }}
-                    stroke="#6b7280"
-                    width={100}
-                  />
-                  <Tooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0].payload
-                        return (
-                          <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4">
-                            <p className="font-semibold text-gray-900 mb-2">
-                              {data.attribute}
+                <YAxis
+                  type="category"
+                  dataKey="attribute"
+                  tick={{ fontSize: 12, fill: '#6b7280' }}
+                  stroke="#6b7280"
+                  width={100}
+                />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload
+                      return (
+                        <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4">
+                          <p className="font-semibold text-gray-900 mb-2">
+                            {data.attribute}
+                          </p>
+                          <div className="space-y-1 text-sm">
+                            <p className="text-gray-600">
+                              <span className="font-medium">Filled:</span>{' '}
+                              <span className="text-green-600 font-semibold">
+                                {data.filled} ({data.percentage}%)
+                              </span>
                             </p>
-                            <div className="space-y-1 text-sm">
-                              <p className="text-gray-600">
-                                <span className="font-medium">
-                                  Filled:
-                                </span>{' '}
-                                <span className="text-green-600 font-semibold">
-                                  {data.filled} ({data.percentage}%)
-                                </span>
-                              </p>
-                              <p className="text-gray-600">
-                                <span className="font-medium">
-                                  Missing:
-                                </span>{' '}
-                                <span className="text-red-600 font-semibold">
-                                  {data.missing}
-                                </span>
-                              </p>
-                              <p className="text-gray-600 text-xs pt-1 border-t border-gray-200 mt-2">
-                                Total: {data.total} characters
-                              </p>
-                            </div>
+                            <p className="text-gray-600">
+                              <span className="font-medium">Missing:</span>{' '}
+                              <span className="text-red-600 font-semibold">
+                                {data.missing}
+                              </span>
+                            </p>
+                            <p className="text-gray-600 text-xs pt-1 border-t border-gray-200 mt-2">
+                              Total: {data.total} characters
+                            </p>
                           </div>
-                        )
-                      }
-                      return null
-                    }}
-                  />
-                  <Bar dataKey="percentage" radius={[0, 8, 8, 0]}>
-                    {completenessData.map((_entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-              <div className="mt-4 text-center text-sm text-gray-500">
-                Sorted by completeness (highest to lowest)
-              </div>
+                        </div>
+                      )
+                    }
+                    return null
+                  }}
+                />
+                <Bar dataKey="percentage" radius={[0, 8, 8, 0]}>
+                  {completenessData.map((_entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+            <div className="mt-4 text-center text-sm text-gray-500">
+              Sorted by completeness (highest to lowest)
             </div>
-          </div>
-        </>
+          </ChartCard>
+        </div>
       )}
 
       {/* Detailed Table */}

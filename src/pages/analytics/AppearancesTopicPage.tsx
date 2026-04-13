@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   fetchInsightsRawData,
@@ -15,6 +15,22 @@ import { AppearanceChartsSection } from '../../components/analytics/AppearanceCh
 import { SagaMatrixSection } from '../../components/analytics/SagaMatrixSection'
 
 function AppearancesTopicPage() {
+  const location = useLocation()
+
+  useEffect(() => {
+    const fullHash = window.location.hash
+    const anchorMatch = fullHash.match(/#([^/][^#]*)$/)
+    if (anchorMatch) {
+      const el = document.getElementById(anchorMatch[1])
+      if (el) {
+        setTimeout(
+          () => el.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+          300
+        )
+      }
+    }
+  }, [location])
+
   const [minChapters, setMinChapters] = useState(2)
   const [arcCharMode, setArcCharMode] = useState<'both' | 'new' | 'returning'>(
     'both'
