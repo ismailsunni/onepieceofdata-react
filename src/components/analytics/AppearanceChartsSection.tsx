@@ -2,32 +2,24 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { STRAW_HAT_IDS } from '../../constants/characters'
-import {
-  fetchAppearanceDistribution,
-  fetchSagaAppearanceDistribution,
-  fetchSagaAppearanceCountDistribution,
-  fetchTimeSkipDistribution,
-} from '../../services/analyticsService'
-import { fetchCharacters } from '../../services/characterService'
+import { fetchTimeSkipDistribution } from '../../services/analyticsService'
 import { fetchSagas } from '../../services/sagaService'
 import { supabase } from '../../services/supabase'
 import { logger } from '../../utils/logger'
-import CharacterAppearanceChart from '../CharacterAppearanceChart'
-import { SagaAppearanceChart } from '../SagaAppearanceChart'
-import { SagaAppearanceCountChart } from '../SagaAppearanceCountChart'
 import TimeSkipVennDiagram from '../TimeSkipVennDiagram'
 import { StatCard, SectionHeader } from './index'
 import { ChartCard } from '../common/ChartCard'
 import { RangeSlider } from '../common/RangeSlider'
+import { SectionTitle } from '../insights/SectionTitle'
+import type { LoyalCharacter } from '../../services/analytics/insightsAnalytics'
 import {
-  ScatterChart,
-  Scatter,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Label,
 } from 'recharts'
 
 interface MatrixCharacter {
@@ -54,34 +46,16 @@ async function fetchMatrixCharacters(): Promise<MatrixCharacter[]> {
   return data || []
 }
 
-export function AppearanceChartsSection() {
-  const { data: appearanceData = [], isLoading: appearanceLoading } = useQuery({
-    queryKey: ['analytics', 'appearance-distribution'],
-    queryFn: fetchAppearanceDistribution,
-  })
+interface AppearanceChartsSectionProps {
+  mostLoyal: LoyalCharacter[]
+}
 
-  const { data: sagaAppearanceData = [], isLoading: sagaAppearanceLoading } =
-    useQuery({
-      queryKey: ['analytics', 'saga-appearance-distribution'],
-      queryFn: fetchSagaAppearanceDistribution,
-    })
-
-  const {
-    data: sagaAppearanceCountData = [],
-    isLoading: sagaAppearanceCountLoading,
-  } = useQuery({
-    queryKey: ['analytics', 'saga-appearance-count-distribution'],
-    queryFn: fetchSagaAppearanceCountDistribution,
-  })
-
+export function AppearanceChartsSection({
+  mostLoyal,
+}: AppearanceChartsSectionProps) {
   const { data: timeSkipData, isLoading: timeSkipLoading } = useQuery({
     queryKey: ['analytics', 'time-skip-distribution'],
     queryFn: fetchTimeSkipDistribution,
-  })
-
-  const { data: allCharacters = [], isLoading: charactersLoading } = useQuery({
-    queryKey: ['characters'],
-    queryFn: fetchCharacters,
   })
 
   const { data: matrixCharacters = [], isLoading: matrixCharsLoading } =
@@ -95,14 +69,7 @@ export function AppearanceChartsSection() {
     queryFn: fetchSagas,
   })
 
-  const isLoading =
-    appearanceLoading ||
-    sagaAppearanceLoading ||
-    sagaAppearanceCountLoading ||
-    timeSkipLoading ||
-    charactersLoading ||
-    matrixCharsLoading ||
-    sagasLoading
+  const isLoading = timeSkipLoading || matrixCharsLoading || sagasLoading
 
   const concentrationData = useMemo(() => {
     if (!matrixCharacters.length || !sagas.length) return []
@@ -127,90 +94,22 @@ export function AppearanceChartsSection() {
     })
   }, [matrixCharacters, sagas])
 
-  const stats = useMemo(() => {
-    if (!sagaAppearanceData.length) {
+  const overviewStats = useMemo(() => {
+    if (!concentrationData.length) {
       return {
-        highestDensitySaga: '-',
-        highestDensityRate: '0',
-        mostActiveSaga: '-',
-        mostActiveSagaCount: 0,
-        totalSagas: 0,
-        debutRate: '0',
+        totalTracked: 0,
+        avgAppearances: '0',
+        recurringCast: 0,
       }
     }
-
-    const totalCharacters = sagaAppearanceData.reduce(
-      (sum, saga) => sum + saga.characterCount,
-      0
-    )
-    const avgPerSaga = totalCharacters / sagaAppearanceData.length
-
-    const mostActive = sagaAppearanceData.reduce((max, saga) =>
-      saga.characterCount > max.characterCount ? saga : max
-    )
-
-    const sagaWithDensity = sagaAppearanceData.map((saga) => ({
-      ...saga,
-      density:
-        saga.chapterCount > 0 ? saga.characterCount / saga.chapterCount : 0,
-    }))
-
-    const highestDensity = sagaWithDensity.reduce((max, saga) =>
-      saga.density > max.density ? saga : max
-    )
-
+    const total = concentrationData.reduce((s, c) => s + c.total, 0)
+    const recurring = concentrationData.filter((c) => c.sagasAppeared >= 5).length
     return {
-      highestDensitySaga: highestDensity.sagaName,
-      highestDensityRate: highestDensity.density.toFixed(2),
-      mostActiveSaga: mostActive.sagaName,
-      mostActiveSagaCount: mostActive.characterCount,
-      totalSagas: sagaAppearanceData.length,
-      debutRate: avgPerSaga.toFixed(1),
+      totalTracked: concentrationData.length,
+      avgAppearances: (total / concentrationData.length).toFixed(1),
+      recurringCast: recurring,
     }
-  }, [sagaAppearanceData])
-
-  const eraStats = useMemo(() => {
-    if (!sagaAppearanceData.length) {
-      return {
-        paradiseChars: 0,
-        newWorldChars: 0,
-        paradiseArcs: 0,
-        newWorldArcs: 0,
-      }
-    }
-
-    const paradiseSagas = sagaAppearanceData.filter((s) => s.sagaOrder <= 6)
-    const newWorldSagas = sagaAppearanceData.filter((s) => s.sagaOrder > 6)
-
-    return {
-      paradiseChars: paradiseSagas.reduce(
-        (sum, s) => sum + s.characterCount,
-        0
-      ),
-      newWorldChars: newWorldSagas.reduce(
-        (sum, s) => sum + s.characterCount,
-        0
-      ),
-      paradiseArcs: paradiseSagas.length,
-      newWorldArcs: newWorldSagas.length,
-    }
-  }, [sagaAppearanceData])
-
-  const coverAppearanceScatterData = useMemo(() => {
-    return allCharacters
-      .filter(
-        (char) =>
-          char.cover_appearance_count &&
-          char.cover_appearance_count > 0 &&
-          char.appearance_count &&
-          char.appearance_count > 0
-      )
-      .map((char) => ({
-        name: char.name || 'Unknown',
-        chapterAppearances: char.appearance_count || 0,
-        coverAppearances: char.cover_appearance_count || 0,
-      }))
-  }, [allCharacters])
+  }, [concentrationData])
 
   if (isLoading) {
     return (
@@ -222,11 +121,13 @@ export function AppearanceChartsSection() {
 
   return (
     <>
+      <SectionTitle title="Overview & Loyalty" />
+
       {/* Stats Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
         <StatCard
-          label={`Highest Density (${stats.highestDensityRate}/ch)`}
-          value={stats.highestDensitySaga}
+          label="Characters Tracked"
+          value={overviewStats.totalTracked.toLocaleString()}
           icon={
             <svg
               className="w-5 h-5"
@@ -238,16 +139,37 @@ export function AppearanceChartsSection() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+              />
+            </svg>
+          }
+          color="blue"
+          tooltip="Characters with at least one chapter appearance recorded"
+        />
+        <StatCard
+          label="Avg Appearances"
+          value={`${overviewStats.avgAppearances}`}
+          icon={
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
               />
             </svg>
           }
           color="emerald"
-          tooltip="The saga with the highest rate of character introductions per chapter"
+          tooltip="Mean chapter appearances per tracked character"
         />
         <StatCard
-          label="Debut Rate"
-          value={`${stats.debutRate}/saga`}
+          label="Recurring Cast (5+ sagas)"
+          value={overviewStats.recurringCast}
           icon={
             <svg
               className="w-5 h-5"
@@ -259,54 +181,12 @@ export function AppearanceChartsSection() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
               />
             </svg>
           }
-          color="blue"
-          tooltip="Average number of new characters introduced per saga"
-        />
-        <StatCard
-          label="Most Active Saga"
-          value={stats.mostActiveSaga}
-          icon={
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-              />
-            </svg>
-          }
-          color="green"
-          tooltip="The saga that introduced the most new characters"
-        />
-        <StatCard
-          label="Character Debuts"
-          value={stats.mostActiveSagaCount}
-          icon={
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-          }
-          color="blue"
-          tooltip="Number of characters introduced in the most active saga"
+          color="purple"
+          tooltip="Characters appearing in 5 or more sagas — the true supporting cast"
         />
       </div>
 
@@ -338,259 +218,53 @@ export function AppearanceChartsSection() {
         </>
       )}
 
-      {/* Saga Appearance Count Distribution */}
-      {sagaAppearanceCountData.length > 0 && (
-        <div className="mb-8">
-          <SagaAppearanceCountChart data={sagaAppearanceCountData} />
-        </div>
-      )}
-
-      {/* Characters Introduced per Saga */}
-      {sagaAppearanceData.length > 0 && (
-        <div className="mb-8">
-          <SagaAppearanceChart data={sagaAppearanceData} />
-        </div>
-      )}
-
-      {/* Character Appearances by Chapter Range */}
-      {appearanceData.length > 0 && (
-        <div className="mb-8">
-          <CharacterAppearanceChart data={appearanceData} />
-        </div>
-      )}
-
-      {/* Era Comparison Section */}
-      {sagaAppearanceData.length > 0 && (
-        <>
-          <SectionHeader
-            title="Era Comparison"
-            description="Character introductions in Paradise Era vs New World Era"
-            icon={
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            }
-          />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border border-blue-200 p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <svg
-                    className="w-6 h-6 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900">
-                  Paradise Era
-                </h3>
-              </div>
-              <div className="space-y-3">
-                <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4">
-                  <p className="text-sm text-gray-600 mb-1">
-                    Characters Introduced
-                  </p>
-                  <p className="text-3xl font-bold text-blue-600">
-                    {eraStats.paradiseChars}
-                  </p>
-                </div>
-                <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4">
-                  <p className="text-sm text-gray-600 mb-1">Number of Sagas</p>
-                  <p className="text-2xl font-semibold text-gray-900">
-                    {eraStats.paradiseArcs}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    ~
-                    {eraStats.paradiseArcs > 0
-                      ? Math.round(
-                          eraStats.paradiseChars / eraStats.paradiseArcs
-                        )
-                      : 0}{' '}
-                    characters per saga
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border border-purple-200 p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center">
-                  <svg
-                    className="w-6 h-6 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900">
-                  New World Era
-                </h3>
-              </div>
-              <div className="space-y-3">
-                <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4">
-                  <p className="text-sm text-gray-600 mb-1">
-                    Characters Introduced
-                  </p>
-                  <p className="text-3xl font-bold text-purple-600">
-                    {eraStats.newWorldChars}
-                  </p>
-                </div>
-                <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4">
-                  <p className="text-sm text-gray-600 mb-1">Number of Sagas</p>
-                  <p className="text-2xl font-semibold text-gray-900">
-                    {eraStats.newWorldArcs}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    ~
-                    {eraStats.newWorldArcs > 0
-                      ? Math.round(
-                          eraStats.newWorldChars / eraStats.newWorldArcs
-                        )
-                      : 0}{' '}
-                    characters per saga
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Cover Appearances vs Chapter Appearances Scatter Plot */}
-      {coverAppearanceScatterData.length > 0 && (
+      {/* Most Loyal Characters */}
+      {mostLoyal.length > 0 && (
         <div className="mb-8">
           <ChartCard
-            title="Cover Appearances vs Chapter Appearances"
-            description="Relationship between volume cover appearances and total chapter appearances for characters featured on covers"
-            downloadFileName="cover-vs-chapter-appearances"
-            chartId="cover-vs-chapter-appearances"
+            title='Most "Loyal" Characters'
+            description="Highest appearance density: appearances / (last chapter - first chapter). Who shows up in nearly every chapter of their active span?"
+            downloadFileName="most-loyal"
+            chartId="most-loyal"
+            embedPath="/embed/insights/most-loyal"
           >
-            <style>
-              {`
-                .recharts-scatter-symbol:focus {
-                  outline: none !important;
-                }
-                .recharts-scatter-symbol:focus-visible {
-                  outline: none !important;
-                }
-              `}
-            </style>
-            <ResponsiveContainer width="100%" height={500}>
-              <ScatterChart
-                margin={{ top: 20, right: 30, bottom: 60, left: 60 }}
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart
+                data={mostLoyal}
+                layout="vertical"
+                margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis
                   type="number"
-                  dataKey="chapterAppearances"
-                  name="Chapter Appearances"
+                  tick={{ fontSize: 11 }}
                   stroke="#6b7280"
-                  tick={{ fill: '#6b7280', fontSize: 12 }}
-                >
-                  <Label
-                    value="Chapter Appearances"
-                    position="bottom"
-                    offset={40}
-                    style={{
-                      fill: '#374151',
-                      fontSize: 14,
-                      fontWeight: 600,
-                    }}
-                  />
-                </XAxis>
-                <YAxis
-                  type="number"
-                  dataKey="coverAppearances"
-                  name="Cover Appearances"
-                  stroke="#6b7280"
-                  tick={{ fill: '#6b7280', fontSize: 12 }}
-                >
-                  <Label
-                    value="Cover Appearances"
-                    angle={-90}
-                    position="left"
-                    offset={40}
-                    style={{
-                      fill: '#374151',
-                      fontSize: 14,
-                      fontWeight: 600,
-                    }}
-                  />
-                </YAxis>
-                <Tooltip
-                  cursor={{ strokeDasharray: '3 3' }}
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const data = payload[0].payload
-                      return (
-                        <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4">
-                          <p className="font-semibold text-gray-900 mb-2">
-                            {data.name}
-                          </p>
-                          <div className="space-y-1 text-sm">
-                            <p className="text-gray-600">
-                              <span className="font-medium">
-                                Chapter Appearances:
-                              </span>{' '}
-                              <span className="text-emerald-600 font-semibold">
-                                {data.chapterAppearances}
-                              </span>
-                            </p>
-                            <p className="text-gray-600">
-                              <span className="font-medium">
-                                Cover Appearances:
-                              </span>{' '}
-                              <span className="text-purple-600 font-semibold">
-                                {data.coverAppearances}
-                              </span>
-                            </p>
-                          </div>
-                        </div>
-                      )
-                    }
-                    return null
+                  label={{
+                    value: 'Density (%)',
+                    position: 'insideBottom',
+                    offset: -5,
+                    style: { fontSize: 11, fill: '#6b7280' },
                   }}
                 />
-                <Scatter
-                  name="Characters"
-                  data={coverAppearanceScatterData}
-                  fill="#8b5cf6"
-                  fillOpacity={0.6}
-                  stroke="#7c3aed"
-                  strokeWidth={1.5}
-                  isAnimationActive={false}
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  width={110}
+                  tick={{ fontSize: 10 }}
+                  stroke="#6b7280"
                 />
-              </ScatterChart>
+                <Tooltip
+                  formatter={(value: number) => [`${value}%`, 'Density']}
+                  labelFormatter={(label: string) => {
+                    const c = mostLoyal.find((l) => l.name === label)
+                    return c
+                      ? `${label} — ${c.appearances} appearances over ${c.span} chapters`
+                      : label
+                  }}
+                />
+                <Bar dataKey="density" fill="#6366f1" radius={[0, 8, 8, 0]} />
+              </BarChart>
             </ResponsiveContainer>
-            <div className="mt-4 text-center text-sm text-gray-500">
-              Each point represents a character. Hover over a point to see
-              details.
-            </div>
           </ChartCard>
         </div>
       )}
