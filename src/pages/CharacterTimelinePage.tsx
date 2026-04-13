@@ -6,7 +6,7 @@ import {
   useRef,
   useEffect,
 } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { fetchCharacters } from '../services/characterService'
 import { fetchArcs } from '../services/arcService'
@@ -82,9 +82,34 @@ export const PRESETS = {
 // Default selected characters (by ID)
 const DEFAULT_CHARACTERS = PRESETS.default.ids
 
+/**
+ * Read initial character selection from URL search params.
+ * Supports `?preset=<key>` (matching PRESETS keys) and `?chars=id1,id2,id3`.
+ * `chars` takes precedence over `preset`. Falls back to default Straw Hats.
+ */
+function getInitialCharactersFromUrl(
+  searchParams: URLSearchParams
+): string[] {
+  const charsParam = searchParams.get('chars')
+  if (charsParam) {
+    const ids = charsParam
+      .split(',')
+      .map((id) => id.trim())
+      .filter(Boolean)
+    if (ids.length > 0) return ids
+  }
+  const presetParam = searchParams.get('preset')
+  if (presetParam && presetParam in PRESETS) {
+    return PRESETS[presetParam as keyof typeof PRESETS].ids
+  }
+  return DEFAULT_CHARACTERS
+}
+
 function CharacterTimelinePage() {
-  const [selectedCharacters, setSelectedCharacters] =
-    useState<string[]>(DEFAULT_CHARACTERS)
+  const [searchParams] = useSearchParams()
+  const [selectedCharacters, setSelectedCharacters] = useState<string[]>(() =>
+    getInitialCharactersFromUrl(searchParams)
+  )
   const [searchTerm, setSearchTerm] = useState('')
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
