@@ -24,7 +24,7 @@ export function EmbedCoverStars({ data }: { data: CoverStar[] }) {
   return (
     <div className="p-4 font-sans">
       <h2 className="text-lg font-semibold text-gray-900 mb-3">
-        Cover Page Stars
+        Top Volume Cover Stars
       </h2>
       <ResponsiveContainer width="100%" height={500}>
         <BarChart
@@ -61,7 +61,7 @@ export function EmbedCoverVsMain({ data }: { data: CoverVsMain[] }) {
   return (
     <div className="p-4 font-sans">
       <h2 className="text-lg font-semibold text-gray-900 mb-3">
-        Cover vs Main Story Appearances
+        Volume Cover vs Main Story Appearances
       </h2>
       <ResponsiveContainer width="100%" height={400}>
         <ScatterChart margin={{ top: 10, right: 30, left: 20, bottom: 10 }}>
@@ -69,14 +69,14 @@ export function EmbedCoverVsMain({ data }: { data: CoverVsMain[] }) {
           <XAxis
             type="number"
             dataKey="main"
-            name="Main Story"
+            name="Main Story Appearances"
             tick={{ fontSize: 11 }}
             stroke="#6b7280"
           />
           <YAxis
             type="number"
             dataKey="cover"
-            name="Cover"
+            name="Volume Cover Appearances"
             tick={{ fontSize: 11 }}
             stroke="#6b7280"
           />

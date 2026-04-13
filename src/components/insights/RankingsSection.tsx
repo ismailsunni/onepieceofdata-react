@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import { ChartCard } from '../common/ChartCard'
-import { SectionTitle } from './SectionTitle'
 import { STRAW_HAT_IDS } from '../../constants/characters'
 import type {
   SagaTopCharacters,
@@ -34,10 +33,7 @@ export function RankingsSection({
 }: RankingsSectionProps) {
   return (
     <>
-      {/* ─── SECTION: Character Rankings ─── */}
-      <SectionTitle title="Character Rankings" />
-
-      {/* #21 Top Characters per Saga */}
+      {/* Top Characters per Saga */}
       <div className="mb-6">
         <ChartCard
           title="Top Characters per Saga"

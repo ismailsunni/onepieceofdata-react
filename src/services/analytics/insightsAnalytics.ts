@@ -925,6 +925,7 @@ export function computeCoverStars(characters: Character[]): CoverStar[] {
 // ── #18 Cover vs Main Appearances ───────────────────────────────────────────
 
 export interface CoverVsMain {
+  id: string
   name: string
   cover: number
   main: number
@@ -940,6 +941,7 @@ export function computeCoverVsMain(characters: Character[]): CoverVsMain[] {
         c.appearance_count > 0
     )
     .map((c) => ({
+      id: c.id,
       name: c.name || 'Unknown',
       cover: c.cover_appearance_count!,
       main: c.appearance_count!,

@@ -2,17 +2,6 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { fetchCharacters } from '../../services/characterService'
 import { StatCard, SectionHeader } from './'
-import { ChartCard } from '../common/ChartCard'
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from 'recharts'
 
 // Define important attributes to track
 const IMPORTANT_ATTRIBUTES = [
@@ -217,93 +206,6 @@ export function CompletenessSection() {
           loading={isLoading}
         />
       </div>
-
-      {/* Completeness Chart */}
-      {completenessData.length > 0 && (
-        <div className="mb-8">
-          <ChartCard
-            title="Attribute Completeness Breakdown"
-            description="Percentage of characters with each attribute filled"
-            downloadFileName="character-attribute-completeness"
-            chartId="attribute-completeness"
-          >
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart
-                data={completenessData}
-                margin={{ top: 20, right: 80, left: 120, bottom: 20 }}
-                layout="vertical"
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis
-                  type="number"
-                  domain={[0, 100]}
-                  tick={{ fontSize: 12, fill: '#6b7280' }}
-                  stroke="#6b7280"
-                  label={{
-                    value: 'Completeness (%)',
-                    position: 'bottom',
-                    style: {
-                      fontSize: 14,
-                      fill: '#374151',
-                      fontWeight: 600,
-                    },
-                  }}
-                />
-                <YAxis
-                  type="category"
-                  dataKey="attribute"
-                  tick={{ fontSize: 12, fill: '#6b7280' }}
-                  stroke="#6b7280"
-                  width={100}
-                />
-                <Tooltip
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const data = payload[0].payload
-                      return (
-                        <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4">
-                          <p className="font-semibold text-gray-900 mb-2">
-                            {data.attribute}
-                          </p>
-                          <div className="space-y-1 text-sm">
-                            <p className="text-gray-600">
-                              <span className="font-medium">Filled:</span>{' '}
-                              <span className="text-green-600 font-semibold">
-                                {data.filled} ({data.percentage}%)
-                              </span>
-                            </p>
-                            <p className="text-gray-600">
-                              <span className="font-medium">Missing:</span>{' '}
-                              <span className="text-red-600 font-semibold">
-                                {data.missing}
-                              </span>
-                            </p>
-                            <p className="text-gray-600 text-xs pt-1 border-t border-gray-200 mt-2">
-                              Total: {data.total} characters
-                            </p>
-                          </div>
-                        </div>
-                      )
-                    }
-                    return null
-                  }}
-                />
-                <Bar dataKey="percentage" radius={[0, 8, 8, 0]}>
-                  {completenessData.map((_entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-            <div className="mt-4 text-center text-sm text-gray-500">
-              Sorted by completeness (highest to lowest)
-            </div>
-          </ChartCard>
-        </div>
-      )}
 
       {/* Detailed Table */}
       {completenessData.length > 0 && (

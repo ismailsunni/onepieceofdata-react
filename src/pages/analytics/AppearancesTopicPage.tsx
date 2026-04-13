@@ -10,23 +10,11 @@ import {
   computeSagaIntroRate,
   computeLongestGaps,
 } from '../../services/analyticsService'
-import { fetchCharacters } from '../../services/characterService'
 import { AppearancesSection } from '../../components/insights/AppearancesSection'
 import { AppearanceChartsSection } from '../../components/analytics/AppearanceChartsSection'
 import { SagaMatrixSection } from '../../components/analytics/SagaMatrixSection'
 import { SectionTitle } from '../../components/insights/SectionTitle'
 import { ChartCard } from '../../components/common/ChartCard'
-import { STRAW_HAT_IDS } from '../../constants/characters'
-import {
-  ScatterChart,
-  Scatter,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Label,
-} from 'recharts'
 
 function AppearancesTopicPage() {
   const location = useLocation()
@@ -53,17 +41,11 @@ function AppearancesTopicPage() {
     'both' | 'new' | 'returning'
   >('both')
   const [wondersMode, setWondersMode] = useState<'arc' | 'saga'>('arc')
-  const [hideStrawHatsScatter, setHideStrawHatsScatter] = useState(true)
 
   const { data: raw, isLoading } = useQuery({
     queryKey: ['insights-raw-data'],
     queryFn: fetchInsightsRawData,
     staleTime: 10 * 60 * 1000,
-  })
-
-  const { data: allCharacters = [] } = useQuery({
-    queryKey: ['characters'],
-    queryFn: fetchCharacters,
   })
 
   const insights = useMemo(() => {
@@ -91,24 +73,6 @@ function AppearancesTopicPage() {
         : [],
     [raw, minChapters]
   )
-
-  const coverAppearanceScatterData = useMemo(() => {
-    return allCharacters
-      .filter(
-        (char) =>
-          char.cover_appearance_count &&
-          char.cover_appearance_count > 0 &&
-          char.appearance_count &&
-          char.appearance_count > 0 &&
-          (!hideStrawHatsScatter || !STRAW_HAT_IDS.has(char.id))
-      )
-      .map((char) => ({
-        id: char.id,
-        name: char.name || 'Unknown',
-        chapterAppearances: char.appearance_count || 0,
-        coverAppearances: char.cover_appearance_count || 0,
-      }))
-  }, [allCharacters, hideStrawHatsScatter])
 
   if (isLoading) {
     return (
@@ -207,128 +171,6 @@ function AppearancesTopicPage() {
 
         {/* Section 3: Deep Dives */}
         <SectionTitle title="Deep Dives" />
-
-        {/* Cover vs Chapter Appearances Scatter */}
-        {coverAppearanceScatterData.length > 0 && (
-          <div className="mb-6">
-            <ChartCard
-              title="Volume Cover Appearances vs Chapter Appearances"
-              description="Relationship between tankōbon (volume) cover appearances and total chapter appearances for characters featured on volume covers"
-              downloadFileName="cover-vs-chapter-appearances"
-              chartId="cover-vs-chapter-appearances"
-              embedPath="/embed/insights/cover-vs-chapter-appearances"
-              filters={
-                <label className="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={hideStrawHatsScatter}
-                    onChange={(e) => setHideStrawHatsScatter(e.target.checked)}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  Hide Straw Hat Pirates
-                </label>
-              }
-            >
-              <style>
-                {`
-                  .recharts-scatter-symbol:focus { outline: none !important; }
-                  .recharts-scatter-symbol:focus-visible { outline: none !important; }
-                `}
-              </style>
-              <ResponsiveContainer width="100%" height={500}>
-                <ScatterChart
-                  margin={{ top: 20, right: 30, bottom: 60, left: 60 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis
-                    type="number"
-                    dataKey="chapterAppearances"
-                    name="Chapter Appearances"
-                    stroke="#6b7280"
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
-                  >
-                    <Label
-                      value="Chapter Appearances"
-                      position="bottom"
-                      offset={40}
-                      style={{
-                        fill: '#374151',
-                        fontSize: 14,
-                        fontWeight: 600,
-                      }}
-                    />
-                  </XAxis>
-                  <YAxis
-                    type="number"
-                    dataKey="coverAppearances"
-                    name="Cover Appearances"
-                    stroke="#6b7280"
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
-                  >
-                    <Label
-                      value="Volume Cover Appearances"
-                      angle={-90}
-                      position="left"
-                      offset={40}
-                      style={{
-                        fill: '#374151',
-                        fontSize: 14,
-                        fontWeight: 600,
-                      }}
-                    />
-                  </YAxis>
-                  <Tooltip
-                    cursor={{ strokeDasharray: '3 3' }}
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0].payload
-                        return (
-                          <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4">
-                            <p className="font-semibold text-gray-900 mb-2">
-                              {data.name}
-                            </p>
-                            <div className="space-y-1 text-sm">
-                              <p className="text-gray-600">
-                                <span className="font-medium">
-                                  Chapter Appearances:
-                                </span>{' '}
-                                <span className="text-emerald-600 font-semibold">
-                                  {data.chapterAppearances}
-                                </span>
-                              </p>
-                              <p className="text-gray-600">
-                                <span className="font-medium">
-                                  Cover Appearances:
-                                </span>{' '}
-                                <span className="text-purple-600 font-semibold">
-                                  {data.coverAppearances}
-                                </span>
-                              </p>
-                            </div>
-                          </div>
-                        )
-                      }
-                      return null
-                    }}
-                  />
-                  <Scatter
-                    name="Characters"
-                    data={coverAppearanceScatterData}
-                    fill="#8b5cf6"
-                    fillOpacity={0.6}
-                    stroke="#7c3aed"
-                    strokeWidth={1.5}
-                    isAnimationActive={false}
-                  />
-                </ScatterChart>
-              </ResponsiveContainer>
-              <div className="mt-4 text-center text-sm text-gray-500">
-                Each point represents a character. Hover over a point to see
-                details.
-              </div>
-            </ChartCard>
-          </div>
-        )}
 
         {/* Longest Disappearances */}
         <div className="mb-6">

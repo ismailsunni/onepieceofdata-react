@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react'
 import {
   BarChart,
   Bar,
@@ -8,40 +9,40 @@ import {
   ResponsiveContainer,
   ScatterChart,
   Scatter,
-  Cell,
 } from 'recharts'
 import { ChartCard } from '../common/ChartCard'
-import { SectionTitle } from './SectionTitle'
+import { STRAW_HAT_IDS } from '../../constants/characters'
 import type {
   CoverStar,
   CoverVsMain,
-  ArcDensity,
-  CompletenessField,
 } from '../../services/analytics/insightsAnalytics'
 
 interface CoverMetaSectionProps {
   coverStars: CoverStar[]
   coverVsMain: CoverVsMain[]
-  arcDensity: ArcDensity[]
-  completeness: CompletenessField[]
 }
 
 export function CoverMetaSection({
   coverStars,
   coverVsMain,
-  arcDensity,
-  completeness,
 }: CoverMetaSectionProps) {
+  const [hideStrawHats, setHideStrawHats] = useState(true)
+
+  const filteredCoverVsMain = useMemo(
+    () =>
+      hideStrawHats
+        ? coverVsMain.filter((c) => !STRAW_HAT_IDS.has(c.id))
+        : coverVsMain,
+    [coverVsMain, hideStrawHats]
+  )
+
   return (
     <>
-      {/* ─── SECTION: Cover Stories & Meta ─── */}
-      <SectionTitle title="Cover Stories & Meta" />
-
-      {/* #17 Cover Page Stars */}
+      {/* Volume Cover Stars */}
       <div className="mb-6">
         <ChartCard
-          title="Cover Page Stars"
-          description="Top 20 characters by cover story appearances"
+          title="Top Volume Cover Stars"
+          description="Top 20 characters by tankōbon (volume) cover appearances"
           downloadFileName="cover-stars"
           chartId="cover-stars"
           embedPath="/embed/insights/cover-stars"
@@ -73,151 +74,96 @@ export function CoverMetaSection({
         </ChartCard>
       </div>
 
-      {/* #18 Cover vs Main */}
+      {/* Volume Cover vs Main Story */}
       <div className="mb-6">
         <ChartCard
-          title="Cover vs Main Story Appearances"
-          description="Some characters live mostly in cover stories. Scatter plot comparing both appearance types"
+          title="Volume Cover vs Main Story Appearances"
+          description="How do tankōbon (volume) cover appearances relate to chapter appearances? Scatter plot comparing both"
           downloadFileName="cover-vs-main"
           chartId="cover-vs-main"
           embedPath="/embed/insights/cover-vs-main"
+          filters={
+            <label className="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={hideStrawHats}
+                onChange={(e) => setHideStrawHats(e.target.checked)}
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              Hide Straw Hat Pirates
+            </label>
+          }
         >
+          <style>
+            {`
+              .recharts-scatter-symbol:focus { outline: none !important; }
+              .recharts-scatter-symbol:focus-visible { outline: none !important; }
+            `}
+          </style>
           <ResponsiveContainer width="100%" height={400}>
             <ScatterChart margin={{ top: 10, right: 30, left: 20, bottom: 10 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis
                 type="number"
                 dataKey="main"
-                name="Main Story"
+                name="Main Story Appearances"
                 tick={{ fontSize: 11 }}
                 stroke="#6b7280"
               />
               <YAxis
                 type="number"
                 dataKey="cover"
-                name="Cover"
+                name="Volume Cover Appearances"
                 tick={{ fontSize: 11 }}
                 stroke="#6b7280"
               />
               <Tooltip
-                labelFormatter={(
-                  _: unknown,
-                  payload: ReadonlyArray<{ payload?: { name?: string } }>
-                ) => payload?.[0]?.payload?.name || ''}
-              />
-              <Scatter data={coverVsMain} fill="#8b5cf6" fillOpacity={0.5} />
-            </ScatterChart>
-          </ResponsiveContainer>
-        </ChartCard>
-      </div>
-
-      {/* #19 Arc Density */}
-      <div className="mb-6">
-        <ChartCard
-          title="Character Cast Size per Arc"
-          description="Which arcs have the most characters active in them?"
-          downloadFileName="arc-density"
-          chartId="arc-density"
-          embedPath="/embed/insights/arc-density"
-        >
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart
-              data={arcDensity}
-              margin={{ top: 5, right: 30, left: 20, bottom: 80 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis
-                dataKey="arc"
-                tick={{ fontSize: 9 }}
-                angle={-45}
-                textAnchor="end"
-                height={100}
-                stroke="#6b7280"
-              />
-              <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
-              <Tooltip
-                formatter={(value: number, name: string) =>
-                  name === 'uniqueCharacters'
-                    ? [value, 'Unique Characters']
-                    : [value, name]
-                }
-              />
-              <Bar
-                dataKey="uniqueCharacters"
-                fill="#06b6d4"
-                name="Unique Characters"
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-      </div>
-
-      {/* #20 Data Completeness */}
-      <div className="mb-6">
-        <ChartCard
-          title="The Completeness Gap"
-          description="What percentage of characters have each attribute filled? A meta-visualization about the dataset itself"
-          downloadFileName="data-completeness"
-          chartId="data-completeness"
-          embedPath="/embed/insights/data-completeness"
-        >
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart
-              data={completeness}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="field" tick={{ fontSize: 11 }} stroke="#6b7280" />
-              <YAxis
-                tick={{ fontSize: 11 }}
-                stroke="#6b7280"
-                domain={[0, 100]}
-                label={{
-                  value: '%',
-                  position: 'insideTopLeft',
-                  style: { fontSize: 11, fill: '#6b7280' },
+                cursor={{ strokeDasharray: '3 3' }}
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    const data = payload[0].payload as CoverVsMain
+                    return (
+                      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4">
+                        <p className="font-semibold text-gray-900 mb-2">
+                          {data.name}
+                        </p>
+                        <div className="space-y-1 text-sm">
+                          <p className="text-gray-600">
+                            <span className="font-medium">
+                              Main Story Appearances:
+                            </span>{' '}
+                            <span className="text-emerald-600 font-semibold">
+                              {data.main}
+                            </span>
+                          </p>
+                          <p className="text-gray-600">
+                            <span className="font-medium">
+                              Volume Cover Appearances:
+                            </span>{' '}
+                            <span className="text-purple-600 font-semibold">
+                              {data.cover}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                    )
+                  }
+                  return null
                 }}
               />
-              <Tooltip
-                formatter={(
-                  value: number,
-                  _name: string,
-                  props: { payload?: CompletenessField }
-                ) => [
-                  `${value}% (${props.payload?.filled || 0}/${props.payload?.total || 0})`,
-                  'Completeness',
-                ]}
+              <Scatter
+                data={filteredCoverVsMain}
+                fill="#8b5cf6"
+                fillOpacity={0.6}
+                stroke="#7c3aed"
+                strokeWidth={1.5}
+                isAnimationActive={false}
               />
-              <Bar dataKey="percent" name="Completeness" radius={[4, 4, 0, 0]}>
-                {completeness.map((entry, i) => (
-                  <Cell
-                    key={i}
-                    fill={
-                      entry.percent >= 80
-                        ? '#10b981'
-                        : entry.percent >= 50
-                          ? '#f59e0b'
-                          : '#ef4444'
-                    }
-                  />
-                ))}
-              </Bar>
-            </BarChart>
+            </ScatterChart>
           </ResponsiveContainer>
-          <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-            <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>{' '}
-              {'>='}80%
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-full bg-amber-500 inline-block"></span>{' '}
-              50-80%
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-full bg-red-500 inline-block"></span>{' '}
-              {'<'}50%
-            </span>
+          <div className="mt-4 text-center text-sm text-gray-500">
+            Each point represents a character. Hover over a point to see
+            details.
           </div>
         </ChartCard>
       </div>

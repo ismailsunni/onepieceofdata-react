@@ -5,14 +5,13 @@ import {
   fetchInsightsRawData,
   computeCoverStars,
   computeCoverVsMain,
-  computeArcDensity,
-  computeCompleteness,
   computeTopCharactersPerSaga,
   computeTopCharactersPerArc,
 } from '../../services/analyticsService'
 import { CoverMetaSection } from '../../components/insights/CoverMetaSection'
 import { RankingsSection } from '../../components/insights/RankingsSection'
 import { CompletenessSection } from '../../components/analytics/CompletenessSection'
+import { SectionTitle } from '../../components/insights/SectionTitle'
 
 function CharactersTopicPage() {
   const location = useLocation()
@@ -53,8 +52,6 @@ function CharactersTopicPage() {
     return {
       coverStars: computeCoverStars(characters),
       coverVsMain: computeCoverVsMain(characters),
-      arcDensity: computeArcDensity(characters, arcs),
-      completeness: computeCompleteness(characters),
       topCharactersPerSaga: computeTopCharactersPerSaga(characters, sagas, 31),
       topCharactersPerArc: computeTopCharactersPerArc(characters, arcs, 31),
     }
@@ -126,20 +123,24 @@ function CharactersTopicPage() {
                   Character Rankings & Meta
                 </h1>
                 <p className="text-gray-600 text-lg mt-2">
-                  Cover appearances, character density, completeness, and
-                  per-saga/arc rankings
+                  Volume cover appearances, per-saga/arc rankings, and dataset
+                  completeness
                 </p>
               </div>
             </div>
           </div>
         </div>
 
+        {/* Section 1: Volume Covers */}
+        <SectionTitle title="Volume Covers" />
+
         <CoverMetaSection
           coverStars={insights.coverStars}
           coverVsMain={insights.coverVsMain}
-          arcDensity={insights.arcDensity}
-          completeness={insights.completeness}
         />
+
+        {/* Section 2: Character Rankings */}
+        <SectionTitle title="Character Rankings" />
 
         <RankingsSection
           topCharactersPerSaga={insights.topCharactersPerSaga}
@@ -153,6 +154,9 @@ function CharactersTopicPage() {
           showPctPerArc={showPctPerArc}
           setShowPctPerArc={setShowPctPerArc}
         />
+
+        {/* Section 3: Data Completeness */}
+        <SectionTitle title="Data Completeness" />
 
         <CompletenessSection />
       </div>
