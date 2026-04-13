@@ -3,15 +3,14 @@ import { Link, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   fetchInsightsRawData,
-  computeArcLengths,
   computePagesPerArc,
   computeSagaPacing,
-  computeYearlyReleases,
   computeChapterComplexity,
 } from '../../services/analyticsService'
 import { StorySection } from '../../components/insights/StorySection'
 import { ArcLengthSection } from '../../components/analytics/ArcLengthSection'
 import { PublicationRateSection } from '../../components/analytics/PublicationRateSection'
+import { SectionTitle } from '../../components/insights/SectionTitle'
 
 function StoryTopicPage() {
   const location = useLocation()
@@ -41,10 +40,8 @@ function StoryTopicPage() {
     if (!raw) return null
     const { arcs, sagas, characters, chapters } = raw
     return {
-      arcLengths: computeArcLengths(arcs),
       pagesPerArc: computePagesPerArc(arcs, chapters),
       sagaPacing: computeSagaPacing(sagas, arcs, characters, chapters),
-      yearlyReleases: computeYearlyReleases(chapters),
       chapterComplexity: computeChapterComplexity(
         characters,
         arcs,
@@ -126,15 +123,18 @@ function StoryTopicPage() {
           </div>
         </div>
 
+        {/* Section 1: Story Structure */}
+        <SectionTitle title="Story Structure" />
+
+        <ArcLengthSection pagesPerArc={insights.pagesPerArc} />
+
         <StorySection
-          arcLengths={insights.arcLengths}
-          pagesPerArc={insights.pagesPerArc}
           sagaPacing={insights.sagaPacing}
-          yearlyReleases={insights.yearlyReleases}
           chapterComplexity={insights.chapterComplexity}
         />
 
-        <ArcLengthSection />
+        {/* Section 2: Publication Cadence */}
+        <SectionTitle title="Publication Cadence" />
 
         <PublicationRateSection />
       </div>

@@ -2,11 +2,23 @@ import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { fetchArcs } from '../../services/arcService'
 import { fetchSagas } from '../../services/sagaService'
-import ArcLengthChart from '../ArcLengthChart'
+import ArcLengthChart, { type ArcMetric } from '../ArcLengthChart'
 import { StatCard, FilterButton, SectionHeader } from '.'
+import type { ArcPages } from '../../services/analytics/insightsAnalytics'
 
-export function ArcLengthSection() {
+interface ArcLengthSectionProps {
+  pagesPerArc?: ArcPages[]
+}
+
+export function ArcLengthSection({ pagesPerArc = [] }: ArcLengthSectionProps) {
   const [selectedSaga, setSelectedSaga] = useState<string | null>(null)
+  const [metric, setMetric] = useState<ArcMetric>('chapters')
+
+  const pagesByArcTitle = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const p of pagesPerArc) map.set(p.arc, p.totalPages)
+    return map
+  }, [pagesPerArc])
 
   // Fetch arcs and sagas data
   const { data: arcs = [], isLoading: arcsLoading } = useQuery({
@@ -207,6 +219,32 @@ export function ArcLengthSection() {
         })}
       </div>
 
+      {/* Metric toggle (chapters | pages) */}
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-sm font-medium text-gray-700">Show:</span>
+        <button
+          onClick={() => setMetric('chapters')}
+          className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+            metric === 'chapters'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          Chapters
+        </button>
+        <button
+          onClick={() => setMetric('pages')}
+          className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+            metric === 'pages'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+          disabled={pagesByArcTitle.size === 0}
+        >
+          Pages
+        </button>
+      </div>
+
       {/* Arc Length Chart */}
       {filteredArcs.length > 0 ? (
         <div className="mb-8">
@@ -214,6 +252,8 @@ export function ArcLengthSection() {
             arcs={filteredArcs}
             showSeparateBars={selectedSaga !== null}
             allArcs={arcs}
+            metric={metric}
+            pagesByArcTitle={pagesByArcTitle}
           />
         </div>
       ) : (
