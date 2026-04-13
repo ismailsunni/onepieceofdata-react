@@ -60,6 +60,9 @@ const CharactersTopicPage = lazy(
 const AffiliationsTopicPage = lazy(
   () => import('./pages/analytics/AffiliationsTopicPage')
 )
+const DataQualityTopicPage = lazy(
+  () => import('./pages/analytics/DataQualityTopicPage')
+)
 
 // Loading fallback component
 const PageLoader = () => (
@@ -164,6 +167,10 @@ function App() {
                               path="/analytics/affiliations"
                               element={<AffiliationsTopicPage />}
                             />
+                            <Route
+                              path="/analytics/data-quality"
+                              element={<DataQualityTopicPage />}
+                            />
                             {/* Standalone interactive tools */}
                             <Route
                               path="/analytics/network"
@@ -212,7 +219,7 @@ function App() {
                             />
                             <Route
                               path="/analytics/character-completeness"
-                              element={<Navigate to="/analytics/characters" replace />}
+                              element={<Navigate to="/analytics/data-quality" replace />}
                             />
                             <Route
                               path="/analytics/insights"

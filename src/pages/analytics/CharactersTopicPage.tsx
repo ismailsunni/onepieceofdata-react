@@ -10,7 +10,6 @@ import {
 } from '../../services/analyticsService'
 import { CoverMetaSection } from '../../components/insights/CoverMetaSection'
 import { RankingsSection } from '../../components/insights/RankingsSection'
-import { CompletenessSection } from '../../components/analytics/CompletenessSection'
 import { SectionTitle } from '../../components/insights/SectionTitle'
 
 function CharactersTopicPage() {
@@ -94,7 +93,7 @@ function CharactersTopicPage() {
             />
           </svg>
           <span className="text-gray-900 font-medium">
-            Character Rankings & Meta
+            Character Rankings
           </span>
         </nav>
 
@@ -120,11 +119,10 @@ function CharactersTopicPage() {
               </div>
               <div>
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-purple-600">
-                  Character Rankings & Meta
+                  Character Rankings
                 </h1>
                 <p className="text-gray-600 text-lg mt-2">
-                  Volume cover appearances, per-saga/arc rankings, and dataset
-                  completeness
+                  Volume cover appearances and per-saga/arc rankings
                 </p>
               </div>
             </div>
@@ -154,11 +152,6 @@ function CharactersTopicPage() {
           showPctPerArc={showPctPerArc}
           setShowPctPerArc={setShowPctPerArc}
         />
-
-        {/* Section 3: Data Completeness */}
-        <SectionTitle title="Data Completeness" />
-
-        <CompletenessSection />
       </div>
     </main>
   )
