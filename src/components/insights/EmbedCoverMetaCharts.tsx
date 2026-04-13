@@ -27,7 +27,7 @@ export function EmbedCoverStars({ data }: { data: CoverStar[] }) {
         <BarChart
           data={data}
           layout="vertical"
-          margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
+          margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           <XAxis type="number" tick={{ fontSize: 11 }} stroke="#6b7280" />

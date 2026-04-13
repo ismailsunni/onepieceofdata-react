@@ -21,6 +21,7 @@ export interface TopBounty {
   name: string
   bounty: number
   origin: string | null
+  origin_region: string | null
   status: string | null
 }
 
@@ -213,7 +214,7 @@ export async function fetchTopBounties(
 
     let query = supabase
       .from('character')
-      .select('name, bounty, origin, status')
+      .select('name, bounty, origin, origin_region, status')
       .not('bounty', 'is', null)
       .gt('bounty', 0)
 
@@ -234,6 +235,7 @@ export async function fetchTopBounties(
       name: char.name || 'Unknown',
       bounty: char.bounty || 0,
       origin: char.origin,
+      origin_region: char.origin_region,
       status: char.status,
     }))
   } catch (error) {

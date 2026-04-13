@@ -303,7 +303,7 @@ export function EmbedRegionBountyTier({
         <BarChart
           data={showPct ? pctData : data}
           layout="vertical"
-          margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+          margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           <XAxis
@@ -476,7 +476,7 @@ export function EmbedTopBounties() {
           <BarChart
             data={rows}
             layout="vertical"
-            margin={{ top: 5, right: 20, left: 110, bottom: 5 }}
+            margin={{ top: 5, right: 20, left: 5, bottom: 5 }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
             <XAxis
@@ -488,9 +488,13 @@ export function EmbedTopBounties() {
             <YAxis
               dataKey="name"
               type="category"
-              width={100}
+              width={190}
               tick={{ fontSize: 10 }}
               stroke="#6b7280"
+              tickFormatter={(name: string) => {
+                const c = rows.find((d) => d.name === name)
+                return c?.origin_region ? `${name} — ${c.origin_region}` : name
+              }}
             />
             <Tooltip
               formatter={(value: number) => [
@@ -499,8 +503,9 @@ export function EmbedTopBounties() {
               ]}
               labelFormatter={(label: string) => {
                 const c = rows.find((d) => d.name === label)
-                const status = c?.status ? ` - ${c.status}` : ''
-                return c?.origin ? `${label} (${c.origin})${status}` : `${label}${status}`
+                const region = c?.origin_region ? ` — ${c.origin_region}` : ''
+                const status = c?.status ? ` (${c.status})` : ''
+                return `${label}${region}${status}`
               }}
             />
             <Bar dataKey="bounty" radius={[0, 8, 8, 0]}>
