@@ -313,7 +313,7 @@ function CharactersPage() {
             </p>
           </div>
           <Link
-            to="/characters/compare"
+            to="/analytics/character-compare"
             className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm whitespace-nowrap"
           >
             ⚔️ Compare Characters

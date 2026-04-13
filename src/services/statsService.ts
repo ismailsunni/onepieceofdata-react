@@ -7,6 +7,7 @@ export interface DatabaseStats {
   arcs: number
   sagas: number
   characters: number
+  affiliations: number
   totalPages: number
   publicationSpan: string
 }
@@ -34,19 +35,23 @@ export async function fetchDatabaseStats(): Promise<DatabaseStats> {
       throw new Error('Supabase not configured')
     }
 
-    // Fetch counts from different tables (note: table names are singular)
+    // Fetch counts from different tables (note: table names are singular).
+    // For affiliations we pull group_name values and dedupe in JS because
+    // PostgREST does not expose a DISTINCT COUNT.
     const [
       chaptersResult,
       volumesResult,
       arcsResult,
       sagasResult,
       charactersResult,
+      affiliationsResult,
     ] = await Promise.all([
       supabase.from('chapter').select('*', { count: 'exact', head: true }),
       supabase.from('volume').select('*', { count: 'exact', head: true }),
       supabase.from('arc').select('*', { count: 'exact', head: true }),
       supabase.from('saga').select('*', { count: 'exact', head: true }),
       supabase.from('character').select('*', { count: 'exact', head: true }),
+      supabase.from('character_affiliation').select('group_name'),
     ])
 
     // Check for errors in any of the queries
@@ -64,6 +69,14 @@ export async function fetchDatabaseStats(): Promise<DatabaseStats> {
     if (sagasResult.error) logger.error('Saga query error:', sagasResult.error)
     if (charactersResult.error)
       logger.error('Character query error:', charactersResult.error)
+    if (affiliationsResult.error)
+      logger.error('Affiliation query error:', affiliationsResult.error)
+
+    const uniqueAffiliations = new Set(
+      (affiliationsResult.data || [])
+        .map((row: { group_name: string | null }) => row.group_name)
+        .filter((name): name is string => !!name)
+    ).size
 
     // Calculate total pages from chapters (column is num_page)
     const { data: chaptersData } = await supabase
@@ -111,6 +124,7 @@ export async function fetchDatabaseStats(): Promise<DatabaseStats> {
       arcs: arcsResult.count || 0,
       sagas: sagasResult.count || 0,
       characters: charactersResult.count || 0,
+      affiliations: uniqueAffiliations,
       totalPages,
       publicationSpan,
     }
@@ -123,6 +137,7 @@ export async function fetchDatabaseStats(): Promise<DatabaseStats> {
       arcs: 0,
       sagas: 0,
       characters: 0,
+      affiliations: 0,
       totalPages: 0,
       publicationSpan: 'Unknown',
     }

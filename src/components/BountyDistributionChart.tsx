@@ -26,6 +26,7 @@ function BountyDistributionChart({
       title="Bounty Distribution by Power Tier"
       downloadFileName="bounty-distribution"
       chartId="bounty-distribution"
+      embedPath="/embed/insights/bounty-distribution"
     >
       <div className="mb-4">
         <p className="text-sm text-gray-600">
@@ -110,6 +111,57 @@ function BountyDistributionChart({
           />
         </BarChart>
       </ResponsiveContainer>
+
+      {/* Power Tier Reference Table */}
+      <div className="mt-6 overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b-2 border-gray-200">
+              <th className="text-left py-2 px-3 font-semibold text-gray-900">
+                Power Tier
+              </th>
+              <th className="text-left py-2 px-3 font-semibold text-gray-900">
+                Bounty Range
+              </th>
+              <th className="text-right py-2 px-3 font-semibold text-gray-900">
+                Count
+              </th>
+              <th className="text-left py-2 px-3 font-semibold text-gray-900">
+                Example Characters
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((tier, idx) => (
+              <tr
+                key={tier.range}
+                className={`border-b border-gray-100 ${idx % 2 === 0 ? 'bg-gray-50/50' : ''}`}
+              >
+                <td className="py-2 px-3">
+                  <span className="flex items-center gap-2">
+                    <span
+                      className="inline-block w-3 h-3 rounded-sm flex-shrink-0"
+                      style={{ backgroundColor: tier.color }}
+                    />
+                    <span className="font-medium text-gray-900">
+                      {tier.powerTier}
+                    </span>
+                  </span>
+                </td>
+                <td className="py-2 px-3 text-gray-600">{tier.range}</td>
+                <td className="py-2 px-3 text-right font-medium text-gray-700">
+                  {tier.count}
+                </td>
+                <td className="py-2 px-3 text-gray-600">
+                  {tier.examples.length > 0
+                    ? tier.examples.map((e) => e.name).join(', ')
+                    : '—'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </ChartCard>
   )
 }

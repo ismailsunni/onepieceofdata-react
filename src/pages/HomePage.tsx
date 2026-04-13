@@ -38,7 +38,7 @@ function HomePage() {
             <StatCard variant="simple" icon="👥" label="Characters" value={stats?.characters || 0} loading={isLoading} link="/characters" />
             <StatCard variant="simple" icon="📄" label="Total Pages" value={stats?.totalPages.toLocaleString() || 0} loading={isLoading} />
             <StatCard variant="simple" icon="📅" label="Publication" value={stats?.publicationSpan ? `${stats.publicationSpan} days` : 'Unknown'} loading={isLoading} />
-            <StatCard variant="simple" icon="📊" label="Data Points" value={(stats ? stats.chapters + stats.volumes + stats.arcs + stats.sagas + stats.characters : 0).toLocaleString()} loading={isLoading} />
+            <StatCard variant="simple" icon="🏴" label="Affiliations" value={stats?.affiliations || 0} loading={isLoading} link="/affiliations" />
           </div>
         </div>
       </section>

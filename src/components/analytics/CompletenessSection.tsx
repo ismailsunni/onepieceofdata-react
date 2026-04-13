@@ -1,0 +1,329 @@
+import { useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { fetchCharacters } from '../../services/characterService'
+import { StatCard, SectionHeader } from './'
+
+// Define important attributes to track
+const IMPORTANT_ATTRIBUTES = [
+  { key: 'name', label: 'Name' },
+  { key: 'origin', label: 'Origin' },
+  { key: 'status', label: 'Status' },
+  { key: 'age', label: 'Age' },
+  { key: 'bounty', label: 'Bounty' },
+  { key: 'blood_type_group', label: 'Blood Type Group' },
+  { key: 'birth_date', label: 'Birthday' },
+]
+
+// Color palette
+const COLORS = [
+  '#3b82f6', // blue-500
+  '#10b981', // green-500
+  '#f59e0b', // amber-500
+  '#ef4444', // red-500
+  '#8b5cf6', // violet-500
+  '#ec4899', // pink-500
+  '#06b6d4', // cyan-500
+  '#84cc16', // lime-500
+  '#f97316', // orange-500
+  '#6366f1', // indigo-500
+]
+
+export function CompletenessSection() {
+  // Fetch all characters
+  const { data: allCharacters = [], isLoading } = useQuery({
+    queryKey: ['characters'],
+    queryFn: fetchCharacters,
+  })
+
+  // Calculate completeness for each attribute
+  const completenessData = useMemo(() => {
+    if (!allCharacters.length) return []
+
+    const totalCharacters = allCharacters.length
+
+    return IMPORTANT_ATTRIBUTES.map((attr) => {
+      let filledCount = 0
+
+      allCharacters.forEach((char) => {
+        const value = char[attr.key as keyof typeof char]
+
+        // Check if the attribute has a meaningful value
+        if (value !== null && value !== undefined) {
+          // For arrays, check if they have items
+          if (Array.isArray(value)) {
+            if (value.length > 0) filledCount++
+          }
+          // For numbers, check if they're greater than 0 (except for age which can be 0)
+          else if (typeof value === 'number') {
+            if (attr.key === 'age' || value > 0) filledCount++
+          }
+          // For strings, check if they're not empty
+          else if (typeof value === 'string') {
+            if (value.trim() !== '') filledCount++
+          }
+        }
+      })
+
+      const percentage = ((filledCount / totalCharacters) * 100).toFixed(1)
+
+      return {
+        attribute: attr.label,
+        filled: filledCount,
+        missing: totalCharacters - filledCount,
+        percentage: parseFloat(percentage),
+        total: totalCharacters,
+      }
+    }).sort((a, b) => b.percentage - a.percentage) // Sort by completeness descending
+  }, [allCharacters])
+
+  // Calculate summary statistics
+  const stats = useMemo(() => {
+    if (!completenessData.length) {
+      return {
+        avgCompleteness: 0,
+        mostComplete: '-',
+        mostCompletePercent: 0,
+        leastComplete: '-',
+        leastCompletePercent: 0,
+        totalCharacters: 0,
+      }
+    }
+
+    const avgCompleteness =
+      completenessData.reduce((sum, d) => sum + d.percentage, 0) /
+      completenessData.length
+    const mostComplete = completenessData[0]
+    const leastComplete = completenessData[completenessData.length - 1]
+
+    return {
+      avgCompleteness: avgCompleteness.toFixed(1),
+      mostComplete: mostComplete.attribute,
+      mostCompletePercent: mostComplete.percentage,
+      leastComplete: leastComplete.attribute,
+      leastCompletePercent: leastComplete.percentage,
+      totalCharacters: completenessData[0]?.total || 0,
+    }
+  }, [completenessData])
+
+  // Loading State
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      {/* Stats Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+        <StatCard
+          label="Total Characters"
+          value={stats.totalCharacters}
+          icon={
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+              />
+            </svg>
+          }
+          color="blue"
+          loading={isLoading}
+        />
+        <StatCard
+          label="Avg Completeness"
+          value={`${stats.avgCompleteness}%`}
+          icon={
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              />
+            </svg>
+          }
+          color="emerald"
+          loading={isLoading}
+          tooltip="Average completeness across all tracked attributes"
+        />
+        <StatCard
+          label="Most Complete"
+          value={stats.mostComplete}
+          subtitle={`${stats.mostCompletePercent}%`}
+          icon={
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          }
+          color="green"
+          loading={isLoading}
+        />
+        <StatCard
+          label="Least Complete"
+          value={stats.leastComplete}
+          subtitle={`${stats.leastCompletePercent}%`}
+          icon={
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          }
+          color="amber"
+          loading={isLoading}
+        />
+      </div>
+
+      {/* Detailed Table */}
+      {completenessData.length > 0 && (
+        <>
+          <SectionHeader
+            title="Detailed Completeness Statistics"
+            description="Comprehensive breakdown of each attribute's data availability"
+            icon={
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
+              </svg>
+            }
+          />
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-8">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Attribute
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Filled
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Missing
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Completeness
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Progress
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-100">
+                  {completenessData.map((item, index) => (
+                    <tr
+                      key={item.attribute}
+                      className={
+                        index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
+                      }
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div
+                            className="w-3 h-3 rounded-full mr-3"
+                            style={{
+                              backgroundColor:
+                                COLORS[index % COLORS.length],
+                            }}
+                          ></div>
+                          <span className="text-sm font-medium text-gray-900">
+                            {item.attribute}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-green-600 font-semibold">
+                        {item.filled}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-red-600 font-semibold">
+                        {item.missing}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold text-gray-900">
+                        {item.percentage}%
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="h-2 rounded-full transition-all duration-300"
+                            style={{
+                              width: `${item.percentage}%`,
+                              backgroundColor:
+                                COLORS[index % COLORS.length],
+                            }}
+                          ></div>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Empty State */}
+      {completenessData.length === 0 && (
+        <div className="text-center py-20">
+          <svg
+            className="w-16 h-16 text-gray-300 mx-auto mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+            />
+          </svg>
+          <p className="text-gray-500 text-lg">
+            No character data available at the moment.
+          </p>
+        </div>
+      )}
+    </>
+  )
+}

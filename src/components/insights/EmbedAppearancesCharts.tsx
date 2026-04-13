@@ -25,13 +25,13 @@ export function EmbedMostLoyal({ data }: { data: LoyalCharacter[] }) {
   return (
     <div className="p-4 font-sans">
       <h2 className="text-lg font-semibold text-gray-900 mb-3">
-        Most &quot;Loyal&quot; Characters
+        Most Consistent Presence
       </h2>
       <ResponsiveContainer width="100%" height={400}>
         <BarChart
           data={data}
           layout="vertical"
-          margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
+          margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           <XAxis
@@ -69,81 +69,54 @@ export function EmbedMostLoyal({ data }: { data: LoyalCharacter[] }) {
   )
 }
 
-// ── #6 Arc Count Distribution ───────────────────────────────────────────────
+// ── #6 Wonders Distribution (One-Arc / One-Saga Wonders) ────────────────────
 
-export function EmbedArcCountDistribution({
-  data,
+export function EmbedWondersDistribution({
+  arcData,
+  sagaData,
 }: {
-  data: ArcCountDistribution[]
+  arcData: ArcCountDistribution[]
+  sagaData: SagaCountDistribution[]
 }) {
+  const [mode, setMode] = useState<'arc' | 'saga'>('arc')
+  const data = mode === 'arc' ? arcData : sagaData
+  const dataKey = mode === 'arc' ? 'arcCount' : 'sagaCount'
+  const fill = mode === 'arc' ? '#8b5cf6' : '#ec4899'
+
   return (
     <div className="p-4 font-sans">
-      <h2 className="text-lg font-semibold text-gray-900 mb-3">
-        One-Arc Wonders vs Recurring Cast
-      </h2>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-semibold text-gray-900">
+          One-Arc / One-Saga Wonders vs Recurring Cast
+        </h2>
+        <div className="flex items-center gap-2">
+          {(['arc', 'saga'] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              className={`px-2 py-1 text-xs rounded-md transition-colors ${
+                mode === m
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              {m === 'arc' ? 'Arcs' : 'Sagas'}
+            </button>
+          ))}
+        </div>
+      </div>
       <ResponsiveContainer width="100%" height={350}>
         <BarChart
           data={data}
           margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis dataKey="arcCount" tick={{ fontSize: 11 }} stroke="#6b7280" />
+          <XAxis dataKey={dataKey} tick={{ fontSize: 11 }} stroke="#6b7280" />
           <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
           <Tooltip />
           <Bar
             dataKey="characterCount"
-            fill="#8b5cf6"
-            radius={[8, 8, 0, 0]}
-            name="Characters"
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            label={(props: any) => {
-              const { x, y, width, value } = props
-              const total = data.reduce((s, d) => s + d.characterCount, 0)
-              const pct = total > 0 ? Math.round((value / total) * 100) : 0
-              return (
-                <text
-                  x={x + width / 2}
-                  y={y - 5}
-                  textAnchor="middle"
-                  fontSize={11}
-                  fill="#374151"
-                >
-                  {value} ({pct}%)
-                </text>
-              )
-            }}
-          />
-        </BarChart>
-      </ResponsiveContainer>
-      <EmbedFooter />
-    </div>
-  )
-}
-
-// ── #6b Saga Count Distribution ─────────────────────────────────────────────
-
-export function EmbedSagaCountDistribution({
-  data,
-}: {
-  data: SagaCountDistribution[]
-}) {
-  return (
-    <div className="p-4 font-sans">
-      <h2 className="text-lg font-semibold text-gray-900 mb-3">
-        One-Saga Wonders vs Recurring Cast
-      </h2>
-      <ResponsiveContainer width="100%" height={350}>
-        <BarChart
-          data={data}
-          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis dataKey="sagaCount" tick={{ fontSize: 11 }} stroke="#6b7280" />
-          <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
-          <Tooltip />
-          <Bar
-            dataKey="characterCount"
-            fill="#ec4899"
+            fill={fill}
             radius={[8, 8, 0, 0]}
             name="Characters"
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

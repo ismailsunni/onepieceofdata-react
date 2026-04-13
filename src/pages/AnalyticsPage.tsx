@@ -30,12 +30,12 @@ function AnalyticsPage() {
     },
   })
 
-  const analyticsCategories = [
+  const topicCategories = [
     {
-      title: 'One Piece Insights',
+      title: 'Bounty & Power',
       description:
-        '26 charts exploring the One Piece universe — bounty inflation, one-arc wonders, crew loyalty, affiliation networks, and more',
-      path: '/analytics/insights',
+        'Bounty inflation, regional power rankings, top bounties, tier distributions, and biggest bounty jumps',
+      path: '/analytics/bounty',
       icon: (
         <svg
           className="w-8 h-8"
@@ -47,45 +47,20 @@ function AnalyticsPage() {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
           />
         </svg>
       ),
-      gradient: 'from-indigo-500 to-purple-600',
-      bgColor: 'bg-indigo-50',
-      borderColor: 'border-indigo-200',
-      iconColor: 'text-indigo-600',
+      gradient: 'from-amber-500 to-orange-600',
+      bgColor: 'bg-amber-50',
+      borderColor: 'border-amber-200',
+      iconColor: 'text-amber-600',
     },
     {
-      title: 'Character Statistics',
+      title: 'Appearances & Longevity',
       description:
-        'Analyze character bounties, status distribution, and rankings',
-      path: '/analytics/character-stats',
-      icon: (
-        <svg
-          className="w-8 h-8"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-          />
-        </svg>
-      ),
-      gradient: 'from-blue-500 to-blue-600',
-      bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-200',
-      iconColor: 'text-blue-600',
-    },
-    {
-      title: 'Character Appearances',
-      description:
-        'Explore character introductions and appearance patterns across sagas',
-      path: '/analytics/character-appearances',
+        'Saga appearance charts, longest disappearances, one-saga wonders, time-skip analysis, and character heatmaps',
+      path: '/analytics/appearances',
       icon: (
         <svg
           className="w-8 h-8"
@@ -107,34 +82,10 @@ function AnalyticsPage() {
       iconColor: 'text-emerald-600',
     },
     {
-      title: 'Data Completeness',
+      title: 'Story & Publication',
       description:
-        'Analyze completeness of character profile attributes in the database',
-      path: '/analytics/character-completeness',
-      icon: (
-        <svg
-          className="w-8 h-8"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-          />
-        </svg>
-      ),
-      gradient: 'from-indigo-500 to-blue-600',
-      bgColor: 'bg-indigo-50',
-      borderColor: 'border-indigo-200',
-      iconColor: 'text-indigo-600',
-    },
-    {
-      title: 'Story & Arc Analytics',
-      description: 'Visualize arc lengths and story progression',
-      path: '/analytics/story-arcs',
+        'Arc lengths, publication rate, break patterns, chapter-per-arc trends, and story progression analytics',
+      path: '/analytics/story',
       icon: (
         <svg
           className="w-8 h-8"
@@ -156,10 +107,10 @@ function AnalyticsPage() {
       iconColor: 'text-purple-600',
     },
     {
-      title: 'Birthday Calendar',
+      title: 'Demographics & World-Building',
       description:
-        'Explore character birthdays throughout the year with an interactive calendar',
-      path: '/analytics/birthdays',
+        'Birthday calendar, age distributions, origin regions, and character demographic patterns',
+      path: '/analytics/demographics',
       icon: (
         <svg
           className="w-8 h-8"
@@ -171,7 +122,7 @@ function AnalyticsPage() {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18zm-3-9v-2a2 2 0 00-2-2H8a2 2 0 00-2 2v2h12z"
+            d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
           />
         </svg>
       ),
@@ -181,10 +132,10 @@ function AnalyticsPage() {
       iconColor: 'text-pink-600',
     },
     {
-      title: 'Chapter Release Calendar',
+      title: 'Character Rankings',
       description:
-        'View chapter release schedule by year and Weekly Shonen Jump issue',
-      path: '/analytics/chapter-releases',
+        'Volume cover appearances, top characters per saga and arc, and volume-vs-chapter appearance comparison',
+      path: '/analytics/characters',
       icon: (
         <svg
           className="w-8 h-8"
@@ -196,20 +147,20 @@ function AnalyticsPage() {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
           />
         </svg>
       ),
-      gradient: 'from-amber-500 to-yellow-600',
-      bgColor: 'bg-amber-50',
-      borderColor: 'border-amber-200',
-      iconColor: 'text-amber-600',
+      gradient: 'from-indigo-500 to-blue-600',
+      bgColor: 'bg-indigo-50',
+      borderColor: 'border-indigo-200',
+      iconColor: 'text-indigo-600',
     },
     {
-      title: 'Publication Rate Analytics',
+      title: 'Affiliations & Organizations',
       description:
-        "Track One Piece's publication consistency and break patterns year by year",
-      path: '/analytics/publication-rate',
+        'Crew loyalty analysis, affiliation network graph, and organization membership patterns',
+      path: '/analytics/affiliations',
       icon: (
         <svg
           className="w-8 h-8"
@@ -221,19 +172,72 @@ function AnalyticsPage() {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
           />
         </svg>
       ),
-      gradient: 'from-green-500 to-emerald-600',
-      bgColor: 'bg-green-50',
-      borderColor: 'border-green-200',
-      iconColor: 'text-green-600',
+      gradient: 'from-rose-500 to-pink-600',
+      bgColor: 'bg-rose-50',
+      borderColor: 'border-rose-200',
+      iconColor: 'text-rose-600',
     },
     {
-      title: 'Character Network Analysis',
+      title: 'Data Quality',
       description:
-        'Explore character co-appearance networks across arcs, sagas, and chapters with interactive graph visualization',
+        'Dataset completeness — how filled are attributes like bounty, origin, birthday, and blood type across all characters',
+      path: '/analytics/data-quality',
+      icon: (
+        <svg
+          className="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+          />
+        </svg>
+      ),
+      gradient: 'from-slate-500 to-gray-600',
+      bgColor: 'bg-slate-50',
+      borderColor: 'border-slate-200',
+      iconColor: 'text-slate-600',
+    },
+  ]
+
+  const interactiveTools = [
+    {
+      title: 'Character Comparison',
+      description:
+        'Side-by-side spec sheet comparing identity, bounty, and key stats across multiple characters',
+      path: '/analytics/character-compare',
+      icon: (
+        <svg
+          className="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+          />
+        </svg>
+      ),
+      gradient: 'from-sky-500 to-blue-600',
+      bgColor: 'bg-sky-50',
+      borderColor: 'border-sky-200',
+      iconColor: 'text-sky-600',
+    },
+    {
+      title: 'Character Network',
+      description:
+        'Interactive graph of character co-appearances across arcs, sagas, and chapters',
       path: '/analytics/network',
       icon: (
         <svg
@@ -254,31 +258,6 @@ function AnalyticsPage() {
       bgColor: 'bg-indigo-50',
       borderColor: 'border-indigo-200',
       iconColor: 'text-indigo-600',
-    },
-    {
-      title: 'Affiliation Network',
-      description:
-        'Explore how groups and organizations are connected through shared members with an interactive network graph',
-      path: '/analytics/affiliation-network',
-      icon: (
-        <svg
-          className="w-8 h-8"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-          />
-        </svg>
-      ),
-      gradient: 'from-rose-500 to-pink-600',
-      bgColor: 'bg-rose-50',
-      borderColor: 'border-rose-200',
-      iconColor: 'text-rose-600',
     },
     {
       title: 'Character Timeline',
@@ -306,10 +285,10 @@ function AnalyticsPage() {
       iconColor: 'text-teal-600',
     },
     {
-      title: 'Region Bounty Analysis',
+      title: 'Chapter Release Predictor',
       description:
-        'Discover which origin regions produce the strongest characters by bounty, with top character breakdowns',
-      path: '/analytics/region-bounty',
+        'Estimate future chapter release dates and milestones based on recent cadence',
+      path: '/analytics/release-predictor',
       icon: (
         <svg
           className="w-8 h-8"
@@ -321,7 +300,7 @@ function AnalyticsPage() {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
           />
         </svg>
       ),
@@ -331,10 +310,10 @@ function AnalyticsPage() {
       iconColor: 'text-amber-600',
     },
     {
-      title: 'Saga Appearance Matrix',
+      title: 'Release History by Jump Issue',
       description:
-        'Heatmap of character appearances broken down by saga, with filters and concentration ranking',
-      path: '/analytics/saga-matrix',
+        'Chapter release schedule by year and Weekly Shonen Jump issue with break analysis',
+      path: '/analytics/chapter-releases',
       icon: (
         <svg
           className="w-8 h-8"
@@ -346,14 +325,14 @@ function AnalyticsPage() {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
           />
         </svg>
       ),
-      gradient: 'from-orange-500 to-amber-600',
-      bgColor: 'bg-orange-50',
-      borderColor: 'border-orange-200',
-      iconColor: 'text-orange-600',
+      gradient: 'from-amber-500 to-yellow-600',
+      bgColor: 'bg-amber-50',
+      borderColor: 'border-amber-200',
+      iconColor: 'text-amber-600',
     },
   ]
 
@@ -485,19 +464,16 @@ function AnalyticsPage() {
           />
         </div>
 
-        {/* Section Title */}
+        {/* Topics */}
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Analytics Categories
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Topics</h2>
           <p className="text-gray-600">
-            Choose a category to explore detailed visualizations and insights
+            Curated deep-dives — each page bundles related charts and tables
           </p>
         </div>
 
-        {/* Analytics Categories Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {analyticsCategories.map((category) => (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+          {topicCategories.map((category) => (
             <Link
               key={category.path}
               to={category.path}
@@ -518,6 +494,63 @@ function AnalyticsPage() {
                   </h3>
                   <p className="text-gray-600 text-sm leading-relaxed">
                     {category.description}
+                  </p>
+                </div>
+
+                {/* Arrow */}
+                <div className="text-gray-400 group-hover:text-gray-600 transition-all duration-200 group-hover:translate-x-1 flex-shrink-0">
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* Interactive Tools */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Interactive Tools
+          </h2>
+          <p className="text-gray-600">
+            Build your own view — pick characters, adjust parameters, explore
+            relationships
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {interactiveTools.map((tool) => (
+            <Link
+              key={tool.path}
+              to={tool.path}
+              className="group block bg-white border-2 border-gray-200 rounded-xl p-6 transition-all duration-200 hover:shadow-lg hover:border-gray-300 hover:-translate-y-1"
+            >
+              <div className="flex items-start gap-4">
+                {/* Icon */}
+                <div
+                  className={`${tool.bgColor} ${tool.iconColor} p-3 rounded-lg flex-shrink-0 transition-transform duration-200 group-hover:scale-110`}
+                >
+                  {tool.icon}
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all">
+                    {tool.title}
+                  </h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    {tool.description}
                   </p>
                 </div>
 

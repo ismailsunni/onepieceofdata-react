@@ -45,6 +45,7 @@ function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
       title="Top 10 Highest Bounties"
       downloadFileName="top-bounties"
       chartId="top-bounties"
+      embedPath="/embed/insights/top-bounties"
     >
       <div className="flex justify-between items-start mb-4">
         <div>
@@ -96,7 +97,7 @@ function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
         <BarChart
           data={data}
           layout="vertical"
-          margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
+          margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           <XAxis
@@ -108,9 +109,13 @@ function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
           <YAxis
             dataKey="name"
             type="category"
-            width={110}
+            width={200}
             tick={{ fontSize: 11 }}
             stroke="#6b7280"
+            tickFormatter={(name: string) => {
+              const c = data.find((d) => d.name === name)
+              return c?.origin_region ? `${name} — ${c.origin_region}` : name
+            }}
           />
           <Tooltip
             contentStyle={{
@@ -124,12 +129,13 @@ function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
             ]}
             labelFormatter={(label: string) => {
               const character = data.find((d) => d.name === label)
-              const statusText = character?.status
-                ? ` - ${character.status}`
+              const region = character?.origin_region
+                ? ` — ${character.origin_region}`
                 : ''
-              return character?.origin
-                ? `${label} (${character.origin})${statusText}`
-                : `${label}${statusText}`
+              const statusText = character?.status
+                ? ` (${character.status})`
+                : ''
+              return `${label}${region}${statusText}`
             }}
           />
           <Bar dataKey="bounty" radius={[0, 8, 8, 0]}>

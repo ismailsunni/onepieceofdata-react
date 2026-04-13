@@ -12,10 +12,14 @@ import {
 import { Arc } from '../types/arc'
 import { ChartCard } from './common/ChartCard'
 
+export type ArcMetric = 'chapters' | 'pages'
+
 interface ArcLengthChartProps {
   arcs: Arc[]
   showSeparateBars?: boolean // When true, show each arc as a separate bar instead of stacked
   allArcs?: Arc[] // All arcs for consistent color mapping across filtered views
+  metric?: ArcMetric
+  pagesByArcTitle?: Map<string, number>
 }
 
 interface ChartDataPoint {
@@ -100,7 +104,16 @@ function ArcLengthChart({
   arcs,
   showSeparateBars = false,
   allArcs,
+  metric = 'chapters',
+  pagesByArcTitle,
 }: ArcLengthChartProps) {
+  const unitLabel = metric === 'pages' ? 'Pages' : 'Chapters'
+  const getSize = (arc: Arc): number => {
+    if (metric === 'pages' && pagesByArcTitle) {
+      return pagesByArcTitle.get(arc.title) ?? 0
+    }
+    return arc.end_chapter - arc.start_chapter + 1
+  }
   // Define color palette at the top level so it's consistent across both views
   const colors = [
     '#1e40af',
@@ -150,25 +163,25 @@ function ArcLengthChart({
     )
 
     const chartData: ChartDataPoint[] = sortedFilteredArcs.map((arc) => {
-      const chapters = arc.end_chapter - arc.start_chapter + 1
+      const size = getSize(arc)
       return {
         saga: arc.title, // Use arc title as the x-axis label
-        totalChapters: chapters,
+        totalChapters: size,
         arcOrder: [
           {
             name: arc.title,
-            chapters: chapters,
+            chapters: size,
             startChapter: arc.start_chapter,
           },
         ],
-        [arc.title]: chapters,
+        [arc.title]: size,
         color: arcColorMap.get(arc.title) || colors[0], // Store color for this arc
       }
     })
 
     return (
       <ChartCard
-        title="Arc Lengths in Chapters"
+        title={`Arc Lengths in ${unitLabel}`}
         downloadFileName="arc-lengths"
         chartId="arc-lengths"
       >
@@ -195,7 +208,7 @@ function ArcLengthChart({
             />
             <YAxis
               label={{
-                value: 'Number of Chapters',
+                value: `Number of ${unitLabel}`,
                 angle: -90,
                 position: 'insideLeft',
                 offset: 10,
@@ -240,20 +253,17 @@ function ArcLengthChart({
     }> = []
     const dataPoint: ChartDataPoint = {
       saga: saga.title,
-      totalChapters: saga.arcs.reduce(
-        (sum, arc) => sum + (arc.end_chapter - arc.start_chapter + 1),
-        0
-      ),
+      totalChapters: saga.arcs.reduce((sum, arc) => sum + getSize(arc), 0),
       arcOrder: arcOrder,
     }
 
     saga.arcs.forEach((arc) => {
-      const chapters = arc.end_chapter - arc.start_chapter + 1
-      dataPoint[arc.title] = chapters
+      const size = getSize(arc)
+      dataPoint[arc.title] = size
       arcNamesSet.add(arc.title)
       arcOrder.push({
         name: arc.title,
-        chapters: chapters,
+        chapters: size,
         startChapter: arc.start_chapter,
       })
     })
@@ -296,7 +306,7 @@ function ArcLengthChart({
 
   return (
     <ChartCard
-      title="Arc and Saga Lengths in Chapters"
+      title={`Arc and Saga Lengths in ${unitLabel}`}
       downloadFileName="arc-saga-lengths"
       chartId="arc-saga-lengths"
     >
@@ -357,7 +367,7 @@ function ArcLengthChart({
           />
           <YAxis
             label={{
-              value: 'Number of Chapters',
+              value: `Number of ${unitLabel}`,
               angle: -90,
               position: 'insideLeft',
               offset: 10,
@@ -365,7 +375,6 @@ function ArcLengthChart({
             }}
             tick={{ fontSize: 12 }}
             stroke="#6b7280"
-            domain={[0, 200]}
           />
           <Tooltip content={<CustomTooltip />} />
           {arcNames.map((arcName, index) => (
