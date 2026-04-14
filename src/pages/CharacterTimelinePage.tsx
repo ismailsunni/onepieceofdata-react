@@ -12,6 +12,7 @@ import { fetchCharacters } from '../services/characterService'
 import { fetchArcs } from '../services/arcService'
 import { fetchSagas } from '../services/sagaService'
 import CharacterTimelineChart from '../components/CharacterTimelineChart'
+import CoverTimelineChart from '../components/CoverTimelineChart'
 import { CACHE } from '../constants/cache'
 
 // Character presets (using character IDs/slugs for reliable matching)
@@ -87,9 +88,7 @@ const DEFAULT_CHARACTERS = PRESETS.default.ids
  * Supports `?preset=<key>` (matching PRESETS keys) and `?chars=id1,id2,id3`.
  * `chars` takes precedence over `preset`. Falls back to default Straw Hats.
  */
-function getInitialCharactersFromUrl(
-  searchParams: URLSearchParams
-): string[] {
+function getInitialCharactersFromUrl(searchParams: URLSearchParams): string[] {
   const charsParam = searchParams.get('chars')
   if (charsParam) {
     const ids = charsParam
@@ -502,6 +501,19 @@ function CharacterTimelinePage() {
                     Character Appearance Timeline
                   </h2>
                   <CharacterTimelineChart characters={selectedCharactersData} />
+                </div>
+
+                {/* Volume Cover Timeline */}
+                <div className="bg-white border border-gray-200 rounded-xl p-6 relative">
+                  {isPending && (
+                    <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-xl">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+                    </div>
+                  )}
+                  <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                    Volume Cover Appearance Timeline
+                  </h2>
+                  <CoverTimelineChart characters={selectedCharactersData} />
                 </div>
 
                 {/* Co-appearance Stats */}
