@@ -8,6 +8,7 @@
  * │ Title                                          │ Slug                       │ Interactive Filters        │
  * ├────────────────────────────────────────────────┼────────────────────────────┼────────────────────────────┤
  * │ Age Distribution by Status                     │ age-distribution           │ —                          │
+ * │ Age vs Bounty                                  │ age-vs-bounty              │ —                          │
  * │ Blood Type Distribution                        │ blood-type-comparison      │ —                          │
  * │ Bounty Distribution by Power Tier              │ bounty-distribution        │ —                          │
  * │ Bounty Jumps                                   │ bounty-jumps               │ Sortable table             │
@@ -104,6 +105,7 @@ import {
 import {
   EmbedPublicationRate,
   EmbedCompleteness,
+  EmbedAgeBounty,
 } from '../components/insights/EmbedAnalyticsCharts'
 
 function EmbedInsightPage() {
@@ -200,6 +202,7 @@ function EmbedInsightPage() {
     'crew-loyalty': <EmbedCrewLoyalty data={insights.crewLoyalty} />,
     'publication-rate-by-year': <EmbedPublicationRate />,
     completeness: <EmbedCompleteness />,
+    'age-vs-bounty': <EmbedAgeBounty />,
   }
 
   const chart = chartId ? chartMap[chartId] : null

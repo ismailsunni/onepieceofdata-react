@@ -12,6 +12,7 @@ import {
   OriginRegionBubble,
 } from '../../components/insights/DemographicsSection'
 import { BirthdayCalendarSection } from '../../components/analytics/BirthdayCalendarSection'
+import { AgeBountyScatterSection } from '../../components/analytics/AgeBountyScatterSection'
 import { SectionTitle } from '../../components/insights/SectionTitle'
 
 function DemographicsTopicPage() {
@@ -136,6 +137,11 @@ function DemographicsTopicPage() {
         <OriginRegionBubble regionCounts={insights.regionCounts} />
 
         <BirthdayCalendarSection />
+
+        {/* Section 3: Age vs Bounty */}
+        <SectionTitle title="Age & Power" />
+
+        <AgeBountyScatterSection />
       </div>
     </main>
   )

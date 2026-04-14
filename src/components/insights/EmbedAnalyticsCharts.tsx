@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   BarChart,
@@ -8,6 +9,9 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  ScatterChart,
+  Scatter,
+  Cell,
 } from 'recharts'
 import { fetchChapterReleases } from '../../services/analyticsService'
 import {
@@ -233,6 +237,172 @@ export function EmbedCompleteness() {
             ))}
           </tbody>
         </table>
+      </div>
+      <EmbedFooter />
+    </div>
+  )
+}
+
+// ── Age vs Bounty Scatter ───────────────────────────────────────────────────
+
+interface AgeBountyPoint {
+  name: string
+  age: number
+  bounty: number
+  status: string
+}
+
+function fmtBounty(value: number): string {
+  if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(0)}M`
+  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`
+  return String(value)
+}
+
+export function EmbedAgeBounty() {
+  const { data: characters = [], isLoading } = useQuery({
+    queryKey: ['embed', 'age-vs-bounty'],
+    queryFn: fetchCharacters,
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const points = useMemo<AgeBountyPoint[]>(
+    () =>
+      characters
+        .filter(
+          (c) => c.age != null && c.age > 0 && c.bounty != null && c.bounty > 0
+        )
+        .map((c) => ({
+          name: c.name ?? 'Unknown',
+          age: c.age as number,
+          bounty: c.bounty as number,
+          status: c.status ?? 'Unknown',
+        })),
+    [characters]
+  )
+
+  const [hideAlive, setHideAlive] = useState(false)
+  const filtered = useMemo(
+    () => (hideAlive ? points.filter((p) => p.status !== 'Alive') : points),
+    [points, hideAlive]
+  )
+
+  if (isLoading) return <EmbedLoading />
+
+  return (
+    <div className="p-4 font-sans">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-semibold text-gray-900">Age vs Bounty</h2>
+        <label className="inline-flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={hideAlive}
+            onChange={(e) => setHideAlive(e.target.checked)}
+            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          Deceased only
+        </label>
+      </div>
+      <ResponsiveContainer width="100%" height={400}>
+        <ScatterChart margin={{ top: 10, right: 20, left: 10, bottom: 10 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <XAxis
+            type="number"
+            dataKey="age"
+            name="Age"
+            tick={{ fontSize: 11 }}
+            stroke="#6b7280"
+            label={{
+              value: 'Age',
+              position: 'insideBottom',
+              offset: -5,
+              style: { fontSize: 11, fill: '#6b7280' },
+            }}
+          />
+          <YAxis
+            type="number"
+            dataKey="bounty"
+            name="Bounty"
+            tick={{ fontSize: 11 }}
+            stroke="#6b7280"
+            tickFormatter={fmtBounty}
+            width={55}
+          />
+          <Tooltip
+            cursor={{ strokeDasharray: '3 3' }}
+            content={({ active, payload }) => {
+              if (active && payload && payload.length) {
+                const d = payload[0].payload as AgeBountyPoint
+                return (
+                  <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-sm">
+                    <p className="font-semibold text-gray-900 mb-1">{d.name}</p>
+                    <p>
+                      Age: <span className="font-semibold">{d.age}</span>
+                    </p>
+                    <p>
+                      Bounty:{' '}
+                      <span className="font-semibold">
+                        {d.bounty.toLocaleString()}
+                      </span>
+                    </p>
+                    <p>
+                      Status:{' '}
+                      <span
+                        className={
+                          d.status === 'Alive'
+                            ? 'text-green-600'
+                            : d.status === 'Deceased'
+                              ? 'text-red-600'
+                              : 'text-gray-500'
+                        }
+                      >
+                        {d.status}
+                      </span>
+                    </p>
+                  </div>
+                )
+              }
+              return null
+            }}
+          />
+          <Scatter data={filtered} isAnimationActive={false}>
+            {filtered.map((p, i) => (
+              <Cell
+                key={i}
+                fill={
+                  p.status === 'Alive'
+                    ? '#10b981'
+                    : p.status === 'Deceased'
+                      ? '#ef4444'
+                      : '#9ca3af'
+                }
+                fillOpacity={0.6}
+                stroke={
+                  p.status === 'Alive'
+                    ? '#059669'
+                    : p.status === 'Deceased'
+                      ? '#dc2626'
+                      : '#6b7280'
+                }
+                strokeWidth={1}
+              />
+            ))}
+          </Scatter>
+        </ScatterChart>
+      </ResponsiveContainer>
+      <div className="mt-2 flex gap-4 justify-center text-xs text-gray-500">
+        <span className="flex items-center gap-1">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>{' '}
+          Alive
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>{' '}
+          Deceased
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="w-2.5 h-2.5 rounded-full bg-gray-400 inline-block"></span>{' '}
+          Unknown
+        </span>
       </div>
       <EmbedFooter />
     </div>
