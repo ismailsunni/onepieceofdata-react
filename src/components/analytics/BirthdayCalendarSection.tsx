@@ -59,7 +59,7 @@ export function BirthdayCalendarSection() {
 
   // Get intensity color based on birthday count
   const getIntensityColor = (count: number): string => {
-    if (count === 0) return 'bg-gray-100'
+    if (count === 0) return 'bg-red-100'
     if (count === 1) return 'bg-blue-200'
     if (count === 2) return 'bg-blue-400'
     if (count === 3) return 'bg-blue-600'
@@ -511,9 +511,7 @@ export function BirthdayCalendarSection() {
             >
               ← {selectedYear - 1}
             </button>
-            <h2 className="text-2xl font-bold text-gray-800">
-              {selectedYear}
-            </h2>
+            <h2 className="text-2xl font-bold text-gray-800">{selectedYear}</h2>
             <button
               onClick={() => setSelectedYear(selectedYear + 1)}
               className="px-5 py-2.5 bg-gradient-to-r from-pink-600 to-rose-600 text-white rounded-lg hover:from-pink-700 hover:to-rose-700 transition-all cursor-pointer shadow-md"
@@ -615,9 +613,7 @@ export function BirthdayCalendarSection() {
                             to={`/characters/${char.id}`}
                             className="flex items-center gap-1 text-xs text-gray-700 px-1 py-0.5 bg-white bg-opacity-80 rounded hover:bg-opacity-100 hover:ring-2 hover:ring-blue-500 transition-all cursor-pointer"
                             title={
-                              hasAge
-                                ? `${char.name} (${char.age})`
-                                : char.name
+                              hasAge ? `${char.name} (${char.age})` : char.name
                             }
                           >
                             <span className="truncate">
@@ -680,8 +676,7 @@ export function BirthdayCalendarSection() {
                     <div className="grid grid-cols-7 gap-1">
                       {miniDays.map((day, dayIndex) => {
                         const isTodayDate =
-                          day.date > 0 &&
-                          isToday(day.year, day.month, day.date)
+                          day.date > 0 && isToday(day.year, day.month, day.date)
                         const isHovered =
                           hoveredDay?.month === monthIndex &&
                           hoveredDay?.date === day.date &&
