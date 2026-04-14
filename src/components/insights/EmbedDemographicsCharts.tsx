@@ -31,7 +31,7 @@ export function EmbedBloodTypeComparison({
       <h2 className="text-lg font-semibold text-gray-900 mb-3">
         Blood Type Distribution
       </h2>
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
           margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
@@ -49,10 +49,11 @@ export function EmbedBloodTypeComparison({
             }}
           />
           <Tooltip
-            formatter={(value: number, _name: string, props: { payload?: { percent?: number } }) => [
-              `${value} (${props?.payload?.percent ?? 0}%)`,
-              'Characters',
-            ]}
+            formatter={(
+              value: number,
+              _name: string,
+              props: { payload?: { percent?: number } }
+            ) => [`${value} (${props?.payload?.percent ?? 0}%)`, 'Characters']}
           />
           <Legend />
           <Bar
@@ -76,7 +77,7 @@ export function EmbedOriginRegions({ data }: { data: RegionCount[] }) {
       <h2 className="text-lg font-semibold text-gray-900 mb-3">
         Origin Region Bubble Chart
       </h2>
-      <ResponsiveContainer width="100%" height={350}>
+      <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
             data={data.slice(0, 15).map((r) => ({
@@ -118,7 +119,7 @@ export function EmbedAgeDistribution({ data }: { data: AgeStatusBucket[] }) {
       <h2 className="text-lg font-semibold text-gray-900 mb-3">
         Age Distribution by Status
       </h2>
-      <ResponsiveContainer width="100%" height={350}>
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
           margin={{ top: 5, right: 30, left: 20, bottom: 5 }}

@@ -23,7 +23,7 @@ export function EmbedCoverStars({ data }: { data: CoverStar[] }) {
       <h2 className="text-lg font-semibold text-gray-900 mb-3">
         Top Volume Cover Stars
       </h2>
-      <ResponsiveContainer width="100%" height={500}>
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
           layout="vertical"
@@ -60,7 +60,7 @@ export function EmbedCoverVsMain({ data }: { data: CoverVsMain[] }) {
       <h2 className="text-lg font-semibold text-gray-900 mb-3">
         Volume Cover vs Main Story Appearances
       </h2>
-      <ResponsiveContainer width="100%" height={400}>
+      <ResponsiveContainer width="100%" height="100%">
         <ScatterChart margin={{ top: 10, right: 30, left: 20, bottom: 10 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           <XAxis
@@ -90,4 +90,3 @@ export function EmbedCoverVsMain({ data }: { data: CoverVsMain[] }) {
     </div>
   )
 }
-

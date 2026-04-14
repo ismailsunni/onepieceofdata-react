@@ -27,7 +27,7 @@ export function EmbedMostLoyal({ data }: { data: LoyalCharacter[] }) {
       <h2 className="text-lg font-semibold text-gray-900 mb-3">
         Most Consistent Presence
       </h2>
-      <ResponsiveContainer width="100%" height={400}>
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
           layout="vertical"
@@ -105,7 +105,7 @@ export function EmbedWondersDistribution({
           ))}
         </div>
       </div>
-      <ResponsiveContainer width="100%" height={350}>
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
           margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
@@ -171,7 +171,7 @@ export function EmbedArcIntroRate({ data }: { data: ArcIntroRate[] }) {
           ))}
         </div>
       </div>
-      <ResponsiveContainer width="100%" height={400}>
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
           margin={{ top: 5, right: 30, left: 20, bottom: 80 }}
@@ -245,7 +245,7 @@ export function EmbedSagaIntroRate({ data }: { data: SagaIntroRate[] }) {
           ))}
         </div>
       </div>
-      <ResponsiveContainer width="100%" height={400}>
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
           margin={{ top: 5, right: 30, left: 20, bottom: 80 }}

@@ -45,7 +45,7 @@ export function EmbedPublicationRate() {
       <h2 className="text-lg font-semibold text-gray-900 mb-3">
         Yearly Publication Statistics
       </h2>
-      <ResponsiveContainer width="100%" height={400}>
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={yearlyStats}
           margin={{ top: 10, right: 20, left: 10, bottom: 60 }}

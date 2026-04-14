@@ -1,9 +1,23 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+/* Embed pages: make chart fill viewport height */
+.embed-root > div {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.embed-root .recharts-responsive-container,
+.embed-root .overflow-x-auto {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
 
 /* Restore the pre-Tailwind-v4 default: interactive controls use a pointer. */
 @layer base {
   button:not(:disabled),
-  [role="button"]:not(:disabled) {
+  [role='button']:not(:disabled) {
     cursor: pointer;
   }
 }

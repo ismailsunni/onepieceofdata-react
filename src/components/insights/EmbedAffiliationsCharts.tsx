@@ -22,7 +22,7 @@ export function EmbedLargestGroups({ data }: { data: GroupSize[] }) {
       <h2 className="text-lg font-semibold text-gray-900 mb-3">
         Largest Crews &amp; Organizations
       </h2>
-      <ResponsiveContainer width="100%" height={600}>
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
           layout="vertical"
@@ -66,7 +66,7 @@ export function EmbedCrewLoyalty({ data }: { data: CrewLoyalty[] }) {
       <h2 className="text-lg font-semibold text-gray-900 mb-3">
         Crew Loyalty vs Turnover
       </h2>
-      <ResponsiveContainer width="100%" height={500}>
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
           layout="vertical"

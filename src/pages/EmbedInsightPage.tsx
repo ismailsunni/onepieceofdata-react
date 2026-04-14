@@ -212,7 +212,7 @@ function EmbedInsightPage() {
     )
   }
 
-  return <>{chart}</>
+  return <div className="h-screen overflow-hidden embed-root">{chart}</div>
 }
 
 export default EmbedInsightPage

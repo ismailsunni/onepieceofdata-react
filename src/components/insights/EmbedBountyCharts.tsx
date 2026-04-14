@@ -45,7 +45,7 @@ export function EmbedCastComplexity({
       <h2 className="text-lg font-semibold text-gray-900 mb-3">
         Cast Complexity Over Time
       </h2>
-      <ResponsiveContainer width="100%" height={350}>
+      <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={data}
           margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
@@ -141,7 +141,7 @@ export function EmbedBountyVsAppearance({
           {hideStrawHats ? 'SHP Hidden' : 'Hide SHP'}
         </button>
       </div>
-      <ResponsiveContainer width="100%" height={400}>
+      <ResponsiveContainer width="100%" height="100%">
         <ScatterChart margin={{ top: 10, right: 30, left: 20, bottom: 10 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           <XAxis
@@ -299,7 +299,7 @@ export function EmbedRegionBountyTier({
           {showPct ? 'Show counts' : 'Show %'}
         </button>
       </div>
-      <ResponsiveContainer width="100%" height={400}>
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={showPct ? pctData : data}
           layout="vertical"
@@ -383,7 +383,7 @@ export function EmbedBountyDistribution() {
       <h2 className="text-lg font-semibold text-gray-900 mb-3">
         Bounty Distribution by Power Tier
       </h2>
-      <ResponsiveContainer width="100%" height={350}>
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={rows}
           margin={{ top: 10, right: 20, left: 10, bottom: 70 }}
@@ -418,7 +418,12 @@ export function EmbedBountyDistribution() {
             formatter={(v) => (v === 'alive' ? 'Alive' : 'Deceased/Unknown')}
           />
           <Bar dataKey="alive" stackId="a" fill="#10b981" />
-          <Bar dataKey="notAlive" stackId="a" fill="#ef4444" radius={[6, 6, 0, 0]} />
+          <Bar
+            dataKey="notAlive"
+            stackId="a"
+            fill="#ef4444"
+            radius={[6, 6, 0, 0]}
+          />
         </BarChart>
       </ResponsiveContainer>
       <EmbedFooter />
@@ -472,7 +477,7 @@ export function EmbedTopBounties() {
       {isLoading ? (
         <EmbedLoading />
       ) : (
-        <ResponsiveContainer width="100%" height={420}>
+        <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={rows}
             layout="vertical"
