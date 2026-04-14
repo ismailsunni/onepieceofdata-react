@@ -7,8 +7,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  PieChart,
-  Pie,
   Cell,
 } from 'recharts'
 import { EmbedFooter } from './EmbedFooter'
@@ -72,39 +70,41 @@ export function EmbedBloodTypeComparison({
 // ── #15 Origin Regions ──────────────────────────────────────────────────────
 
 export function EmbedOriginRegions({ data }: { data: RegionCount[] }) {
+  const top15 = data.slice(0, 15)
   return (
     <div className="p-4 font-sans">
       <h2 className="text-lg font-semibold text-gray-900 mb-3">
-        Origin Region Bubble Chart
+        Origin Region Distribution
       </h2>
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
-          <Pie
-            data={data.slice(0, 15).map((r) => ({
-              ...r,
-              [r.region]: r.count,
-            }))}
+      <ResponsiveContainer width="100%" height={450}>
+        <BarChart
+          data={top15}
+          layout="vertical"
+          margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <XAxis type="number" tick={{ fontSize: 11 }} stroke="#6b7280" />
+          <YAxis
+            dataKey="region"
+            type="category"
+            width={120}
+            tick={{ fontSize: 10 }}
+            stroke="#6b7280"
+          />
+          <Tooltip
+            formatter={(value: number) => [`${value} characters`, 'Count']}
+          />
+          <Bar
             dataKey="count"
-            nameKey="region"
-            cx="50%"
-            cy="50%"
-            outerRadius={120}
-            label={(props: {
-              region?: string
-              count?: number
-              name?: string
-              value?: number
-            }) =>
-              `${props.region || props.name || ''} (${props.count ?? props.value ?? 0})`
-            }
-            labelLine={{ stroke: '#6b7280', strokeWidth: 1 }}
+            fill="#3b82f6"
+            name="Characters"
+            radius={[0, 8, 8, 0]}
           >
-            {data.slice(0, 15).map((_, i) => (
+            {top15.map((_, i) => (
               <Cell key={i} fill={SAGA_COLORS[i % SAGA_COLORS.length]} />
             ))}
-          </Pie>
-          <Tooltip />
-        </PieChart>
+          </Bar>
+        </BarChart>
       </ResponsiveContainer>
       <EmbedFooter />
     </div>

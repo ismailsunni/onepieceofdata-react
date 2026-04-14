@@ -7,8 +7,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  PieChart,
-  Pie,
   Cell,
 } from 'recharts'
 import { ChartCard } from '../common/ChartCard'
@@ -98,11 +96,19 @@ export function DemographicsSection({
                   value: 'Characters',
                   angle: -90,
                   position: 'insideLeft',
-                  style: { fontSize: 11, fill: '#6b7280', textAnchor: 'middle' },
+                  style: {
+                    fontSize: 11,
+                    fill: '#6b7280',
+                    textAnchor: 'middle',
+                  },
                 }}
               />
               <Tooltip
-                formatter={(value: number, _name: string, props: { payload?: { percent?: number } }) => [
+                formatter={(
+                  value: number,
+                  _name: string,
+                  props: { payload?: { percent?: number } }
+                ) => [
                   `${value} (${props?.payload?.percent ?? 0}%)`,
                   'Characters',
                 ]}
@@ -135,34 +141,35 @@ export function OriginRegionBubble({ regionCounts }: OriginRegionBubbleProps) {
         chartId="origin-regions"
         embedPath="/embed/insights/origin-regions"
       >
-        <ResponsiveContainer width="100%" height={350}>
-          <PieChart>
-            <Pie
-              data={regionCounts.slice(0, 15).map((r) => ({
-                ...r,
-                [r.region]: r.count,
-              }))}
+        <ResponsiveContainer width="100%" height={450}>
+          <BarChart
+            data={regionCounts.slice(0, 15)}
+            layout="vertical"
+            margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis type="number" tick={{ fontSize: 11 }} stroke="#6b7280" />
+            <YAxis
+              dataKey="region"
+              type="category"
+              width={120}
+              tick={{ fontSize: 10 }}
+              stroke="#6b7280"
+            />
+            <Tooltip
+              formatter={(value: number) => [`${value} characters`, 'Count']}
+            />
+            <Bar
               dataKey="count"
-              nameKey="region"
-              cx="50%"
-              cy="50%"
-              outerRadius={120}
-              label={(props: {
-                region?: string
-                count?: number
-                name?: string
-                value?: number
-              }) =>
-                `${props.region || props.name || ''} (${props.count ?? props.value ?? 0})`
-              }
-              labelLine={{ stroke: '#6b7280', strokeWidth: 1 }}
+              fill="#3b82f6"
+              name="Characters"
+              radius={[0, 8, 8, 0]}
             >
               {regionCounts.slice(0, 15).map((_, i) => (
                 <Cell key={i} fill={SAGA_COLORS[i % SAGA_COLORS.length]} />
               ))}
-            </Pie>
-            <Tooltip />
-          </PieChart>
+            </Bar>
+          </BarChart>
         </ResponsiveContainer>
       </ChartCard>
     </div>
