@@ -289,6 +289,38 @@ export function computeRegionBountyTier(
     .sort((a, b) => b.total - a.total)
 }
 
+// ── Bounty Tier Distribution by Blood Type ─────────────────────────────────
+
+export interface BloodTypeBountyTierData {
+  bloodType: string
+  total: number
+  [tier: string]: string | number
+}
+
+export function computeBloodTypeBountyTier(
+  characters: Character[]
+): BloodTypeBountyTierData[] {
+  const btMap = new Map<string, Record<string, number>>()
+
+  for (const c of characters) {
+    if (c.bounty == null || c.bounty <= 0) continue
+    const bt =
+      normalizeBloodType(c.blood_type_group) ?? normalizeBloodType(c.blood_type)
+    if (!bt) continue
+    const tier = getBountyTierLabel(c.bounty)
+    const entry = btMap.get(bt) || {}
+    entry[tier] = (entry[tier] || 0) + 1
+    btMap.set(bt, entry)
+  }
+
+  return Array.from(btMap.entries())
+    .map(([bloodType, tiers]) => {
+      const total = Object.values(tiers).reduce((s, v) => s + v, 0)
+      return { bloodType, total, ...tiers } as BloodTypeBountyTierData
+    })
+    .sort((a, b) => b.total - a.total)
+}
+
 // ── #5 Most Loyal Characters ────────────────────────────────────────────────
 
 export interface LoyalCharacter {
@@ -751,8 +783,7 @@ export function computeBloodTypeDistribution(
   for (const c of characters) {
     // Prefer blood_type_group; fall back to blood_type (which may include "F RH+", etc.)
     const bt =
-      normalizeBloodType(c.blood_type_group) ??
-      normalizeBloodType(c.blood_type)
+      normalizeBloodType(c.blood_type_group) ?? normalizeBloodType(c.blood_type)
     if (!bt) continue
     bloodTypeMap.set(bt, (bloodTypeMap.get(bt) || 0) + 1)
     total++

@@ -6,11 +6,13 @@ import {
   computeBountyVsAppearance,
   computeTopBountyJumps,
   computeRegionBountyTier,
+  computeBloodTypeBountyTier,
   BOUNTY_TIER_LABELS,
 } from '../../services/analyticsService'
 import { BountySection } from '../../components/insights/BountySection'
 import { BountyStatsSection } from '../../components/analytics/BountyStatsSection'
 import { RegionBountySection } from '../../components/analytics/RegionBountySection'
+import { BloodTypeBountySection } from '../../components/analytics/BloodTypeBountySection'
 
 function BountyTopicPage() {
   const location = useLocation()
@@ -45,6 +47,7 @@ function BountyTopicPage() {
       bountyVsAppearance: computeBountyVsAppearance(characters),
       topBountyJumps: computeTopBountyJumps(characters),
       regionBountyTier: computeRegionBountyTier(characters),
+      bloodTypeBountyTier: computeBloodTypeBountyTier(characters),
     }
   }, [raw])
 
@@ -160,6 +163,8 @@ function BountyTopicPage() {
           regionBountyTierCount={regionBountyTierCount}
           regionBountyTierPct={regionBountyTierPct}
         />
+
+        <BloodTypeBountySection data={insights.bloodTypeBountyTier} />
 
         <RegionBountySection />
       </div>

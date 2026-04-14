@@ -12,11 +12,13 @@
  * │ Blood Type Distribution                        │ blood-type-comparison      │ —                          │
  * │ Bounty Distribution by Power Tier              │ bounty-distribution        │ —                          │
  * │ Bounty Jumps                                   │ bounty-jumps               │ Sortable table             │
+ * │ Bounty Tier Distribution by Blood Type         │ blood-type-bounty-tier     │ Count / %                  │
  * │ Bounty Tier Distribution by Region             │ region-bounty-tier         │ Count / %                  │
  * │ Bounty vs Appearance Count                     │ bounty-vs-appearance       │ SHP toggle                 │
  * │ Cast Complexity Over Time                      │ cast-complexity            │ —                          │
  * │ Characters per Arc (New vs Returning)          │ arc-intro-rate             │ Both / New / Returning     │
  * │ Characters per Saga (New vs Returning)         │ saga-intro-rate            │ Both / New / Returning     │
+ * │ Cover Appearances per Volume                   │ cover-per-volume           │ SHP toggle                 │
  * │ Crew Loyalty vs Turnover                       │ crew-loyalty               │ —                          │
  * │ Detailed Completeness Statistics               │ completeness               │ —                          │
  * │ Largest Crews & Organizations                  │ largest-groups             │ —                          │
@@ -51,6 +53,7 @@ import {
   computeBountyVsAppearance,
   computeTopBountyJumps,
   computeRegionBountyTier,
+  computeBloodTypeBountyTier,
   computeMostLoyal,
   computeArcCountDistribution,
   computeSagaCountDistribution,
@@ -76,6 +79,7 @@ import {
   EmbedBountyDistribution,
   EmbedTopBounties,
   EmbedRegionBountyTable,
+  EmbedBloodTypeBountyTier,
 } from '../components/insights/EmbedBountyCharts'
 import {
   EmbedMostLoyal,
@@ -93,6 +97,7 @@ import {
 import {
   EmbedCoverStars,
   EmbedCoverVsMain,
+  EmbedCoverPerVolume,
 } from '../components/insights/EmbedCoverMetaCharts'
 import {
   EmbedTopCharactersPerSaga,
@@ -129,6 +134,7 @@ function EmbedInsightPage() {
       bountyVsAppearance: computeBountyVsAppearance(characters),
       topBountyJumps: computeTopBountyJumps(characters),
       regionBountyTier: computeRegionBountyTier(characters),
+      bloodTypeBountyTier: computeBloodTypeBountyTier(characters),
       mostLoyal: computeMostLoyal(characters),
       arcCountDistribution: computeArcCountDistribution(characters, arcs, 2),
       sagaCountDistribution: computeSagaCountDistribution(characters, sagas, 2),
@@ -172,6 +178,9 @@ function EmbedInsightPage() {
     'region-bounty-tier': (
       <EmbedRegionBountyTier data={insights.regionBountyTier.slice(0, 15)} />
     ),
+    'blood-type-bounty-tier': (
+      <EmbedBloodTypeBountyTier data={insights.bloodTypeBountyTier} />
+    ),
     'most-loyal': <EmbedMostLoyal data={insights.mostLoyal} />,
     'wonders-distribution': (
       <EmbedWondersDistribution
@@ -192,6 +201,7 @@ function EmbedInsightPage() {
     ),
     'cover-stars': <EmbedCoverStars data={insights.coverStars} />,
     'cover-vs-main': <EmbedCoverVsMain data={insights.coverVsMain} />,
+    'cover-per-volume': <EmbedCoverPerVolume />,
     'top-characters-per-saga': (
       <EmbedTopCharactersPerSaga data={insights.topCharactersPerSaga} />
     ),

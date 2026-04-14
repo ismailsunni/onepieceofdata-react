@@ -9,6 +9,7 @@ import {
   computeTopCharactersPerArc,
 } from '../../services/analyticsService'
 import { CoverMetaSection } from '../../components/insights/CoverMetaSection'
+import { CoverPerVolumeSection } from '../../components/analytics/CoverPerVolumeSection'
 import { RankingsSection } from '../../components/insights/RankingsSection'
 import { SectionTitle } from '../../components/insights/SectionTitle'
 
@@ -92,9 +93,7 @@ function CharactersTopicPage() {
               d="M9 5l7 7-7 7"
             />
           </svg>
-          <span className="text-gray-900 font-medium">
-            Character Rankings
-          </span>
+          <span className="text-gray-900 font-medium">Character Rankings</span>
         </nav>
 
         {/* Hero */}
@@ -136,6 +135,8 @@ function CharactersTopicPage() {
           coverStars={insights.coverStars}
           coverVsMain={insights.coverVsMain}
         />
+
+        <CoverPerVolumeSection />
 
         {/* Section 2: Character Rankings */}
         <SectionTitle title="Character Rankings" />
