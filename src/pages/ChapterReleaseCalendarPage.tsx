@@ -87,7 +87,7 @@ function getCellColor(
     case 'luffy': {
       // Check if Luffy appears in any of the chapters
       const luffyAppears = chapters.some((ch) => ch.luffyAppears)
-      return luffyAppears ? '#fbbf24' : '#d1d5db' // yellow-400 : gray-300
+      return luffyAppears ? '#22c55e' : '#d1d5db' // green-500 : gray-300
     }
 
     default:
@@ -725,7 +725,7 @@ function ChapterReleaseCalendarPage() {
                   <div
                     className="w-8 h-8 rounded"
                     style={{
-                      backgroundColor: '#fbbf24',
+                      backgroundColor: '#22c55e',
                       border: '1px solid #d1d5db',
                     }}
                   ></div>
