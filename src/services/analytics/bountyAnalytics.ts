@@ -22,6 +22,7 @@ export interface TopBounty {
   bounty: number
   origin: string | null
   origin_region: string | null
+  blood_type_group: string | null
   status: string | null
 }
 
@@ -183,7 +184,7 @@ export async function fetchBountyStats(): Promise<BountyStats> {
 
     const percentage = totalCharacters
       ? Math.round(((charactersWithBounty || 0) / totalCharacters) * 100 * 10) /
-      10
+        10
       : 0
 
     return {
@@ -214,7 +215,7 @@ export async function fetchTopBounties(
 
     let query = supabase
       .from('character')
-      .select('name, bounty, origin, origin_region, status')
+      .select('name, bounty, origin, origin_region, blood_type_group, status')
       .not('bounty', 'is', null)
       .gt('bounty', 0)
 
@@ -236,6 +237,7 @@ export async function fetchTopBounties(
       bounty: char.bounty || 0,
       origin: char.origin,
       origin_region: char.origin_region,
+      blood_type_group: char.blood_type_group,
       status: char.status,
     }))
   } catch (error) {

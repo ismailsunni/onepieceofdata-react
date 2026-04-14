@@ -500,7 +500,10 @@ export function EmbedTopBounties() {
               stroke="#6b7280"
               tickFormatter={(name: string) => {
                 const c = rows.find((d) => d.name === name)
-                return c?.origin_region ? `${name} — ${c.origin_region}` : name
+                const parts = [c?.origin_region, c?.blood_type_group]
+                  .filter(Boolean)
+                  .join(', ')
+                return parts ? `${name} — ${parts}` : name
               }}
             />
             <Tooltip
@@ -510,9 +513,12 @@ export function EmbedTopBounties() {
               ]}
               labelFormatter={(label: string) => {
                 const c = rows.find((d) => d.name === label)
-                const region = c?.origin_region ? ` — ${c.origin_region}` : ''
+                const parts = [c?.origin_region, c?.blood_type_group]
+                  .filter(Boolean)
+                  .join(', ')
+                const info = parts ? ` — ${parts}` : ''
                 const status = c?.status ? ` (${c.status})` : ''
-                return `${label}${region}${status}`
+                return `${label}${info}${status}`
               }}
             />
             <Bar dataKey="bounty" radius={[0, 8, 8, 0]}>

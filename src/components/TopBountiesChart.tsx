@@ -114,7 +114,10 @@ function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
             stroke="#6b7280"
             tickFormatter={(name: string) => {
               const c = data.find((d) => d.name === name)
-              return c?.origin_region ? `${name} — ${c.origin_region}` : name
+              const parts = [c?.origin_region, c?.blood_type_group]
+                .filter(Boolean)
+                .join(', ')
+              return parts ? `${name} — ${parts}` : name
             }}
           />
           <Tooltip
@@ -129,13 +132,17 @@ function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
             ]}
             labelFormatter={(label: string) => {
               const character = data.find((d) => d.name === label)
-              const region = character?.origin_region
-                ? ` — ${character.origin_region}`
-                : ''
+              const parts = [
+                character?.origin_region,
+                character?.blood_type_group,
+              ]
+                .filter(Boolean)
+                .join(', ')
+              const info = parts ? ` — ${parts}` : ''
               const statusText = character?.status
                 ? ` (${character.status})`
                 : ''
-              return `${label}${region}${statusText}`
+              return `${label}${info}${statusText}`
             }}
           />
           <Bar dataKey="bounty" radius={[0, 8, 8, 0]}>
