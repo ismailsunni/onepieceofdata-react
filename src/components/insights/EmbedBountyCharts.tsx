@@ -240,7 +240,7 @@ export function EmbedBountyJumps({ data }: { data: BountyJump[] }) {
           defaultSortField="jump"
           defaultSortDirection="desc"
           rowKey={(row) => row.id}
-          maxHeight="500px"
+          maxHeight="100%"
         />
       ) : (
         <p className="text-gray-500 text-center py-8">

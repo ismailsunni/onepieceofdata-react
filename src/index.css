@@ -7,7 +7,11 @@
   flex-direction: column;
 }
 
-.embed-root .recharts-responsive-container,
+.embed-root .recharts-responsive-container {
+  flex: 1;
+  min-height: 0;
+}
+
 .embed-root .overflow-x-auto {
   flex: 1;
   min-height: 0;
