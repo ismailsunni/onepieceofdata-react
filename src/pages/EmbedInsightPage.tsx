@@ -9,6 +9,7 @@
  * ├────────────────────────────────────────────────┼────────────────────────────┼────────────────────────────┤
  * │ Age Distribution by Status                     │ age-distribution           │ —                          │
  * │ Age vs Bounty                                  │ age-vs-bounty              │ —                          │
+ * │ Blood Type Bounty Breakdown                    │ blood-type-bounty-table    │ All / Alive Only           │
  * │ Blood Type Distribution                        │ blood-type-comparison      │ —                          │
  * │ Bounty Distribution by Power Tier              │ bounty-distribution        │ —                          │
  * │ Bounty Jumps                                   │ bounty-jumps               │ Sortable table             │
@@ -80,6 +81,7 @@ import {
   EmbedTopBounties,
   EmbedRegionBountyTable,
   EmbedBloodTypeBountyTier,
+  EmbedBloodTypeBountyTable,
 } from '../components/insights/EmbedBountyCharts'
 import {
   EmbedMostLoyal,
@@ -181,6 +183,7 @@ function EmbedInsightPage() {
     'blood-type-bounty-tier': (
       <EmbedBloodTypeBountyTier data={insights.bloodTypeBountyTier} />
     ),
+    'blood-type-bounty-table': <EmbedBloodTypeBountyTable />,
     'most-loyal': <EmbedMostLoyal data={insights.mostLoyal} />,
     'wonders-distribution': (
       <EmbedWondersDistribution

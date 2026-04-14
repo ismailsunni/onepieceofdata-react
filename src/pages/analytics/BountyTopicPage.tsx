@@ -13,6 +13,7 @@ import { BountySection } from '../../components/insights/BountySection'
 import { BountyStatsSection } from '../../components/analytics/BountyStatsSection'
 import { RegionBountySection } from '../../components/analytics/RegionBountySection'
 import { BloodTypeBountySection } from '../../components/analytics/BloodTypeBountySection'
+import { BloodTypeBountyBreakdownSection } from '../../components/analytics/BloodTypeBountyBreakdownSection'
 
 function BountyTopicPage() {
   const location = useLocation()
@@ -165,6 +166,8 @@ function BountyTopicPage() {
         />
 
         <BloodTypeBountySection data={insights.bloodTypeBountyTier} />
+
+        <BloodTypeBountyBreakdownSection />
 
         <RegionBountySection />
       </div>

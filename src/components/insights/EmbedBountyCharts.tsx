@@ -30,6 +30,7 @@ import {
   fetchBountyDistribution,
   fetchTopBounties,
   fetchRegionBountyData,
+  fetchBloodTypeBountyData,
 } from '../../services/analyticsService'
 import { formatBounty, bountyJumpColumns } from './constants'
 import { EmbedFooter } from './EmbedFooter'
@@ -742,6 +743,120 @@ export function EmbedBloodTypeBountyTier({
           ))}
         </BarChart>
       </ResponsiveContainer>
+      <EmbedFooter />
+    </div>
+  )
+}
+
+// ── Blood Type Bounty Breakdown (table) ────────────────────────────────────
+
+export function EmbedBloodTypeBountyTable() {
+  const [excludeDead, setExcludeDead] = useState(false)
+  const { data, isLoading } = useQuery({
+    queryKey: ['embed', 'blood-type-bounty-table', excludeDead],
+    queryFn: () => fetchBloodTypeBountyData(excludeDead),
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const rows = useMemo(() => {
+    return [...(data ?? [])].sort((a, b) => b.totalBounty - a.totalBounty)
+  }, [data])
+
+  return (
+    <div className="p-4 font-sans">
+      <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+        <h2 className="text-lg font-semibold text-gray-900">
+          Blood Type Bounty Breakdown
+        </h2>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-gray-600">
+            Include deceased:
+          </span>
+          <button
+            onClick={() => setExcludeDead(false)}
+            className={`px-2 py-1 text-xs rounded-md transition-colors ${
+              !excludeDead
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Yes
+          </button>
+          <button
+            onClick={() => setExcludeDead(true)}
+            className={`px-2 py-1 text-xs rounded-md transition-colors ${
+              excludeDead
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Alive Only
+          </button>
+        </div>
+      </div>
+      {isLoading ? (
+        <EmbedLoading />
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b-2 border-gray-200">
+                <th className="text-left py-2 px-3 font-semibold text-gray-900">
+                  Blood Type
+                </th>
+                <th className="text-right py-2 px-3 font-semibold text-gray-900">
+                  Characters
+                </th>
+                <th className="text-right py-2 px-3 font-semibold text-gray-900">
+                  Total Bounty
+                </th>
+                <th className="text-right py-2 px-3 font-semibold text-gray-900">
+                  Average
+                </th>
+                <th className="text-right py-2 px-3 font-semibold text-gray-900">
+                  Median
+                </th>
+                <th className="text-right py-2 px-3 font-semibold text-gray-900">
+                  Avg Top 5
+                </th>
+                <th className="text-left py-2 px-3 font-semibold text-gray-900">
+                  Top Character
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r, i) => (
+                <tr
+                  key={r.bloodType}
+                  className={`border-b border-gray-100 ${i % 2 === 0 ? 'bg-gray-50/50' : ''}`}
+                >
+                  <td className="py-2 px-3 font-medium text-gray-900">
+                    {r.bloodType}
+                  </td>
+                  <td className="py-2 px-3 text-right text-gray-700">
+                    {r.characterCount}
+                  </td>
+                  <td className="py-2 px-3 text-right font-medium text-amber-600">
+                    ฿{formatBounty(r.totalBounty)}
+                  </td>
+                  <td className="py-2 px-3 text-right font-medium text-purple-600">
+                    ฿{formatBounty(r.averageBounty)}
+                  </td>
+                  <td className="py-2 px-3 text-right font-medium text-blue-600">
+                    ฿{formatBounty(r.medianBounty)}
+                  </td>
+                  <td className="py-2 px-3 text-right font-medium text-emerald-600">
+                    ฿{formatBounty(r.avgTop5Bounty)}
+                  </td>
+                  <td className="py-2 px-3 text-left text-gray-600">
+                    {r.topCharacters[0]?.name ?? '—'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       <EmbedFooter />
     </div>
   )
