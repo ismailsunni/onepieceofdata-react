@@ -594,6 +594,12 @@ export function EmbedRegionBountyTable() {
                 <th className="text-right py-2 px-3 font-semibold text-gray-900">
                   Median
                 </th>
+                <th className="text-right py-2 px-3 font-semibold text-gray-900">
+                  Avg Top 5
+                </th>
+                <th className="text-left py-2 px-3 font-semibold text-gray-900">
+                  Top Character
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -616,6 +622,12 @@ export function EmbedRegionBountyTable() {
                   </td>
                   <td className="py-2 px-3 text-right font-medium text-blue-600">
                     ฿{formatBounty(r.medianBounty)}
+                  </td>
+                  <td className="py-2 px-3 text-right font-medium text-emerald-600">
+                    ฿{formatBounty(r.avgTop5Bounty)}
+                  </td>
+                  <td className="py-2 px-3 text-left text-gray-600">
+                    {r.topCharacters[0]?.name ?? '—'}
                   </td>
                 </tr>
               ))}
