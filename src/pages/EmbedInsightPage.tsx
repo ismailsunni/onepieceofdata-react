@@ -24,6 +24,7 @@
  * │ Detailed Completeness Statistics               │ completeness               │ —                          │
  * │ Largest Crews & Organizations                  │ largest-groups             │ —                          │
  * │ Longest Disappearances                         │ gap-analysis               │ Sortable table             │
+ * │ Main Character Moments                         │ main-character-moments     │ SHP 3-way + Sortable table │
  * │ Most Consistent Presence                       │ most-loyal                 │ —                          │
  * │ One-Arc / One-Saga Wonders vs Recurring Cast   │ wonders-distribution       │ Arcs / Sagas               │
  * │ Origin Region Distribution                     │ origin-regions             │ —                          │
@@ -104,6 +105,7 @@ import {
 import {
   EmbedTopCharactersPerSaga,
   EmbedTopCharactersPerArc,
+  EmbedMainCharacterMoments,
 } from '../components/insights/EmbedRankingsCharts'
 import {
   EmbedLargestGroups,
@@ -211,6 +213,7 @@ function EmbedInsightPage() {
     'top-characters-per-arc': (
       <EmbedTopCharactersPerArc data={insights.topCharactersPerArc} />
     ),
+    'main-character-moments': <EmbedMainCharacterMoments />,
     'largest-groups': <EmbedLargestGroups data={insights.largestGroups} />,
     'crew-loyalty': <EmbedCrewLoyalty data={insights.crewLoyalty} />,
     'publication-rate-by-year': <EmbedPublicationRate />,

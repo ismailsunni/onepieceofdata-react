@@ -1139,6 +1139,105 @@ export function computeTopCharactersPerSaga(
   })
 }
 
+// ── Main Character Moments ────────────────────────────────────────────────
+
+export interface MainCharacterMomentEntry {
+  id: string
+  title: string
+  count: number
+  total: number
+  pct: number
+}
+
+export interface MainCharacterMoment {
+  id: string
+  name: string
+  arcMainCount: number
+  sagaMainCount: number
+  totalMainCount: number
+  topArc: MainCharacterMomentEntry | null
+  topSaga: MainCharacterMomentEntry | null
+  arcMoments: MainCharacterMomentEntry[]
+  sagaMoments: MainCharacterMomentEntry[]
+}
+
+/**
+ * Compute characters who have "main character moments" — appearing in ≥50%
+ * of an arc's or saga's chapters.
+ */
+export function computeMainCharacterMoments(
+  characters: Character[],
+  arcs: Arc[],
+  sagas: Saga[],
+  threshold = 0.5
+): MainCharacterMoment[] {
+  const results: MainCharacterMoment[] = []
+
+  for (const c of characters) {
+    if (!c.chapter_list || c.chapter_list.length === 0) continue
+
+    const arcMoments: MainCharacterMomentEntry[] = []
+    for (const arc of arcs) {
+      const total = arc.end_chapter - arc.start_chapter + 1
+      if (total <= 0) continue
+      const count = c.chapter_list.filter(
+        (ch) => ch >= arc.start_chapter && ch <= arc.end_chapter
+      ).length
+      if (count / total >= threshold) {
+        arcMoments.push({
+          id: arc.arc_id,
+          title: arc.title,
+          count,
+          total,
+          pct: Math.round((count / total) * 1000) / 10,
+        })
+      }
+    }
+
+    const sagaMoments: MainCharacterMomentEntry[] = []
+    for (const saga of sagas) {
+      const total = saga.end_chapter - saga.start_chapter + 1
+      if (total <= 0) continue
+      const count = c.chapter_list.filter(
+        (ch) => ch >= saga.start_chapter && ch <= saga.end_chapter
+      ).length
+      if (count / total >= threshold) {
+        sagaMoments.push({
+          id: saga.saga_id,
+          title: saga.title,
+          count,
+          total,
+          pct: Math.round((count / total) * 1000) / 10,
+        })
+      }
+    }
+
+    if (arcMoments.length === 0 && sagaMoments.length === 0) continue
+
+    arcMoments.sort((a, b) => b.pct - a.pct)
+    sagaMoments.sort((a, b) => b.pct - a.pct)
+
+    results.push({
+      id: c.id,
+      name: c.name || 'Unknown',
+      arcMainCount: arcMoments.length,
+      sagaMainCount: sagaMoments.length,
+      totalMainCount: arcMoments.length + sagaMoments.length,
+      topArc: arcMoments[0] || null,
+      topSaga: sagaMoments[0] || null,
+      arcMoments,
+      sagaMoments,
+    })
+  }
+
+  return results.sort(
+    (a, b) =>
+      b.totalMainCount - a.totalMainCount ||
+      b.arcMainCount - a.arcMainCount ||
+      b.sagaMainCount - a.sagaMainCount
+  )
+}
+
 // ── #23 Largest Crews / Organizations ──────────────────────────────────────
 
 export interface GroupSize {
