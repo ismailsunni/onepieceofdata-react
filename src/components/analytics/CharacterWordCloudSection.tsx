@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import cloud from 'd3-cloud'
 import { fetchInsightsRawData } from '../../services/analyticsService'
 import { STRAW_HAT_IDS } from '../../constants/characters'
+import { isLightColor } from '../../constants/strawHatColors'
 import { Character } from '../../types/character'
 import { ChartCard } from '../common/ChartCard'
 import { formatBounty } from '../insights/constants'
@@ -200,29 +201,39 @@ function CharacterWordCloudFlat({
           role="img"
         >
           <g transform={`translate(${width / 2},${height / 2})`}>
-            {laidOut.map((w) => (
-              <text
-                key={w.id}
-                textAnchor="middle"
-                transform={`translate(${w.x},${w.y}) rotate(${w.rotate})`}
-                fontFamily="sans-serif"
-                fontWeight={w.isSHP ? 700 : 500}
-                fontSize={w.size}
-                fill={wordColor(w.id, w.isSHP)}
-                style={{
-                  cursor: linkCharacters ? 'pointer' : 'default',
-                  userSelect: 'none',
-                }}
-                onClick={
-                  linkCharacters
-                    ? () => navigate(`/characters/${w.id}`)
-                    : undefined
-                }
-              >
-                <title>{`${w.name} — ${formatValue(w.value)} ${suffix}`}</title>
-                {w.name}
-              </text>
-            ))}
+            {laidOut.map((w) => {
+              const fill = wordColor(w.id, w.isSHP)
+              // Light Straw Hat colours (Usopp's yellow, Franky/Vivi/Brook
+              // greys) would vanish on the white backdrop — add a thin dark
+              // stroke painted behind the fill for contrast.
+              const needsOutline = isLightColor(fill)
+              return (
+                <text
+                  key={w.id}
+                  textAnchor="middle"
+                  transform={`translate(${w.x},${w.y}) rotate(${w.rotate})`}
+                  fontFamily="sans-serif"
+                  fontWeight={w.isSHP ? 700 : 500}
+                  fontSize={w.size}
+                  fill={fill}
+                  stroke={needsOutline ? '#374151' : undefined}
+                  strokeWidth={needsOutline ? 1 : undefined}
+                  paintOrder={needsOutline ? 'stroke fill' : undefined}
+                  style={{
+                    cursor: linkCharacters ? 'pointer' : 'default',
+                    userSelect: 'none',
+                  }}
+                  onClick={
+                    linkCharacters
+                      ? () => navigate(`/characters/${w.id}`)
+                      : undefined
+                  }
+                >
+                  <title>{`${w.name} — ${formatValue(w.value)} ${suffix}`}</title>
+                  {w.name}
+                </text>
+              )
+            })}
           </g>
         </svg>
       )}
@@ -463,33 +474,39 @@ function CharacterWordCloudSphere({
           role="img"
         >
           <g ref={groupRef} transform={`translate(${width / 2},${height / 2})`}>
-            {placements.map((p) => (
-              <text
-                key={p.id}
-                data-id={p.id}
-                textAnchor="middle"
-                dominantBaseline="central"
-                fontFamily="sans-serif"
-                fontWeight={p.isSHP ? 700 : 500}
-                fontSize={p.size}
-                fill={p.color}
-                style={{
-                  cursor: linkCharacters ? 'pointer' : 'default',
-                  userSelect: 'none',
-                }}
-                onClick={
-                  linkCharacters
-                    ? () => {
-                        if (didDragRef.current) return
-                        navigate(`/characters/${p.id}`)
-                      }
-                    : undefined
-                }
-              >
-                <title>{`${p.name} — ${formatValue(p.value)} ${suffix}`}</title>
-                {p.name}
-              </text>
-            ))}
+            {placements.map((p) => {
+              const needsOutline = isLightColor(p.color)
+              return (
+                <text
+                  key={p.id}
+                  data-id={p.id}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  fontFamily="sans-serif"
+                  fontWeight={p.isSHP ? 700 : 500}
+                  fontSize={p.size}
+                  fill={p.color}
+                  stroke={needsOutline ? '#374151' : undefined}
+                  strokeWidth={needsOutline ? 1 : undefined}
+                  paintOrder={needsOutline ? 'stroke fill' : undefined}
+                  style={{
+                    cursor: linkCharacters ? 'pointer' : 'default',
+                    userSelect: 'none',
+                  }}
+                  onClick={
+                    linkCharacters
+                      ? () => {
+                          if (didDragRef.current) return
+                          navigate(`/characters/${p.id}`)
+                        }
+                      : undefined
+                  }
+                >
+                  <title>{`${p.name} — ${formatValue(p.value)} ${suffix}`}</title>
+                  {p.name}
+                </text>
+              )
+            })}
           </g>
         </svg>
       )}

@@ -3,6 +3,7 @@
  * Used both by the live-render component (CharacterWordCloudSection) and the
  * offline exporters (wordCloudExport).
  */
+import { getStrawHatColor } from '../constants/strawHatColors'
 
 export interface WordCloudItem {
   id: string
@@ -49,14 +50,16 @@ export function wordCloudFontSize(
 }
 
 /**
- * Colour for a word. SHP characters get a fixed high-saturation rose so they
- * pop against the mixed-hue crowd; everyone else gets a pseudo-random hue
- * derived from their id — deterministic per character (stable across renders)
- * but spread across the full colour wheel instead of cycling through a small
- * palette.
+ * Colour for a word. Straw Hats get Oda's signature crew colour (red for
+ * Luffy, green for Zoro, etc.) so the crew stays visually identifiable
+ * across every chart that uses this palette. Unknown SHPs (defensive
+ * fallback) keep the previous rose. Everyone else gets a pseudo-random
+ * hue derived from their id — deterministic per character (stable across
+ * renders) but spread across the full colour wheel instead of cycling
+ * through a small palette.
  */
 export function wordColor(id: string, isSHP: boolean): string {
-  if (isSHP) return '#e11d48'
+  if (isSHP) return getStrawHatColor(id) ?? '#e11d48'
   // Three independent hashes so hue/sat/light don't correlate. Wider S/L
   // ranges than before — the earlier 55–74% / 36–47% bands compressed every
   // character into nearly-identical muted tones. The new bands stay legible

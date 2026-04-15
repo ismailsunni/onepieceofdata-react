@@ -9,10 +9,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { fetchInsightsRawData } from '../../services/analyticsService'
 import { STRAW_HAT_IDS } from '../../constants/characters'
-import {
-  getStrawHatColor,
-  STRAW_HAT_MARKER,
-} from '../../constants/strawHatColors'
+import { STRAW_HAT_MARKER, isLightColor } from '../../constants/strawHatColors'
 import { ChartCard } from '../common/ChartCard'
 import { wordColor } from '../../utils/wordCloud'
 import {
@@ -153,10 +150,16 @@ function RaceRow({
         ? (entry.score / maxScore) * 100
         : 0
   const nameInside = pct >= NAME_INSIDE_THRESHOLD_PCT
-  // Straw Hats get Oda's signature crew colors in every mode; everyone
-  // else keeps the deterministic hashed hue.
-  const shpColor = entry.isSHP ? getStrawHatColor(entry.id) : undefined
-  const color = shpColor ?? wordColor(entry.id, false)
+  // wordColor routes SHPs to the signature Oda palette, everyone else
+  // to a deterministic hashed hue.
+  const color = wordColor(entry.id, entry.isSHP)
+  // Flip text to dark on light bars (Usopp's yellow, Franky's pale blue,
+  // Brook's gray, Vivi's white) so labels stay legible.
+  const lightBar = isLightColor(color)
+  const insideTextColor = lightBar ? '#111827' : '#ffffff'
+  const insideTextShadow = lightBar
+    ? '0 1px 1px rgba(255, 255, 255, 0.55)'
+    : '0 1px 2px rgba(0, 0, 0, 0.45)'
   // Rows outside the visible top-N still render (for smooth enter/exit) but
   // fade to invisible so the clipped band is clean.
   const fadeOut = rank > TOP_N
@@ -197,9 +200,10 @@ function RaceRow({
             title={`${entry.name} — score ${entry.score.toFixed(1)}`}
           >
             <span
-              className="text-xs sm:text-sm font-semibold text-white whitespace-nowrap truncate select-none"
+              className="text-xs sm:text-sm font-semibold whitespace-nowrap truncate select-none"
               style={{
-                textShadow: '0 1px 2px rgba(0, 0, 0, 0.45)',
+                color: insideTextColor,
+                textShadow: insideTextShadow,
                 opacity: nameInside ? 1 : 0,
                 transition: 'opacity 200ms linear',
               }}
