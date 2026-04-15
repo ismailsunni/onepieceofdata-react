@@ -278,6 +278,8 @@ export function CharacterAppearanceRaceSection({
   // flips) without changing what "recent appearances" means at the macro
   // level. Default on because the goal is a comfortable watch.
   const [smoothing, setSmoothing] = useState(true)
+  // Animated-export state. null = idle, 'gif' | 'svg' = encoding.
+  const [exporting, setExporting] = useState<null | 'gif' | 'svg'>(null)
 
   const { data: raw, isLoading } = useQuery({
     queryKey: ['insights-raw-data'],
@@ -377,6 +379,60 @@ export function CharacterAppearanceRaceSection({
     setCurrentChapter(minChapter)
   }
 
+  // "Saga — Arc" subtitle lookup keyed by chapter, shared with SVG/GIF
+  // exporters so the sub-header text tracks the current arc + saga. Sagas
+  // bracket arcs by chapter range; we pick the matching saga per chapter and
+  // prefix the arc title with it so exported animations read like
+  // "Whole Cake Island — Reverie".
+  const arcTitleByChapter = useMemo(() => {
+    const m = new Map<number, string>()
+    if (!raw) return m
+    const sagas = raw.sagas
+    for (const [c, info] of arcByChapter) {
+      const saga = sagas.find((s) => c >= s.start_chapter && c <= s.end_chapter)
+      m.set(c, saga ? `${saga.title} — ${info.title}` : info.title)
+    }
+    return m
+  }, [arcByChapter, raw])
+
+  const handleDownload = async (format: 'gif' | 'svg') => {
+    if (exporting || frames.length === 0) return
+    setExporting(format)
+    try {
+      const { exportRaceAsGif, exportRaceAsSvg } = await import(
+        '../../utils/appearanceRaceExport'
+      )
+      const { downloadBlob } = await import('../../utils/wordCloudExport')
+      // Height math mirrors appearanceRaceExport.ts layout (~90 header with
+      // the stacked chapter+subtitle + 42 per row + ~30 bottom for progress
+      // bar and padding). Kept in sync by eyeballing — the exporter is the
+      // canonical layout.
+      const opts = {
+        width: 1080,
+        height: 100 + TOP_N * 42 + 40,
+        frames: 150,
+        duration: 12,
+        topN: TOP_N,
+        maxScore,
+        arcByChapter: arcTitleByChapter,
+      }
+      const baseName = `character-appearance-race-${smoothing ? 'decay' : 'window'}-${windowSize}`
+      if (format === 'gif') {
+        const blob = await exportRaceAsGif(frames, opts)
+        downloadBlob(blob, `${baseName}.gif`)
+      } else {
+        const svg = exportRaceAsSvg(frames, opts)
+        const blob = new Blob([svg], { type: 'image/svg+xml' })
+        downloadBlob(blob, `${baseName}.svg`)
+      }
+    } catch (err) {
+      console.error('Race export failed:', err)
+      alert(err instanceof Error ? err.message : 'Export failed. See console.')
+    } finally {
+      setExporting(null)
+    }
+  }
+
   const progressPct =
     maxChapter > minChapter
       ? ((clampedChapter - minChapter) / (maxChapter - minChapter)) * 100
@@ -463,6 +519,34 @@ export function CharacterAppearanceRaceSection({
                 ))}
               </select>
             </label>
+            <div
+              className="inline-flex items-center gap-1"
+              role="group"
+              aria-label="Download animated race chart"
+            >
+              <span className="text-gray-500 text-xs mr-1">Animated:</span>
+              {(['gif', 'svg'] as const).map((fmt) => {
+                const busy = exporting === fmt
+                const disabled = exporting !== null || frames.length === 0
+                return (
+                  <button
+                    key={fmt}
+                    onClick={() => handleDownload(fmt)}
+                    disabled={disabled}
+                    title={`Download race animation as ${fmt.toUpperCase()}`}
+                    className={`px-2.5 py-1 text-xs rounded-md border transition-colors tabular-nums ${
+                      busy
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : disabled
+                          ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
+                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
+                    }`}
+                  >
+                    {busy ? 'Encoding…' : fmt.toUpperCase()}
+                  </button>
+                )
+              })}
+            </div>
           </div>
         }
       >

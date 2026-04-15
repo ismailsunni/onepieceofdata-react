@@ -84,6 +84,53 @@ function getArg(name: string, defaultValue?: string): string | undefined {
   return defaultValue
 }
 
+function hasFlag(name: string): boolean {
+  return process.argv.slice(2).includes(`--${name}`)
+}
+
+const USAGE = `Usage: npm run wordcloud -- [options]
+
+Render the rotating 3D character word cloud as an animated SVG, GIF, or a
+PNG frame sequence. Reads Supabase credentials from .env.local.
+
+Output
+  --format <svg|gif|png-frames>   Output format (default: svg)
+  --output <path>                 Output file (svg/gif) or directory
+                                  (png-frames). Default: out/word-cloud.<ext>
+
+Data
+  --metric <chapter|cover|arc|saga|bounty>
+                                  Which metric drives word size (default: chapter)
+  --min <N>                       Minimum metric value to include a character.
+                                  Per-metric defaults: chapter=50, cover=1,
+                                  arc=1, saga=1, bounty=100000000
+  --shp <all|hide|only>           Straw Hat filter (default: all)
+
+Rendering
+  --width <px>                    Canvas width (default: 1080)
+  --height <px>                   Canvas height (default: 1080)
+  --duration <sec>                Animation loop duration (default: 6)
+  --frames <N>                    Frame count for gif/png-frames (default: 120)
+  --background <color>            CSS/hex background (default: #fafafa)
+
+Typography
+  --font <family>                 Font family (default: sans-serif)
+
+Other
+  --help, -h                      Show this help and exit
+
+Examples
+  npm run wordcloud -- --format gif --width 1200 --height 1200 \\
+    --metric chapter --min 50 --duration 6 --frames 120 \\
+    --output out/word-cloud.gif
+
+  npm run wordcloud -- --format svg --metric bounty --min 500000000 \\
+    --output out/bounty-cloud.svg
+
+  npm run wordcloud -- --format png-frames --width 1920 --height 1920 \\
+    --frames 240 --output out/cloud-frames
+`
+
 function parseArgs(): CliArgs {
   const format = (getArg('format', 'svg') as OutputFormat) ?? 'svg'
   if (!['svg', 'gif', 'png-frames'].includes(format)) {
@@ -404,6 +451,10 @@ async function renderPngFrames(
 // ── Main ───────────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
+  if (hasFlag('help') || hasFlag('h') || process.argv.includes('-h')) {
+    process.stdout.write(USAGE)
+    return
+  }
   const args = parseArgs()
   console.log('Word cloud generator')
   console.log(

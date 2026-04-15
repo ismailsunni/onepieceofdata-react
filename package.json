@@ -15,7 +15,8 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "prepare": "husky",
     "update-chart-index": "tsx src/scripts/updateEmbedChartIndex.ts",
-    "wordcloud": "tsx src/scripts/generateWordCloud.ts"
+    "wordcloud": "tsx src/scripts/generateWordCloud.ts",
+    "race": "tsx src/scripts/generateAppearanceRace.ts"
   },
   "keywords": [
     "one-piece",
