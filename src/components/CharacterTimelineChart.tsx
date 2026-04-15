@@ -13,6 +13,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Character } from '../types/character'
 import { ChartCard } from './common/ChartCard'
 import { supabase } from '../services/supabase'
+import { fetchDatabaseStats } from '../services/statsService'
 import type { Saga } from '../types/arc'
 
 interface CharacterTimelineChartProps {
@@ -128,6 +129,15 @@ const CharacterTimelineChart = memo(
       queryFn: fetchSagasForChart,
     })
 
+    // Use the absolute total chapter count as the x-axis max so the timeline
+    // always extends to the latest published chapter (not just the selected
+    // characters' last appearance).
+    const { data: dbStats } = useQuery({
+      queryKey: ['database-stats'],
+      queryFn: fetchDatabaseStats,
+      staleTime: 10 * 60 * 1000,
+    })
+
     // Transform character data into scatter plot format
     const chartData = useMemo(() => {
       const data: Array<{
@@ -175,25 +185,19 @@ const CharacterTimelineChart = memo(
         .map((char) => char.name as string)
     }, [characters])
 
-    // Calculate the range for X-axis
-    const chapterRange = useMemo(() => {
-      let min = Infinity
+    // X-axis max comes from the total chapter count (latest published chapter).
+    // Falls back to derived max from selected characters if stats not yet loaded.
+    const chapterMax = useMemo(() => {
+      if (dbStats?.chapters && dbStats.chapters > 0) return dbStats.chapters
       let max = -Infinity
-
       characters.forEach((character) => {
         if (character.chapter_list && character.chapter_list.length > 0) {
-          const charMin = Math.min(...character.chapter_list)
           const charMax = Math.max(...character.chapter_list)
-          if (charMin < min) min = charMin
           if (charMax > max) max = charMax
         }
       })
-
-      return {
-        min: min === Infinity ? 0 : min,
-        max: max === -Infinity ? 1000 : max,
-      }
-    }, [characters])
+      return max === -Infinity ? 1000 : max
+    }, [dbStats?.chapters, characters])
 
     // Create the Y-axis tick renderer with character names
     const yAxisTick = useMemo(
@@ -239,7 +243,7 @@ const CharacterTimelineChart = memo(
               type="number"
               dataKey="chapter"
               name="Chapter"
-              domain={[0, chapterRange.max + 10]}
+              domain={[0, chapterMax]}
               label={{
                 value: 'Chapter Number',
                 position: 'insideBottom',

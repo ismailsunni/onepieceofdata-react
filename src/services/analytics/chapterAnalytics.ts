@@ -15,7 +15,6 @@ export interface ChapterRelease {
   arcTitle: string | null
   sagaId: string | null
   sagaTitle: string | null
-  luffyAppears: boolean
 }
 
 /**
@@ -105,8 +104,8 @@ export async function fetchChapterReleases(): Promise<ChapterRelease[]> {
       return []
     }
 
-    // Fetch chapters, arcs, sagas, and Luffy's data in parallel
-    const [chaptersRes, arcsRes, sagasRes, luffyRes] = await Promise.all([
+    // Fetch chapters, arcs, and sagas in parallel
+    const [chaptersRes, arcsRes, sagasRes] = await Promise.all([
       supabase
         .from('chapter')
         .select('number, jump, date')
@@ -117,11 +116,6 @@ export async function fetchChapterReleases(): Promise<ChapterRelease[]> {
       supabase
         .from('saga')
         .select('saga_id, title, start_chapter, end_chapter'),
-      supabase
-        .from('character')
-        .select('chapter_list')
-        .eq('name', 'Monkey D. Luffy')
-        .single(),
     ])
 
     if (chaptersRes.error) {
@@ -132,7 +126,6 @@ export async function fetchChapterReleases(): Promise<ChapterRelease[]> {
     const chapters = chaptersRes.data || []
     const arcs = arcsRes.data || []
     const sagas = sagasRes.data || []
-    const luffyChapters = new Set(luffyRes.data?.chapter_list || [])
 
     // Parse and extract year and issue from jump field
     const releases: ChapterRelease[] = chapters.map((chapter) => {
@@ -167,7 +160,6 @@ export async function fetchChapterReleases(): Promise<ChapterRelease[]> {
         arcTitle: arc?.title || null,
         sagaId: saga?.saga_id || null,
         sagaTitle: saga?.title || null,
-        luffyAppears: luffyChapters.has(chapter.number),
       }
     })
 
@@ -176,6 +168,27 @@ export async function fetchChapterReleases(): Promise<ChapterRelease[]> {
     logger.error('Error in fetchChapterReleases:', error)
     return []
   }
+}
+
+/**
+ * Fetch the chapter_list (sorted set of appearance chapter numbers) for a
+ * single character, identified by their character ID. Used by the release
+ * history calendar to color cells based on character appearance.
+ */
+export async function fetchCharacterChapterList(
+  characterId: string
+): Promise<number[]> {
+  if (!supabase || !characterId) return []
+  const { data, error } = await supabase
+    .from('character')
+    .select('chapter_list')
+    .eq('id', characterId)
+    .single()
+  if (error) {
+    logger.error('Error fetching character chapter_list:', error)
+    return []
+  }
+  return data?.chapter_list || []
 }
 
 // ── Yearly publication statistics ───────────────────────────────────────────

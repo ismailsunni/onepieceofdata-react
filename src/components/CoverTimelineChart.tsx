@@ -13,6 +13,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Character } from '../types/character'
 import { ChartCard } from './common/ChartCard'
 import { supabase } from '../services/supabase'
+import { fetchDatabaseStats } from '../services/statsService'
 import type { Saga } from '../types/arc'
 
 interface CoverTimelineChartProps {
@@ -164,6 +165,14 @@ const CoverTimelineChart = memo(({ characters }: CoverTimelineChartProps) => {
     staleTime: 10 * 60 * 1000,
   })
 
+  // Use the absolute total volume count as the x-axis max so the timeline
+  // always extends to the latest published volume.
+  const { data: dbStats } = useQuery({
+    queryKey: ['database-stats'],
+    queryFn: fetchDatabaseStats,
+    staleTime: 10 * 60 * 1000,
+  })
+
   const sagaVolumeRanges = useMemo(
     () => computeSagaVolumeRanges(sagas, chapterVolumes),
     [sagas, chapterVolumes]
@@ -197,27 +206,22 @@ const CoverTimelineChart = memo(({ characters }: CoverTimelineChartProps) => {
       .map((char) => char.name as string)
   }, [characters])
 
-  const volumeRange = useMemo(() => {
-    let min = Infinity
+  // X-axis max comes from the total volume count (latest published volume).
+  // Falls back to derived max from selected characters if stats not yet loaded.
+  const volumeMax = useMemo(() => {
+    if (dbStats?.volumes && dbStats.volumes > 0) return dbStats.volumes
     let max = -Infinity
-
     characters.forEach((character) => {
       if (
         character.cover_volume_list &&
         character.cover_volume_list.length > 0
       ) {
-        const charMin = Math.min(...character.cover_volume_list)
         const charMax = Math.max(...character.cover_volume_list)
-        if (charMin < min) min = charMin
         if (charMax > max) max = charMax
       }
     })
-
-    return {
-      min: min === Infinity ? 0 : min,
-      max: max === -Infinity ? 110 : max,
-    }
-  }, [characters])
+    return max === -Infinity ? 110 : max
+  }, [dbStats?.volumes, characters])
 
   const yAxisTick = useMemo(
     () => CustomYAxisTick(characterNames),
@@ -266,7 +270,7 @@ const CoverTimelineChart = memo(({ characters }: CoverTimelineChartProps) => {
                 type="number"
                 dataKey="volume"
                 name="Volume"
-                domain={[0, volumeRange.max + 2]}
+                domain={[0, volumeMax]}
                 label={{
                   value: 'Volume Number',
                   position: 'insideBottom',

@@ -1,10 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import {
   fetchChapterReleases,
+  fetchCharacterChapterList,
   ChapterRelease,
 } from '../services/analyticsService'
+import { fetchCharacters } from '../services/characterService'
 import { Link } from 'react-router-dom'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { StatCard, FilterButton } from '../components/analytics'
 import { ChartCard } from '../components/common/ChartCard'
 
@@ -41,7 +43,7 @@ const ARC_COLORS = [
   '#facc15', // yellow-400
 ]
 
-type VisualizationTheme = 'jump' | 'saga' | 'arc' | 'luffy'
+type VisualizationTheme = 'jump' | 'saga' | 'arc' | 'character'
 
 interface JumpIssue {
   jump: string
@@ -62,7 +64,8 @@ function getCellColor(
   chapters: ChapterRelease[],
   theme: VisualizationTheme,
   sagaColorMap: Map<string, string>,
-  arcColorMap: Map<string, string>
+  arcColorMap: Map<string, string>,
+  characterChapterSet: Set<number> | null
 ): string {
   if (chapters.length === 0) return '#fca5a5' // red-300
 
@@ -84,10 +87,10 @@ function getCellColor(
       }
       return '#9ca3af' // gray-400
 
-    case 'luffy': {
-      // Check if Luffy appears in any of the chapters
-      const luffyAppears = chapters.some((ch) => ch.luffyAppears)
-      return luffyAppears ? '#22c55e' : '#d1d5db' // green-500 : gray-300
+    case 'character': {
+      if (!characterChapterSet) return '#d1d5db' // gray-300 — no character selected
+      const appears = chapters.some((ch) => characterChapterSet.has(ch.number))
+      return appears ? '#22c55e' : '#d1d5db' // green-500 : gray-300
     }
 
     default:
@@ -95,9 +98,77 @@ function getCellColor(
   }
 }
 
+/**
+ * Compute the longest run of consecutive chapter numbers in `appearChapters`
+ * (longest streak of appearances) and the longest gap between two consecutive
+ * appearances (the longest stretch of chapters where the character does NOT
+ * appear, bounded by chapters where they do).
+ *
+ * Both ranges are returned as inclusive [from, to] chapter numbers, with
+ * length being the chapter count covered by the range.
+ */
+function computeAppearanceStreaks(appearChapters: number[]): {
+  longestStreak: { from: number; to: number; length: number } | null
+  longestGap: { from: number; to: number; length: number } | null
+} {
+  if (!appearChapters || appearChapters.length === 0) {
+    return { longestStreak: null, longestGap: null }
+  }
+
+  const sorted = [...new Set(appearChapters)].sort((a, b) => a - b)
+
+  // Longest streak: longest run of consecutive integers
+  let streakStart = sorted[0]
+  let streakLen = 1
+  let bestStreakStart = sorted[0]
+  let bestStreakEnd = sorted[0]
+  let bestStreakLen = 1
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i] === sorted[i - 1] + 1) {
+      streakLen++
+    } else {
+      streakLen = 1
+      streakStart = sorted[i]
+    }
+    if (streakLen > bestStreakLen) {
+      bestStreakLen = streakLen
+      bestStreakStart = streakStart
+      bestStreakEnd = sorted[i]
+    }
+  }
+
+  // Longest gap: largest difference between consecutive appearances
+  let bestGap: { from: number; to: number; length: number } | null = null
+  for (let i = 1; i < sorted.length; i++) {
+    const gap = sorted[i] - sorted[i - 1] - 1
+    if (gap > 0 && (!bestGap || gap > bestGap.length)) {
+      bestGap = {
+        from: sorted[i - 1] + 1,
+        to: sorted[i] - 1,
+        length: gap,
+      }
+    }
+  }
+
+  return {
+    longestStreak: {
+      from: bestStreakStart,
+      to: bestStreakEnd,
+      length: bestStreakLen,
+    },
+    longestGap: bestGap,
+  }
+}
+
 function ChapterReleaseCalendarPage() {
   const [theme, setTheme] = useState<VisualizationTheme>('jump')
   const [isCompact, setIsCompact] = useState(false)
+  const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(
+    null
+  )
+  const [characterSearch, setCharacterSearch] = useState('')
+  const [characterDropdownOpen, setCharacterDropdownOpen] = useState(false)
+  const characterSearchRef = useRef<HTMLDivElement>(null)
 
   const {
     data: releases,
@@ -108,6 +179,74 @@ function ChapterReleaseCalendarPage() {
     queryFn: fetchChapterReleases,
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
+
+  // Character list — used for the search dropdown when the Character theme is
+  // active. Cached across the app since CharacterTimelinePage uses it too.
+  const { data: allCharacters = [] } = useQuery({
+    queryKey: ['characters'],
+    queryFn: fetchCharacters,
+    staleTime: 10 * 60 * 1000,
+  })
+
+  // Default to Luffy when the user hasn't picked anyone yet. Derived during
+  // render (no effect) to avoid cascading renders.
+  const effectiveCharacterId = useMemo(() => {
+    if (selectedCharacterId) return selectedCharacterId
+    return allCharacters.find((c) => c.name === 'Monkey D. Luffy')?.id ?? null
+  }, [selectedCharacterId, allCharacters])
+
+  // Fetch the chapter_list of the currently selected character (only when
+  // we actually have a character selected — not gated by theme so that the
+  // data is ready immediately when the user switches to the Character theme).
+  const { data: selectedCharacterChapters = [] } = useQuery({
+    queryKey: ['character-chapter-list', effectiveCharacterId],
+    queryFn: () => fetchCharacterChapterList(effectiveCharacterId!),
+    enabled: !!effectiveCharacterId,
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const characterChapterSet = useMemo(
+    () =>
+      theme === 'character' && selectedCharacterChapters.length > 0
+        ? new Set(selectedCharacterChapters)
+        : null,
+    [theme, selectedCharacterChapters]
+  )
+
+  const selectedCharacter = useMemo(
+    () => allCharacters.find((c) => c.id === effectiveCharacterId) || null,
+    [allCharacters, effectiveCharacterId]
+  )
+
+  const filteredCharacters = useMemo(() => {
+    if (!characterSearch.trim()) return []
+    return allCharacters
+      .filter((c) =>
+        c.name?.toLowerCase().includes(characterSearch.toLowerCase())
+      )
+      .slice(0, 30)
+  }, [allCharacters, characterSearch])
+
+  // Close character dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        characterSearchRef.current &&
+        !characterSearchRef.current.contains(event.target as Node)
+      ) {
+        setCharacterDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // Streaks of appearance for selected character (only meaningful when
+  // 'character' theme is active and a character is selected).
+  const characterStreaks = useMemo(
+    () => computeAppearanceStreaks(selectedCharacterChapters),
+    [selectedCharacterChapters]
+  )
 
   // Group chapters by year and Jump issue
   const yearData = useMemo(() => {
@@ -576,11 +715,139 @@ function ChapterReleaseCalendarPage() {
                     Arc
                   </FilterButton>
                   <FilterButton
-                    active={theme === 'luffy'}
-                    onClick={() => setTheme('luffy')}
+                    active={theme === 'character'}
+                    onClick={() => setTheme('character')}
                   >
-                    Luffy
+                    Character
                   </FilterButton>
+                </div>
+
+                {/* Character search — visible always so users see the
+                    feature, but disabled when a non-character theme is
+                    active. */}
+                <div
+                  ref={characterSearchRef}
+                  className={`relative mt-3 transition-opacity ${
+                    theme === 'character'
+                      ? 'opacity-100'
+                      : 'opacity-50 pointer-events-none'
+                  }`}
+                  aria-disabled={theme !== 'character'}
+                >
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    {theme === 'character'
+                      ? 'Search character:'
+                      : 'Character search (switch to "Character" theme to enable)'}
+                  </label>
+                  <div className="relative">
+                    <svg
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                    <input
+                      type="text"
+                      placeholder={
+                        selectedCharacter?.name
+                          ? `Selected: ${selectedCharacter.name}`
+                          : 'Type a character name…'
+                      }
+                      value={characterSearch}
+                      onChange={(e) => {
+                        setCharacterSearch(e.target.value)
+                        setCharacterDropdownOpen(
+                          e.target.value.trim().length > 0
+                        )
+                      }}
+                      onFocus={() => {
+                        if (characterSearch.trim())
+                          setCharacterDropdownOpen(true)
+                      }}
+                      disabled={theme !== 'character'}
+                      className="w-full pl-9 pr-8 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-50 disabled:cursor-not-allowed"
+                    />
+                    {characterSearch && (
+                      <button
+                        onClick={() => {
+                          setCharacterSearch('')
+                          setCharacterDropdownOpen(false)
+                        }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                        aria-label="Clear search"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    )}
+
+                    {/* Dropdown results */}
+                    {characterDropdownOpen && characterSearch.trim() && (
+                      <div className="absolute top-full mt-1 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto z-50">
+                        {filteredCharacters.length === 0 ? (
+                          <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                            No characters found for "{characterSearch}"
+                          </div>
+                        ) : (
+                          filteredCharacters.map((character) => {
+                            if (!character.name) return null
+                            const isSelected =
+                              effectiveCharacterId === character.id
+                            return (
+                              <button
+                                key={character.id}
+                                onClick={() => {
+                                  setSelectedCharacterId(character.id)
+                                  setCharacterSearch('')
+                                  setCharacterDropdownOpen(false)
+                                }}
+                                className={`w-full px-4 py-2 text-left text-sm flex items-center justify-between gap-2 transition-colors ${
+                                  isSelected
+                                    ? 'bg-blue-50 text-blue-800 hover:bg-blue-100'
+                                    : 'text-gray-700 hover:bg-gray-50'
+                                }`}
+                              >
+                                <span>{character.name}</span>
+                                {isSelected && (
+                                  <svg
+                                    className="w-4 h-4 text-blue-600 shrink-0"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M5 13l4 4L19 7"
+                                    />
+                                  </svg>
+                                )}
+                              </button>
+                            )
+                          })
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               <div>
@@ -719,45 +986,94 @@ function ChapterReleaseCalendarPage() {
               </div>
             )}
 
-            {theme === 'luffy' && (
-              <div className="flex flex-wrap gap-4">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-8 h-8 rounded"
-                    style={{
-                      backgroundColor: '#22c55e',
-                      border: '1px solid #d1d5db',
-                    }}
-                  ></div>
-                  <span className="text-sm" style={{ color: '#4b5563' }}>
-                    Luffy Appears
-                  </span>
+            {theme === 'character' && (
+              <>
+                <div className="flex flex-wrap gap-4">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-8 h-8 rounded"
+                      style={{
+                        backgroundColor: '#22c55e',
+                        border: '1px solid #d1d5db',
+                      }}
+                    ></div>
+                    <span className="text-sm" style={{ color: '#4b5563' }}>
+                      {selectedCharacter?.name || 'Character'} Appears
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-8 h-8 rounded"
+                      style={{
+                        backgroundColor: '#d1d5db',
+                        border: '1px solid #d1d5db',
+                      }}
+                    ></div>
+                    <span className="text-sm" style={{ color: '#4b5563' }}>
+                      {selectedCharacter?.name || 'Character'} Does Not Appear
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-8 h-8 rounded"
+                      style={{
+                        backgroundColor: '#fca5a5',
+                        border: '1px solid #d1d5db',
+                      }}
+                    ></div>
+                    <span className="text-sm" style={{ color: '#4b5563' }}>
+                      No Chapter
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-8 h-8 rounded"
-                    style={{
-                      backgroundColor: '#d1d5db',
-                      border: '1px solid #d1d5db',
-                    }}
-                  ></div>
-                  <span className="text-sm" style={{ color: '#4b5563' }}>
-                    Luffy Does Not Appear
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-8 h-8 rounded"
-                    style={{
-                      backgroundColor: '#fca5a5',
-                      border: '1px solid #d1d5db',
-                    }}
-                  ></div>
-                  <span className="text-sm" style={{ color: '#4b5563' }}>
-                    No Chapter
-                  </span>
-                </div>
-              </div>
+
+                {/* Streak / gap stats for the selected character */}
+                {selectedCharacter && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                    <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                        Longest continuous appearance
+                      </p>
+                      {characterStreaks.longestStreak ? (
+                        <p className="text-sm text-emerald-900 mt-1">
+                          <span className="font-bold">
+                            Ch. {characterStreaks.longestStreak.from} – Ch.{' '}
+                            {characterStreaks.longestStreak.to}
+                          </span>{' '}
+                          <span className="text-emerald-700">
+                            ({characterStreaks.longestStreak.length} chapters)
+                          </span>
+                        </p>
+                      ) : (
+                        <p className="text-sm text-emerald-900 mt-1 italic">
+                          No appearances recorded.
+                        </p>
+                      )}
+                    </div>
+                    <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-rose-700">
+                        Longest absence between appearances
+                      </p>
+                      {characterStreaks.longestGap ? (
+                        <p className="text-sm text-rose-900 mt-1">
+                          <span className="font-bold">
+                            Ch. {characterStreaks.longestGap.from} – Ch.{' '}
+                            {characterStreaks.longestGap.to}
+                          </span>{' '}
+                          <span className="text-rose-700">
+                            ({characterStreaks.longestGap.length} chapters
+                            missing)
+                          </span>
+                        </p>
+                      ) : (
+                        <p className="text-sm text-rose-900 mt-1 italic">
+                          No gaps — appears in every chapter they were in.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
             <p className="text-xs mt-2" style={{ color: '#6b7280' }}>
@@ -854,7 +1170,8 @@ function ChapterReleaseCalendarPage() {
                         issue.chapters,
                         theme,
                         sagaColorMap,
-                        arcColorMap
+                        arcColorMap,
+                        characterChapterSet
                       )
 
                       // Create tooltip for compact mode
@@ -871,11 +1188,16 @@ function ChapterReleaseCalendarPage() {
                           additionalInfo = `\nSaga: ${firstChapter.sagaTitle}`
                         } else if (theme === 'arc' && firstChapter.arcTitle) {
                           additionalInfo = `\nArc: ${firstChapter.arcTitle}`
-                        } else if (theme === 'luffy') {
-                          const luffyAppears = issue.chapters.some(
-                            (ch) => ch.luffyAppears
+                        } else if (
+                          theme === 'character' &&
+                          characterChapterSet
+                        ) {
+                          const appears = issue.chapters.some((ch) =>
+                            characterChapterSet.has(ch.number)
                           )
-                          additionalInfo = `\n${luffyAppears ? 'Luffy appears' : 'Luffy does not appear'}`
+                          const charName =
+                            selectedCharacter?.name || 'Character'
+                          additionalInfo = `\n${appears ? `${charName} appears` : `${charName} does not appear`}`
                         }
 
                         return `Chapter${issue.chapters.length > 1 ? 's' : ''}: ${chapterNumbers}${additionalInfo}`
