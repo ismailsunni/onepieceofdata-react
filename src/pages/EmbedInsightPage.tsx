@@ -17,6 +17,7 @@
  * │ Bounty Tier Distribution by Region             │ region-bounty-tier         │ Count / %                  │
  * │ Bounty vs Appearance Count                     │ bounty-vs-appearance       │ SHP toggle                 │
  * │ Cast Complexity Over Time                      │ cast-complexity            │ —                          │
+ * │ Character Word Cloud                           │ character-word-cloud       │ SHP 3-way                  │
  * │ Characters per Arc (New vs Returning)          │ arc-intro-rate             │ Both / New / Returning     │
  * │ Characters per Saga (New vs Returning)         │ saga-intro-rate            │ Both / New / Returning     │
  * │ Cover Appearances per Volume                   │ cover-per-volume           │ SHP toggle                 │
@@ -106,6 +107,7 @@ import {
   EmbedTopCharactersPerSaga,
   EmbedTopCharactersPerArc,
   EmbedMainCharacterMoments,
+  EmbedCharacterWordCloud,
 } from '../components/insights/EmbedRankingsCharts'
 import {
   EmbedLargestGroups,
@@ -214,6 +216,7 @@ function EmbedInsightPage() {
       <EmbedTopCharactersPerArc data={insights.topCharactersPerArc} />
     ),
     'main-character-moments': <EmbedMainCharacterMoments />,
+    'character-word-cloud': <EmbedCharacterWordCloud />,
     'largest-groups': <EmbedLargestGroups data={insights.largestGroups} />,
     'crew-loyalty': <EmbedCrewLoyalty data={insights.crewLoyalty} />,
     'publication-rate-by-year': <EmbedPublicationRate />,
