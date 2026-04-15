@@ -7,7 +7,11 @@
  * mode, and SHP filter — suitable for slides, social posts, or short videos.
  *
  * Output formats:
- *   - svg          Animated SVG (SMIL). Pure vector, infinite loop.
+ *   - svg          Static single-frame SVG snapshot (no SMIL — design tools
+ *                  like Figma/Illustrator don't play SMIL and would otherwise
+ *                  render every animated state on top of each other). Use
+ *                  --snapshot-chapter to pick the frame; default is the last
+ *                  chapter in the range.
  *   - gif          Animated GIF via gifenc + @napi-rs/canvas.
  *   - png-frames   PNG sequence into --output directory; compose with ffmpeg:
  *                    ffmpeg -framerate 30 -i frame_%04d.png \
@@ -68,6 +72,7 @@ interface CliArgs {
   frames: number
   startChapter: number | null
   endChapter: number | null
+  snapshotChapter: number | null
   background: string
   output: string
   fontFamily: string
@@ -104,6 +109,8 @@ Data / scoring
   --top <N>                       How many top ranks to show (default: 10)
   --start-chapter <N>             Slice from this chapter (inclusive)
   --end-chapter <N>               Slice to this chapter (inclusive)
+  --snapshot-chapter <N>          [svg only] Chapter to render in the static
+                                  SVG snapshot (default: last chapter in range)
 
 Rendering
   --width <px>                    Canvas width (default: 1200)
@@ -150,6 +157,7 @@ function parseArgs(): CliArgs {
       : `out/appearance-race.${format}`
   const startArg = getArg('start-chapter')
   const endArg = getArg('end-chapter')
+  const snapshotArg = getArg('snapshot-chapter')
   const titleArg = getArg('title')
   return {
     format,
@@ -163,6 +171,7 @@ function parseArgs(): CliArgs {
     frames: parseInt(getArg('frames', '180')!, 10),
     startChapter: startArg ? parseInt(startArg, 10) : null,
     endChapter: endArg ? parseInt(endArg, 10) : null,
+    snapshotChapter: snapshotArg ? parseInt(snapshotArg, 10) : null,
     background: getArg('background', '#fafafa')!,
     output: getArg('output', defaultOutput)!,
     fontFamily: getArg('font', 'sans-serif')!,
@@ -405,9 +414,23 @@ async function main(): Promise<void> {
   if (!existsSync(outParent)) mkdirSync(outParent, { recursive: true })
 
   if (args.format === 'svg') {
-    const svg = exportRaceAsSvg(sliced, exportOpts)
+    // Pick the snapshot frame. Default: last frame in range (end of race);
+    // --snapshot-chapter lets the user lock onto any specific chapter.
+    const targetChapter =
+      args.snapshotChapter ?? sliced[sliced.length - 1].chapter
+    const snapshot = sliced.find((f) => f.chapter === targetChapter)
+    if (!snapshot) {
+      throw new Error(
+        `--snapshot-chapter ${targetChapter} not found in range ${startCh}..${endCh}`
+      )
+    }
+    const progress =
+      endCh > startCh ? (snapshot.chapter - startCh) / (endCh - startCh) : 1
+    const svg = exportRaceAsSvg(snapshot, { ...exportOpts, progress })
     writeFileSync(outAbs, svg, 'utf-8')
-    console.log(`Wrote ${args.output} (${svg.length.toLocaleString()} bytes)`)
+    console.log(
+      `Wrote ${args.output} (chapter ${snapshot.chapter}, ${svg.length.toLocaleString()} bytes)`
+    )
   } else if (args.format === 'gif') {
     const bytes = await renderGif(sliced, exportOpts, args)
     writeFileSync(outAbs, bytes)

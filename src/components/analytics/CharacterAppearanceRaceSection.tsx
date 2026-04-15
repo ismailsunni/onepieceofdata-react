@@ -421,9 +421,21 @@ export function CharacterAppearanceRaceSection({
         const blob = await exportRaceAsGif(frames, opts)
         downloadBlob(blob, `${baseName}.gif`)
       } else {
-        const svg = exportRaceAsSvg(frames, opts)
+        // SVG is a static snapshot of the currently-viewed chapter (GIF covers
+        // animation). SMIL-animated SVG broke in design tools — see the
+        // export util's header comment.
+        const idx = Math.max(
+          0,
+          Math.min(frames.length - 1, clampedChapter - minChapter)
+        )
+        const frame = frames[idx]
+        const svgProgress =
+          maxChapter > minChapter
+            ? (clampedChapter - minChapter) / (maxChapter - minChapter)
+            : 1
+        const svg = exportRaceAsSvg(frame, { ...opts, progress: svgProgress })
         const blob = new Blob([svg], { type: 'image/svg+xml' })
-        downloadBlob(blob, `${baseName}.svg`)
+        downloadBlob(blob, `${baseName}-ch${frame.chapter}.svg`)
       }
     } catch (err) {
       console.error('Race export failed:', err)
@@ -522,18 +534,22 @@ export function CharacterAppearanceRaceSection({
             <div
               className="inline-flex items-center gap-1"
               role="group"
-              aria-label="Download animated race chart"
+              aria-label="Download race chart"
             >
-              <span className="text-gray-500 text-xs mr-1">Animated:</span>
+              <span className="text-gray-500 text-xs mr-1">Download:</span>
               {(['gif', 'svg'] as const).map((fmt) => {
                 const busy = exporting === fmt
                 const disabled = exporting !== null || frames.length === 0
+                const title =
+                  fmt === 'gif'
+                    ? 'Download full race as animated GIF'
+                    : 'Download current chapter as static SVG (vector snapshot)'
                 return (
                   <button
                     key={fmt}
                     onClick={() => handleDownload(fmt)}
                     disabled={disabled}
-                    title={`Download race animation as ${fmt.toUpperCase()}`}
+                    title={title}
                     className={`px-2.5 py-1 text-xs rounded-md border transition-colors tabular-nums ${
                       busy
                         ? 'bg-blue-600 text-white border-blue-600'

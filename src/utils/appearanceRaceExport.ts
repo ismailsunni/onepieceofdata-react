@@ -2,13 +2,14 @@
  * Exporters for the character-appearance race chart.
  *
  *   - GIF: rasterise each sampled chapter onto a <canvas>, encode via gifenc.
- *   - SVG: build a self-looping SMIL animation — one group per character
- *          that ever reaches the top-N band, with its translateY (rank),
- *          bar width, and opacity animated through the sampled timeline.
+ *   - SVG: render a single static frame as layered vector primitives. GIF is
+ *          the animated format; SVG is the importable snapshot — design tools
+ *          (Figma, Illustrator) don't play SMIL, so an animated SVG there
+ *          stacks every frame on top of itself. A static snapshot gives users
+ *          a clean vector of whatever chapter they're viewing.
  *
- * Both renderers share `drawRaceFrameCanvas` for consistent layout between
- * preview (static PNG, if ever wanted) and GIF export. The SVG renderer is
- * layout-equivalent but expressed as vector SMIL primitives.
+ * Both renderers share `drawRaceFrameCanvas` for layout so canvas-rasterised
+ * frames (GIF, CLI PNG sequence) and the SVG snapshot match pixel-for-pixel.
  */
 import type { RaceFrame } from './appearanceRace'
 import { wordColor } from './wordCloud'
@@ -298,22 +299,26 @@ export async function exportRaceAsGif(
 }
 
 /**
- * Build a self-looping SMIL-animated SVG of the race. Renders one group per
- * character that ever appears in the top-N during the sampled timeline; each
- * group animates its (translateY, width, opacity) so the bar enters/leaves
- * the top band and changes rank smoothly.
- *
- * Layout mirrors `drawRaceFrameCanvas` so the two exports look consistent.
+ * Options for a single-frame SVG export. `progress` (0..1) drives only the
+ * bottom progress bar fill — pass the caller's current playback position so
+ * the snapshot matches what's on screen. `duration` is unused here (GIF-only)
+ * and accepted via the shared `RaceExportOpts` shape for ergonomics.
  */
-export function exportRaceAsSvg(
-  frames: RaceFrame[],
-  opts: RaceExportOpts
-): string {
+export interface RaceSvgOpts extends RaceExportOpts {
+  progress?: number
+}
+
+/**
+ * Render a single race frame as a static SVG snapshot. No SMIL — design tools
+ * (Figma, Illustrator) that don't support SMIL would otherwise stack every
+ * animated state on top of itself and produce garbled output. Layout mirrors
+ * `drawRaceFrameCanvas` so a GIF frame and this SVG look identical at the
+ * same chapter.
+ */
+export function exportRaceAsSvg(frame: RaceFrame, opts: RaceSvgOpts): string {
   const {
     width,
     height,
-    frames: frameCount = 120,
-    duration = 8,
     background = BG_DEFAULT,
     topN = 10,
     maxScore,
@@ -321,15 +326,9 @@ export function exportRaceAsSvg(
     arcByChapter,
     fontFamily = 'sans-serif',
     fontScale = 1,
+    progress = 1,
   } = opts
   const fontSz = (n: number) => (n * fontScale).toFixed(1)
-  if (frames.length === 0) throw new Error('no race frames to export')
-
-  const indices = sampleFrameIndices(frames.length, frameCount)
-  const N = indices.length
-  const keyTimes: string[] = []
-  for (let i = 0; i < N; i++) keyTimes.push((i / Math.max(1, N - 1)).toFixed(4))
-  const keyTimesStr = keyTimes.join(';')
 
   const layout = computeHeaderLayout(fontScale, !!title)
   const barsTop = layout.barsTop
@@ -337,7 +336,6 @@ export function exportRaceAsSvg(
   const barsRight = width - PADDING_X - SCORE_LABEL_W
   const barAreaWidth = Math.max(20, barsRight - barsLeft)
   const barHeight = ROW_HEIGHT - ROW_GAP * 2
-  const offscreenY = barsTop + topN * ROW_HEIGHT + 100 // park invisible rows here
 
   const esc = (s: string) =>
     s.replace(/[<>&"']/g, (c) =>
@@ -352,164 +350,108 @@ export function exportRaceAsSvg(
               : '&#39;'
     )
 
-  // Collect, per character, per-sample (rank, score, pct). If a character is
-  // not in the top-N at sample i, their state is "hidden" (opacity 0, parked).
-  interface CharState {
-    id: string
-    name: string
-    isSHP: boolean
-    color: string
-    ranks: number[] // 1..topN or 0 if absent
-    widths: number[] // bar width in px
-    opacities: number[] // 0 or 1
-    scores: number[] // for label animation (if we ever want it)
-    everVisible: boolean
-  }
-  const byId = new Map<string, CharState>()
-  for (let s = 0; s < N; s++) {
-    const frame = frames[indices[s]]
-    for (let i = 0; i < Math.min(topN, frame.entries.length); i++) {
-      const e = frame.entries[i]
-      let st = byId.get(e.id)
-      if (!st) {
-        st = {
-          id: e.id,
-          name: e.name,
-          isSHP: e.isSHP,
-          color: wordColor(e.id, e.isSHP),
-          ranks: new Array(N).fill(0),
-          widths: new Array(N).fill(0),
-          opacities: new Array(N).fill(0),
-          scores: new Array(N).fill(0),
-          everVisible: true,
-        }
-        byId.set(e.id, st)
-      }
-      st.ranks[s] = i + 1
-      const pct = maxScore > 0 ? Math.max(2, (e.score / maxScore) * 100) : 0
-      st.widths[s] = (pct / 100) * barAreaWidth
-      st.opacities[s] = 1
-      st.scores[s] = e.score
-    }
-  }
+  // Header — optional title, chapter number, stacked saga–arc subtitle.
+  const parts: string[] = []
+  parts.push(
+    `<rect width="${width}" height="${height}" fill="${esc(background)}"/>`
+  )
 
-  // Fill in "hidden" translate y-values so the SMIL animation carries the
-  // last known rank forward during gaps (less jarring than snapping to the
-  // parking row).
-  for (const st of byId.values()) {
-    let lastRank = topN // default parking rank if never-visible-before
-    for (let s = 0; s < N; s++) {
-      if (st.ranks[s] > 0) {
-        lastRank = st.ranks[s]
-      } else {
-        st.ranks[s] = lastRank
-      }
-    }
+  if (title) {
+    parts.push(
+      `<text x="${PADDING_X}" y="${layout.titleBaseY.toFixed(1)}" ` +
+        `font-family="${esc(fontFamily)}" font-size="${fontSz(14)}" ` +
+        `font-weight="500" fill="#6b7280">${esc(title)}</text>`
+    )
   }
-
-  // Emit one <g> per character. Using a group with <animateTransform> for
-  // translation and a child <rect>/<text> with <animate> for width/opacity
-  // keeps the per-character SMIL bundled together.
-  const groups: string[] = []
-  for (const st of byId.values()) {
-    const translates = st.ranks
-      .map((r, s) => {
-        const y =
-          st.opacities[s] === 0
-            ? offscreenY
-            : barsTop + (r - 1) * ROW_HEIGHT + ROW_GAP
-        return `${barsLeft.toFixed(2)},${y.toFixed(2)}`
-      })
-      .join(';')
-    const widths = st.widths.map((w) => w.toFixed(2)).join(';')
-    const opacities = st.opacities.map((o) => o.toFixed(0)).join(';')
-    const nameLabel = st.isSHP ? `${STRAW_HAT_MARKER} ${st.name}` : st.name
-    const textFill = isLightColor(st.color) ? '#111827' : '#ffffff'
-
-    groups.push(
-      `<g opacity="0">` +
-        `<animateTransform attributeName="transform" type="translate" ` +
-        `dur="${duration}s" repeatCount="indefinite" ` +
-        `values="${translates}" keyTimes="${keyTimesStr}"/>` +
-        `<animate attributeName="opacity" dur="${duration}s" ` +
-        `repeatCount="indefinite" values="${opacities}" keyTimes="${keyTimesStr}"/>` +
-        `<rect x="0" y="0" width="0" height="${barHeight}" rx="6" ry="6" fill="${st.color}">` +
-        `<animate attributeName="width" dur="${duration}s" ` +
-        `repeatCount="indefinite" values="${widths}" keyTimes="${keyTimesStr}"/>` +
-        `</rect>` +
-        `<text x="${BAR_INSET}" y="${barHeight / 2 + 5}" ` +
-        `font-family="${esc(fontFamily)}" font-weight="700" font-size="${fontSz(14)}" ` +
-        `fill="${textFill}">${esc(nameLabel)}</text>` +
-        `</g>`
+  parts.push(
+    `<text x="${PADDING_X}" y="${layout.chapterBaseY.toFixed(1)}" ` +
+      `font-family="${esc(fontFamily)}" font-weight="700" ` +
+      `font-size="${fontSz(32)}" fill="#111827">Chapter ${frame.chapter}</text>`
+  )
+  const arcTitle = arcByChapter?.get(frame.chapter)
+  if (arcTitle) {
+    parts.push(
+      `<text x="${PADDING_X}" y="${layout.subBaseY.toFixed(1)}" ` +
+        `font-family="${esc(fontFamily)}" font-weight="500" ` +
+        `font-size="${fontSz(14)}" fill="#6b7280">${esc(arcTitle)}</text>`
     )
   }
 
-  // Rank rail (1..topN labels, static).
-  const rankLabels: string[] = []
+  // Rows — rank label + bar + name (inside if it fits, otherwise right of
+  // the bar edge) + score, mirroring drawRaceFrameCanvas.
   for (let i = 0; i < topN; i++) {
-    rankLabels.push(
-      `<text x="${PADDING_X + RANK_LABEL_W - 8}" y="${
-        barsTop + i * ROW_HEIGHT + ROW_HEIGHT / 2 + 4
-      }" text-anchor="end" font-family="${esc(fontFamily)}" font-size="${fontSz(14)}" ` +
+    const y = barsTop + i * ROW_HEIGHT
+    parts.push(
+      `<text x="${PADDING_X + RANK_LABEL_W - 8}" ` +
+        `y="${y + ROW_HEIGHT / 2 + 4}" text-anchor="end" ` +
+        `font-family="${esc(fontFamily)}" font-size="${fontSz(14)}" ` +
         `font-weight="600" fill="#9ca3af">${i + 1}</text>`
     )
-  }
+    const entry = frame.entries[i]
+    if (!entry) continue
 
-  // Animated chapter counter: each sampled label is a separate <text> whose
-  // opacity is driven to "1" only during its time window.
-  const chapterLabels: string[] = []
-  const windowFrac = 1 / Math.max(1, N)
-  for (let s = 0; s < N; s++) {
-    const chapter = frames[indices[s]].chapter
-    const begin = (s * duration) / N
-    const dur = windowFrac * duration
-    chapterLabels.push(
-      `<text x="${PADDING_X}" y="${layout.chapterBaseY.toFixed(1)}" font-family="${esc(fontFamily)}" ` +
-        `font-weight="700" font-size="${fontSz(32)}" fill="#111827" opacity="0">` +
-        `<set attributeName="opacity" to="1" begin="${begin.toFixed(3)}s" ` +
-        `dur="${dur.toFixed(3)}s" repeatCount="indefinite"/>` +
-        `Chapter ${chapter}</text>`
+    const pct = maxScore > 0 ? Math.max(2, (entry.score / maxScore) * 100) : 0
+    const barWidth = (pct / 100) * barAreaWidth
+    const barY = y + ROW_GAP
+    const color = wordColor(entry.id, entry.isSHP)
+
+    parts.push(
+      `<rect x="${barsLeft}" y="${barY}" ` +
+        `width="${barWidth.toFixed(2)}" height="${barHeight}" ` +
+        `rx="6" ry="6" fill="${color}"/>`
     )
-    const arc = arcByChapter?.get(chapter)
-    if (arc) {
-      // Stack below the chapter number so larger font sizes (high fontScale)
-      // don't overlap the subtitle.
-      chapterLabels.push(
-        `<text x="${PADDING_X}" y="${layout.subBaseY.toFixed(1)}" font-family="${esc(fontFamily)}" ` +
-          `font-weight="500" font-size="${fontSz(14)}" fill="#6b7280" opacity="0">` +
-          `<set attributeName="opacity" to="1" begin="${begin.toFixed(3)}s" ` +
-          `dur="${dur.toFixed(3)}s" repeatCount="indefinite"/>` +
-          `${esc(arc)}</text>`
+
+    // Estimate label width at the bar font size. Canvas uses ctx.measureText;
+    // here we approximate with ~0.58 × fontSize per char, which is close
+    // enough for sans-serif fonts and sidesteps needing a layout engine.
+    const nameLabel = entry.isSHP
+      ? `${STRAW_HAT_MARKER} ${entry.name}`
+      : entry.name
+    const labelFontSize = 14 * fontScale
+    const approxNameW = nameLabel.length * labelFontSize * 0.58
+    const insideFits = barWidth - BAR_INSET * 2 >= approxNameW
+    if (insideFits) {
+      parts.push(
+        `<text x="${barsLeft + BAR_INSET}" y="${barY + barHeight / 2 + 5}" ` +
+          `font-family="${esc(fontFamily)}" font-weight="700" ` +
+          `font-size="${fontSz(14)}" fill="${isLightColor(color) ? '#111827' : '#ffffff'}">` +
+          `${esc(nameLabel)}</text>`
+      )
+    } else {
+      parts.push(
+        `<text x="${barsLeft + barWidth + BAR_INSET}" y="${barY + barHeight / 2 + 5}" ` +
+          `font-family="${esc(fontFamily)}" font-weight="700" ` +
+          `font-size="${fontSz(14)}" fill="#111827">${esc(nameLabel)}</text>`
       )
     }
+
+    parts.push(
+      `<text x="${width - PADDING_X}" y="${barY + barHeight / 2 + 5}" ` +
+        `text-anchor="end" font-family="${esc(fontFamily)}" ` +
+        `font-weight="700" font-size="${fontSz(14)}" fill="#111827">` +
+        `${formatScore(entry.score)}</text>`
+    )
   }
 
-  // Animated progress bar (width interpolates 0..fullWidth over the loop).
+  // Static progress bar — rail + fill at the requested progress.
   const progressFullW = width - PADDING_X * 2
   const progressY = barsTop + topN * ROW_HEIGHT + 16
-  const progressRail =
+  const p = Math.max(0, Math.min(1, progress))
+  parts.push(
     `<rect x="${PADDING_X}" y="${progressY}" width="${progressFullW}" ` +
-    `height="6" rx="3" ry="3" fill="#e5e7eb"/>` +
-    `<rect x="${PADDING_X}" y="${progressY}" width="0" height="6" rx="3" ry="3" fill="#3b82f6">` +
-    `<animate attributeName="width" dur="${duration}s" repeatCount="indefinite" ` +
-    `values="0;${progressFullW}" keyTimes="0;1"/>` +
-    `</rect>`
-
-  const titleNode = title
-    ? `<text x="${PADDING_X}" y="${layout.titleBaseY.toFixed(1)}" font-family="${esc(fontFamily)}" ` +
-      `font-size="${fontSz(14)}" font-weight="500" fill="#6b7280">${esc(title)}</text>`
-    : ''
+      `height="6" rx="3" ry="3" fill="#e5e7eb"/>`
+  )
+  parts.push(
+    `<rect x="${PADDING_X}" y="${progressY}" ` +
+      `width="${Math.max(2, progressFullW * p).toFixed(2)}" ` +
+      `height="6" rx="3" ry="3" fill="#3b82f6"/>`
+  )
 
   return (
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
     `<svg xmlns="http://www.w3.org/2000/svg" ` +
     `viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">` +
-    `<rect width="${width}" height="${height}" fill="${background}"/>` +
-    titleNode +
-    chapterLabels.join('') +
-    rankLabels.join('') +
-    groups.join('') +
-    progressRail +
+    parts.join('') +
     `</svg>\n`
   )
 }
