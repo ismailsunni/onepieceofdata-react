@@ -57,27 +57,76 @@ export function wordCloudFontSize(
  */
 export function wordColor(id: string, isSHP: boolean): string {
   if (isSHP) return '#e11d48'
+  // Three independent hashes so hue/sat/light don't correlate. Wider S/L
+  // ranges than before — the earlier 55–74% / 36–47% bands compressed every
+  // character into nearly-identical muted tones. The new bands stay legible
+  // against a light background while spanning muted → vivid.
   const hue = Math.floor(hashId(id) * 360)
-  const bit = Math.floor(hashId(id + '#') * 1000)
-  const sat = 55 + (bit % 20) // 55–74%
-  const light = 36 + ((bit >> 3) % 12) // 36–47%
+  const satBit = Math.floor(hashId(id + '#') * 1000)
+  const lightBit = Math.floor(hashId(id + '@') * 1000)
+  const sat = 55 + (satBit % 40) // 55–94%
+  const light = 28 + (lightBit % 24) // 28–51%
   return `hsl(${hue}, ${sat}%, ${light}%)`
 }
 
-/** Fibonacci-sphere layout — evenly distributes N points on the unit sphere. */
+/** Greatest common divisor — used to build a bijective sphere permutation. */
+function gcd(a: number, b: number): number {
+  while (b) {
+    const t = a % b
+    a = b
+    b = t
+  }
+  return a
+}
+
+/**
+ * Pick a stride near φ·n that is coprime to n. Used to decorrelate a length-
+ * ordered character list from the Fibonacci-sphere index order, so adjacent
+ * sorted ranks land on sphere indices that are far apart.
+ */
+function goldenStride(n: number): number {
+  if (n <= 1) return 1
+  const target = Math.max(2, Math.round(n * 0.6180339887498949))
+  // Walk symmetrically outward from target until we find a value coprime
+  // with n. Bounded by n, so guaranteed to terminate (1 and n-1 are always
+  // coprime with n for n > 2).
+  for (let delta = 0; delta < n; delta++) {
+    for (const sign of [1, -1]) {
+      const s = target + sign * delta
+      if (s > 1 && s < n && gcd(s, n) === 1) return s
+    }
+  }
+  return 1
+}
+
+/**
+ * Fibonacci-sphere layout — evenly distributes N points on the unit sphere.
+ *
+ * Placement strategy: sort characters by name length (descending, then by
+ * hashId for a stable tie-break) and assign rank `r` to sphere index
+ * `(r * stride) mod n`, where `stride` is coprime to n and close to φ·n.
+ * This scatters long names across the sphere instead of letting chance
+ * cluster them on one side.
+ */
 export function buildSpherePlacements(
   items: WordCloudItem[],
   minValue: number,
   maxValue: number
 ): SpherePlacement[] {
   if (items.length === 0) return []
-  const sorted = [...items].sort((a, b) => hashId(a.id) - hashId(b.id))
-  const n = sorted.length
+  const n = items.length
+  const byLength = [...items].sort(
+    (a, b) => b.name.length - a.name.length || hashId(a.id) - hashId(b.id)
+  )
+  const stride = goldenStride(n)
   const goldenAngle = Math.PI * (1 + Math.sqrt(5))
-  return sorted.map((item, i) => {
+  const placements = new Array<SpherePlacement>(n)
+  for (let r = 0; r < n; r++) {
+    const i = (r * stride) % n
     const phi = Math.acos(1 - (2 * (i + 0.5)) / n)
     const theta = goldenAngle * (i + 0.5)
-    return {
+    const item = byLength[r]
+    placements[i] = {
       id: item.id,
       name: item.name,
       value: item.value,
@@ -88,7 +137,8 @@ export function buildSpherePlacements(
       by: Math.sin(phi) * Math.sin(theta),
       bz: Math.cos(phi),
     }
-  })
+  }
+  return placements
 }
 
 export interface SphereProjection {

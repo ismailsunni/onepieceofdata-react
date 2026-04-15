@@ -335,6 +335,7 @@ export function EmbedCharacterWordCloud() {
     cover: 1,
     arc: 1,
     saga: 1,
+    bounty: 100_000_000,
   })
 
   const { data: raw, isLoading } = useQuery({
@@ -432,13 +433,14 @@ export function EmbedCharacterWordCloud() {
               type="number"
               min={1}
               max={Math.max(1, maxValue)}
+              step={metricOpt.step ?? 1}
               value={minValue}
               onChange={(e) => {
                 const n = parseInt(e.target.value, 10) || 1
                 const clamped = Math.max(1, Math.min(n, Math.max(1, maxValue)))
                 setMinInput((prev) => ({ ...prev, [metric]: clamped }))
               }}
-              className="w-16 px-2 py-1 border border-gray-300 rounded-md bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 tabular-nums"
+              className="w-24 px-2 py-1 border border-gray-300 rounded-md bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 tabular-nums"
             />
           </label>
         </div>
@@ -448,6 +450,7 @@ export function EmbedCharacterWordCloud() {
         minValue={minValue}
         maxValue={maxValue}
         suffix={metricOpt.suffix}
+        formatValue={metricOpt.formatValue}
         linkCharacters={false}
         height={320}
         mode={mode}

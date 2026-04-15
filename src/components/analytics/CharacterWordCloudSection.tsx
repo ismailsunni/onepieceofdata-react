@@ -6,6 +6,7 @@ import { fetchInsightsRawData } from '../../services/analyticsService'
 import { STRAW_HAT_IDS } from '../../constants/characters'
 import { Character } from '../../types/character'
 import { ChartCard } from '../common/ChartCard'
+import { formatBounty } from '../insights/constants'
 import {
   MIN_FONT,
   buildSpherePlacements,
@@ -16,18 +17,32 @@ import {
   type WordCloudItem,
 } from '../../utils/wordCloud'
 
-export type WordCloudMetric = 'chapter' | 'cover' | 'arc' | 'saga'
+export type WordCloudMetric = 'chapter' | 'cover' | 'arc' | 'saga' | 'bounty'
 
-export const WORD_CLOUD_METRIC_OPTIONS: {
+export interface WordCloudMetricOption {
   value: WordCloudMetric
   label: string
   defaultMin: number
   suffix: string
-}[] = [
+  /** Input step — useful when values span large magnitudes (e.g. bounty). */
+  step?: number
+  /** Display formatter for values in tooltips / labels. Defaults to String. */
+  formatValue?: (n: number) => string
+}
+
+export const WORD_CLOUD_METRIC_OPTIONS: WordCloudMetricOption[] = [
   { value: 'chapter', label: 'Chapter Count', defaultMin: 50, suffix: 'ch' },
   { value: 'cover', label: 'Volume Cover Count', defaultMin: 1, suffix: 'cv' },
   { value: 'arc', label: 'Arc Count', defaultMin: 1, suffix: 'arcs' },
   { value: 'saga', label: 'Saga Count', defaultMin: 1, suffix: 'sagas' },
+  {
+    value: 'bounty',
+    label: 'Bounty',
+    defaultMin: 100_000_000,
+    suffix: '\u0e3f',
+    step: 10_000_000,
+    formatValue: formatBounty,
+  },
 ]
 
 export function getWordCloudMetricValue(
@@ -43,6 +58,8 @@ export function getWordCloudMetricValue(
       return c.arc_list?.length ?? 0
     case 'saga':
       return c.saga_list?.length ?? 0
+    case 'bounty':
+      return c.bounty ?? 0
   }
 }
 
@@ -58,6 +75,8 @@ interface WordCloudProps {
   height?: number
   /** 'flat' = static d3-cloud packing; 'sphere' = rotating 3D sphere. */
   mode?: WordCloudMode
+  /** Format function for values shown in tooltips (e.g. bounty → "1.5B"). */
+  formatValue?: (n: number) => string
 }
 
 interface CloudWord extends cloud.Word {
@@ -105,6 +124,7 @@ function CharacterWordCloudFlat({
   suffix,
   linkCharacters = true,
   height = 420,
+  formatValue = String,
 }: Omit<WordCloudProps, 'mode'>) {
   const navigate = useNavigate()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -199,7 +219,7 @@ function CharacterWordCloudFlat({
                     : undefined
                 }
               >
-                <title>{`${w.name} — ${w.value} ${suffix}`}</title>
+                <title>{`${w.name} — ${formatValue(w.value)} ${suffix}`}</title>
                 {w.name}
               </text>
             ))}
@@ -229,6 +249,7 @@ function CharacterWordCloudSphere({
   suffix,
   linkCharacters = true,
   height = 420,
+  formatValue = String,
 }: Omit<WordCloudProps, 'mode'>) {
   const navigate = useNavigate()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -465,7 +486,7 @@ function CharacterWordCloudSphere({
                     : undefined
                 }
               >
-                <title>{`${p.name} — ${p.value} ${suffix}`}</title>
+                <title>{`${p.name} — ${formatValue(p.value)} ${suffix}`}</title>
                 {p.name}
               </text>
             ))}
@@ -487,6 +508,7 @@ export function CharacterWordCloudSection() {
     cover: 1,
     arc: 1,
     saga: 1,
+    bounty: 100_000_000,
   })
 
   const { data: raw, isLoading } = useQuery({
@@ -571,7 +593,7 @@ export function CharacterWordCloudSection() {
     <div className="mb-6">
       <ChartCard
         title="Character Word Cloud"
-        description="Character names sized by chapter, volume cover, arc, or saga counts. Toggle between a flat packing (2D) and a rotating sphere (3D) — in 3D, move the mouse to steer or drag to rotate. Click a name to open the character."
+        description="Character names sized by chapter, volume cover, arc, saga counts, or bounty. Toggle between a flat packing (2D) and a rotating sphere (3D) — in 3D, move the mouse to steer or drag to rotate. Click a name to open the character."
         downloadFileName="character-word-cloud"
         chartId="character-word-cloud"
         embedPath="/embed/insights/character-word-cloud"
@@ -600,11 +622,12 @@ export function CharacterWordCloudSection() {
                 type="number"
                 min={1}
                 max={Math.max(1, maxValue)}
+                step={metricOpt.step ?? 1}
                 value={minValue}
                 onChange={(e) =>
                   handleMinChange(parseInt(e.target.value, 10) || 1)
                 }
-                className="w-20 px-2 py-1 border border-gray-300 rounded-md bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 tabular-nums"
+                className="w-28 px-2 py-1 border border-gray-300 rounded-md bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 tabular-nums"
               />
             </label>
             <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden">
@@ -672,7 +695,10 @@ export function CharacterWordCloudSection() {
               </div>
             )}
             <span className="text-gray-500 text-xs">
-              Max: <span className="tabular-nums">{maxValue}</span>
+              Max:{' '}
+              <span className="tabular-nums">
+                {metricOpt.formatValue?.(maxValue) ?? maxValue}
+              </span>
             </span>
             <span className="text-gray-500 text-xs">
               Showing{' '}
@@ -689,6 +715,7 @@ export function CharacterWordCloudSection() {
           minValue={minValue}
           maxValue={maxValue}
           suffix={metricOpt.suffix}
+          formatValue={metricOpt.formatValue}
           mode={mode}
         />
       </ChartCard>

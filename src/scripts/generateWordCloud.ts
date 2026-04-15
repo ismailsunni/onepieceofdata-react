@@ -51,8 +51,17 @@ import type { Character } from '../types/character'
 // ── CLI arg parsing ────────────────────────────────────────────────────────
 
 type OutputFormat = 'svg' | 'gif' | 'png-frames'
-type Metric = 'chapter' | 'cover' | 'arc' | 'saga'
+type Metric = 'chapter' | 'cover' | 'arc' | 'saga' | 'bounty'
 type ShpFilter = 'all' | 'hide' | 'only'
+
+/** Default --min per metric. Bounty jumps straight to 100M since 1 is useless. */
+const DEFAULT_MIN: Record<Metric, number> = {
+  chapter: 50,
+  cover: 1,
+  arc: 1,
+  saga: 1,
+  bounty: 100_000_000,
+}
 
 interface CliArgs {
   format: OutputFormat
@@ -81,8 +90,8 @@ function parseArgs(): CliArgs {
     throw new Error(`--format must be svg | gif | png-frames (got: ${format})`)
   }
   const metric = (getArg('metric', 'chapter') as Metric) ?? 'chapter'
-  if (!['chapter', 'cover', 'arc', 'saga'].includes(metric)) {
-    throw new Error(`--metric must be chapter | cover | arc | saga`)
+  if (!['chapter', 'cover', 'arc', 'saga', 'bounty'].includes(metric)) {
+    throw new Error(`--metric must be chapter | cover | arc | saga | bounty`)
   }
   const shp = (getArg('shp', 'all') as ShpFilter) ?? 'all'
   if (!['all', 'hide', 'only'].includes(shp)) {
@@ -95,7 +104,7 @@ function parseArgs(): CliArgs {
   return {
     format,
     metric,
-    min: parseInt(getArg('min', metric === 'chapter' ? '50' : '1')!, 10),
+    min: parseInt(getArg('min', String(DEFAULT_MIN[metric]))!, 10),
     shp,
     width: parseInt(getArg('width', '1080')!, 10),
     height: parseInt(getArg('height', '1080')!, 10),
@@ -146,6 +155,8 @@ function metricValue(c: Character, metric: Metric): number {
       return c.arc_list?.length ?? 0
     case 'saga':
       return c.saga_list?.length ?? 0
+    case 'bounty':
+      return c.bounty ?? 0
   }
 }
 
