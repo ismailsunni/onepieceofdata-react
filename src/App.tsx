@@ -35,6 +35,9 @@ const NetworkAnalysisPage = lazy(() => import('./pages/NetworkAnalysisPage'))
 const CharacterWordCloudPage = lazy(
   () => import('./pages/CharacterWordCloudPage')
 )
+const CharacterAppearanceRacePage = lazy(
+  () => import('./pages/CharacterAppearanceRacePage')
+)
 const DevilFruitsPage = lazy(() => import('./pages/DevilFruitsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 const ChatPage = lazy(() => import('./pages/ChatPage'))
@@ -186,6 +189,10 @@ function App() {
                             <Route
                               path="/analytics/word-cloud"
                               element={<CharacterWordCloudPage />}
+                            />
+                            <Route
+                              path="/analytics/appearance-race"
+                              element={<CharacterAppearanceRacePage />}
                             />
                             <Route
                               path="/analytics/release-predictor"

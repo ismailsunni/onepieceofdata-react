@@ -19,6 +19,7 @@ import {
   type WordCloudMetric,
   type WordCloudMode,
 } from '../analytics/CharacterWordCloudSection'
+import { CharacterAppearanceRaceSection } from '../analytics/CharacterAppearanceRaceSection'
 
 // ── #21 Top Characters per Saga ─────────────────────────────────────────────
 
@@ -455,6 +456,17 @@ export function EmbedCharacterWordCloud() {
         height={320}
         mode={mode}
       />
+      <EmbedFooter />
+    </div>
+  )
+}
+
+// ── Character Appearance Race ───────────────────────────────────────────────
+
+export function EmbedCharacterAppearanceRace() {
+  return (
+    <div className="p-4 font-sans">
+      <CharacterAppearanceRaceSection linkCharacters={false} compact />
       <EmbedFooter />
     </div>
   )

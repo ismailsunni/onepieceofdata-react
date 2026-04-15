@@ -310,6 +310,31 @@ function AnalyticsPage() {
       iconColor: 'text-fuchsia-600',
     },
     {
+      title: 'Appearance Race',
+      description:
+        'Animated top-10 leaderboard of character appearances in a rolling chapter window — watch rankings evolve across the series',
+      path: '/analytics/appearance-race',
+      icon: (
+        <svg
+          className="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+          />
+        </svg>
+      ),
+      gradient: 'from-amber-500 to-red-600',
+      bgColor: 'bg-amber-50',
+      borderColor: 'border-amber-200',
+      iconColor: 'text-amber-600',
+    },
+    {
       title: 'Chapter Release Predictor',
       description:
         'Estimate future chapter release dates and milestones based on recent cadence',
