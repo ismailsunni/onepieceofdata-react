@@ -34,3 +34,6 @@ dist-ssr
 .env.test.local
 .env.production.local
 supabase/.temp/
+
+# Generated word cloud renders (npm run wordcloud)
+/out/

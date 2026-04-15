@@ -19,17 +19,34 @@ const ANALYTICS_ITEMS: NavItem[] = [
   { to: '/analytics', label: 'Dashboard', exact: true },
   { label: 'Topics', heading: true },
   { to: '/analytics/bounty', label: 'Bounty & Power', exact: true },
-  { to: '/analytics/appearances', label: 'Appearances & Longevity', exact: true },
+  {
+    to: '/analytics/appearances',
+    label: 'Appearances & Longevity',
+    exact: true,
+  },
   { to: '/analytics/story', label: 'Story & Publication', exact: true },
   { to: '/analytics/demographics', label: 'Demographics', exact: true },
   { to: '/analytics/characters', label: 'Character Rankings', exact: true },
   { to: '/analytics/affiliations', label: 'Affiliations', exact: true },
   { to: '/analytics/data-quality', label: 'Data Quality', exact: true },
   { label: 'Interactive Tools', heading: true },
-  { to: '/analytics/character-compare', label: 'Character Comparison', exact: true },
+  {
+    to: '/analytics/character-compare',
+    label: 'Character Comparison',
+    exact: true,
+  },
   { to: '/analytics/network', label: 'Character Network', exact: true },
-  { to: '/analytics/character-timeline', label: 'Character Timeline', exact: true },
-  { to: '/analytics/release-predictor', label: 'Release Predictor', exact: true },
+  {
+    to: '/analytics/character-timeline',
+    label: 'Character Timeline',
+    exact: true,
+  },
+  { to: '/analytics/word-cloud', label: 'Character Word Cloud', exact: true },
+  {
+    to: '/analytics/release-predictor',
+    label: 'Release Predictor',
+    exact: true,
+  },
   { to: '/analytics/chapter-releases', label: 'Release History', exact: true },
 ]
 

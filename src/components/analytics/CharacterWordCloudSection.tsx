@@ -1,10 +1,20 @@
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import cloud from 'd3-cloud'
 import { fetchInsightsRawData } from '../../services/analyticsService'
 import { STRAW_HAT_IDS } from '../../constants/characters'
 import { Character } from '../../types/character'
 import { ChartCard } from '../common/ChartCard'
+import {
+  MIN_FONT,
+  buildSpherePlacements,
+  hashId,
+  wordCloudFontSize,
+  wordColor,
+  type SpherePlacement,
+  type WordCloudItem,
+} from '../../utils/wordCloud'
 
 export type WordCloudMetric = 'chapter' | 'cover' | 'arc' | 'saga'
 
@@ -14,7 +24,7 @@ export const WORD_CLOUD_METRIC_OPTIONS: {
   defaultMin: number
   suffix: string
 }[] = [
-  { value: 'chapter', label: 'Chapter Count', defaultMin: 100, suffix: 'ch' },
+  { value: 'chapter', label: 'Chapter Count', defaultMin: 50, suffix: 'ch' },
   { value: 'cover', label: 'Volume Cover Count', defaultMin: 1, suffix: 'cv' },
   { value: 'arc', label: 'Arc Count', defaultMin: 1, suffix: 'arcs' },
   { value: 'saga', label: 'Saga Count', defaultMin: 1, suffix: 'sagas' },
@@ -36,36 +46,7 @@ export function getWordCloudMetricValue(
   }
 }
 
-// Deterministic hash → shuffled order so the cloud feel is stable per id.
-function hashId(id: string): number {
-  let h = 2166136261
-  for (let i = 0; i < id.length; i++) {
-    h ^= id.charCodeAt(i)
-    h = Math.imul(h, 16777619)
-  }
-  return (h >>> 0) / 0xffffffff
-}
-
-interface WordCloudItem {
-  id: string
-  name: string
-  value: number
-  isSHP: boolean
-}
-
-const MIN_FONT = 11
-const MAX_FONT = 44
-
-/** Compute sqrt-scaled font size for a value in [min, max]. */
-export function wordCloudFontSize(
-  value: number,
-  min: number,
-  max: number
-): number {
-  if (max <= min) return MIN_FONT
-  const t = Math.sqrt(Math.max(0, (value - min) / (max - min)))
-  return MIN_FONT + t * (MAX_FONT - MIN_FONT)
-}
+export type WordCloudMode = 'flat' | 'sphere'
 
 interface WordCloudProps {
   items: WordCloudItem[]
@@ -73,58 +54,424 @@ interface WordCloudProps {
   maxValue: number
   suffix: string
   linkCharacters?: boolean
-  /** Constrain cloud height; scrolls when overflowing. */
-  maxHeight?: string
+  /** Cloud canvas height in px. */
+  height?: number
+  /** 'flat' = static d3-cloud packing; 'sphere' = rotating 3D sphere. */
+  mode?: WordCloudMode
 }
 
+interface CloudWord extends cloud.Word {
+  id: string
+  name: string
+  value: number
+  isSHP: boolean
+}
+
+interface LaidOutWord extends CloudWord {
+  x: number
+  y: number
+  size: number
+  rotate: number
+}
+
+/**
+ * Dispatcher: picks between the flat d3-cloud layout and the rotating sphere.
+ * The two modes are separate components so switching mode fully unmounts the
+ * other one (cancelling its RAF loop or d3-cloud job).
+ */
 export function CharacterWordCloud({
-  items,
-  minValue,
-  maxValue,
-  suffix,
-  linkCharacters = true,
-  maxHeight = '420px',
+  mode = 'sphere',
+  ...props
 }: WordCloudProps) {
-  if (items.length === 0) {
+  if (props.items.length === 0) {
     return (
       <p className="text-center text-gray-500 py-12 text-sm">
         No characters match the current filter.
       </p>
     )
   }
+  return mode === 'sphere' ? (
+    <CharacterWordCloudSphere {...props} />
+  ) : (
+    <CharacterWordCloudFlat {...props} />
+  )
+}
+
+/** Static 2D word packing via d3-cloud. */
+function CharacterWordCloudFlat({
+  items,
+  minValue,
+  maxValue,
+  suffix,
+  linkCharacters = true,
+  height = 420,
+}: Omit<WordCloudProps, 'mode'>) {
+  const navigate = useNavigate()
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [width, setWidth] = useState(0)
+  const [laidOut, setLaidOut] = useState<LaidOutWord[]>([])
+
+  useLayoutEffect(() => {
+    if (!containerRef.current) return
+    const el = containerRef.current
+    setWidth(el.clientWidth)
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const w = Math.floor(entry.contentRect.width)
+        if (w > 0) setWidth(w)
+      }
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  useEffect(() => {
+    // Parent short-circuits on items.length === 0, and laidOut starts empty,
+    // so no explicit reset is needed here — just bail until we have a width.
+    if (items.length === 0 || width <= 0) return
+    const words: CloudWord[] = items.map((item) => ({
+      id: item.id,
+      name: item.name,
+      value: item.value,
+      isSHP: item.isSHP,
+      text: item.name,
+      size: wordCloudFontSize(item.value, minValue, maxValue),
+      rotate: hashId(item.id) < 0.25 ? 90 : 0,
+    }))
+    const layout = cloud<CloudWord>()
+      .size([width, height])
+      .words(words)
+      .padding(2)
+      .rotate((d) => d.rotate ?? 0)
+      .font('sans-serif')
+      .fontSize((d) => d.size ?? MIN_FONT)
+      .spiral('archimedean')
+      .random(() => 0.5)
+      .on('end', (laid) => {
+        setLaidOut(laid as LaidOutWord[])
+      })
+    layout.start()
+    return () => {
+      layout.stop()
+    }
+  }, [items, width, height, minValue, maxValue])
+
+  // Derived: we're still computing if there's work to do and nothing placed
+  // yet. Avoids a setState-in-effect call that React 19 now lints against.
+  const computing = items.length > 0 && width > 0 && laidOut.length === 0
+  const hidden = items.length - laidOut.length
+
   return (
     <div
-      className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 px-2 py-3 leading-none overflow-y-auto rounded-lg border border-gray-100 bg-gray-50/30"
-      style={{ maxHeight }}
+      ref={containerRef}
+      className="relative w-full rounded-lg border border-gray-100 bg-gray-50/30 overflow-hidden"
+      style={{ height }}
     >
-      {items.map((item) => {
-        const size = wordCloudFontSize(item.value, minValue, maxValue)
-        const title = `${item.name} — ${item.value} ${suffix}`
-        const className = `transition-opacity hover:opacity-70 ${
-          item.isSHP
-            ? 'text-amber-700 font-semibold'
-            : 'text-blue-700 font-medium'
-        }`
-        const style = { fontSize: `${size}px`, lineHeight: 1.05 }
-        if (linkCharacters) {
-          return (
-            <Link
-              key={item.id}
-              to={`/characters/${item.id}`}
-              title={title}
-              className={className}
-              style={style}
-            >
-              {item.name}
-            </Link>
-          )
+      {computing && laidOut.length === 0 && (
+        <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-400">
+          Laying out cloud…
+        </div>
+      )}
+      {width > 0 && (
+        <svg
+          width={width}
+          height={height}
+          aria-label="Character word cloud"
+          role="img"
+        >
+          <g transform={`translate(${width / 2},${height / 2})`}>
+            {laidOut.map((w) => (
+              <text
+                key={w.id}
+                textAnchor="middle"
+                transform={`translate(${w.x},${w.y}) rotate(${w.rotate})`}
+                fontFamily="sans-serif"
+                fontWeight={w.isSHP ? 700 : 500}
+                fontSize={w.size}
+                fill={wordColor(w.id, w.isSHP)}
+                style={{
+                  cursor: linkCharacters ? 'pointer' : 'default',
+                  userSelect: 'none',
+                }}
+                onClick={
+                  linkCharacters
+                    ? () => navigate(`/characters/${w.id}`)
+                    : undefined
+                }
+              >
+                <title>{`${w.name} — ${w.value} ${suffix}`}</title>
+                {w.name}
+              </text>
+            ))}
+          </g>
+        </svg>
+      )}
+      {hidden > 0 && !computing && (
+        <div className="absolute bottom-1 right-2 text-[10px] text-gray-400 bg-white/70 px-1.5 py-0.5 rounded">
+          {hidden} word{hidden === 1 ? '' : 's'} hidden (no fit)
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * 3D-style rotating word sphere rendered as SVG. Positions are laid out with a
+ * Fibonacci spiral on the unit sphere, then projected each frame inside a
+ * requestAnimationFrame loop that mutates the live DOM directly (no React
+ * re-render per frame). Mouse position steers the rotation; click-and-drag
+ * takes manual control; left alone the sphere drifts gently.
+ */
+function CharacterWordCloudSphere({
+  items,
+  minValue,
+  maxValue,
+  suffix,
+  linkCharacters = true,
+  height = 420,
+}: Omit<WordCloudProps, 'mode'>) {
+  const navigate = useNavigate()
+  const containerRef = useRef<HTMLDivElement>(null)
+  const groupRef = useRef<SVGGElement>(null)
+  const [width, setWidth] = useState(0)
+
+  // Mutable animation state (never triggers re-render).
+  const rotRef = useRef({ x: 0, y: 0 })
+  const velRef = useRef({ x: 0, y: 0 })
+  const mouseRef = useRef({
+    over: false,
+    x: 0,
+    y: 0,
+    dragging: false,
+    lastX: 0,
+    lastY: 0,
+    downX: 0,
+    downY: 0,
+  })
+  const didDragRef = useRef(false)
+
+  // Track container width so the layout fills available space.
+  useLayoutEffect(() => {
+    if (!containerRef.current) return
+    const el = containerRef.current
+    setWidth(el.clientWidth)
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const w = Math.floor(entry.contentRect.width)
+        if (w > 0) setWidth(w)
+      }
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  // Deterministic Fibonacci-sphere placement, stable across renders for the
+  // same items+min+max. Sort by hashId first so new items don't reshuffle the
+  // whole cloud visually.
+  const placements = useMemo<SpherePlacement[]>(
+    () => buildSpherePlacements(items, minValue, maxValue),
+    [items, minValue, maxValue]
+  )
+
+  // Animation loop — rotates the sphere, projects to 2D, mutates SVG directly.
+  useEffect(() => {
+    if (placements.length === 0 || width <= 0) return
+    const group = groupRef.current
+    if (!group) return
+
+    // Build an id → element lookup once per placements change.
+    const textById = new Map<string, SVGTextElement>()
+    group.querySelectorAll<SVGTextElement>('text[data-id]').forEach((t) => {
+      const id = t.getAttribute('data-id')
+      if (id) textById.set(id, t)
+    })
+
+    const radius = Math.min(width, height) * 0.42
+    const reducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    let rafId = 0
+    const tick = () => {
+      const rot = rotRef.current
+      const vel = velRef.current
+      const mouse = mouseRef.current
+
+      if (!mouse.dragging) {
+        if (mouse.over) {
+          // Distance of pointer from centre steers rotation velocity.
+          const cx = width / 2
+          const cy = height / 2
+          const dx = (mouse.x - cx) / cx
+          const dy = (mouse.y - cy) / cy
+          const maxSpeed = reducedMotion ? 0 : 0.025
+          vel.y = dx * maxSpeed
+          vel.x = -dy * maxSpeed
+        } else {
+          // Idle: damp user velocity and keep a gentle baseline spin.
+          vel.x *= 0.9
+          vel.y *= 0.9
+          if (!reducedMotion) {
+            const baseline = 0.003
+            if (Math.abs(vel.y) < baseline) vel.y = baseline
+          }
         }
-        return (
-          <span key={item.id} title={title} className={className} style={style}>
-            {item.name}
-          </span>
+      }
+
+      rot.x += vel.x
+      rot.y += vel.y
+
+      const sinX = Math.sin(rot.x)
+      const cosX = Math.cos(rot.x)
+      const sinY = Math.sin(rot.y)
+      const cosY = Math.cos(rot.y)
+
+      // Project each placement and z-sort back-to-front so front words paint
+      // over back ones (SVG uses document order; later siblings are on top).
+      const projected = new Array<{
+        el: SVGTextElement
+        x: number
+        y: number
+        z: number
+        scale: number
+        opacity: number
+      }>(placements.length)
+      for (let i = 0; i < placements.length; i++) {
+        const p = placements[i]
+        // Rotate around Y axis.
+        const rx = p.bx * cosY + p.bz * sinY
+        const rz0 = -p.bx * sinY + p.bz * cosY
+        // Rotate around X axis.
+        const ry = p.by * cosX - rz0 * sinX
+        const rz = p.by * sinX + rz0 * cosX
+        const depth = (rz + 1) / 2 // 0 (far) .. 1 (near)
+        const el = textById.get(p.id)
+        if (!el) continue
+        projected[i] = {
+          el,
+          x: rx * radius,
+          y: ry * radius,
+          z: rz,
+          scale: 0.35 + 0.75 * depth,
+          opacity: 0.2 + 0.8 * depth,
+        }
+      }
+      projected.sort((a, b) => a.z - b.z)
+
+      // Apply transforms and reorder children by z-depth in one pass.
+      const frag = document.createDocumentFragment()
+      for (const q of projected) {
+        if (!q) continue
+        q.el.setAttribute(
+          'transform',
+          `translate(${q.x.toFixed(2)},${q.y.toFixed(2)}) scale(${q.scale.toFixed(3)})`
         )
-      })}
+        q.el.setAttribute('opacity', q.opacity.toFixed(3))
+        frag.appendChild(q.el)
+      }
+      group.appendChild(frag)
+
+      rafId = requestAnimationFrame(tick)
+    }
+    rafId = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafId)
+  }, [placements, width, height])
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const mouse = mouseRef.current
+    mouse.x = e.clientX - rect.left
+    mouse.y = e.clientY - rect.top
+    mouse.over = true
+    if (mouse.dragging) {
+      const dx = e.clientX - mouse.lastX
+      const dy = e.clientY - mouse.lastY
+      mouse.lastX = e.clientX
+      mouse.lastY = e.clientY
+      const distFromDown = Math.hypot(
+        e.clientX - mouse.downX,
+        e.clientY - mouse.downY
+      )
+      if (distFromDown > 4) didDragRef.current = true
+      rotRef.current.y += dx * 0.006
+      rotRef.current.x += -dy * 0.006
+      // Carry a small residual velocity for inertia on release.
+      velRef.current.y = dx * 0.006
+      velRef.current.x = -dy * 0.006
+    }
+  }
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    const mouse = mouseRef.current
+    mouse.dragging = true
+    mouse.lastX = e.clientX
+    mouse.lastY = e.clientY
+    mouse.downX = e.clientX
+    mouse.downY = e.clientY
+    didDragRef.current = false
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    mouseRef.current.dragging = false
+    e.currentTarget.releasePointerCapture?.(e.pointerId)
+  }
+  const handlePointerLeave = () => {
+    mouseRef.current.over = false
+    mouseRef.current.dragging = false
+  }
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative w-full rounded-lg border border-gray-100 bg-gray-50/30 overflow-hidden select-none"
+      style={{
+        height,
+        cursor: linkCharacters ? 'grab' : 'default',
+        touchAction: 'none',
+      }}
+      onPointerMove={handlePointerMove}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      onPointerLeave={handlePointerLeave}
+    >
+      {width > 0 && (
+        <svg
+          width={width}
+          height={height}
+          aria-label="Interactive character word cloud — drag or hover to rotate"
+          role="img"
+        >
+          <g ref={groupRef} transform={`translate(${width / 2},${height / 2})`}>
+            {placements.map((p) => (
+              <text
+                key={p.id}
+                data-id={p.id}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fontFamily="sans-serif"
+                fontWeight={p.isSHP ? 700 : 500}
+                fontSize={p.size}
+                fill={p.color}
+                style={{
+                  cursor: linkCharacters ? 'pointer' : 'default',
+                  userSelect: 'none',
+                }}
+                onClick={
+                  linkCharacters
+                    ? () => {
+                        if (didDragRef.current) return
+                        navigate(`/characters/${p.id}`)
+                      }
+                    : undefined
+                }
+              >
+                <title>{`${p.name} — ${p.value} ${suffix}`}</title>
+                {p.name}
+              </text>
+            ))}
+          </g>
+        </svg>
+      )}
     </div>
   )
 }
@@ -134,8 +481,9 @@ type SHPFilter = 'all' | 'hide' | 'only'
 export function CharacterWordCloudSection() {
   const [metric, setMetric] = useState<WordCloudMetric>('chapter')
   const [shpFilter, setSHPFilter] = useState<SHPFilter>('all')
+  const [mode, setMode] = useState<WordCloudMode>('sphere')
   const [minInput, setMinInput] = useState<Record<WordCloudMetric, number>>({
-    chapter: 100,
+    chapter: 50,
     cover: 1,
     arc: 1,
     saga: 1,
@@ -185,11 +533,45 @@ export function CharacterWordCloudSection() {
     setMinInput((prev) => ({ ...prev, [metric]: clamped }))
   }
 
+  // Animated-export state. null = idle, 'gif' | 'svg' = encoding.
+  const [exporting, setExporting] = useState<null | 'gif' | 'svg'>(null)
+
+  const handleDownload = async (format: 'gif' | 'svg') => {
+    if (exporting) return
+    setExporting(format)
+    try {
+      const { buildSpherePlacements: build } = await import(
+        '../../utils/wordCloud'
+      )
+      const { exportSphereAsGif, exportSphereAsSvg, downloadBlob } =
+        await import('../../utils/wordCloudExport')
+      const placementsForExport = build(items, minValue, maxValue)
+      const opts = { width: 900, height: 600 }
+      const metricOptCurrent = WORD_CLOUD_METRIC_OPTIONS.find(
+        (o) => o.value === metric
+      )!
+      const baseName = `character-word-cloud-${metricOptCurrent.value}`
+      if (format === 'gif') {
+        const blob = await exportSphereAsGif(placementsForExport, opts)
+        downloadBlob(blob, `${baseName}.gif`)
+      } else {
+        const svg = exportSphereAsSvg(placementsForExport, opts)
+        const blob = new Blob([svg], { type: 'image/svg+xml' })
+        downloadBlob(blob, `${baseName}.svg`)
+      }
+    } catch (err) {
+      console.error('Word cloud export failed:', err)
+      alert(err instanceof Error ? err.message : 'Export failed. See console.')
+    } finally {
+      setExporting(null)
+    }
+  }
+
   return (
     <div className="mb-6">
       <ChartCard
         title="Character Word Cloud"
-        description="Character names sized by chapter, volume cover, arc, or saga counts. Click a name to open the character."
+        description="Character names sized by chapter, volume cover, arc, or saga counts. Toggle between a flat packing (2D) and a rotating sphere (3D) — in 3D, move the mouse to steer or drag to rotate. Click a name to open the character."
         downloadFileName="character-word-cloud"
         chartId="character-word-cloud"
         embedPath="/embed/insights/character-word-cloud"
@@ -240,6 +622,55 @@ export function CharacterWordCloudSection() {
                 </button>
               ))}
             </div>
+            <div
+              className="inline-flex rounded-lg border border-gray-200 overflow-hidden"
+              role="group"
+              aria-label="Word cloud view mode"
+            >
+              {(['flat', 'sphere'] as const).map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setMode(v)}
+                  className={`px-3 py-1.5 transition-colors ${
+                    mode === v
+                      ? 'bg-blue-600 text-white font-medium'
+                      : 'bg-white text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  {v === 'flat' ? '2D' : '3D'}
+                </button>
+              ))}
+            </div>
+            {mode === 'sphere' && (
+              <div
+                className="inline-flex items-center gap-1"
+                role="group"
+                aria-label="Download animated word cloud"
+              >
+                <span className="text-gray-500 text-xs mr-1">Animated:</span>
+                {(['gif', 'svg'] as const).map((fmt) => {
+                  const busy = exporting === fmt
+                  const disabled = exporting !== null
+                  return (
+                    <button
+                      key={fmt}
+                      onClick={() => handleDownload(fmt)}
+                      disabled={disabled}
+                      title={`Download rotating sphere as ${fmt.toUpperCase()}`}
+                      className={`px-2.5 py-1 text-xs rounded-md border transition-colors tabular-nums ${
+                        busy
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : disabled
+                            ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
+                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
+                      }`}
+                    >
+                      {busy ? 'Encoding…' : fmt.toUpperCase()}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
             <span className="text-gray-500 text-xs">
               Max: <span className="tabular-nums">{maxValue}</span>
             </span>
@@ -258,6 +689,7 @@ export function CharacterWordCloudSection() {
           minValue={minValue}
           maxValue={maxValue}
           suffix={metricOpt.suffix}
+          mode={mode}
         />
       </ChartCard>
     </div>

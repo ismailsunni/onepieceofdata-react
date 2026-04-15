@@ -12,7 +12,6 @@ import { CoverMetaSection } from '../../components/insights/CoverMetaSection'
 import { CoverPerVolumeSection } from '../../components/analytics/CoverPerVolumeSection'
 import { RankingsSection } from '../../components/insights/RankingsSection'
 import { MainCharacterMomentsSection } from '../../components/analytics/MainCharacterMomentsSection'
-import { CharacterWordCloudSection } from '../../components/analytics/CharacterWordCloudSection'
 import { SectionTitle } from '../../components/insights/SectionTitle'
 
 function CharactersTopicPage() {
@@ -157,8 +156,6 @@ function CharactersTopicPage() {
         />
 
         <MainCharacterMomentsSection />
-
-        <CharacterWordCloudSection />
       </div>
     </main>
   )

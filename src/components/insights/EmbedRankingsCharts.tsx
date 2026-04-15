@@ -17,6 +17,7 @@ import {
   WORD_CLOUD_METRIC_OPTIONS,
   getWordCloudMetricValue,
   type WordCloudMetric,
+  type WordCloudMode,
 } from '../analytics/CharacterWordCloudSection'
 
 // ── #21 Top Characters per Saga ─────────────────────────────────────────────
@@ -328,8 +329,9 @@ export function EmbedMainCharacterMoments() {
 export function EmbedCharacterWordCloud() {
   const [metric, setMetric] = useState<WordCloudMetric>('chapter')
   const [shpFilter, setSHPFilter] = useState<'all' | 'hide' | 'only'>('all')
+  const [mode, setMode] = useState<WordCloudMode>('sphere')
   const [minInput, setMinInput] = useState<Record<WordCloudMetric, number>>({
-    chapter: 100,
+    chapter: 50,
     cover: 1,
     arc: 1,
     saga: 1,
@@ -405,6 +407,25 @@ export function EmbedCharacterWordCloud() {
               </button>
             ))}
           </div>
+          <div
+            className="inline-flex rounded-lg border border-gray-200 overflow-hidden"
+            role="group"
+            aria-label="Word cloud view mode"
+          >
+            {(['flat', 'sphere'] as const).map((v) => (
+              <button
+                key={v}
+                onClick={() => setMode(v)}
+                className={`px-2 py-1 transition-colors ${
+                  mode === v
+                    ? 'bg-blue-600 text-white font-medium'
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                {v === 'flat' ? '2D' : '3D'}
+              </button>
+            ))}
+          </div>
           <label className="flex items-center gap-1 text-gray-600">
             Min
             <input
@@ -428,7 +449,8 @@ export function EmbedCharacterWordCloud() {
         maxValue={maxValue}
         suffix={metricOpt.suffix}
         linkCharacters={false}
-        maxHeight="320px"
+        height={320}
+        mode={mode}
       />
       <EmbedFooter />
     </div>

@@ -285,6 +285,31 @@ function AnalyticsPage() {
       iconColor: 'text-teal-600',
     },
     {
+      title: 'Character Word Cloud',
+      description:
+        'Character names sized by chapter, volume cover, arc, or saga counts — click a name to open the character',
+      path: '/analytics/word-cloud',
+      icon: (
+        <svg
+          className="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M7 8h10M7 12h6m-6 4h10M5 4h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"
+          />
+        </svg>
+      ),
+      gradient: 'from-fuchsia-500 to-rose-600',
+      bgColor: 'bg-fuchsia-50',
+      borderColor: 'border-fuchsia-200',
+      iconColor: 'text-fuchsia-600',
+    },
+    {
       title: 'Chapter Release Predictor',
       description:
         'Estimate future chapter release dates and milestones based on recent cadence',

@@ -32,6 +32,9 @@ const ChapterReleasePredictorPage = lazy(
   () => import('./pages/ChapterReleasePredictorPage')
 )
 const NetworkAnalysisPage = lazy(() => import('./pages/NetworkAnalysisPage'))
+const CharacterWordCloudPage = lazy(
+  () => import('./pages/CharacterWordCloudPage')
+)
 const DevilFruitsPage = lazy(() => import('./pages/DevilFruitsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 const ChatPage = lazy(() => import('./pages/ChatPage'))
@@ -42,15 +45,11 @@ const AffiliationDetailPage = lazy(
   () => import('./pages/AffiliationDetailPage')
 )
 // Topic-based analytics pages
-const BountyTopicPage = lazy(
-  () => import('./pages/analytics/BountyTopicPage')
-)
+const BountyTopicPage = lazy(() => import('./pages/analytics/BountyTopicPage'))
 const AppearancesTopicPage = lazy(
   () => import('./pages/analytics/AppearancesTopicPage')
 )
-const StoryTopicPage = lazy(
-  () => import('./pages/analytics/StoryTopicPage')
-)
+const StoryTopicPage = lazy(() => import('./pages/analytics/StoryTopicPage'))
 const DemographicsTopicPage = lazy(
   () => import('./pages/analytics/DemographicsTopicPage')
 )
@@ -185,49 +184,82 @@ function App() {
                               element={<ChapterReleaseCalendarPage />}
                             />
                             <Route
+                              path="/analytics/word-cloud"
+                              element={<CharacterWordCloudPage />}
+                            />
+                            <Route
                               path="/analytics/release-predictor"
                               element={<ChapterReleasePredictorPage />}
                             />
                             {/* Redirects from old routes */}
                             <Route
                               path="/analytics/character-stats"
-                              element={<Navigate to="/analytics/bounty" replace />}
+                              element={
+                                <Navigate to="/analytics/bounty" replace />
+                              }
                             />
                             <Route
                               path="/analytics/region-bounty"
-                              element={<Navigate to="/analytics/bounty" replace />}
+                              element={
+                                <Navigate to="/analytics/bounty" replace />
+                              }
                             />
                             <Route
                               path="/analytics/character-appearances"
-                              element={<Navigate to="/analytics/appearances" replace />}
+                              element={
+                                <Navigate to="/analytics/appearances" replace />
+                              }
                             />
                             <Route
                               path="/analytics/saga-matrix"
-                              element={<Navigate to="/analytics/appearances" replace />}
+                              element={
+                                <Navigate to="/analytics/appearances" replace />
+                              }
                             />
                             <Route
                               path="/analytics/story-arcs"
-                              element={<Navigate to="/analytics/story" replace />}
+                              element={
+                                <Navigate to="/analytics/story" replace />
+                              }
                             />
                             <Route
                               path="/analytics/publication-rate"
-                              element={<Navigate to="/analytics/story" replace />}
+                              element={
+                                <Navigate to="/analytics/story" replace />
+                              }
                             />
                             <Route
                               path="/analytics/birthdays"
-                              element={<Navigate to="/analytics/demographics" replace />}
+                              element={
+                                <Navigate
+                                  to="/analytics/demographics"
+                                  replace
+                                />
+                              }
                             />
                             <Route
                               path="/analytics/character-completeness"
-                              element={<Navigate to="/analytics/data-quality" replace />}
+                              element={
+                                <Navigate
+                                  to="/analytics/data-quality"
+                                  replace
+                                />
+                              }
                             />
                             <Route
                               path="/analytics/insights"
-                              element={<Navigate to="/analytics/bounty" replace />}
+                              element={
+                                <Navigate to="/analytics/bounty" replace />
+                              }
                             />
                             <Route
                               path="/analytics/affiliation-network"
-                              element={<Navigate to="/analytics/affiliations" replace />}
+                              element={
+                                <Navigate
+                                  to="/analytics/affiliations"
+                                  replace
+                                />
+                              }
                             />
                             <Route
                               path="/analytics/character-compare"
