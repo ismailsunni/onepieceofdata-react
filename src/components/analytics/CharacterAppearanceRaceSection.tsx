@@ -9,9 +9,17 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { fetchInsightsRawData } from '../../services/analyticsService'
 import { STRAW_HAT_IDS } from '../../constants/characters'
+import {
+  getStrawHatColor,
+  STRAW_HAT_MARKER,
+} from '../../constants/strawHatColors'
 import { ChartCard } from '../common/ChartCard'
 import { wordColor } from '../../utils/wordCloud'
-import { computeRaceFrames, type RaceFrame } from '../../utils/appearanceRace'
+import {
+  computeRaceFrames,
+  type RaceFrame,
+  type RaceScoringMode,
+} from '../../utils/appearanceRace'
 
 export type RaceSHPFilter = 'all' | 'hide' | 'only'
 export type BarScale = 'absolute' | 'relative'
@@ -39,11 +47,10 @@ interface RaceChartProps {
   frames: RaceFrame[]
   minChapter: number
   currentChapter: number
-  /** Bar-width denominator when `barScale === 'absolute'`. */
-  windowSize: number
+  /** Bar-width denominator when `barScale === 'absolute'`. Comes from the
+   *  compute result so 'count' and 'decay' scoring both pin at 100%. */
+  maxScore: number
   barScale: BarScale
-  /** True when SHP-only filter is on — each SHP gets its own hashed color. */
-  individualShpColors: boolean
   /** Matches playback frame interval so transitions chain without restarting. */
   transitionMs: number
   linkCharacters: boolean
@@ -63,9 +70,8 @@ function RaceChart({
   frames,
   minChapter,
   currentChapter,
-  windowSize,
+  maxScore,
   barScale,
-  individualShpColors,
   transitionMs,
   linkCharacters,
 }: RaceChartProps) {
@@ -94,9 +100,8 @@ function RaceChart({
           rank={i + 1}
           entry={entry}
           barScale={barScale}
-          windowSize={windowSize}
+          maxScore={maxScore}
           leaderScore={leaderScore}
-          individualShpColors={individualShpColors}
           transitionMs={transitionMs}
           linkCharacters={linkCharacters}
           onClick={
@@ -114,9 +119,8 @@ interface RaceRowProps {
   rank: number
   entry: { id: string; name: string; score: number; isSHP: boolean }
   barScale: BarScale
-  windowSize: number
+  maxScore: number
   leaderScore: number
-  individualShpColors: boolean
   transitionMs: number
   linkCharacters: boolean
   onClick?: () => void
@@ -126,16 +130,17 @@ function RaceRow({
   rank,
   entry,
   barScale,
-  windowSize,
+  maxScore,
   leaderScore,
-  individualShpColors,
   transitionMs,
   linkCharacters,
   onClick,
 }: RaceRowProps) {
   // Two bar-length modes:
-  //   absolute — score as a fraction of the window size (so the leader only
-  //              pins at 100% when they appear in every chapter of the window)
+  //   absolute — score as a fraction of the theoretical maximum (window size
+  //              in count mode, geometric-series ceiling in decay mode), so
+  //              a bar only pins at 100% when a character appears in every
+  //              chapter.
   //   relative — every frame normalised against the current leader, so bars
   //              always span the full width; changes look smaller frame-to-
   //              frame, giving a calmer race animation
@@ -144,11 +149,14 @@ function RaceRow({
       ? leaderScore > 0
         ? (entry.score / leaderScore) * 100
         : 0
-      : windowSize > 0
-        ? (entry.score / windowSize) * 100
+      : maxScore > 0
+        ? (entry.score / maxScore) * 100
         : 0
   const nameInside = pct >= NAME_INSIDE_THRESHOLD_PCT
-  const color = wordColor(entry.id, entry.isSHP && !individualShpColors)
+  // Straw Hats get Oda's signature crew colors in every mode; everyone
+  // else keeps the deterministic hashed hue.
+  const shpColor = entry.isSHP ? getStrawHatColor(entry.id) : undefined
+  const color = shpColor ?? wordColor(entry.id, false)
   // Rows outside the visible top-N still render (for smooth enter/exit) but
   // fade to invisible so the clipped band is clean.
   const fadeOut = rank > TOP_N
@@ -186,7 +194,7 @@ function RaceRow({
               cursor: linkCharacters ? 'pointer' : 'default',
             }}
             onClick={onClick}
-            title={`${entry.name} — ${entry.score} appearances`}
+            title={`${entry.name} — score ${entry.score.toFixed(1)}`}
           >
             <span
               className="text-xs sm:text-sm font-semibold text-white whitespace-nowrap truncate select-none"
@@ -196,6 +204,15 @@ function RaceRow({
                 transition: 'opacity 200ms linear',
               }}
             >
+              {entry.isSHP && (
+                <span
+                  aria-label="Straw Hat Pirate"
+                  className="mr-1"
+                  style={{ textShadow: 'none' }}
+                >
+                  {STRAW_HAT_MARKER}
+                </span>
+              )}
               {entry.name}
             </span>
           </div>
@@ -216,11 +233,16 @@ function RaceRow({
             }}
             onClick={!nameInside ? onClick : undefined}
           >
+            {entry.isSHP && (
+              <span aria-label="Straw Hat Pirate" className="mr-1">
+                {STRAW_HAT_MARKER}
+              </span>
+            )}
             {entry.name}
           </span>
         </div>
-        <span className="w-8 text-right text-sm font-bold tabular-nums text-gray-900 flex-shrink-0">
-          {entry.score}
+        <span className="w-10 text-right text-sm font-bold tabular-nums text-gray-900 flex-shrink-0">
+          {Number.isInteger(entry.score) ? entry.score : entry.score.toFixed(1)}
         </span>
       </div>
     </div>
@@ -247,6 +269,11 @@ export function CharacterAppearanceRaceSection({
   const [speed, setSpeed] = useState(2)
   const [playing, setPlaying] = useState(false)
   const [currentChapter, setCurrentChapter] = useState(1)
+  // Smoothing on = EMA-decay scoring + rank hysteresis. Kills the two main
+  // sources of visual chatter (discrete ±1 window steps, near-tie rank
+  // flips) without changing what "recent appearances" means at the macro
+  // level. Default on because the goal is a comfortable watch.
+  const [smoothing, setSmoothing] = useState(true)
 
   const { data: raw, isLoading } = useQuery({
     queryKey: ['insights-raw-data'],
@@ -254,16 +281,31 @@ export function CharacterAppearanceRaceSection({
     staleTime: 10 * 60 * 1000,
   })
 
-  const { frames, minChapter, maxChapter } = useMemo(() => {
-    if (!raw) return { frames: [], minChapter: 1, maxChapter: 0 }
+  const { frames, minChapter, maxChapter, maxScore } = useMemo(() => {
+    const scoringMode: RaceScoringMode = smoothing ? 'decay' : 'window'
+    // Margin of 1.0 prevents ties and ±1-step jitter from flipping ranks;
+    // legitimate leads (> 1 appearance / decay unit) still overtake.
+    const hysteresisMargin = smoothing ? 1.0 : 0
+    if (!raw)
+      return {
+        frames: [],
+        minChapter: 1,
+        maxChapter: 0,
+        maxScore: windowSize,
+      }
     return computeRaceFrames({
       characters: raw.characters,
       shpIds: STRAW_HAT_IDS,
       windowSize,
       topN: COMPUTE_TOP,
       shpFilter,
+      scoringMode,
+      hysteresisMargin,
+      // Top 5 stays score-truthful; hysteresis only calms the noisier
+      // 6th-and-below slots where near-ties cause most flicker.
+      hysteresisMinRank: 6,
     })
-  }, [raw, windowSize, shpFilter])
+  }, [raw, windowSize, shpFilter, smoothing])
 
   // Arc lookup keyed by chapter — drives the "Currently in: ..." subtitle.
   const arcByChapter = useMemo(() => {
@@ -340,7 +382,7 @@ export function CharacterAppearanceRaceSection({
     <div className={compact ? '' : 'mb-6'}>
       <ChartCard
         title="Character Appearance Race"
-        description={`Top ${TOP_N} characters ranked by appearance count in the trailing ${windowSize}-chapter window. Press play to watch the race evolve across the series, or scrub to any chapter.`}
+        description={`Top ${TOP_N} characters ranked by ${smoothing ? `a ${windowSize}-chapter half-life decay` : `appearance count in the trailing ${windowSize}-chapter window`}. Press play to watch the race evolve across the series, or scrub to any chapter.`}
         downloadFileName="character-appearance-race"
         chartId="character-appearance-race"
         embedPath="/embed/insights/character-appearance-race"
@@ -374,6 +416,18 @@ export function CharacterAppearanceRaceSection({
                     {o.label}
                   </option>
                 ))}
+              </select>
+            </label>
+            <label className="flex items-center gap-2">
+              <span className="text-gray-600">Smoothing</span>
+              <select
+                value={smoothing ? 'on' : 'off'}
+                onChange={(e) => setSmoothing(e.target.value === 'on')}
+                className="px-2 py-1 border border-gray-300 rounded-md bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                title="On: old appearances fade (EMA) and near-tied ranks don't flip. Off: hard window count."
+              >
+                <option value="on">On</option>
+                <option value="off">Off</option>
               </select>
             </label>
             <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden">
@@ -476,9 +530,8 @@ export function CharacterAppearanceRaceSection({
             frames={frames}
             minChapter={minChapter}
             currentChapter={clampedChapter}
-            windowSize={windowSize}
+            maxScore={maxScore}
             barScale={barScale}
-            individualShpColors={shpFilter === 'only'}
             transitionMs={transitionMs}
             linkCharacters={linkCharacters}
           />

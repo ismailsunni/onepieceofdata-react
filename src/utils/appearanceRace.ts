@@ -8,6 +8,16 @@
  * Implemented with a sliding-window counter so the whole pass is O(total
  * appearances + C) rather than O(C * maxChapter) — Luffy alone has 1000+
  * chapters, so naive recomputation per frame gets expensive.
+ *
+ * Two scoring modes:
+ *   - 'window': hard sliding window count; each chapter in the window adds 1.
+ *   - 'decay': exponential decay with half-life = windowSize. Older
+ *              appearances fade smoothly instead of dropping off a cliff,
+ *              producing calmer bar-width animations.
+ *
+ * Optional rank hysteresis (`hysteresisMargin > 0`) prevents flicker between
+ * near-tied characters: we only swap two ranks when their score gap exceeds
+ * the margin, otherwise we preserve the previous frame's relative order.
  */
 import { hashId } from './wordCloud'
 
@@ -23,6 +33,8 @@ export interface RaceFrame {
   entries: RaceEntry[]
 }
 
+export type RaceScoringMode = 'window' | 'decay'
+
 export interface RaceComputeInput {
   characters: {
     id: string
@@ -33,12 +45,32 @@ export interface RaceComputeInput {
   windowSize: number
   topN: number
   shpFilter: 'all' | 'hide' | 'only'
+  /** Defaults to 'window' for backwards compatibility. */
+  scoringMode?: RaceScoringMode
+  /**
+   * If > 0, require this score gap before swapping two characters' ranks;
+   * otherwise keep the previous frame's relative order. Kills near-tie
+   * flicker. Set to 0 to disable.
+   */
+  hysteresisMargin?: number
+  /**
+   * Hysteresis only kicks in for ranks ≥ this value (1-indexed). Lower
+   * ranks (1 .. hysteresisMinRank-1) always follow raw score order so the
+   * top of the board stays truthful. Defaults to 1 (apply everywhere).
+   */
+  hysteresisMinRank?: number
 }
 
 export interface RaceResult {
   frames: RaceFrame[]
   minChapter: number
   maxChapter: number
+  /**
+   * Theoretical ceiling of `entry.score` for the chosen scoring mode. Used
+   * by callers to normalise bar widths. For 'window' this is `windowSize`;
+   * for 'decay' it's the geometric sum `1 / (1 - decay)`.
+   */
+  maxScore: number
 }
 
 /**
@@ -48,7 +80,16 @@ export interface RaceResult {
  * [minChapter..maxChapter]. Callers can index directly by chapter offset.
  */
 export function computeRaceFrames(input: RaceComputeInput): RaceResult {
-  const { characters, shpIds, windowSize, topN, shpFilter } = input
+  const {
+    characters,
+    shpIds,
+    windowSize,
+    topN,
+    shpFilter,
+    scoringMode = 'window',
+    hysteresisMargin = 0,
+    hysteresisMinRank = 1,
+  } = input
 
   // Normalize + apply SHP filter once, up-front.
   const validChars = characters
@@ -63,8 +104,15 @@ export function computeRaceFrames(input: RaceComputeInput): RaceResult {
       shpFilter === 'hide' ? !c.isSHP : shpFilter === 'only' ? c.isSHP : true
     )
 
+  // Decay factor: half-life = windowSize chapters, so after windowSize
+  // chapters an appearance's weight drops to 0.5. `maxScore` is the
+  // geometric-series limit if a character appeared in *every* chapter.
+  const decay =
+    scoringMode === 'decay' ? Math.pow(0.5, 1 / Math.max(1, windowSize)) : 0
+  const maxScore = scoringMode === 'decay' ? 1 / (1 - decay) : windowSize
+
   if (validChars.length === 0) {
-    return { frames: [], minChapter: 1, maxChapter: 0 }
+    return { frames: [], minChapter: 1, maxChapter: 0, maxScore }
   }
 
   // Inverted index: chapter → character ids appearing in it.
@@ -85,32 +133,51 @@ export function computeRaceFrames(input: RaceComputeInput): RaceResult {
   const startChapter = Math.max(1, minCh)
   const endChapter = maxCh
 
-  // Sliding window — scores only holds characters with nonzero counts so
-  // the sort per frame scans O(|active|) rather than O(|all|).
+  // Below this score, drop from active set so the map doesn't grow
+  // unboundedly in decay mode (contribution is visually negligible).
+  const PRUNE_EPSILON = 0.01
+
   const scores = new Map<string, number>()
   const frames: RaceFrame[] = []
+  // Previous frame's rank for each character (1-indexed among ranked list).
+  // Drives the hysteresis bubble-pass below.
+  let prevRanks = new Map<string, number>()
 
   for (let ch = startChapter; ch <= endChapter; ch++) {
-    const entering = chapterToChars.get(ch)
-    if (entering) {
-      for (const id of entering) {
-        scores.set(id, (scores.get(id) ?? 0) + 1)
+    if (scoringMode === 'decay') {
+      // Multiply all active scores by decay, prune anything negligible.
+      for (const [id, v] of scores) {
+        const next = v * decay
+        if (next < PRUNE_EPSILON) scores.delete(id)
+        else scores.set(id, next)
       }
-    }
-    const leavingChapter = ch - windowSize
-    if (leavingChapter >= startChapter) {
-      const leaving = chapterToChars.get(leavingChapter)
-      if (leaving) {
-        for (const id of leaving) {
-          const v = (scores.get(id) ?? 0) - 1
-          if (v <= 0) scores.delete(id)
-          else scores.set(id, v)
+      const entering = chapterToChars.get(ch)
+      if (entering) {
+        for (const id of entering) {
+          scores.set(id, (scores.get(id) ?? 0) + 1)
+        }
+      }
+    } else {
+      const entering = chapterToChars.get(ch)
+      if (entering) {
+        for (const id of entering) {
+          scores.set(id, (scores.get(id) ?? 0) + 1)
+        }
+      }
+      const leavingChapter = ch - windowSize
+      if (leavingChapter >= startChapter) {
+        const leaving = chapterToChars.get(leavingChapter)
+        if (leaving) {
+          for (const id of leaving) {
+            const v = (scores.get(id) ?? 0) - 1
+            if (v <= 0) scores.delete(id)
+            else scores.set(id, v)
+          }
         }
       }
     }
 
-    // Rank + slice top-N. hashId tiebreak keeps ordering stable when two
-    // characters are tied — avoids visual jitter during playback.
+    // Rank. hashId tiebreak keeps exact ties stable across frames.
     const ranked: RaceEntry[] = []
     for (const [id, score] of scores) {
       const c = charById.get(id)
@@ -118,8 +185,53 @@ export function computeRaceFrames(input: RaceComputeInput): RaceResult {
       ranked.push({ id, name: c.name, score, isSHP: c.isSHP })
     }
     ranked.sort((a, b) => b.score - a.score || hashId(a.id) - hashId(b.id))
+
+    // Hysteresis bubble-pass: if neighbour (i+1) was previously ranked
+    // higher than (i), and their score gap is within the margin, swap them
+    // back. Kills flicker between near-tied characters without freezing
+    // legitimate rank changes (a gap > margin always wins). O(N²) worst
+    // case but only runs over a small top slice.
+    //
+    // Only applied from rank `hysteresisMinRank` downward — the leaderboard
+    // top stays truthful (sorted purely by score) while the noisier lower
+    // ranks get stabilized.
+    if (hysteresisMargin > 0 && prevRanks.size > 0) {
+      const SLICE = Math.min(ranked.length, topN * 2)
+      const startI = Math.max(0, hysteresisMinRank - 1)
+      let changed = true
+      let guard = 0
+      while (changed && guard++ < SLICE) {
+        changed = false
+        for (let i = startI; i < SLICE - 1; i++) {
+          const a = ranked[i]
+          const b = ranked[i + 1]
+          const pa = prevRanks.get(a.id) ?? Infinity
+          const pb = prevRanks.get(b.id) ?? Infinity
+          if (pb < pa && a.score - b.score <= hysteresisMargin) {
+            ranked[i] = b
+            ranked[i + 1] = a
+            changed = true
+          }
+        }
+      }
+    }
+
+    // Snapshot ranks for next frame's hysteresis pass — only track the
+    // slice we compared, everything beyond is treated as "unranked".
+    const nextPrev = new Map<string, number>()
+    const snapLimit = Math.min(ranked.length, topN * 2)
+    for (let i = 0; i < snapLimit; i++) {
+      nextPrev.set(ranked[i].id, i + 1)
+    }
+    prevRanks = nextPrev
+
     frames.push({ chapter: ch, entries: ranked.slice(0, topN) })
   }
 
-  return { frames, minChapter: startChapter, maxChapter: endChapter }
+  return {
+    frames,
+    minChapter: startChapter,
+    maxChapter: endChapter,
+    maxScore,
+  }
 }
