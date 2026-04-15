@@ -43,6 +43,11 @@ const ANALYTICS_ITEMS: NavItem[] = [
   },
   { to: '/analytics/word-cloud', label: 'Character Word Cloud', exact: true },
   {
+    to: '/analytics/appearance-race',
+    label: 'Appearance Race',
+    exact: true,
+  },
+  {
     to: '/analytics/release-predictor',
     label: 'Release Predictor',
     exact: true,
