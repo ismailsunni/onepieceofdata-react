@@ -18,9 +18,35 @@ export interface ExportOpts {
   frames?: number
   /** Background color (hex or CSS). */
   background?: string
+  /** Bottom-right watermark. Pass '' to disable. Defaults to the site URL. */
+  watermark?: string
 }
 
 const BG_DEFAULT = '#fafafa'
+const WATERMARK_DEFAULT = 'onepieceofdata.com'
+
+/**
+ * Draw a muted site-mark in the bottom-right corner. Font size scales with
+ * the canvas so it reads the same at 600×400 and 1080×1080. Drawn on top of
+ * the sphere so it's legible regardless of what the cloud paints underneath.
+ */
+function drawWatermarkCanvas(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  width: number,
+  height: number
+): void {
+  if (!text) return
+  const size = Math.max(10, Math.round(Math.min(width, height) * 0.022))
+  const padding = Math.round(Math.min(width, height) * 0.02)
+  ctx.save()
+  ctx.font = `500 ${size}px sans-serif`
+  ctx.fillStyle = 'rgba(107, 114, 128, 0.75)' // gray-500 @ 75%
+  ctx.textAlign = 'right'
+  ctx.textBaseline = 'alphabetic'
+  ctx.fillText(text, width - padding, height - padding)
+  ctx.restore()
+}
 
 /** Render a single frame of the sphere to the given 2D canvas context. */
 function drawSphereFrame(
@@ -71,6 +97,7 @@ export async function exportSphereAsGif(
     frames = 90,
     duration = 3,
     background = BG_DEFAULT,
+    watermark = WATERMARK_DEFAULT,
   } = opts
   const radius = Math.min(width, height) * 0.42
   const canvas = document.createElement('canvas')
@@ -85,6 +112,7 @@ export async function exportSphereAsGif(
   for (let i = 0; i < frames; i++) {
     const rotY = (i / frames) * Math.PI * 2
     drawSphereFrame(ctx, placements, 0, rotY, width, height, radius, background)
+    drawWatermarkCanvas(ctx, watermark, width, height)
     const { data } = ctx.getImageData(0, 0, width, height)
     const palette = quantize(data, 256)
     const index = applyPalette(data, palette)
@@ -113,6 +141,7 @@ export function exportSphereAsSvg(
     frames = 60,
     duration = 6,
     background = BG_DEFAULT,
+    watermark = WATERMARK_DEFAULT,
   } = opts
   const radius = Math.min(width, height) * 0.42
 
@@ -170,12 +199,24 @@ export function exportSphereAsSvg(
     })
     .join('')
 
+  // Watermark — static `<text>` at bottom-right. Geometry matches the canvas
+  // helper so SVG and GIF outputs agree on placement.
+  const wmSize = Math.max(10, Math.round(Math.min(width, height) * 0.022))
+  const wmPad = Math.round(Math.min(width, height) * 0.02)
+  const watermarkNode = watermark
+    ? `<text x="${width - wmPad}" y="${height - wmPad}" ` +
+      `text-anchor="end" font-family="sans-serif" font-weight="500" ` +
+      `font-size="${wmSize}" fill="rgba(107,114,128,0.75)">` +
+      `${escape(watermark)}</text>`
+    : ''
+
   return (
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
     `<svg xmlns="http://www.w3.org/2000/svg" ` +
     `viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">` +
     `<rect width="${width}" height="${height}" fill="${background}"/>` +
     `<g transform="translate(${width / 2},${height / 2})">${texts}</g>` +
+    watermarkNode +
     `</svg>\n`
   )
 }
@@ -189,7 +230,13 @@ export async function exportSphereAsWebM(
   placements: SpherePlacement[],
   opts: ExportOpts
 ): Promise<Blob> {
-  const { width, height, duration = 4, background = BG_DEFAULT } = opts
+  const {
+    width,
+    height,
+    duration = 4,
+    background = BG_DEFAULT,
+    watermark = WATERMARK_DEFAULT,
+  } = opts
   const radius = Math.min(width, height) * 0.42
   const canvas = document.createElement('canvas')
   canvas.width = width
@@ -218,6 +265,7 @@ export async function exportSphereAsWebM(
     // Prime the first frame before starting capture so the recording doesn't
     // open with a blank canvas.
     drawSphereFrame(ctx, placements, 0, 0, width, height, radius, background)
+    drawWatermarkCanvas(ctx, watermark, width, height)
 
     const stream = canvas.captureStream(30)
     const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
@@ -280,6 +328,7 @@ export async function exportSphereAsWebM(
           radius,
           background
         )
+        drawWatermarkCanvas(ctx, watermark, width, height)
         requestAnimationFrame(tick)
       }
       requestAnimationFrame(tick)

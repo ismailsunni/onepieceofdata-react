@@ -78,6 +78,7 @@ interface CliArgs {
   fontFamily: string
   fontScale: number
   title: string | null
+  watermark: string
 }
 
 function getArg(name: string, defaultValue?: string): string | undefined {
@@ -123,6 +124,10 @@ Rendering
 Typography
   --font <family>                 Font family (default: sans-serif)
   --font-scale <N>                Multiplier on label sizes (default: 1.4)
+
+Branding
+  --watermark <text>              Bottom-right watermark (default: onepieceofdata.com)
+  --no-watermark                  Disable the watermark
 
 Other
   --help, -h                      Show this help and exit
@@ -177,6 +182,9 @@ function parseArgs(): CliArgs {
     fontFamily: getArg('font', 'sans-serif')!,
     fontScale: parseFloat(getArg('font-scale', '1.4')!),
     title: titleArg ?? null,
+    watermark: hasFlag('no-watermark')
+      ? ''
+      : (getArg('watermark', 'onepieceofdata.com') ?? 'onepieceofdata.com'),
   }
 }
 
@@ -406,6 +414,7 @@ async function main(): Promise<void> {
     title: args.title ?? undefined,
     fontFamily: args.fontFamily,
     fontScale: args.fontScale,
+    watermark: args.watermark,
   }
 
   // Ensure the output directory exists.

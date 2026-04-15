@@ -75,6 +75,8 @@ interface CliArgs {
   background: string
   output: string
   fontFamily: string
+  /** Bottom-right watermark text. Empty string disables. */
+  watermark: string
 }
 
 function getArg(name: string, defaultValue?: string): string | undefined {
@@ -115,6 +117,10 @@ Rendering
 
 Typography
   --font <family>                 Font family (default: sans-serif)
+
+Branding
+  --watermark <text>              Bottom-right watermark (default: onepieceofdata.com)
+  --no-watermark                  Disable the watermark
 
 Other
   --help, -h                      Show this help and exit
@@ -160,6 +166,9 @@ function parseArgs(): CliArgs {
     background: getArg('background', '#fafafa')!,
     output: getArg('output', defaultOutput)!,
     fontFamily: getArg('font', 'sans-serif')!,
+    watermark: hasFlag('no-watermark')
+      ? ''
+      : (getArg('watermark', 'onepieceofdata.com') ?? 'onepieceofdata.com'),
   }
 }
 
@@ -254,6 +263,30 @@ function buildItems(
 // ── Renderers ──────────────────────────────────────────────────────────────
 
 /**
+ * Bottom-right watermark in a muted gray. Font size scales with the canvas so
+ * it reads the same at 1080p and 1920p. Drawn on top of the sphere so it
+ * stays legible regardless of what the cloud paints underneath.
+ */
+function drawWatermarkCanvas(
+  ctx: SKRSContext2D,
+  text: string,
+  width: number,
+  height: number,
+  fontFamily: string
+): void {
+  if (!text) return
+  const size = Math.max(12, Math.round(Math.min(width, height) * 0.018))
+  const padding = Math.round(Math.min(width, height) * 0.02)
+  ctx.save()
+  ctx.font = `500 ${size}px ${fontFamily}`
+  ctx.fillStyle = 'rgba(107, 114, 128, 0.75)' // gray-500 @ 75%
+  ctx.textAlign = 'right'
+  ctx.textBaseline = 'alphabetic'
+  ctx.fillText(text, width - padding, height - padding)
+  ctx.restore()
+}
+
+/**
  * Draw one frame of the rotating sphere onto a canvas context. Identical math
  * to the in-browser renderer (z-sort, perspective scale, depth opacity), but
  * uses the @napi-rs/canvas 2D API which mirrors the browser's.
@@ -295,7 +328,8 @@ function drawSphereFrame(
 
 /** Pure-vector animated SVG (SMIL). Independent of canvas. */
 function renderSvg(placements: SpherePlacement[], args: CliArgs): string {
-  const { width, height, duration, frames, background, fontFamily } = args
+  const { width, height, duration, frames, background, fontFamily, watermark } =
+    args
   const radius = Math.min(width, height) * 0.42
 
   const keyTimes: string[] = []
@@ -347,12 +381,24 @@ function renderSvg(placements: SpherePlacement[], args: CliArgs): string {
     })
     .join('')
 
+  // Watermark: static text at bottom-right. Geometry matches the canvas
+  // renderer so SVG and GIF/PNG outputs agree on placement and size.
+  const wmSize = Math.max(12, Math.round(Math.min(width, height) * 0.018))
+  const wmPad = Math.round(Math.min(width, height) * 0.02)
+  const watermarkNode = watermark
+    ? `<text x="${width - wmPad}" y="${height - wmPad}" ` +
+      `text-anchor="end" font-family="${escape(fontFamily)}" ` +
+      `font-weight="500" font-size="${wmSize}" ` +
+      `fill="rgba(107,114,128,0.75)">${escape(watermark)}</text>`
+    : ''
+
   return (
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
     `<svg xmlns="http://www.w3.org/2000/svg" ` +
     `viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">` +
     `<rect width="${width}" height="${height}" fill="${background}"/>` +
     `<g transform="translate(${width / 2},${height / 2})">${texts}</g>` +
+    watermarkNode +
     `</svg>\n`
   )
 }
@@ -386,6 +432,7 @@ async function renderGif(
       fontFamily,
       fontScale
     )
+    drawWatermarkCanvas(ctx, args.watermark, width, height, fontFamily)
     const imgData = ctx.getImageData(0, 0, width, height)
     const data = new Uint8Array(
       imgData.data.buffer,
@@ -432,6 +479,7 @@ async function renderPngFrames(
       fontFamily,
       fontScale
     )
+    drawWatermarkCanvas(ctx, args.watermark, width, height, fontFamily)
     const buf = await canvas.encode('png')
     const name = `frame_${String(i).padStart(pad, '0')}.png`
     writeFileSync(resolve(outDir, name), buf)

@@ -36,7 +36,11 @@ export interface RaceExportOpts {
   /** Scale factor for text sizes. Useful for CLI exports at higher resolutions
    *  where the default 14px header/label size looks tiny. Defaults to 1. */
   fontScale?: number
+  /** Bottom-right watermark. Pass '' to disable. Defaults to the site URL. */
+  watermark?: string
 }
+
+const WATERMARK_DEFAULT = 'onepieceofdata.com'
 
 const BG_DEFAULT = '#fafafa'
 const ROW_HEIGHT = 42
@@ -115,6 +119,7 @@ export function drawRaceFrameCanvas(
     progress,
     fontFamily = 'sans-serif',
     fontScale = 1,
+    watermark = WATERMARK_DEFAULT,
   } = opts
   // Scale all label sizes together; caller passes fontScale when rendering at
   // higher-than-default resolutions (e.g. CLI 1080p+).
@@ -225,6 +230,19 @@ export function drawRaceFrameCanvas(
     3
   )
   ctx.fill()
+
+  // Watermark — drawn last so it sits above the chart content.
+  if (watermark) {
+    const wmSize = Math.max(10, Math.round(Math.min(width, height) * 0.018))
+    const wmPad = Math.round(Math.min(width, height) * 0.015)
+    ctx.save()
+    ctx.font = `500 ${wmSize}px ${fontFamily}`
+    ctx.fillStyle = 'rgba(107, 114, 128, 0.75)'
+    ctx.textAlign = 'right'
+    ctx.textBaseline = 'alphabetic'
+    ctx.fillText(watermark, width - wmPad, height - wmPad)
+    ctx.restore()
+  }
 }
 
 /** Rounded-rect helper compatible with both browser and node canvas. */
@@ -327,6 +345,7 @@ export function exportRaceAsSvg(frame: RaceFrame, opts: RaceSvgOpts): string {
     fontFamily = 'sans-serif',
     fontScale = 1,
     progress = 1,
+    watermark = WATERMARK_DEFAULT,
   } = opts
   const fontSz = (n: number) => (n * fontScale).toFixed(1)
 
@@ -446,6 +465,18 @@ export function exportRaceAsSvg(frame: RaceFrame, opts: RaceSvgOpts): string {
       `width="${Math.max(2, progressFullW * p).toFixed(2)}" ` +
       `height="6" rx="3" ry="3" fill="#3b82f6"/>`
   )
+
+  // Watermark — geometry matches drawRaceFrameCanvas so SVG and GIF agree.
+  if (watermark) {
+    const wmSize = Math.max(10, Math.round(Math.min(width, height) * 0.018))
+    const wmPad = Math.round(Math.min(width, height) * 0.015)
+    parts.push(
+      `<text x="${width - wmPad}" y="${height - wmPad}" ` +
+        `text-anchor="end" font-family="${esc(fontFamily)}" font-weight="500" ` +
+        `font-size="${wmSize}" fill="rgba(107,114,128,0.75)">` +
+        `${esc(watermark)}</text>`
+    )
+  }
 
   return (
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
