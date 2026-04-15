@@ -3,16 +3,25 @@ import { logger } from '../utils/logger'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowLeft, faLink, faCheck, faExternalLinkAlt, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons'
+import {
+  faArrowLeft,
+  faLink,
+  faCheck,
+  faExternalLinkAlt,
+} from '@fortawesome/free-solid-svg-icons'
 import { faXTwitter } from '@fortawesome/free-brands-svg-icons'
 import { supabase } from '../services/supabase'
 import { Chapter } from '../types/chapter'
 import { Character } from '../types/character'
 import { Arc } from '../types/arc'
 import { fetchChapters } from '../services/chapterService'
+import { STRAW_HAT_IDS } from '../constants/characters'
+import SortableTable, { Column } from '../components/common/SortableTable'
 
 // Service function to fetch a single chapter by number
-async function fetchChapterByNumber(chapterNumber: number): Promise<Chapter | null> {
+async function fetchChapterByNumber(
+  chapterNumber: number
+): Promise<Chapter | null> {
   try {
     if (!supabase) {
       logger.error('Supabase client is not initialized')
@@ -38,7 +47,9 @@ async function fetchChapterByNumber(chapterNumber: number): Promise<Chapter | nu
 }
 
 // Service function to fetch characters that appear in this chapter
-async function fetchCharactersByChapter(chapterNumber: number): Promise<Character[]> {
+async function fetchCharactersByChapter(
+  chapterNumber: number
+): Promise<Character[]> {
   try {
     if (!supabase) {
       logger.error('Supabase client is not initialized')
@@ -93,9 +104,17 @@ async function fetchArcByChapter(chapterNumber: number): Promise<Arc | null> {
 // ===== REUSABLE COMPONENTS =====
 
 // Card component wrapper
-function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+function Card({
+  children,
+  className = '',
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
   return (
-    <div className={`bg-white rounded-xl shadow-sm border border-gray-200 p-6 ${className}`}>
+    <div
+      className={`bg-white rounded-xl shadow-sm border border-gray-200 p-6 ${className}`}
+    >
       {children}
     </div>
   )
@@ -104,9 +123,7 @@ function Card({ children, className = '' }: { children: React.ReactNode; classNa
 // SectionTitle component
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="text-xl font-semibold text-gray-900 mb-4">
-      {children}
-    </h2>
+    <h2 className="text-xl font-semibold text-gray-900 mb-4">{children}</h2>
   )
 }
 
@@ -114,7 +131,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 function Tag({
   children,
   to,
-  variant = 'default'
+  variant = 'default',
 }: {
   children: React.ReactNode
   to?: string
@@ -123,7 +140,7 @@ function Tag({
   const variantStyles = {
     saga: 'bg-purple-50 text-purple-700 hover:bg-purple-100',
     arc: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100',
-    default: 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+    default: 'bg-gray-50 text-gray-700 hover:bg-gray-100',
   }
 
   const className = `inline-block px-3 py-1 rounded-full text-sm font-medium transition-colors ${variantStyles[variant]}`
@@ -144,7 +161,7 @@ function ChapterDetailPage() {
   const navigate = useNavigate()
   const chapterNumber = number ? parseInt(number, 10) : null
   const [copyLinkFeedback, setCopyLinkFeedback] = useState(false)
-  const [showAllCharacters, setShowAllCharacters] = useState(false)
+  const [hideStrawHats, setHideStrawHats] = useState(false)
 
   const { data: chapter, isLoading: chapterLoading } = useQuery({
     queryKey: ['chapter', chapterNumber],
@@ -171,7 +188,8 @@ function ChapterDetailPage() {
 
   const handleRandomChapter = () => {
     if (allChapters.length > 0) {
-      const randomChapter = allChapters[Math.floor(Math.random() * allChapters.length)]
+      const randomChapter =
+        allChapters[Math.floor(Math.random() * allChapters.length)]
       navigate(`/chapters/${randomChapter.number}`)
     }
   }
@@ -197,7 +215,8 @@ function ChapterDetailPage() {
               Chapter Not Found
             </h2>
             <p className="text-gray-600 mb-6">
-              The chapter you're looking for doesn't exist or couldn't be loaded.
+              The chapter you're looking for doesn't exist or couldn't be
+              loaded.
             </p>
             <button
               onClick={() => navigate('/chapters')}
@@ -237,7 +256,66 @@ function ChapterDetailPage() {
 
   const wikiUrl = `https://onepiece.fandom.com/wiki/Chapter_${chapter.number}`
 
-  const displayedCharacters = showAllCharacters ? characters : characters.slice(0, 12)
+  const filteredCharacters = hideStrawHats
+    ? characters.filter((c) => !STRAW_HAT_IDS.has(c.id))
+    : characters
+
+  const characterColumns: Column<Character>[] = [
+    {
+      key: 'name',
+      label: 'Name',
+      sortValue: (row) => row.name ?? '',
+      render: (row) => {
+        const isDebut =
+          row.chapter_list &&
+          row.chapter_list.length > 0 &&
+          Math.min(...row.chapter_list) === chapterNumber
+        return (
+          <span className="inline-flex items-center gap-2">
+            <Link
+              to={`/characters/${row.id}`}
+              className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+            >
+              {row.name || 'Unknown'}
+            </Link>
+            {isDebut && (
+              <span className="px-1.5 py-0.5 bg-yellow-400 text-yellow-900 text-[10px] font-bold rounded">
+                DEBUT
+              </span>
+            )}
+          </span>
+        )
+      },
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      sortValue: (row) => row.status ?? '',
+      render: (row) => row.status || '-',
+    },
+    {
+      key: 'bounty',
+      label: 'Bounty',
+      sortValue: (row) => row.bounty ?? -1,
+      render: (row) =>
+        row.bounty != null && row.bounty > 0
+          ? `₿${row.bounty.toLocaleString()}`
+          : '-',
+    },
+    {
+      key: 'first_appearance',
+      label: 'First Appearance',
+      sortValue: (row) => row.first_appearance ?? 0,
+      render: (row) =>
+        row.first_appearance ? `Ch. ${row.first_appearance}` : '-',
+    },
+    {
+      key: 'appearance_count',
+      label: 'Total Appearances',
+      sortValue: (row) => row.appearance_count ?? 0,
+      render: (row) => row.appearance_count ?? '-',
+    },
+  ]
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -247,16 +325,41 @@ function ChapterDetailPage() {
           <Link to="/" className="hover:text-gray-900 transition-colors">
             Home
           </Link>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
           </svg>
-          <Link to="/chapters" className="hover:text-gray-900 transition-colors">
+          <Link
+            to="/chapters"
+            className="hover:text-gray-900 transition-colors"
+          >
             Chapters
           </Link>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
           </svg>
-          <span className="text-gray-900 font-medium">Chapter {chapter.number}</span>
+          <span className="text-gray-900 font-medium">
+            Chapter {chapter.number}
+          </span>
         </nav>
 
         {/* Action Buttons Row */}
@@ -305,14 +408,20 @@ function ChapterDetailPage() {
               className="p-2 bg-white/90 hover:bg-white border border-gray-200 rounded-lg transition-colors shadow-sm"
               title={copyLinkFeedback ? 'Copied!' : 'Copy link'}
             >
-              <FontAwesomeIcon icon={copyLinkFeedback ? faCheck : faLink} className="w-4 h-4 text-gray-700" />
+              <FontAwesomeIcon
+                icon={copyLinkFeedback ? faCheck : faLink}
+                className="w-4 h-4 text-gray-700"
+              />
             </button>
             <button
               onClick={handleShareToTwitter}
               className="p-2 bg-white/90 hover:bg-white border border-gray-200 rounded-lg transition-colors shadow-sm"
               title="Share on Twitter"
             >
-              <FontAwesomeIcon icon={faXTwitter} className="w-4 h-4 text-gray-700" />
+              <FontAwesomeIcon
+                icon={faXTwitter}
+                className="w-4 h-4 text-gray-700"
+              />
             </button>
             <a
               href={wikiUrl}
@@ -321,7 +430,10 @@ function ChapterDetailPage() {
               className="p-2 bg-white/90 hover:bg-white border border-gray-200 rounded-lg transition-colors shadow-sm"
               title="View on Wiki"
             >
-              <FontAwesomeIcon icon={faExternalLinkAlt} className="w-4 h-4 text-gray-700" />
+              <FontAwesomeIcon
+                icon={faExternalLinkAlt}
+                className="w-4 h-4 text-gray-700"
+              />
             </a>
           </div>
         </div>
@@ -341,7 +453,9 @@ function ChapterDetailPage() {
                   <div className="h-1 w-32 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-full"></div>
                 </div>
                 {chapter.title && (
-                  <p className="text-xl text-gray-700 font-medium mb-4">{chapter.title}</p>
+                  <p className="text-xl text-gray-700 font-medium mb-4">
+                    {chapter.title}
+                  </p>
                 )}
                 {arc && (
                   <div className="flex flex-wrap gap-2">
@@ -360,12 +474,26 @@ function ChapterDetailPage() {
               {chapter.num_page && (
                 <div className="flex-shrink-0 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-6 border-2 border-emerald-200 shadow-sm">
                   <div className="flex items-center gap-2 mb-2">
-                    <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    <svg
+                      className="w-5 h-5 text-emerald-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
                     </svg>
-                    <div className="text-sm font-semibold text-emerald-800 uppercase tracking-wide">Pages</div>
+                    <div className="text-sm font-semibold text-emerald-800 uppercase tracking-wide">
+                      Pages
+                    </div>
                   </div>
-                  <div className="text-4xl font-bold text-emerald-900">{chapter.num_page}</div>
+                  <div className="text-4xl font-bold text-emerald-900">
+                    {chapter.num_page}
+                  </div>
                 </div>
               )}
             </div>
@@ -376,8 +504,18 @@ function ChapterDetailPage() {
         <Card className="mb-8 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-2 mb-5">
             <div className="p-2 bg-emerald-100 rounded-lg">
-              <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-5 h-5 text-emerald-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </div>
             <SectionTitle>Chapter Information</SectionTitle>
@@ -385,34 +523,71 @@ function ChapterDetailPage() {
           <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex justify-between items-start py-2 border-b border-gray-100">
               <dt className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                <svg
+                  className="w-4 h-4 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
+                  />
                 </svg>
                 Chapter Number
               </dt>
-              <dd className="text-sm font-semibold text-gray-900 text-right ml-4">{chapter.number}</dd>
+              <dd className="text-sm font-semibold text-gray-900 text-right ml-4">
+                {chapter.number}
+              </dd>
             </div>
             {chapter.title && (
               <div className="flex justify-between items-start py-2 border-b border-gray-100">
                 <dt className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+                    />
                   </svg>
                   Title
                 </dt>
-                <dd className="text-sm font-semibold text-gray-900 text-right ml-4">{chapter.title}</dd>
+                <dd className="text-sm font-semibold text-gray-900 text-right ml-4">
+                  {chapter.title}
+                </dd>
               </div>
             )}
             {chapter.volume && (
               <div className="flex justify-between items-start py-2 border-b border-gray-100">
                 <dt className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                    />
                   </svg>
                   Volume
                 </dt>
                 <dd className="text-sm text-right ml-4">
-                  <Link to={`/volumes/${chapter.volume}`} className="font-semibold text-blue-600 hover:text-blue-800 hover:underline">
+                  <Link
+                    to={`/volumes/${chapter.volume}`}
+                    className="font-semibold text-blue-600 hover:text-blue-800 hover:underline"
+                  >
                     Volume {chapter.volume}
                   </Link>
                 </dd>
@@ -421,35 +596,72 @@ function ChapterDetailPage() {
             {chapter.date && (
               <div className="flex justify-between items-start py-2 border-b border-gray-100">
                 <dt className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
                   </svg>
                   Release Date
                 </dt>
-                <dd className="text-sm font-semibold text-gray-900 text-right ml-4">{formatDate(chapter.date)}</dd>
+                <dd className="text-sm font-semibold text-gray-900 text-right ml-4">
+                  {formatDate(chapter.date)}
+                </dd>
               </div>
             )}
             {chapter.jump && (
               <div className="flex justify-between items-start py-2 border-b border-gray-100">
                 <dt className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
+                    />
                   </svg>
                   Jump Issue
                 </dt>
-                <dd className="text-sm font-semibold text-gray-900 text-right ml-4">{chapter.jump}</dd>
+                <dd className="text-sm font-semibold text-gray-900 text-right ml-4">
+                  {chapter.jump}
+                </dd>
               </div>
             )}
             {arc && (
               <div className="flex justify-between items-start py-2 border-b border-gray-100">
                 <dt className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
                   </svg>
                   Story Arc
                 </dt>
                 <dd className="text-sm text-right ml-4">
-                  <Link to={`/arcs/${arc.arc_id}`} className="font-semibold text-blue-600 hover:text-blue-800 hover:underline">
+                  <Link
+                    to={`/arcs/${arc.arc_id}`}
+                    className="font-semibold text-blue-600 hover:text-blue-800 hover:underline"
+                  >
                     {arc.title}
                   </Link>
                 </dd>
@@ -463,14 +675,26 @@ function ChapterDetailPage() {
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
               <div className="p-2 bg-blue-100 rounded-lg">
-                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                <svg
+                  className="w-5 h-5 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
                 </svg>
               </div>
               <SectionTitle>
                 Characters Appearing
                 {characters.length > 0 && (
-                  <span className="ml-2 text-base text-gray-500">({characters.length})</span>
+                  <span className="ml-2 text-base text-gray-500">
+                    ({characters.length})
+                  </span>
                 )}
               </SectionTitle>
             </div>
@@ -482,70 +706,24 @@ function ChapterDetailPage() {
             </div>
           ) : characters.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {displayedCharacters.map((character) => {
-                  const isDebut = character.chapter_list &&
-                    character.chapter_list.length > 0 &&
-                    Math.min(...character.chapter_list) === chapterNumber
-
-                  return (
-                    <Link
-                      key={character.id}
-                      to={`/characters/${character.id}`}
-                      className={`bg-white border rounded-lg p-4 hover:shadow-md transition-all ${
-                        isDebut
-                          ? 'border-yellow-400 bg-yellow-50 hover:border-yellow-500'
-                          : 'border-gray-200 hover:border-blue-300'
-                      }`}
-                    >
-                      <div className="flex flex-col h-full">
-                        <div className="flex items-start justify-between mb-2">
-                          <h3 className="font-semibold text-gray-800 line-clamp-2 flex-1">
-                            {character.name || 'Unknown'}
-                          </h3>
-                          {isDebut && (
-                            <span className="ml-2 px-2 py-0.5 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full whitespace-nowrap">
-                              DEBUT
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex-1 space-y-1 text-sm text-gray-600">
-                          {character.status && (
-                            <p>
-                              <span className="font-medium">Status:</span>{' '}
-                              {character.status}
-                            </p>
-                          )}
-                          {character.first_appearance && (
-                            <p>
-                              <span className="font-medium">Debut:</span> Ch.{' '}
-                              {character.first_appearance}
-                            </p>
-                          )}
-                          {character.bounty !== null && character.bounty > 0 && (
-                            <p>
-                              <span className="font-medium">Bounty:</span> ₿
-                              {character.bounty.toLocaleString()}
-                            </p>
-                          )}
-                        </div>
-                        <div className="mt-3 text-xs text-blue-600 font-medium">
-                          View Details →
-                        </div>
-                      </div>
-                    </Link>
-                  )
-                })}
+              <div className="mb-3">
+                <label className="inline-flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={hideStrawHats}
+                    onChange={(e) => setHideStrawHats(e.target.checked)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  Hide Straw Hat Pirates
+                </label>
               </div>
-              {characters.length > 12 && (
-                <button
-                  onClick={() => setShowAllCharacters(!showAllCharacters)}
-                  className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg font-medium transition-colors border border-blue-200"
-                >
-                  <span>{showAllCharacters ? 'Show Less' : `Show ${characters.length - 12} More Characters`}</span>
-                  <FontAwesomeIcon icon={showAllCharacters ? faChevronUp : faChevronDown} className="w-3 h-3" />
-                </button>
-              )}
+              <SortableTable<Character>
+                columns={characterColumns}
+                data={filteredCharacters}
+                defaultSortField="appearance_count"
+                defaultSortDirection="desc"
+                rowKey={(row) => row.id}
+              />
             </>
           ) : (
             <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-500">
