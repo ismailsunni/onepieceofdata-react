@@ -1,7 +1,7 @@
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { logger } from '../utils/logger'
 import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faArrowLeft,
@@ -181,6 +181,11 @@ function CharacterDetailPage() {
     enabled: !!id,
   })
 
+  // Character portrait state — must be declared before any early returns so
+  // hook order is stable across renders.
+  const [imgError, setImgError] = useState(false)
+  const handleImgError = useCallback(() => setImgError(true), [])
+
   // Create lookup maps
   const arcMap = new Map<string, Arc>()
   arcs.forEach((arc) => arcMap.set(arc.arc_id, arc))
@@ -230,6 +235,10 @@ function CharacterDetailPage() {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join('_')
   const wikiUrl = `https://onepiece.fandom.com/wiki/${wikiName}`
+
+  // Character portrait from Supabase storage bucket.
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
+  const characterImageUrl = `${supabaseUrl}/storage/v1/object/public/character-images/${encodeURIComponent(character.id)}.png`
 
   // Copy link handler
   const handleCopyLink = () => {
@@ -453,7 +462,29 @@ function CharacterDetailPage() {
 
           <Card className="relative border-2 border-blue-100">
             <div className="flex flex-col lg:flex-row items-start justify-between gap-8">
-              {/* Left: Character Name & Status */}
+              {/* Portrait */}
+              <div className="flex-shrink-0 self-center lg:self-start">
+                {imgError ? (
+                  <div className="w-32 h-40 lg:w-40 lg:h-48 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-200 flex items-center justify-center">
+                    <svg
+                      className="w-16 h-16 text-gray-300"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
+                    </svg>
+                  </div>
+                ) : (
+                  <img
+                    src={characterImageUrl}
+                    alt={character.name || 'Character portrait'}
+                    className="w-32 lg:w-40 max-h-48 lg:max-h-56 rounded-xl object-contain bg-gray-100 border-2 border-white shadow-md"
+                    onError={handleImgError}
+                  />
+                )}
+              </div>
+
+              {/* Character Name & Status */}
               <div className="flex-1">
                 <div className="inline-block mb-3">
                   <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-2">
