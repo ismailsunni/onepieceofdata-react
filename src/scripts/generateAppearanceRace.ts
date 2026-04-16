@@ -149,8 +149,8 @@ function parseArgs(): CliArgs {
     throw new Error(`--format must be svg | gif | png-frames (got: ${format})`)
   }
   const mode = (getArg('mode', 'decay') as RaceScoringMode) ?? 'decay'
-  if (!['window', 'decay'].includes(mode)) {
-    throw new Error(`--mode must be window | decay (got: ${mode})`)
+  if (!['window', 'decay', 'cumulative'].includes(mode)) {
+    throw new Error(`--mode must be window | decay | cumulative (got: ${mode})`)
   }
   const shp = (getArg('shp', 'all') as ShpFilter) ?? 'all'
   if (!['all', 'hide', 'only'].includes(shp)) {

@@ -13,6 +13,7 @@ import {
 import { AppearancesSection } from '../../components/insights/AppearancesSection'
 import { AppearanceChartsSection } from '../../components/analytics/AppearanceChartsSection'
 import { SagaMatrixSection } from '../../components/analytics/SagaMatrixSection'
+import { AppearanceConcentrationSection } from '../../components/analytics/AppearanceConcentrationSection'
 import { SectionTitle } from '../../components/insights/SectionTitle'
 import { ChartCard } from '../../components/common/ChartCard'
 
@@ -235,6 +236,9 @@ function AppearancesTopicPage() {
             </div>
           </ChartCard>
         </div>
+
+        {/* Appearance Concentration */}
+        <AppearanceConcentrationSection />
 
         {/* Saga Matrix Heatmap */}
         <SagaMatrixSection />
