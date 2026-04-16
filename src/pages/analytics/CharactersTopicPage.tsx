@@ -10,6 +10,7 @@ import {
 } from '../../services/analyticsService'
 import { CoverMetaSection } from '../../components/insights/CoverMetaSection'
 import { CoverPerVolumeSection } from '../../components/analytics/CoverPerVolumeSection'
+import { CoverRankSection } from '../../components/analytics/CoverRankSection'
 import { RankingsSection } from '../../components/insights/RankingsSection'
 import { MainCharacterMomentsSection } from '../../components/analytics/MainCharacterMomentsSection'
 import { SectionTitle } from '../../components/insights/SectionTitle'
@@ -138,6 +139,8 @@ function CharactersTopicPage() {
         />
 
         <CoverPerVolumeSection />
+
+        <CoverRankSection />
 
         {/* Section 2: Character Rankings */}
         <SectionTitle title="Character Rankings" />
