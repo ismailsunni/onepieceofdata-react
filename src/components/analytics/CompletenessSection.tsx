@@ -1,8 +1,9 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { fetchCharacters } from '../../services/characterService'
 import { StatCard } from './'
 import { ChartCard } from '../common/ChartCard'
+import { RangeSlider } from '../common/RangeSlider'
 
 // Define important attributes to track
 const IMPORTANT_ATTRIBUTES = [
@@ -36,16 +37,59 @@ export function CompletenessSection() {
     queryFn: fetchCharacters,
   })
 
+  // Compute max arc/saga counts for slider bounds
+  const { maxArcs, maxSagas } = useMemo(() => {
+    let mA = 0
+    let mS = 0
+    for (const c of allCharacters) {
+      if (c.arc_list && c.arc_list.length > mA) mA = c.arc_list.length
+      if (c.saga_list && c.saga_list.length > mS) mS = c.saga_list.length
+    }
+    return { maxArcs: mA || 1, maxSagas: mS || 1 }
+  }, [allCharacters])
+
+  const [arcRange, setArcRange] = useState<[number, number]>([0, 999])
+  const [sagaRange, setSagaRange] = useState<[number, number]>([0, 999])
+
+  const effectiveArcRange: [number, number] = [
+    arcRange[0],
+    Math.min(arcRange[1], maxArcs),
+  ]
+  const effectiveSagaRange: [number, number] = [
+    sagaRange[0],
+    Math.min(sagaRange[1], maxSagas),
+  ]
+
+  // Filter characters by arc/saga count
+  const filteredCharacters = useMemo(() => {
+    return allCharacters.filter((c) => {
+      const arcs = c.arc_list?.length ?? 0
+      const sagas = c.saga_list?.length ?? 0
+      return (
+        arcs >= effectiveArcRange[0] &&
+        arcs <= effectiveArcRange[1] &&
+        sagas >= effectiveSagaRange[0] &&
+        sagas <= effectiveSagaRange[1]
+      )
+    })
+  }, [
+    allCharacters,
+    effectiveArcRange[0],
+    effectiveArcRange[1],
+    effectiveSagaRange[0],
+    effectiveSagaRange[1],
+  ])
+
   // Calculate completeness for each attribute
   const completenessData = useMemo(() => {
-    if (!allCharacters.length) return []
+    if (!filteredCharacters.length) return []
 
-    const totalCharacters = allCharacters.length
+    const totalCharacters = filteredCharacters.length
 
     return IMPORTANT_ATTRIBUTES.map((attr) => {
       let filledCount = 0
 
-      allCharacters.forEach((char) => {
+      filteredCharacters.forEach((char) => {
         const value = char[attr.key as keyof typeof char]
 
         // Check if the attribute has a meaningful value
@@ -75,7 +119,7 @@ export function CompletenessSection() {
         total: totalCharacters,
       }
     }).sort((a, b) => b.percentage - a.percentage) // Sort by completeness descending
-  }, [allCharacters])
+  }, [filteredCharacters])
 
   // Calculate summary statistics
   const stats = useMemo(() => {
@@ -206,6 +250,33 @@ export function CompletenessSection() {
           color="amber"
           loading={isLoading}
         />
+      </div>
+
+      {/* Filters */}
+      <div className="mb-8 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h3 className="text-sm font-semibold text-gray-700 mb-4">
+          Filter Characters
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <RangeSlider
+            label="Arcs"
+            min={0}
+            max={maxArcs}
+            value={effectiveArcRange}
+            onChange={setArcRange}
+          />
+          <RangeSlider
+            label="Sagas"
+            min={0}
+            max={maxSagas}
+            value={effectiveSagaRange}
+            onChange={setSagaRange}
+          />
+        </div>
+        <p className="text-xs text-gray-400 mt-3">
+          {filteredCharacters.length} of {allCharacters.length} characters match
+          the current filters
+        </p>
       </div>
 
       {/* Detailed Table */}
