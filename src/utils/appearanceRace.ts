@@ -33,7 +33,7 @@ export interface RaceFrame {
   entries: RaceEntry[]
 }
 
-export type RaceScoringMode = 'window' | 'decay'
+export type RaceScoringMode = 'window' | 'decay' | 'cumulative'
 
 export interface RaceComputeInput {
   characters: {
@@ -109,7 +109,14 @@ export function computeRaceFrames(input: RaceComputeInput): RaceResult {
   // geometric-series limit if a character appeared in *every* chapter.
   const decay =
     scoringMode === 'decay' ? Math.pow(0.5, 1 / Math.max(1, windowSize)) : 0
-  const maxScore = scoringMode === 'decay' ? 1 / (1 - decay) : windowSize
+  // For cumulative mode maxScore is set after the loop (we don't know the
+  // final leader's score yet); initialise to 1 to avoid division by zero.
+  let maxScore =
+    scoringMode === 'decay'
+      ? 1 / (1 - decay)
+      : scoringMode === 'cumulative'
+        ? 1
+        : windowSize
 
   if (validChars.length === 0) {
     return { frames: [], minChapter: 1, maxChapter: 0, maxScore }
@@ -151,6 +158,14 @@ export function computeRaceFrames(input: RaceComputeInput): RaceResult {
         if (next < PRUNE_EPSILON) scores.delete(id)
         else scores.set(id, next)
       }
+      const entering = chapterToChars.get(ch)
+      if (entering) {
+        for (const id of entering) {
+          scores.set(id, (scores.get(id) ?? 0) + 1)
+        }
+      }
+    } else if (scoringMode === 'cumulative') {
+      // Pure running total — never subtract.
       const entering = chapterToChars.get(ch)
       if (entering) {
         for (const id of entering) {
@@ -226,6 +241,12 @@ export function computeRaceFrames(input: RaceComputeInput): RaceResult {
     prevRanks = nextPrev
 
     frames.push({ chapter: ch, entries: ranked.slice(0, topN) })
+  }
+
+  // For cumulative mode, maxScore is the leader's score in the last frame.
+  if (scoringMode === 'cumulative' && frames.length > 0) {
+    const last = frames[frames.length - 1].entries
+    maxScore = last.length > 0 ? last[0].score : 1
   }
 
   return {

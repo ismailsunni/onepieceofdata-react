@@ -28,7 +28,7 @@ const ROW_HEIGHT = 42
 const TOP_N = 10
 const BUFFER = 5
 const COMPUTE_TOP = TOP_N + BUFFER
-const WINDOW_OPTIONS = [10, 20, 30, 50]
+const WINDOW_OPTIONS = [10, 20, 30, 50, 0] // 0 = cumulative (all chapters)
 const SPEED_OPTIONS = [1, 2, 4, 8]
 const FPS_AT_1X = 6
 // Below this bar-width percentage, the name overflows the bar visually —
@@ -288,21 +288,26 @@ export function CharacterAppearanceRaceSection({
   })
 
   const { frames, minChapter, maxChapter, maxScore } = useMemo(() => {
-    const scoringMode: RaceScoringMode = smoothing ? 'decay' : 'window'
+    const isCumulative = windowSize === 0
+    const scoringMode: RaceScoringMode = isCumulative
+      ? 'cumulative'
+      : smoothing
+        ? 'decay'
+        : 'window'
     // Margin of 1.0 prevents ties and ±1-step jitter from flipping ranks;
     // legitimate leads (> 1 appearance / decay unit) still overtake.
-    const hysteresisMargin = smoothing ? 1.0 : 0
+    const hysteresisMargin = smoothing && !isCumulative ? 1.0 : 0
     if (!raw)
       return {
         frames: [],
         minChapter: 1,
         maxChapter: 0,
-        maxScore: windowSize,
+        maxScore: windowSize || 1,
       }
     return computeRaceFrames({
       characters: raw.characters,
       shpIds: STRAW_HAT_IDS,
-      windowSize,
+      windowSize: isCumulative ? 1 : windowSize,
       topN: COMPUTE_TOP,
       shpFilter,
       scoringMode,
@@ -416,7 +421,7 @@ export function CharacterAppearanceRaceSection({
         maxScore,
         arcByChapter: arcTitleByChapter,
       }
-      const baseName = `character-appearance-race-${smoothing ? 'decay' : 'window'}-${windowSize}`
+      const baseName = `character-appearance-race-${windowSize === 0 ? 'cumulative' : smoothing ? 'decay' : 'window'}-${windowSize || 'all'}`
       if (format === 'gif') {
         const blob = await exportRaceAsGif(frames, opts)
         downloadBlob(blob, `${baseName}.gif`)
@@ -454,7 +459,7 @@ export function CharacterAppearanceRaceSection({
     <div className={compact ? '' : 'mb-6'}>
       <ChartCard
         title="Character Appearance Race"
-        description={`Top ${TOP_N} characters ranked by ${smoothing ? `a ${windowSize}-chapter half-life decay` : `appearance count in the trailing ${windowSize}-chapter window`}. Press play to watch the race evolve across the series, or scrub to any chapter.`}
+        description={`Top ${TOP_N} characters ranked by ${windowSize === 0 ? 'total chapter appearances (cumulative)' : smoothing ? `a ${windowSize}-chapter half-life decay` : `appearance count in the trailing ${windowSize}-chapter window`}. Press play to watch the race evolve across the series, or scrub to any chapter.`}
         downloadFileName="character-appearance-race"
         chartId="character-appearance-race"
         embedPath="/embed/insights/character-appearance-race"
@@ -470,7 +475,7 @@ export function CharacterAppearanceRaceSection({
               >
                 {WINDOW_OPTIONS.map((v) => (
                   <option key={v} value={v}>
-                    last {v} chapters
+                    {v === 0 ? 'All chapters' : `last ${v} chapters`}
                   </option>
                 ))}
               </select>
