@@ -10,6 +10,7 @@ import {
   faExternalLinkAlt,
   faChevronDown,
   faChevronUp,
+  faShuffle,
 } from '@fortawesome/free-solid-svg-icons'
 import { faXTwitter } from '@fortawesome/free-brands-svg-icons'
 import {
@@ -185,6 +186,24 @@ function CharacterDetailPage() {
   // hook order is stable across renders.
   const [imgError, setImgError] = useState(false)
   const handleImgError = useCallback(() => setImgError(true), [])
+
+  // Lightweight ID-only list for the "random character" button.
+  const { data: characterIds = [] } = useQuery({
+    queryKey: ['character-ids'],
+    queryFn: async () => {
+      if (!supabase) return []
+      const { data } = await supabase.from('character').select('id')
+      return (data ?? []).map((r) => r.id as string)
+    },
+    staleTime: 30 * 60 * 1000,
+  })
+
+  const handleRandomCharacter = useCallback(() => {
+    const others = characterIds.filter((cid) => cid !== id)
+    if (others.length === 0) return
+    const randomId = others[Math.floor(Math.random() * others.length)]
+    navigate(`/characters/${randomId}`)
+  }, [characterIds, id, navigate])
 
   // Create lookup maps
   const arcMap = new Map<string, Arc>()
@@ -410,14 +429,25 @@ function CharacterDetailPage() {
 
         {/* Action Buttons Row */}
         <div className="flex items-center justify-between mb-6">
-          <button
-            onClick={() => navigate('/characters')}
-            className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg transition-colors shadow-sm"
-            title="Back to Characters"
-          >
-            <FontAwesomeIcon icon={faArrowLeft} className="w-4 h-4" />
-            <span className="text-sm font-medium">Back</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/characters')}
+              className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg transition-colors shadow-sm"
+              title="Back to Characters"
+            >
+              <FontAwesomeIcon icon={faArrowLeft} className="w-4 h-4" />
+              <span className="text-sm font-medium">Back</span>
+            </button>
+            <button
+              onClick={handleRandomCharacter}
+              disabled={characterIds.length === 0}
+              className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Go to a random character"
+            >
+              <FontAwesomeIcon icon={faShuffle} className="w-4 h-4" />
+              <span className="text-sm font-medium">Random</span>
+            </button>
+          </div>
 
           <div className="flex items-center gap-2">
             <button
