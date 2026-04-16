@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { STRAW_HAT_IDS } from '../constants/characters'
 import { logger } from '../utils/logger'
 import { useParams, useNavigate, Link } from 'react-router-dom'
@@ -137,6 +137,53 @@ function Tag({ children, to }: { children: React.ReactNode; to?: string }) {
   return <span className={className}>{children}</span>
 }
 
+function CharacterPortrait({
+  character,
+  appearances,
+}: {
+  character: Character
+  appearances: number
+}) {
+  const [imgError, setImgError] = useState(false)
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
+  const imageUrl = `${supabaseUrl}/storage/v1/object/public/character-images/${encodeURIComponent(character.id)}.png`
+
+  return (
+    <Link
+      to={`/characters/${character.id}`}
+      className="flex flex-col items-center gap-2 group w-24"
+      title={`${character.name} — ${appearances} appearances`}
+    >
+      <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-200 group-hover:border-blue-400 transition-colors bg-gray-100 flex-shrink-0">
+        {imgError ? (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+            <svg
+              className="w-8 h-8 text-gray-300"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
+            </svg>
+          </div>
+        ) : (
+          <img
+            src={imageUrl}
+            alt={character.name || 'Character'}
+            className="w-full h-full object-cover object-top"
+            onError={() => setImgError(true)}
+          />
+        )}
+      </div>
+      <div className="text-center">
+        <div className="text-xs font-medium text-gray-900 group-hover:text-blue-600 transition-colors leading-tight truncate w-full">
+          {character.name}
+        </div>
+        <div className="text-xs text-gray-500">{appearances} ch.</div>
+      </div>
+    </Link>
+  )
+}
+
 function ArcDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -180,6 +227,27 @@ function ArcDetailPage() {
       navigate(`/arcs/${randomArc.arc_id}`)
     }
   }
+
+  // Top 3 SHP + top 3 non-SHP by appearances in this arc. Must be declared
+  // before any early returns so hook order is stable across renders.
+  const { topSHP, topOther } = useMemo(() => {
+    const start = arc?.start_chapter ?? 0
+    const end = arc?.end_chapter ?? 9999
+    const ranked = characters
+      .map((c) => {
+        const apps = c.chapter_list
+          ? c.chapter_list.filter((ch) => ch >= start && ch <= end).length
+          : 0
+        return { ...c, arcAppearances: apps }
+      })
+      .filter((c) => c.arcAppearances > 0)
+      .sort((a, b) => b.arcAppearances - a.arcAppearances)
+
+    return {
+      topSHP: ranked.filter((c) => STRAW_HAT_IDS.has(c.id)).slice(0, 3),
+      topOther: ranked.filter((c) => !STRAW_HAT_IDS.has(c.id)).slice(0, 3),
+    }
+  }, [characters, arc?.start_chapter, arc?.end_chapter])
 
   if (arcLoading) {
     return (
@@ -498,6 +566,44 @@ function ArcDetailPage() {
                     <Tag to={`/sagas/${arc.saga_id}`}>
                       {arc.saga.title} Saga
                     </Tag>
+                  </div>
+                )}
+
+                {/* Featured Characters — inline below title */}
+                {(topSHP.length > 0 || topOther.length > 0) && (
+                  <div className="mt-4 flex flex-wrap gap-6">
+                    {topSHP.length > 0 && (
+                      <div>
+                        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                          Top Straw Hats
+                        </h3>
+                        <div className="flex gap-3">
+                          {topSHP.map((c) => (
+                            <CharacterPortrait
+                              key={c.id}
+                              character={c}
+                              appearances={c.arcAppearances}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {topOther.length > 0 && (
+                      <div>
+                        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                          Key Characters
+                        </h3>
+                        <div className="flex gap-3">
+                          {topOther.map((c) => (
+                            <CharacterPortrait
+                              key={c.id}
+                              character={c}
+                              appearances={c.arcAppearances}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
