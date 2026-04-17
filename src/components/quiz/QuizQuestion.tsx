@@ -3,7 +3,6 @@ import type { QuizQuestion as QuizQuestionType } from '../../types/quiz'
 import { calculatePoints } from '../../services/quizService'
 
 const TIME_PER_QUESTION = 10 // seconds
-const PREVIEW_DURATION = 2000 // ms — show options before revealing image
 const FEEDBACK_DURATION = 1500 // ms
 
 interface QuizQuestionProps {
@@ -25,29 +24,17 @@ export default function QuizQuestion({
   onAnswer,
 }: QuizQuestionProps) {
   // Component is remounted via key={currentQuestion} so initial state = reset
-  const [phase, setPhase] = useState<'preview' | 'answering' | 'feedback'>(
-    'preview'
-  )
   const [timeRemaining, setTimeRemaining] = useState(TIME_PER_QUESTION)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [showFeedback, setShowFeedback] = useState(false)
   const [imgError, setImgError] = useState(false)
   const startTimeRef = useRef(0)
   const answeredRef = useRef(false)
   const timerRef = useRef<ReturnType<typeof setInterval>>(undefined)
 
-  // Preview phase: show options for 2 seconds, then reveal image and start timer
+  // Start timer on mount
   useEffect(() => {
-    const previewTimer = setTimeout(() => {
-      startTimeRef.current = Date.now()
-      setPhase('answering')
-    }, PREVIEW_DURATION)
-
-    return () => clearTimeout(previewTimer)
-  }, [])
-
-  // Timer logic — only runs during answering phase
-  useEffect(() => {
-    if (phase !== 'answering') return
+    startTimeRef.current = Date.now()
 
     timerRef.current = setInterval(() => {
       const elapsed = (Date.now() - startTimeRef.current) / 1000
@@ -58,7 +45,7 @@ export default function QuizQuestion({
         answeredRef.current = true
         clearInterval(timerRef.current)
         setSelectedId(null)
-        setPhase('feedback')
+        setShowFeedback(true)
         setTimeout(() => {
           onAnswer(null, false, 0, 0)
         }, FEEDBACK_DURATION)
@@ -66,10 +53,10 @@ export default function QuizQuestion({
     }, 50)
 
     return () => clearInterval(timerRef.current)
-  }, [phase, onAnswer])
+  }, [onAnswer])
 
   const handleSelect = (characterId: string) => {
-    if (phase !== 'answering' || answeredRef.current) return
+    if (answeredRef.current) return
     answeredRef.current = true
     clearInterval(timerRef.current)
 
@@ -77,16 +64,13 @@ export default function QuizQuestion({
     const points = isCorrect ? calculatePoints(timeRemaining) : 0
 
     setSelectedId(characterId)
-    setPhase('feedback')
+    setShowFeedback(true)
 
     const capturedRemaining = timeRemaining
     setTimeout(() => {
       onAnswer(characterId, isCorrect, capturedRemaining, points)
     }, FEEDBACK_DURATION)
   }
-
-  const showFeedback = phase === 'feedback'
-  const showImage = phase === 'answering' || phase === 'feedback'
 
   // Timer bar color
   const timerColor =
@@ -122,11 +106,9 @@ export default function QuizQuestion({
         Question {questionIndex + 1} of {totalQuestions}
       </p>
 
-      {/* Character image — hidden during preview */}
+      {/* Character image */}
       <div className="w-full max-w-[280px] aspect-square bg-gray-100 rounded-2xl overflow-hidden mb-4 flex items-center justify-center">
-        {!showImage ? (
-          <p className="text-gray-400 font-medium text-lg">Get ready...</p>
-        ) : imgError ? (
+        {imgError ? (
           <svg
             className="w-24 h-24 text-gray-300"
             fill="currentColor"
@@ -145,26 +127,21 @@ export default function QuizQuestion({
         )}
       </div>
 
-      {/* Timer bar — only active during answering */}
+      {/* Timer bar */}
       <div className="w-full max-w-[280px] h-2 bg-gray-200 rounded-full mb-6 overflow-hidden">
-        {showImage && (
-          <div
-            className={`h-full rounded-full transition-all duration-100 ${timerColor}`}
-            style={{ width: `${timerPercent}%` }}
-          />
-        )}
+        <div
+          className={`h-full rounded-full transition-all duration-100 ${timerColor}`}
+          style={{ width: `${timerPercent}%` }}
+        />
       </div>
 
-      {/* Options — always visible */}
+      {/* Options */}
       <div className="w-full max-w-sm space-y-3">
         {question.options.map((option) => {
           let buttonStyle =
             'bg-white border-2 border-gray-200 text-gray-900 hover:border-blue-400 hover:bg-blue-50'
 
-          if (phase === 'preview') {
-            buttonStyle =
-              'bg-white border-2 border-gray-200 text-gray-900 cursor-default'
-          } else if (showFeedback) {
+          if (showFeedback) {
             if (option.id === question.correctCharacter.id) {
               buttonStyle =
                 'bg-green-50 border-2 border-green-500 text-green-900'
@@ -183,7 +160,7 @@ export default function QuizQuestion({
             <button
               key={option.id}
               onClick={() => handleSelect(option.id)}
-              disabled={phase !== 'answering'}
+              disabled={showFeedback}
               className={`w-full min-h-[56px] py-4 px-6 rounded-xl text-lg font-medium transition-all duration-200 ${buttonStyle} disabled:cursor-default`}
             >
               {option.name}
