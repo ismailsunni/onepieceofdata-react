@@ -1,9 +1,22 @@
+import type { QuizStats } from '../../services/quizStatsService'
+
 interface QuizIntroProps {
   onStart: () => void
   isLoading: boolean
+  stats: QuizStats
 }
 
-export default function QuizIntro({ onStart, isLoading }: QuizIntroProps) {
+export default function QuizIntro({
+  onStart,
+  isLoading,
+  stats,
+}: QuizIntroProps) {
+  const hasPlayed = stats.gamesPlayed > 0
+  const accuracy =
+    stats.totalQuestions > 0
+      ? Math.round((stats.totalCorrect / stats.totalQuestions) * 100)
+      : 0
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 text-center">
       <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
@@ -41,6 +54,38 @@ export default function QuizIntro({ onStart, isLoading }: QuizIntroProps) {
         </div>
       </div>
 
+      {hasPlayed && (
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-8 max-w-sm w-full">
+          <p className="text-xs text-gray-500 uppercase font-semibold mb-3 tracking-wide">
+            Your Stats
+          </p>
+          <div className="grid grid-cols-2 gap-3 text-center">
+            <div>
+              <p className="text-xl font-bold text-gray-900">
+                {stats.gamesPlayed}
+              </p>
+              <p className="text-xs text-gray-500">Games</p>
+            </div>
+            <div>
+              <p className="text-xl font-bold text-gray-900">
+                {stats.bestScore}
+              </p>
+              <p className="text-xs text-gray-500">Best Score</p>
+            </div>
+            <div>
+              <p className="text-xl font-bold text-gray-900">{accuracy}%</p>
+              <p className="text-xs text-gray-500">Accuracy</p>
+            </div>
+            <div>
+              <p className="text-xl font-bold text-gray-900">
+                {stats.bestRank}
+              </p>
+              <p className="text-xs text-gray-500">Best Rank</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <button
         onClick={onStart}
         disabled={isLoading}
@@ -51,8 +96,10 @@ export default function QuizIntro({ onStart, isLoading }: QuizIntroProps) {
             <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
             Loading...
           </span>
+        ) : hasPlayed ? (
+          'Play Again'
         ) : (
-          'Start Quiz'
+          'Start Game'
         )}
       </button>
     </div>

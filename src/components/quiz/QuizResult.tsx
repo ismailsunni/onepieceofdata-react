@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import type { QuizAnswer } from '../../types/quiz'
+import type { QuizStats } from '../../services/quizStatsService'
 import {
   getCharacterImageUrl,
   getShortName,
@@ -12,12 +13,14 @@ interface QuizResultProps {
   answers: QuizAnswer[]
   totalScore: number
   onPlayAgain: () => void
+  stats: QuizStats
 }
 
 export default function QuizResult({
   answers,
   totalScore,
   onPlayAgain,
+  stats,
 }: QuizResultProps) {
   const rating = getScoreRating(totalScore)
 
@@ -138,6 +141,37 @@ export default function QuizResult({
           </Link>
         ))}
       </div>
+
+      {/* Stats summary */}
+      {stats.gamesPlayed > 1 && (
+        <div className="w-full max-w-sm bg-gray-50 border border-gray-200 rounded-xl p-4 mb-8">
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div>
+              <p className="text-lg font-bold text-gray-900">
+                {stats.bestScore}
+              </p>
+              <p className="text-xs text-gray-500">Best Score</p>
+            </div>
+            <div>
+              <p className="text-lg font-bold text-gray-900">
+                {Math.round(stats.totalScore / stats.gamesPlayed)}
+              </p>
+              <p className="text-xs text-gray-500">Avg Score</p>
+            </div>
+            <div>
+              <p className="text-lg font-bold text-gray-900">
+                {Math.round((stats.totalCorrect / stats.totalQuestions) * 100)}%
+              </p>
+              <p className="text-xs text-gray-500">Accuracy</p>
+            </div>
+          </div>
+          {totalScore >= stats.bestScore && stats.gamesPlayed > 1 && (
+            <p className="text-center text-sm text-green-600 font-medium mt-3">
+              New personal best!
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Action buttons - sticky bottom */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 max-w-lg mx-auto">

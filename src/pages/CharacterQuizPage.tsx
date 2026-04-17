@@ -1,7 +1,12 @@
 import { useState, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { fetchCharacters } from '../services/characterService'
-import { generateQuizQuestions } from '../services/quizService'
+import { generateQuizQuestions, getScoreRating } from '../services/quizService'
+import {
+  loadStats,
+  saveGameResult,
+  type QuizStats,
+} from '../services/quizStatsService'
 import { CACHE } from '../constants/cache'
 import type { QuizQuestion, QuizAnswer } from '../types/quiz'
 import QuizIntro from '../components/quiz/QuizIntro'
@@ -17,6 +22,7 @@ export default function CharacterQuizPage() {
   const [answers, setAnswers] = useState<QuizAnswer[]>([])
   const [totalScore, setTotalScore] = useState(0)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [stats, setStats] = useState<QuizStats>(loadStats)
 
   const { data: characters, isLoading: isLoadingCharacters } = useQuery({
     queryKey: ['characters'],
@@ -31,10 +37,7 @@ export default function CharacterQuizPage() {
     const generated = await generateQuizQuestions(characters)
     setIsGenerating(false)
 
-    if (!generated) {
-      // Not enough characters or images — shouldn't happen with real data
-      return
-    }
+    if (!generated) return
 
     setQuestions(generated)
     setAnswers([])
@@ -59,16 +62,29 @@ export default function CharacterQuizPage() {
         pointsEarned: points,
       }
 
-      setAnswers((prev) => [...prev, answer])
-      setTotalScore((prev) => prev + points)
+      const newAnswers = [...answers, answer]
+      const newScore = totalScore + points
+
+      setAnswers(newAnswers)
+      setTotalScore(newScore)
 
       if (currentQuestion < questions.length - 1) {
         setCurrentQuestion((prev) => prev + 1)
       } else {
+        // Game over — save stats
+        const correctCount = newAnswers.filter((a) => a.isCorrect).length
+        const rating = getScoreRating(newScore)
+        const updated = saveGameResult(
+          newScore,
+          rating.label,
+          correctCount,
+          newAnswers.length
+        )
+        setStats(updated)
         setPhase('result')
       }
     },
-    [currentQuestion, questions]
+    [currentQuestion, questions, answers, totalScore]
   )
 
   const handlePlayAgain = useCallback(() => {
@@ -85,6 +101,7 @@ export default function CharacterQuizPage() {
         <QuizIntro
           onStart={startQuiz}
           isLoading={isLoadingCharacters || isGenerating}
+          stats={stats}
         />
       )}
 
@@ -103,6 +120,7 @@ export default function CharacterQuizPage() {
           answers={answers}
           totalScore={totalScore}
           onPlayAgain={handlePlayAgain}
+          stats={stats}
         />
       )}
     </div>
