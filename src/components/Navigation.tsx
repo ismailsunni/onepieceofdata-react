@@ -104,6 +104,10 @@ function Navigation() {
           width="w-64"
         />
 
+        <NavLink to="/quiz" className={getLinkClass}>
+          Quiz
+        </NavLink>
+
         <NavLink to="/about" className={getLinkClass}>
           About
         </NavLink>
@@ -199,6 +203,14 @@ function Navigation() {
                 items={ANALYTICS_ITEMS}
                 onClose={closeMobileMenu}
               />
+
+              <NavLink
+                to="/quiz"
+                className={getMobileLinkClass}
+                onClick={closeMobileMenu}
+              >
+                Quiz
+              </NavLink>
 
               <NavLink
                 to="/about"
