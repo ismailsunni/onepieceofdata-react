@@ -147,20 +147,42 @@ export function calculatePoints(timeRemaining: number): number {
   return 200 + Math.round(800 * (timeRemaining / 10))
 }
 
-/** Get score rating label */
-export function getScoreRating(score: number): {
+interface ScoreRating {
   label: string
   characterId: string | null
-} {
-  if (score === 5000)
-    return { label: 'One Piece!', characterId: 'Gol_D._Roger' }
-  if (score >= 4500)
-    return { label: 'Pirate King!', characterId: 'Gol_D._Roger' }
-  if (score >= 4000) return { label: 'Yonko Level!', characterId: null }
-  if (score >= 3500) return { label: 'Shichibukai!', characterId: null }
-  if (score >= 3000) return { label: 'Supernova!', characterId: null }
-  if (score >= 2000) return { label: 'New World Pirate!', characterId: null }
-  if (score >= 1000) return { label: 'Rookie!', characterId: null }
-  if (score > 0) return { label: 'Gaimon Level!', characterId: 'Gaimon' }
-  return { label: "Foxy's Friend!", characterId: 'Foxy' }
+  nextRank: string | null
+  nextThreshold: number | null
+}
+
+const RANKS: { min: number; label: string; characterId: string | null }[] = [
+  { min: 5000, label: 'One Piece!', characterId: 'Gol_D._Roger' },
+  { min: 4500, label: 'Pirate King!', characterId: 'Gol_D._Roger' },
+  { min: 4000, label: 'Yonko Level!', characterId: null },
+  { min: 3500, label: 'Shichibukai!', characterId: null },
+  { min: 3000, label: 'Supernova!', characterId: null },
+  { min: 2000, label: 'New World Pirate!', characterId: null },
+  { min: 1000, label: 'Rookie!', characterId: null },
+  { min: 1, label: 'Gaimon Level!', characterId: 'Gaimon' },
+  { min: 0, label: "Foxy's Friend!", characterId: 'Foxy' },
+]
+
+/** Get score rating label */
+export function getScoreRating(score: number): ScoreRating {
+  for (let i = 0; i < RANKS.length; i++) {
+    if (score >= RANKS[i].min) {
+      const nextRankEntry = i > 0 ? RANKS[i - 1] : null
+      return {
+        label: RANKS[i].label,
+        characterId: RANKS[i].characterId,
+        nextRank: nextRankEntry?.label ?? null,
+        nextThreshold: nextRankEntry?.min ?? null,
+      }
+    }
+  }
+  return {
+    label: "Foxy's Friend!",
+    characterId: 'Foxy',
+    nextRank: 'Gaimon Level!',
+    nextThreshold: 1,
+  }
 }

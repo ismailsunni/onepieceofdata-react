@@ -140,19 +140,29 @@ export default function QuizResult({
       </div>
 
       {/* Action buttons - sticky bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex gap-3 max-w-lg mx-auto">
-        <button
-          onClick={handleShare}
-          className="flex-1 py-3 px-4 border-2 border-blue-600 text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition-colors"
-        >
-          Share Score
-        </button>
-        <button
-          onClick={onPlayAgain}
-          className="flex-1 py-3 px-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors"
-        >
-          Play Again
-        </button>
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 max-w-lg mx-auto">
+        {rating.nextRank && (
+          <p className="text-center text-sm text-gray-500 mb-3">
+            {rating.nextThreshold! - totalScore} more points to reach{' '}
+            <span className="font-semibold text-gray-700">
+              {rating.nextRank}
+            </span>
+          </p>
+        )}
+        <div className="flex gap-3">
+          <button
+            onClick={handleShare}
+            className="flex-1 py-3 px-4 border-2 border-blue-600 text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition-colors"
+          >
+            Share Score
+          </button>
+          <button
+            onClick={onPlayAgain}
+            className="flex-1 py-3 px-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors"
+          >
+            Play Again
+          </button>
+        </div>
       </div>
     </div>
   )
