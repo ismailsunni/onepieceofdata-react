@@ -22,21 +22,15 @@ export default function QuizResult({
   const rating = getScoreRating(totalScore)
 
   const buildShareText = () => {
-    const resultLine = answers
+    const resultLines = answers
       .map(
         (a) =>
           `${getShortName(a.correctCharacter.name)} ${a.isCorrect ? '\u2705' : '\u274C'}`
       )
-      .join(' | ')
+      .join('\n')
 
     const gameUrl = 'https://onepieceofdata.com/#/games/guess-character'
-    return {
-      text:
-        `I scored ${totalScore}/5000 on the One Piece Character Game! (${rating.label})\n` +
-        `${resultLine}\n` +
-        `Play at: ${gameUrl}`,
-      url: gameUrl,
-    }
+    return `I reached ${rating.label} with ${totalScore} points in One Piece of Data - Guess the Character!\n${resultLines}\n${gameUrl}`
   }
 
   const copyToClipboardFallback = (text: string): boolean => {
@@ -57,15 +51,13 @@ export default function QuizResult({
   }
 
   const handleShare = async () => {
-    const { text, url } = buildShareText()
+    const text = buildShareText()
 
     // 1. Try Web Share API (mobile native share sheet)
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'One Piece Character Game',
           text,
-          url,
         })
         return
       } catch (err) {
