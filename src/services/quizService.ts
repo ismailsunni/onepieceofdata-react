@@ -147,26 +147,20 @@ export function calculatePoints(timeRemaining: number): number {
   return 200 + Math.round(800 * (timeRemaining / 10))
 }
 
-const ZERO_SCORE_OPTIONS = [
-  { label: "Kin'emon's Friend", characterId: "Kin'emon" },
-  { label: "Buggy's Friend", characterId: 'Buggy' },
-  { label: "Foxy's Friend", characterId: 'Foxy' },
-]
-
 /** Get score rating label */
 export function getScoreRating(score: number): {
   label: string
   characterId: string | null
 } {
+  if (score === 5000)
+    return { label: 'One Piece!', characterId: 'Gol_D._Roger' }
   if (score >= 4500)
     return { label: 'Pirate King!', characterId: 'Gol_D._Roger' }
-  if (score >= 3500) return { label: 'Yonko Level!', characterId: null }
-  if (score >= 2500) return { label: 'Shichibukai!', characterId: null }
-  if (score >= 1500) return { label: 'Supernova!', characterId: null }
-  if (score >= 500) return { label: 'Grand Line Rookie', characterId: null }
+  if (score >= 4000) return { label: 'Yonko Level!', characterId: null }
+  if (score >= 3500) return { label: 'Shichibukai!', characterId: null }
+  if (score >= 3000) return { label: 'Supernova!', characterId: null }
+  if (score >= 2000) return { label: 'New World Pirate!', characterId: null }
+  if (score >= 1000) return { label: 'Rookie!', characterId: null }
   if (score > 0) return { label: 'Gaimon Level!', characterId: 'Gaimon' }
-  // 0 points: random pick from Kin'emon, Buggy, or Foxy
-  const pick =
-    ZERO_SCORE_OPTIONS[Math.floor(Math.random() * ZERO_SCORE_OPTIONS.length)]
-  return { label: pick.label, characterId: pick.characterId }
+  return { label: "Foxy's Friend!", characterId: 'Foxy' }
 }
