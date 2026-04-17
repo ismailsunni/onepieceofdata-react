@@ -65,7 +65,7 @@ const AffiliationsTopicPage = lazy(
 const DataQualityTopicPage = lazy(
   () => import('./pages/analytics/DataQualityTopicPage')
 )
-const QuizIndexPage = lazy(() => import('./pages/QuizIndexPage'))
+const GamesIndexPage = lazy(() => import('./pages/GamesIndexPage'))
 const CharacterQuizPage = lazy(() => import('./pages/CharacterQuizPage'))
 
 // Loading fallback component
@@ -286,9 +286,9 @@ function App() {
                               path="/devil-fruits"
                               element={<DevilFruitsPage />}
                             />
-                            <Route path="/quiz" element={<QuizIndexPage />} />
+                            <Route path="/games" element={<GamesIndexPage />} />
                             <Route
-                              path="/quiz/guess-character"
+                              path="/games/guess-character"
                               element={<CharacterQuizPage />}
                             />
                             <Route path="/about" element={<AboutPage />} />

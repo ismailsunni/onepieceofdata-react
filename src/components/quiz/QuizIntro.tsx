@@ -36,7 +36,7 @@ export default function QuizIntro({ onStart, isLoading }: QuizIntroProps) {
         <div className="flex items-start gap-3">
           <span className="text-blue-600 font-bold text-sm mt-0.5">04</span>
           <p className="text-gray-700 text-sm">
-            Max score: 5000 points — can you become Pirate King?
+            Max score: 5000 points — can you reach Pirate King?
           </p>
         </div>
       </div>

@@ -21,7 +21,7 @@ export default function QuizResult({
 }: QuizResultProps) {
   const rating = getScoreRating(totalScore)
 
-  const handleShare = () => {
+  const buildShareText = () => {
     const resultLine = answers
       .map(
         (a) =>
@@ -29,14 +29,68 @@ export default function QuizResult({
       )
       .join(' | ')
 
-    const shareText =
-      `I scored ${totalScore}/5000 on the One Piece Character Quiz! (${rating.label})\n` +
-      `${resultLine}\n` +
-      `Play at: ${window.location.href}`
+    const gameUrl = 'https://onepieceofdata.com/#/games/guess-character'
+    return {
+      text:
+        `I scored ${totalScore}/5000 on the One Piece Character Game! (${rating.label})\n` +
+        `${resultLine}\n` +
+        `Play at: ${gameUrl}`,
+      url: gameUrl,
+    }
+  }
 
-    navigator.clipboard.writeText(shareText).then(() => {
+  const copyToClipboardFallback = (text: string): boolean => {
+    const textarea = document.createElement('textarea')
+    textarea.value = text
+    textarea.style.position = 'fixed'
+    textarea.style.opacity = '0'
+    document.body.appendChild(textarea)
+    textarea.select()
+    let success = false
+    try {
+      success = document.execCommand('copy')
+    } catch {
+      success = false
+    }
+    document.body.removeChild(textarea)
+    return success
+  }
+
+  const handleShare = async () => {
+    const { text, url } = buildShareText()
+
+    // 1. Try Web Share API (mobile native share sheet)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'One Piece Character Game',
+          text,
+          url,
+        })
+        return
+      } catch (err) {
+        if ((err as DOMException).name === 'AbortError') return
+        // Fall through to clipboard
+      }
+    }
+
+    // 2. Try Clipboard API (requires secure context)
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(text)
+        toast.success('Score copied to clipboard!')
+        return
+      } catch {
+        // Fall through to execCommand fallback
+      }
+    }
+
+    // 3. Fallback: execCommand('copy') — works on HTTP
+    if (copyToClipboardFallback(text)) {
       toast.success('Score copied to clipboard!')
-    })
+    } else {
+      toast.error('Could not share — try copying manually')
+    }
   }
 
   return (
