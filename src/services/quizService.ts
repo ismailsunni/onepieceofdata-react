@@ -3,13 +3,13 @@ import type { QuizCharacter, QuizQuestion } from '../types/quiz'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string
 
-// Difficulty tiers: Q1 easiest → Q5 hardest
+// Difficulty tiers: Q1 easiest → Q5 hardest (~170 characters each)
 const TIERS = [
-  { tier: 1, min: 200, max: Infinity }, // Main cast
-  { tier: 2, min: 100, max: 199 }, // Major recurring
-  { tier: 3, min: 50, max: 99 }, // Significant supporting
-  { tier: 4, min: 20, max: 49 }, // Notable minor
-  { tier: 5, min: 0, max: 19 }, // Rare/obscure (filtered by eligibility)
+  { tier: 1, min: 37, max: Infinity }, // Main & major recurring cast
+  { tier: 2, min: 18, max: 36 }, // Notable supporting characters
+  { tier: 3, min: 10, max: 17 }, // Minor recurring characters
+  { tier: 4, min: 7, max: 9 }, // Rare characters
+  { tier: 5, min: 0, max: 6 }, // Obscure characters (filtered by eligibility)
 ]
 
 export function getCharacterImageUrl(characterId: string): string {
@@ -141,22 +141,32 @@ export function getShortName(name: string): string {
   return parts[parts.length - 1]
 }
 
-/** Calculate points for a correct answer */
+/** Calculate points for a correct answer: 200 base + up to 800 speed bonus */
 export function calculatePoints(timeRemaining: number): number {
   if (timeRemaining <= 0) return 0
-  return Math.round(1000 * (timeRemaining / 10))
+  return 200 + Math.round(800 * (timeRemaining / 10))
 }
+
+const ZERO_SCORE_OPTIONS = [
+  { label: "Kin'emon's Friend", characterId: "Kin'emon" },
+  { label: "Buggy's Friend", characterId: 'Buggy' },
+  { label: "Foxy's Friend", characterId: 'Foxy' },
+]
 
 /** Get score rating label */
 export function getScoreRating(score: number): {
   label: string
   characterId: string | null
 } {
-  if (score === 5000)
+  if (score >= 4500)
     return { label: 'Pirate King!', characterId: 'Gol_D._Roger' }
-  if (score >= 4000) return { label: 'Yonko Level!', characterId: null }
-  if (score >= 3000) return { label: 'Shichibukai!', characterId: null }
-  if (score >= 2000) return { label: 'Supernova!', characterId: null }
-  if (score >= 1000) return { label: 'Grand Line Rookie', characterId: null }
-  return { label: 'Gaimon Level!', characterId: 'Gaimon' }
+  if (score >= 3500) return { label: 'Yonko Level!', characterId: null }
+  if (score >= 2500) return { label: 'Shichibukai!', characterId: null }
+  if (score >= 1500) return { label: 'Supernova!', characterId: null }
+  if (score >= 500) return { label: 'Grand Line Rookie', characterId: null }
+  if (score > 0) return { label: 'Gaimon Level!', characterId: 'Gaimon' }
+  // 0 points: random pick from Kin'emon, Buggy, or Foxy
+  const pick =
+    ZERO_SCORE_OPTIONS[Math.floor(Math.random() * ZERO_SCORE_OPTIONS.length)]
+  return { label: pick.label, characterId: pick.characterId }
 }

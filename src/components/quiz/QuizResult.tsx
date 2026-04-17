@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import type { QuizAnswer } from '../../types/quiz'
 import {
@@ -60,12 +61,13 @@ export default function QuizResult({
       {/* Per-question recap */}
       <div className="w-full max-w-sm space-y-3 mb-8">
         {answers.map((answer, i) => (
-          <div
+          <Link
             key={i}
-            className={`flex items-center gap-3 p-3 rounded-xl border ${
+            to={`/characters/${encodeURIComponent(answer.correctCharacter.id)}`}
+            className={`flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 hover:shadow-md ${
               answer.isCorrect
-                ? 'bg-green-50 border-green-200'
-                : 'bg-red-50 border-red-200'
+                ? 'bg-green-50 border-green-200 hover:border-green-300'
+                : 'bg-red-50 border-red-200 hover:border-red-300'
             }`}
           >
             <RecapThumbnail
@@ -87,7 +89,7 @@ export default function QuizResult({
             <span className="text-lg flex-shrink-0">
               {answer.isCorrect ? '\u2705' : '\u274C'}
             </span>
-          </div>
+          </Link>
         ))}
       </div>
 
