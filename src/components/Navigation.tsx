@@ -12,7 +12,7 @@ const EXPLORE_ITEMS: NavItem[] = [
   { to: '/volumes', label: 'Volumes' },
   { to: '/chapters', label: 'Chapters' },
   { to: '/affiliations', label: 'Affiliations' },
-  { to: '/devil-fruits', label: 'Devil Fruits', badge: 'soon' },
+  { to: '/devil-fruits', label: 'Devil Fruits' },
 ]
 
 const ANALYTICS_ITEMS: NavItem[] = [
