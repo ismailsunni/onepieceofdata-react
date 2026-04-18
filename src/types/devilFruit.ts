@@ -4,4 +4,5 @@ export interface CharacterDevilFruit {
   english_name: string | null
   meaning: string | null
   fruit_type: string | null
+  fruit_sub_type: string | null
 }

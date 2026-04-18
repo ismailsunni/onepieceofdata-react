@@ -35,6 +35,7 @@ function DevilFruitsPage() {
           f.fruit_name.toLowerCase().includes(q) ||
           f.english_name?.toLowerCase().includes(q) ||
           f.meaning?.toLowerCase().includes(q) ||
+          f.fruit_sub_type?.toLowerCase().includes(q) ||
           f.character_id.replace(/_/g, ' ').toLowerCase().includes(q)
       )
     }
@@ -83,6 +84,19 @@ function DevilFruitsPage() {
             }`}
           >
             {row.fruit_type}
+          </span>
+        ) : (
+          <span className="text-gray-300">&ndash;</span>
+        ),
+    },
+    {
+      key: 'fruit_sub_type',
+      label: 'Sub-type',
+      sortValue: (row) => row.fruit_sub_type ?? '',
+      render: (row) =>
+        row.fruit_sub_type ? (
+          <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+            {row.fruit_sub_type}
           </span>
         ) : (
           <span className="text-gray-300">&ndash;</span>

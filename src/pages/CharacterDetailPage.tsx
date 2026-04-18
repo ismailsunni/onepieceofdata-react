@@ -1240,19 +1240,26 @@ function CharacterDetailPage() {
                               </p>
                             )}
                           </div>
-                          {fruit.fruit_type && (
-                            <span
-                              className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
-                                fruit.fruit_type === 'Logia'
-                                  ? 'bg-sky-100 text-sky-700'
-                                  : fruit.fruit_type === 'Zoan'
-                                    ? 'bg-green-100 text-green-700'
-                                    : 'bg-purple-100 text-purple-700'
-                              }`}
-                            >
-                              {fruit.fruit_type}
-                            </span>
-                          )}
+                          <div className="flex flex-col items-end gap-1">
+                            {fruit.fruit_type && (
+                              <span
+                                className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                                  fruit.fruit_type === 'Logia'
+                                    ? 'bg-sky-100 text-sky-700'
+                                    : fruit.fruit_type === 'Zoan'
+                                      ? 'bg-green-100 text-green-700'
+                                      : 'bg-purple-100 text-purple-700'
+                                }`}
+                              >
+                                {fruit.fruit_type}
+                              </span>
+                            )}
+                            {fruit.fruit_sub_type && (
+                              <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                                {fruit.fruit_sub_type}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}

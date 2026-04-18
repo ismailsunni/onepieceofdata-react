@@ -10,8 +10,7 @@ CREATE TABLE public.arc (
   end_chapter integer NOT NULL,
   saga_id text,
   description text,
-  CONSTRAINT arc_pkey PRIMARY KEY (arc_id),
-  CONSTRAINT fk_arc_saga FOREIGN KEY (saga_id) REFERENCES public.saga(saga_id)
+  CONSTRAINT arc_pkey PRIMARY KEY (arc_id)
 );
 CREATE TABLE public.chapter (
   number integer NOT NULL,
@@ -48,6 +47,9 @@ CREATE TABLE public.character (
   cover_volume_list ARRAY,
   cover_appearance_count integer,
   origin_region text,
+  haki_observation boolean,
+  haki_armament boolean,
+  haki_conqueror boolean,
   CONSTRAINT character_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.character_affiliation (
@@ -56,6 +58,15 @@ CREATE TABLE public.character_affiliation (
   sub_group text,
   status text NOT NULL,
   CONSTRAINT character_affiliation_pkey PRIMARY KEY (character_id, group_name)
+);
+CREATE TABLE public.character_devil_fruit (
+  character_id text NOT NULL,
+  fruit_name text NOT NULL,
+  english_name text,
+  meaning text,
+  fruit_type text,
+  fruit_sub_type text,
+  CONSTRAINT character_devil_fruit_pkey PRIMARY KEY (character_id, fruit_name)
 );
 CREATE TABLE public.profiles (
   id uuid NOT NULL,
