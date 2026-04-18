@@ -5,9 +5,12 @@ import { fetchAllDevilFruits } from '../services/devilFruitService'
 import SortableTable, { Column } from '../components/common/SortableTable'
 import type { CharacterDevilFruit } from '../types/devilFruit'
 
+const UNKNOWN_TYPE = '????'
+
 function DevilFruitsPage() {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<string>('all')
+  const [subTypeFilter, setSubTypeFilter] = useState<string>('all')
 
   const { data: devilFruits = [], isLoading } = useQuery({
     queryKey: ['all-devil-fruits'],
@@ -15,18 +18,60 @@ function DevilFruitsPage() {
     staleTime: 10 * 60 * 1000,
   })
 
-  const fruitTypes = useMemo(() => {
-    const types = new Set<string>()
+  const typeCounts = useMemo(() => {
+    const counts = new Map<string, number>()
     for (const fruit of devilFruits) {
-      if (fruit.fruit_type) types.add(fruit.fruit_type)
+      const key = fruit.fruit_type || UNKNOWN_TYPE
+      counts.set(key, (counts.get(key) ?? 0) + 1)
     }
-    return Array.from(types).sort()
+    return counts
   }, [devilFruits])
+
+  const fruitTypes = useMemo(
+    () =>
+      Array.from(typeCounts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .map(([type]) => type),
+    [typeCounts]
+  )
+
+  const subTypeCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    if (typeFilter === 'all') return counts
+    for (const fruit of devilFruits) {
+      const typeKey = fruit.fruit_type || UNKNOWN_TYPE
+      if (typeKey === typeFilter && fruit.fruit_sub_type) {
+        counts.set(
+          fruit.fruit_sub_type,
+          (counts.get(fruit.fruit_sub_type) ?? 0) + 1
+        )
+      }
+    }
+    return counts
+  }, [devilFruits, typeFilter])
+
+  const subTypes = useMemo(
+    () =>
+      Array.from(subTypeCounts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .map(([sub]) => sub),
+    [subTypeCounts]
+  )
+
+  const handleTypeFilter = (type: string) => {
+    setTypeFilter(type)
+    setSubTypeFilter('all')
+  }
 
   const filtered = useMemo(() => {
     let result = devilFruits
     if (typeFilter !== 'all') {
-      result = result.filter((f) => f.fruit_type === typeFilter)
+      result = result.filter(
+        (f) => (f.fruit_type || UNKNOWN_TYPE) === typeFilter
+      )
+      if (subTypeFilter !== 'all') {
+        result = result.filter((f) => f.fruit_sub_type === subTypeFilter)
+      }
     }
     if (search.trim()) {
       const q = search.toLowerCase()
@@ -40,7 +85,7 @@ function DevilFruitsPage() {
       )
     }
     return result
-  }, [devilFruits, search, typeFilter])
+  }, [devilFruits, search, typeFilter, subTypeFilter])
 
   const formatCharacterName = (id: string) =>
     id
@@ -184,34 +229,66 @@ function DevilFruitsPage() {
           </div>
           <div className="flex gap-2 flex-wrap">
             <button
-              onClick={() => setTypeFilter('all')}
+              onClick={() => handleTypeFilter('all')}
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 typeFilter === 'all'
                   ? 'bg-gray-900 text-white'
                   : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
               }`}
             >
-              All
+              All ({devilFruits.length})
             </button>
             {fruitTypes.map((type) => (
               <button
                 key={type}
-                onClick={() => setTypeFilter(type)}
+                onClick={() => handleTypeFilter(type)}
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   typeFilter === type
                     ? type === 'Logia'
                       ? 'bg-sky-600 text-white'
                       : type === 'Zoan'
                         ? 'bg-green-600 text-white'
-                        : 'bg-purple-600 text-white'
+                        : type === 'Paramecia'
+                          ? 'bg-purple-600 text-white'
+                          : 'bg-gray-600 text-white'
                     : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                {type}
+                {type} ({typeCounts.get(type) ?? 0})
               </button>
             ))}
           </div>
         </div>
+
+        {/* Sub-type filters */}
+        {typeFilter !== 'all' && subTypes.length > 0 && (
+          <div className="mb-6 flex items-center gap-2 flex-wrap">
+            <span className="text-sm text-gray-500 mr-1">Sub-type:</span>
+            <button
+              onClick={() => setSubTypeFilter('all')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                subTypeFilter === 'all'
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              All ({typeCounts.get(typeFilter) ?? 0})
+            </button>
+            {subTypes.map((sub) => (
+              <button
+                key={sub}
+                onClick={() => setSubTypeFilter(sub)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  subTypeFilter === sub
+                    ? 'bg-gray-700 text-white'
+                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {sub} ({subTypeCounts.get(sub) ?? 0})
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Table */}
         {isLoading ? (
