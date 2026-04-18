@@ -1,6 +1,7 @@
 import type { Character } from '../types/character'
 import type { Arc } from '../types/arc'
 import type { CharacterAffiliation } from '../types/affiliation'
+import type { CharacterDevilFruit } from '../types/devilFruit'
 import type { WhoAmIHint, WhoAmICharacter } from '../types/whoAmI'
 import { getCharacterImageUrl, preloadImage } from './quizService'
 
@@ -37,7 +38,8 @@ function formatBounty(bounty: number): string {
 function generateHints(
   char: Character,
   arcMap: Map<string, Arc>,
-  affiliationMap: Map<string, CharacterAffiliation[]>
+  affiliationMap: Map<string, CharacterAffiliation[]>,
+  devilFruitMap: Map<string, CharacterDevilFruit[]>
 ): WhoAmIHint[] {
   const hints: WhoAmIHint[] = []
 
@@ -88,12 +90,29 @@ function generateHints(
     })
   }
 
-  // Hint 2: Appearance count + status
+  // Hint 2: Appearance count + status + powers
   const count = char.appearance_count ?? 0
   const status = char.status ?? 'Unknown'
+  const fruits = devilFruitMap.get(char.id) ?? []
+  const hakiTypes: string[] = []
+  if (char.haki_observation) hakiTypes.push('Observation')
+  if (char.haki_armament) hakiTypes.push('Armament')
+  if (char.haki_conqueror) hakiTypes.push("Conqueror's")
+
+  let powersText = ''
+  if (fruits.length > 0 && hakiTypes.length > 0) {
+    powersText = `. Devil Fruit user. Haki: ${hakiTypes.join(', ')}`
+  } else if (fruits.length > 0) {
+    powersText = '. Devil Fruit user (no known Haki)'
+  } else if (hakiTypes.length > 0) {
+    powersText = `. No Devil Fruit. Haki: ${hakiTypes.join(', ')}`
+  } else {
+    powersText = '. No known Devil Fruit or Haki'
+  }
+
   hints.push({
-    label: 'Appearances & Status',
-    value: `Appeared in ${count} chapters. Status: ${status}`,
+    label: 'Appearances & Powers',
+    value: `Appeared in ${count} chapters. Status: ${status}${powersText}`,
     type: 'text',
   })
 
@@ -170,7 +189,8 @@ function generateHints(
 export async function generateWhoAmIRound(
   characters: Character[],
   arcMap: Map<string, Arc>,
-  affiliationMap: Map<string, CharacterAffiliation[]>
+  affiliationMap: Map<string, CharacterAffiliation[]>,
+  devilFruitMap: Map<string, CharacterDevilFruit[]>
 ): Promise<WhoAmICharacter[] | null> {
   const eligible = characters.filter(isEligibleForWhoAmI)
   const shuffled = shuffleArray(eligible)
@@ -187,7 +207,7 @@ export async function generateWhoAmIRound(
     const loaded = await preloadImage(imageUrl)
     if (!loaded) continue
 
-    const hints = generateHints(char, arcMap, affiliationMap)
+    const hints = generateHints(char, arcMap, affiliationMap, devilFruitMap)
     result.push({
       id: char.id,
       name: char.name!,

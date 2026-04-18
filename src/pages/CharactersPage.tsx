@@ -619,7 +619,6 @@ function CharactersPage() {
                   <tr>
                     {[
                       'Name',
-                      'Origin',
                       'Region',
                       'Status',
                       'Appearances',
@@ -637,7 +636,7 @@ function CharactersPage() {
                 <tbody className="divide-y divide-gray-200">
                   {[...Array(5)].map((_, i) => (
                     <tr key={i} className="bg-white">
-                      {[...Array(9)].map((_, j) => (
+                      {[...Array(8)].map((_, j) => (
                         <td key={j} className="px-4 py-4">
                           <div className="h-4 bg-gray-100 rounded animate-pulse"></div>
                         </td>

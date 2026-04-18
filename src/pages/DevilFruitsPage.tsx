@@ -1,19 +1,221 @@
-function DevilFruitsPage() {
-  return (
-    <main className="container mx-auto px-4 py-12">
-      <h2 className="text-4xl font-bold text-gray-800 mb-6">Devil Fruits</h2>
-      <p className="text-xl text-gray-600 mb-8">
-        Discover the mysterious powers of Devil Fruits.
-      </p>
+import { useState, useMemo } from 'react'
+import { Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import { fetchAllDevilFruits } from '../services/devilFruitService'
+import SortableTable, { Column } from '../components/common/SortableTable'
+import type { CharacterDevilFruit } from '../types/devilFruit'
 
-      <div className="bg-white rounded-lg shadow-md p-8">
-        <p className="text-gray-600 text-center">
-          Devil Fruits catalog coming soon...
-        </p>
-        <p className="text-gray-500 text-center mt-4 text-sm">
-          This page will display all known Devil Fruits categorized by type
-          (Paramecia, Zoan, Logia) with their abilities and users.
-        </p>
+function DevilFruitsPage() {
+  const [search, setSearch] = useState('')
+  const [typeFilter, setTypeFilter] = useState<string>('all')
+
+  const { data: devilFruits = [], isLoading } = useQuery({
+    queryKey: ['all-devil-fruits'],
+    queryFn: fetchAllDevilFruits,
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const fruitTypes = useMemo(() => {
+    const types = new Set<string>()
+    for (const fruit of devilFruits) {
+      if (fruit.fruit_type) types.add(fruit.fruit_type)
+    }
+    return Array.from(types).sort()
+  }, [devilFruits])
+
+  const filtered = useMemo(() => {
+    let result = devilFruits
+    if (typeFilter !== 'all') {
+      result = result.filter((f) => f.fruit_type === typeFilter)
+    }
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      result = result.filter(
+        (f) =>
+          f.fruit_name.toLowerCase().includes(q) ||
+          f.english_name?.toLowerCase().includes(q) ||
+          f.meaning?.toLowerCase().includes(q) ||
+          f.character_id.replace(/_/g, ' ').toLowerCase().includes(q)
+      )
+    }
+    return result
+  }, [devilFruits, search, typeFilter])
+
+  const formatCharacterName = (id: string) =>
+    id
+      .split('_')
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ')
+
+  const columns: Column<CharacterDevilFruit>[] = [
+    {
+      key: 'fruit_name',
+      label: 'Fruit Name',
+      sortValue: (row) => row.fruit_name,
+      render: (row) => (
+        <span className="font-medium text-gray-900">{row.fruit_name}</span>
+      ),
+    },
+    {
+      key: 'meaning',
+      label: 'Meaning',
+      sortValue: (row) => row.meaning ?? '',
+      render: (row) =>
+        row.meaning ? (
+          <span className="text-gray-600 text-sm">{row.meaning}</span>
+        ) : (
+          <span className="text-gray-300">&ndash;</span>
+        ),
+    },
+    {
+      key: 'fruit_type',
+      label: 'Type',
+      sortValue: (row) => row.fruit_type ?? '',
+      render: (row) =>
+        row.fruit_type ? (
+          <span
+            className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+              row.fruit_type === 'Logia'
+                ? 'bg-sky-100 text-sky-700'
+                : row.fruit_type === 'Zoan'
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-purple-100 text-purple-700'
+            }`}
+          >
+            {row.fruit_type}
+          </span>
+        ) : (
+          <span className="text-gray-300">&ndash;</span>
+        ),
+    },
+    {
+      key: 'character_id',
+      label: 'User',
+      sortValue: (row) => formatCharacterName(row.character_id),
+      render: (row) => (
+        <Link
+          to={`/characters/${row.character_id}`}
+          className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+        >
+          {formatCharacterName(row.character_id)}
+        </Link>
+      ),
+    },
+  ]
+
+  return (
+    <main className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
+          <Link to="/" className="hover:text-gray-900 transition-colors">
+            Home
+          </Link>
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+          <span className="text-gray-900 font-medium">Devil Fruits</span>
+        </nav>
+
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">
+            Devil Fruits
+          </h1>
+          <p className="text-lg text-gray-600">
+            All known Devil Fruits and their users
+            {devilFruits.length > 0 && (
+              <span className="ml-2 text-sm text-gray-400">
+                ({devilFruits.length} fruits)
+              </span>
+            )}
+          </p>
+        </div>
+
+        {/* Filters */}
+        <div className="mb-6 flex flex-col sm:flex-row gap-3">
+          <div className="relative max-w-md flex-1">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg
+                className="w-5 h-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+            <input
+              type="text"
+              placeholder="Search fruits..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-shadow"
+            />
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => setTypeFilter('all')}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                typeFilter === 'all'
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              All
+            </button>
+            {fruitTypes.map((type) => (
+              <button
+                key={type}
+                onClick={() => setTypeFilter(type)}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  typeFilter === type
+                    ? type === 'Logia'
+                      ? 'bg-sky-600 text-white'
+                      : type === 'Zoan'
+                        ? 'bg-green-600 text-white'
+                        : 'bg-purple-600 text-white'
+                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Table */}
+        {isLoading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+          </div>
+        ) : (
+          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+            <SortableTable<CharacterDevilFruit>
+              columns={columns}
+              data={filtered}
+              defaultSortField="fruit_name"
+              defaultSortDirection="asc"
+              rowKey={(row) => `${row.character_id}-${row.fruit_name}`}
+              maxHeight="700px"
+            />
+          </div>
+        )}
       </div>
     </main>
   )

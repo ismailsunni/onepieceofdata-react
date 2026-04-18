@@ -3,7 +3,9 @@ import { useQuery } from '@tanstack/react-query'
 import { fetchCharacters } from '../services/characterService'
 import { fetchArcs } from '../services/arcService'
 import { fetchAllAffiliations } from '../services/affiliationService'
+import { fetchAllDevilFruits } from '../services/devilFruitService'
 import type { CharacterAffiliation } from '../types/affiliation'
+import type { CharacterDevilFruit } from '../types/devilFruit'
 import { generateWhoAmIRound } from '../services/whoAmIService'
 import {
   loadWhoAmIStats,
@@ -46,6 +48,12 @@ export default function WhoAmIPage() {
     staleTime: CACHE.DEFAULT_STALE,
   })
 
+  const { data: allDevilFruits, isLoading: isLoadingDevilFruits } = useQuery({
+    queryKey: ['all-devil-fruits'],
+    queryFn: fetchAllDevilFruits,
+    staleTime: CACHE.DEFAULT_STALE,
+  })
+
   const arcMap = useMemo(() => {
     const map = new Map<string, Arc>()
     arcs?.forEach((a) => map.set(a.arc_id, a))
@@ -62,8 +70,21 @@ export default function WhoAmIPage() {
     return map
   }, [allAffiliations])
 
+  const devilFruitMap = useMemo(() => {
+    const map = new Map<string, CharacterDevilFruit[]>()
+    allDevilFruits?.forEach((f) => {
+      const existing = map.get(f.character_id) ?? []
+      existing.push(f)
+      map.set(f.character_id, existing)
+    })
+    return map
+  }, [allDevilFruits])
+
   const isLoading =
-    isLoadingCharacters || isLoadingArcs || isLoadingAffiliations
+    isLoadingCharacters ||
+    isLoadingArcs ||
+    isLoadingAffiliations ||
+    isLoadingDevilFruits
 
   const startGame = useCallback(async () => {
     if (!allCharacters || allCharacters.length === 0) return
@@ -72,7 +93,8 @@ export default function WhoAmIPage() {
     const generated = await generateWhoAmIRound(
       allCharacters,
       arcMap,
-      affiliationMap
+      affiliationMap,
+      devilFruitMap
     )
     setIsGenerating(false)
 
@@ -83,7 +105,7 @@ export default function WhoAmIPage() {
     setTotalScore(0)
     setCurrentRound(0)
     setPhase('playing')
-  }, [allCharacters, arcMap, affiliationMap])
+  }, [allCharacters, arcMap, affiliationMap, devilFruitMap])
 
   const handleRoundComplete = useCallback(
     (result: WhoAmIRoundResult) => {

@@ -28,6 +28,8 @@ import { fetchArcs } from '../services/arcService'
 import { Arc, Saga } from '../types/arc'
 import { fetchAffiliationsByCharacter } from '../services/affiliationService'
 import { CharacterAffiliation } from '../types/affiliation'
+import { fetchDevilFruitsByCharacter } from '../services/devilFruitService'
+import { CharacterDevilFruit } from '../types/devilFruit'
 
 // Service function to fetch a single character by ID
 async function fetchCharacterById(id: string): Promise<Character | null> {
@@ -179,6 +181,12 @@ function CharacterDetailPage() {
   const { data: affiliations = [] } = useQuery({
     queryKey: ['character-affiliations', id],
     queryFn: () => fetchAffiliationsByCharacter(id!),
+    enabled: !!id,
+  })
+
+  const { data: devilFruits = [] } = useQuery<CharacterDevilFruit[]>({
+    queryKey: ['character-devil-fruits', id],
+    queryFn: () => fetchDevilFruitsByCharacter(id!),
     enabled: !!id,
   })
 
@@ -1146,6 +1154,165 @@ function CharacterDetailPage() {
             </dl>
           </Card>
         </div>
+
+        {/* Devil Fruits & Haki */}
+        {(devilFruits.length > 0 ||
+          character.haki_observation ||
+          character.haki_armament ||
+          character.haki_conqueror) && (
+          <>
+            <div className="relative my-10">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-gray-50 px-6 py-2 rounded-full border border-gray-300">
+                  <div className="flex items-center gap-2">
+                    <svg
+                      className="w-5 h-5 text-gray-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 10V3L4 14h7v7l9-11h-7z"
+                      />
+                    </svg>
+                    <h2 className="text-xl font-semibold text-gray-900">
+                      Powers & Abilities
+                    </h2>
+                  </div>
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Devil Fruits */}
+              {devilFruits.length > 0 && (
+                <Card className="hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 bg-violet-100 rounded-lg">
+                        <svg
+                          className="w-4 h-4 text-violet-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 10V3L4 14h7v7l9-11h-7z"
+                          />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        Devil Fruit{devilFruits.length > 1 ? 's' : ''}
+                      </h3>
+                    </div>
+                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-violet-100 text-violet-700 text-sm font-semibold">
+                      {devilFruits.length}
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    {devilFruits.map((fruit) => (
+                      <div
+                        key={fruit.fruit_name}
+                        className="border border-violet-100 rounded-lg p-4 bg-violet-50/30"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="font-semibold text-gray-900">
+                              {fruit.fruit_name}
+                            </p>
+                            {fruit.english_name && (
+                              <p className="text-sm text-gray-600">
+                                {fruit.english_name}
+                              </p>
+                            )}
+                            {fruit.meaning && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                Meaning: {fruit.meaning}
+                              </p>
+                            )}
+                          </div>
+                          {fruit.fruit_type && (
+                            <span
+                              className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                                fruit.fruit_type === 'Logia'
+                                  ? 'bg-sky-100 text-sky-700'
+                                  : fruit.fruit_type === 'Zoan'
+                                    ? 'bg-green-100 text-green-700'
+                                    : 'bg-purple-100 text-purple-700'
+                              }`}
+                            >
+                              {fruit.fruit_type}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
+
+              {/* Haki */}
+              {(character.haki_observation ||
+                character.haki_armament ||
+                character.haki_conqueror) && (
+                <Card className="hover:shadow-md transition-shadow">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="p-2 bg-amber-100 rounded-lg">
+                      <svg
+                        className="w-4 h-4 text-amber-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Haki
+                    </h3>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div
+                      className={`text-center rounded-lg px-3 py-2 text-sm font-medium ${character.haki_observation ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-400 line-through'}`}
+                    >
+                      Observation
+                    </div>
+                    <div
+                      className={`text-center rounded-lg px-3 py-2 text-sm font-medium ${character.haki_armament ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-400 line-through'}`}
+                    >
+                      Armament
+                    </div>
+                    <div
+                      className={`text-center rounded-lg px-3 py-2 text-sm font-medium ${character.haki_conqueror ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-400 line-through'}`}
+                    >
+                      Conqueror&apos;s
+                    </div>
+                  </div>
+                </Card>
+              )}
+            </div>
+          </>
+        )}
 
         {/* Affiliations */}
         {affiliations.length > 0 && (

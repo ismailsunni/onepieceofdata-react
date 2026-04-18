@@ -277,10 +277,6 @@ function CharacterTable({
           return <span className="font-medium text-blue-600">{name}</span>
         },
       }),
-      columnHelper.accessor('origin', {
-        header: 'Origin',
-        cell: (info) => info.getValue() || '-',
-      }),
       columnHelper.accessor('origin_region', {
         header: 'Region',
         cell: (info) => info.getValue() || '-',

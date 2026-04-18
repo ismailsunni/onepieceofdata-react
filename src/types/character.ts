@@ -24,4 +24,7 @@ export interface Character {
   saga_list: string[] | null
   cover_volume_list: number[] | null
   cover_appearance_count: number | null
+  haki_observation: boolean | null
+  haki_armament: boolean | null
+  haki_conqueror: boolean | null
 }
