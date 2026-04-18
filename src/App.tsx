@@ -67,6 +67,7 @@ const DataQualityTopicPage = lazy(
 )
 const GamesIndexPage = lazy(() => import('./pages/GamesIndexPage'))
 const CharacterQuizPage = lazy(() => import('./pages/CharacterQuizPage'))
+const WhoAmIPage = lazy(() => import('./pages/WhoAmIPage'))
 
 // Loading fallback component
 const PageLoader = () => (
@@ -290,6 +291,10 @@ function App() {
                             <Route
                               path="/games/guess-character"
                               element={<CharacterQuizPage />}
+                            />
+                            <Route
+                              path="/games/who-am-i"
+                              element={<WhoAmIPage />}
                             />
                             <Route path="/about" element={<AboutPage />} />
                             <Route path="/chat" element={<ChatPage />} />

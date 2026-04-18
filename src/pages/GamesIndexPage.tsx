@@ -1,6 +1,9 @@
 import { Navigate } from 'react-router-dom'
 
-const GAMES = [{ path: '/games/guess-character', label: 'Guess the Character' }]
+const GAMES = [
+  { path: '/games/guess-character', label: 'Guess the Character' },
+  { path: '/games/who-am-i', label: 'Who Am I?' },
+]
 
 export default function GamesIndexPage() {
   // If there's only one game, redirect directly to it
