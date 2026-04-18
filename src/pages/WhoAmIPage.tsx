@@ -2,6 +2,8 @@ import { useState, useCallback, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { fetchCharacters } from '../services/characterService'
 import { fetchArcs } from '../services/arcService'
+import { fetchAllAffiliations } from '../services/affiliationService'
+import type { CharacterAffiliation } from '../types/affiliation'
 import { generateWhoAmIRound } from '../services/whoAmIService'
 import {
   loadWhoAmIStats,
@@ -38,19 +40,40 @@ export default function WhoAmIPage() {
     staleTime: CACHE.DEFAULT_STALE,
   })
 
+  const { data: allAffiliations, isLoading: isLoadingAffiliations } = useQuery({
+    queryKey: ['all-affiliations'],
+    queryFn: fetchAllAffiliations,
+    staleTime: CACHE.DEFAULT_STALE,
+  })
+
   const arcMap = useMemo(() => {
     const map = new Map<string, Arc>()
     arcs?.forEach((a) => map.set(a.arc_id, a))
     return map
   }, [arcs])
 
-  const isLoading = isLoadingCharacters || isLoadingArcs
+  const affiliationMap = useMemo(() => {
+    const map = new Map<string, CharacterAffiliation[]>()
+    allAffiliations?.forEach((a) => {
+      const existing = map.get(a.character_id) ?? []
+      existing.push(a)
+      map.set(a.character_id, existing)
+    })
+    return map
+  }, [allAffiliations])
+
+  const isLoading =
+    isLoadingCharacters || isLoadingArcs || isLoadingAffiliations
 
   const startGame = useCallback(async () => {
     if (!allCharacters || allCharacters.length === 0) return
 
     setIsGenerating(true)
-    const generated = await generateWhoAmIRound(allCharacters, arcMap)
+    const generated = await generateWhoAmIRound(
+      allCharacters,
+      arcMap,
+      affiliationMap
+    )
     setIsGenerating(false)
 
     if (!generated) return
@@ -60,7 +83,7 @@ export default function WhoAmIPage() {
     setTotalScore(0)
     setCurrentRound(0)
     setPhase('playing')
-  }, [allCharacters, arcMap])
+  }, [allCharacters, arcMap, affiliationMap])
 
   const handleRoundComplete = useCallback(
     (result: WhoAmIRoundResult) => {

@@ -1,5 +1,6 @@
 import type { Character } from '../types/character'
 import type { Arc } from '../types/arc'
+import type { CharacterAffiliation } from '../types/affiliation'
 import type { WhoAmIHint, WhoAmICharacter } from '../types/whoAmI'
 import { getCharacterImageUrl, preloadImage } from './quizService'
 
@@ -35,7 +36,8 @@ function formatBounty(bounty: number): string {
 
 function generateHints(
   char: Character,
-  arcMap: Map<string, Arc>
+  arcMap: Map<string, Arc>,
+  affiliationMap: Map<string, CharacterAffiliation[]>
 ): WhoAmIHint[] {
   const hints: WhoAmIHint[] = []
 
@@ -54,23 +56,25 @@ function generateHints(
   }
 
   if (arcCounts.size > 0) {
-    // Find the arc with the most chapter appearances
-    let topArcId = ''
-    let topCount = 0
-    for (const [id, count] of arcCounts) {
-      if (count > topCount) {
-        topArcId = id
-        topCount = count
-      }
-    }
-    const topArcName = arcMap.get(topArcId)?.title ?? topArcId
+    const totalAppearances = char.appearance_count ?? chapterList.length
+    // Sort by count descending, take top 3
+    const topArcs = [...arcCounts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([id, count]) => {
+        const name = arcMap.get(id)?.title ?? id
+        const pct =
+          totalAppearances > 0
+            ? Math.round((count / totalAppearances) * 100)
+            : 0
+        return `${name} Arc (${pct}%)`
+      })
     hints.push({
-      label: 'Top Arc',
-      value: `Most appeared in: ${topArcName} Arc (${topCount} chapters)`,
+      label: 'Top Arcs',
+      value: `Most appeared in: ${topArcs.join(', ')}`,
       type: 'text',
     })
   } else {
-    // Fallback: just show arc count
     const arcNames = (char.arc_list ?? [])
       .map((id) => arcMap.get(id)?.title)
       .filter(Boolean) as string[]
@@ -93,48 +97,63 @@ function generateHints(
     type: 'text',
   })
 
-  // Hint 3: Origin or first appearance arc
-  if (char.origin) {
+  // Hint 3: Affiliation (fallback to origin)
+  const affiliations = affiliationMap.get(char.id) ?? []
+  const currentAffiliations = affiliations.filter((a) =>
+    [
+      'current',
+      'temporary',
+      'undercover',
+      'double agent',
+      'espionage',
+      'secret',
+    ].includes(a.status.toLowerCase())
+  )
+  const displayAffiliations =
+    currentAffiliations.length > 0 ? currentAffiliations : affiliations
+
+  if (displayAffiliations.length > 0) {
+    const names = [
+      ...new Set(displayAffiliations.map((a) => a.group_name)),
+    ].slice(0, 3)
+    hints.push({
+      label: 'Affiliation',
+      value:
+        names.length === 1
+          ? `Affiliated with: ${names[0]}`
+          : `Affiliated with: ${names.join(', ')}`,
+      type: 'text',
+    })
+  } else if (char.origin) {
     hints.push({
       label: 'Origin',
       value: `Origin: ${char.origin}`,
       type: 'text',
     })
-  } else if (
-    char.first_appearance &&
-    char.arc_list &&
-    char.arc_list.length > 0
-  ) {
-    const firstArc = arcMap.get(char.arc_list[0])
-    const arcName = firstArc?.title ?? char.arc_list[0]
-    hints.push({
-      label: 'First Appearance',
-      value: `First appeared in Chapter ${char.first_appearance} (${arcName})`,
-      type: 'text',
-    })
-  } else if (char.first_appearance) {
-    hints.push({
-      label: 'First Appearance',
-      value: `First appeared in Chapter ${char.first_appearance}`,
-      type: 'text',
-    })
   } else {
     hints.push({
-      label: 'Origin',
-      value: 'Origin unknown',
+      label: 'Affiliation',
+      value: 'No known affiliation',
       type: 'text',
     })
   }
 
-  // Hint 4: First letter + bounty
-  const firstLetter = char.name!.charAt(0).toUpperCase()
+  // Hint 4: Masked name pattern + bounty
+  const maskedName = char
+    .name!.split(/(\s+)/)
+    .map((part) => {
+      if (/^\s+$/.test(part)) return part
+      if (part.length <= 1) return part
+      return part[0] + '*'.repeat(part.length - 1)
+    })
+    .join('')
   const bountyText =
     char.bounty && char.bounty > 0
       ? `Bounty: ${formatBounty(char.bounty)}`
       : 'Has no known bounty'
   hints.push({
     label: 'Name & Bounty',
-    value: `Name starts with "${firstLetter}". ${bountyText}`,
+    value: `Name: ${maskedName}. ${bountyText}`,
     type: 'text',
   })
 
@@ -150,7 +169,8 @@ function generateHints(
 
 export async function generateWhoAmIRound(
   characters: Character[],
-  arcMap: Map<string, Arc>
+  arcMap: Map<string, Arc>,
+  affiliationMap: Map<string, CharacterAffiliation[]>
 ): Promise<WhoAmICharacter[] | null> {
   const eligible = characters.filter(isEligibleForWhoAmI)
   const shuffled = shuffleArray(eligible)
@@ -167,7 +187,7 @@ export async function generateWhoAmIRound(
     const loaded = await preloadImage(imageUrl)
     if (!loaded) continue
 
-    const hints = generateHints(char, arcMap)
+    const hints = generateHints(char, arcMap, affiliationMap)
     result.push({
       id: char.id,
       name: char.name!,
