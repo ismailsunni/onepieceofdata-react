@@ -1,49 +1,7 @@
-<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-  <rect width="64" height="64" rx="12" fill="#0a0a0a"/>
-
-  <!-- Skull silhouette -->
-  <path d="M32 10
-           C 20 10, 12 18, 12 30
-           C 12 36, 14 40, 18 43
-           L 18 48
-           C 18 50, 20 51, 22 51
-           L 26 51
-           L 26 47
-           L 30 47
-           L 30 51
-           L 34 51
-           L 34 47
-           L 38 47
-           L 38 51
-           L 42 51
-           C 44 51, 46 50, 46 48
-           L 46 43
-           C 50 40, 52 36, 52 30
-           C 52 18, 44 10, 32 10 Z"
-        fill="#ffffff"/>
-
-  <!-- Eye sockets -->
-  <circle cx="24" cy="28" r="4" fill="#0a0a0a"/>
-  <circle cx="40" cy="28" r="4" fill="#0a0a0a"/>
-
-  <!-- Yellow pac-man accent in one eye -->
-  <path d="M 40 28
-           L 43 25.5
-           A 3 3 0 1 1 43 30.5
-           Z" fill="#fbbf24"/>
-
-  <!-- Nose -->
-  <path d="M32 34 L29 39 L35 39 Z" fill="#0a0a0a"/>
-
-  <!-- Crossbones behind skull (simple) -->
-  <g stroke="#ffffff" stroke-width="4" stroke-linecap="round">
-    <line x1="12" y1="52" x2="52" y2="56"/>
-    <line x1="52" y1="52" x2="12" y2="56"/>
-  </g>
-  <g fill="#ffffff">
-    <circle cx="11" cy="52" r="3"/>
-    <circle cx="53" cy="52" r="3"/>
-    <circle cx="11" cy="56" r="3"/>
-    <circle cx="53" cy="56" r="3"/>
+<svg viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="640" rx="96" fill="#0a0a0a"/>
+  <g transform="translate(96 64)">
+    <path d="M384 144C384 64.5 312.4 0 224 0S64 64.5 64 144c0 47.1 25.1 88.9 64 115.2l0 28.8c0 17.7 14.3 32 32 32l128 0c17.7 0 32-14.3 32-32l0-28.8c38.9-26.3 64-68.1 64-115.2zM160 128a32 32 0 1 1 0 64 32 32 0 1 1 0-64zm96 32a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zM445.5 339.7c-6.8-16.3-25.5-24-41.8-17.2L224 397.3 44.3 322.5c-16.3-6.8-35 .9-41.8 17.2s.9 35 17.2 41.8L140.8 432 19.7 482.5C3.4 489.3-4.3 508 2.5 524.3s25.5 24 41.8 17.2L224 466.7 403.7 541.5c16.3 6.8 35-.9 41.8-17.2s-.9-35-17.2-41.8L307.2 432 428.3 381.5c16.3-6.8 24-25.5 17.2-41.8z"
+          fill="#ffffff"/>
   </g>
 </svg>
