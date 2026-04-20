@@ -10,7 +10,8 @@ CREATE TABLE public.arc (
   end_chapter integer NOT NULL,
   saga_id text,
   description text,
-  CONSTRAINT arc_pkey PRIMARY KEY (arc_id)
+  CONSTRAINT arc_pkey PRIMARY KEY (arc_id),
+  CONSTRAINT fk_arc_saga FOREIGN KEY (saga_id) REFERENCES public.saga(saga_id)
 );
 CREATE TABLE public.chapter (
   number integer NOT NULL,
@@ -66,6 +67,7 @@ CREATE TABLE public.character_devil_fruit (
   meaning text,
   fruit_type text,
   fruit_sub_type text,
+  is_artificial boolean NOT NULL,
   CONSTRAINT character_devil_fruit_pkey PRIMARY KEY (character_id, fruit_name)
 );
 CREATE TABLE public.profiles (

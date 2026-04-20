@@ -11,6 +11,9 @@ function DevilFruitsPage() {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [subTypeFilter, setSubTypeFilter] = useState<string>('all')
+  const [artificialFilter, setArtificialFilter] = useState<
+    'all' | 'natural' | 'artificial'
+  >('all')
 
   const { data: devilFruits = [], isLoading } = useQuery({
     queryKey: ['all-devil-fruits'],
@@ -73,6 +76,11 @@ function DevilFruitsPage() {
         result = result.filter((f) => f.fruit_sub_type === subTypeFilter)
       }
     }
+    if (artificialFilter === 'artificial') {
+      result = result.filter((f) => f.is_artificial)
+    } else if (artificialFilter === 'natural') {
+      result = result.filter((f) => !f.is_artificial)
+    }
     if (search.trim()) {
       const q = search.toLowerCase()
       result = result.filter(
@@ -85,7 +93,12 @@ function DevilFruitsPage() {
       )
     }
     return result
-  }, [devilFruits, search, typeFilter, subTypeFilter])
+  }, [devilFruits, search, typeFilter, subTypeFilter, artificialFilter])
+
+  const artificialCount = useMemo(
+    () => devilFruits.filter((f) => f.is_artificial).length,
+    [devilFruits]
+  )
 
   const formatCharacterName = (id: string) =>
     id
@@ -99,7 +112,17 @@ function DevilFruitsPage() {
       label: 'Fruit Name',
       sortValue: (row) => row.fruit_name,
       render: (row) => (
-        <span className="font-medium text-gray-900">{row.fruit_name}</span>
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-gray-900">{row.fruit_name}</span>
+          {row.is_artificial && (
+            <span
+              className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700"
+              title="Artificial devil fruit"
+            >
+              Artificial
+            </span>
+          )}
+        </div>
       ),
     },
     {
@@ -258,6 +281,41 @@ function DevilFruitsPage() {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Origin filter */}
+        <div className="mb-6 flex items-center gap-2 flex-wrap">
+          <span className="text-sm text-gray-500 mr-1">Origin:</span>
+          <button
+            onClick={() => setArtificialFilter('all')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              artificialFilter === 'all'
+                ? 'bg-gray-900 text-white'
+                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            All ({devilFruits.length})
+          </button>
+          <button
+            onClick={() => setArtificialFilter('natural')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              artificialFilter === 'natural'
+                ? 'bg-emerald-600 text-white'
+                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            Natural ({devilFruits.length - artificialCount})
+          </button>
+          <button
+            onClick={() => setArtificialFilter('artificial')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              artificialFilter === 'artificial'
+                ? 'bg-orange-600 text-white'
+                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            Artificial ({artificialCount})
+          </button>
         </div>
 
         {/* Sub-type filters */}

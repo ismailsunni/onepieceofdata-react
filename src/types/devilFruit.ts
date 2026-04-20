@@ -5,4 +5,5 @@ export interface CharacterDevilFruit {
   meaning: string | null
   fruit_type: string | null
   fruit_sub_type: string | null
+  is_artificial: boolean
 }

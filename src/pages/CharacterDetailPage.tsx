@@ -1226,9 +1226,19 @@ function CharacterDetailPage() {
                       >
                         <div className="flex items-start justify-between">
                           <div>
-                            <p className="font-semibold text-gray-900">
-                              {fruit.fruit_name}
-                            </p>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="font-semibold text-gray-900">
+                                {fruit.fruit_name}
+                              </p>
+                              {fruit.is_artificial && (
+                                <span
+                                  className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700"
+                                  title="Artificial devil fruit"
+                                >
+                                  Artificial
+                                </span>
+                              )}
+                            </div>
                             {fruit.english_name && (
                               <p className="text-sm text-gray-600">
                                 {fruit.english_name}
