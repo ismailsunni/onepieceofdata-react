@@ -115,15 +115,6 @@ function Navigation() {
         <NavLink to="/chat" className={getLinkClass}>
           <span className="inline-flex items-center gap-1">✨ AI Chat</span>
         </NavLink>
-
-        {user ? (
-          <button
-            onClick={signOut}
-            className="ml-2 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            Sign out
-          </button>
-        ) : null}
       </nav>
 
       {/* Mobile Hamburger Button */}
