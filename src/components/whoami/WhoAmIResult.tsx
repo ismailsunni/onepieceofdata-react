@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { toPng } from 'html-to-image'
 import type { WhoAmIRoundResult } from '../../types/whoAmI'
 import type { WhoAmIStats } from '../../services/whoAmIStatsService'
 import { getWhoAmIRating } from '../../services/whoAmIService'
 import { getCharacterImageUrl, getShortName } from '../../services/quizService'
+import WhoAmIShareCard, { type ShareFormat } from './WhoAmIShareCard'
 
 interface WhoAmIResultProps {
   roundResults: WhoAmIRoundResult[]
@@ -20,6 +22,55 @@ export default function WhoAmIResult({
   stats,
 }: WhoAmIResultProps) {
   const rating = getWhoAmIRating(totalScore)
+  const squareRef = useRef<HTMLDivElement>(null)
+  const storyRef = useRef<HTMLDivElement>(null)
+  const [sharingFormat, setSharingFormat] = useState<ShareFormat | null>(null)
+  const logoUrl = `${window.location.origin}${import.meta.env.BASE_URL}graph-skull.svg`
+
+  const shareAsImage = async (format: ShareFormat) => {
+    const node = format === 'square' ? squareRef.current : storyRef.current
+    if (!node) return
+    setSharingFormat(format)
+    try {
+      const dataUrl = await toPng(node, {
+        cacheBust: true,
+        pixelRatio: 1,
+        skipFonts: true,
+      })
+      const blob = await (await fetch(dataUrl)).blob()
+      const fileName = `one-piece-of-data-who-am-i-${format}.png`
+      const file = new File([blob], fileName, { type: 'image/png' })
+
+      if (
+        navigator.canShare &&
+        navigator.canShare({ files: [file] }) &&
+        navigator.share
+      ) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: 'One Piece of Data — Who Am I?',
+            text: buildShareText(),
+          })
+          return
+        } catch (err) {
+          if ((err as DOMException).name === 'AbortError') return
+        }
+      }
+
+      // Fallback: download
+      const link = document.createElement('a')
+      link.href = dataUrl
+      link.download = fileName
+      link.click()
+      toast.success('Image downloaded — share it anywhere!')
+    } catch (err) {
+      console.error(err)
+      toast.error('Could not generate share image')
+    } finally {
+      setSharingFormat(null)
+    }
+  }
 
   const buildShareText = () => {
     const resultLines = roundResults
@@ -165,12 +216,28 @@ export default function WhoAmIResult({
 
       {/* Action buttons - sticky bottom */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 max-w-lg mx-auto">
+        <div className="grid grid-cols-2 gap-2 mb-2">
+          <button
+            onClick={() => shareAsImage('square')}
+            disabled={sharingFormat !== null}
+            className="py-2.5 px-3 border-2 border-blue-600 text-blue-600 text-sm font-semibold rounded-xl hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-wait"
+          >
+            {sharingFormat === 'square' ? 'Preparing…' : '📷 Share to Feed'}
+          </button>
+          <button
+            onClick={() => shareAsImage('story')}
+            disabled={sharingFormat !== null}
+            className="py-2.5 px-3 border-2 border-blue-600 text-blue-600 text-sm font-semibold rounded-xl hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-wait"
+          >
+            {sharingFormat === 'story' ? 'Preparing…' : '📱 Share to Story'}
+          </button>
+        </div>
         <div className="flex gap-3">
           <button
             onClick={handleShare}
-            className="flex-1 py-3 px-4 border-2 border-blue-600 text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition-colors"
+            className="flex-1 py-3 px-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors"
           >
-            Share Score
+            Share as Text
           </button>
           <button
             onClick={onPlayAgain}
@@ -179,6 +246,34 @@ export default function WhoAmIResult({
             Play Again
           </button>
         </div>
+      </div>
+
+      {/* Offscreen share cards (rendered for html-to-image) */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          top: '-99999px',
+          left: '-99999px',
+          pointerEvents: 'none',
+        }}
+      >
+        <WhoAmIShareCard
+          ref={squareRef}
+          format="square"
+          roundResults={roundResults}
+          totalScore={totalScore}
+          rating={rating.label}
+          logoUrl={logoUrl}
+        />
+        <WhoAmIShareCard
+          ref={storyRef}
+          format="story"
+          roundResults={roundResults}
+          totalScore={totalScore}
+          rating={rating.label}
+          logoUrl={logoUrl}
+        />
       </div>
     </div>
   )
