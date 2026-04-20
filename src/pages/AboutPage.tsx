@@ -171,6 +171,37 @@ function AboutPage() {
                 </a>{' '}
                 or buy the official comics.
               </p>
+
+              {/* Attribution */}
+              <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600 space-y-1">
+                <p className="font-semibold text-gray-700">Attribution</p>
+                <p>
+                  Character data, images, and descriptions are adapted from the{' '}
+                  <a
+                    href="https://onepiece.fandom.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-700 hover:underline"
+                  >
+                    One Piece Wiki on Fandom
+                  </a>
+                  , contributed to by its community of fans and editors.
+                </p>
+                <p>
+                  Content from the wiki is licensed under{' '}
+                  <a
+                    href="https://creativecommons.org/licenses/by-sa/3.0/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-700 hover:underline"
+                  >
+                    CC BY-SA 3.0
+                  </a>
+                  . One Piece © Eiichiro Oda / Shueisha. This site is an
+                  unofficial fan project and is not affiliated with or endorsed
+                  by Shueisha, Toei Animation, or Fandom.
+                </p>
+              </div>
             </div>
           </section>
 
