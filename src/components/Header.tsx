@@ -22,9 +22,11 @@ function Header() {
         <div className="flex items-center justify-between h-16 gap-6">
           {/* Logo/Brand */}
           <Link to="/" className="flex items-center gap-3 group flex-shrink-0">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-sm">
-              <span className="text-white font-bold text-lg">O</span>
-            </div>
+            <img
+              src={`${import.meta.env.BASE_URL}graph-skull.svg`}
+              alt="One Piece of Data"
+              className="w-10 h-10 rounded-lg shadow-sm"
+            />
             <div className="flex flex-col">
               <span className="text-gray-900 font-semibold text-base leading-tight group-hover:text-blue-600 transition-colors">
                 One Piece of Data
