@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { fetchAllDevilFruits } from '../services/devilFruitService'
+import { fetchCharacters } from '../services/characterService'
 import SortableTable, { Column } from '../components/common/SortableTable'
 import type { CharacterDevilFruit } from '../types/devilFruit'
 
@@ -20,6 +21,25 @@ function DevilFruitsPage() {
     queryFn: fetchAllDevilFruits,
     staleTime: 10 * 60 * 1000,
   })
+
+  const { data: characters = [] } = useQuery({
+    queryKey: ['all-characters'],
+    queryFn: fetchCharacters,
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const characterStatusById = useMemo(() => {
+    const map = new Map<string, string | null>()
+    for (const c of characters) {
+      map.set(c.id, c.status ?? null)
+    }
+    return map
+  }, [characters])
+
+  const isDeceased = (characterId: string) => {
+    const status = characterStatusById.get(characterId)
+    return status?.toLowerCase() === 'deceased'
+  }
 
   const typeCounts = useMemo(() => {
     const counts = new Map<string, number>()
@@ -89,6 +109,7 @@ function DevilFruitsPage() {
           f.english_name?.toLowerCase().includes(q) ||
           f.meaning?.toLowerCase().includes(q) ||
           f.fruit_sub_type?.toLowerCase().includes(q) ||
+          f.fruit_model?.toLowerCase().includes(q) ||
           f.character_id.replace(/_/g, ' ').toLowerCase().includes(q)
       )
     }
@@ -112,7 +133,7 @@ function DevilFruitsPage() {
       label: 'Fruit Name',
       sortValue: (row) => row.fruit_name,
       render: (row) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="font-medium text-gray-900">{row.fruit_name}</span>
           {row.is_artificial && (
             <span
@@ -124,6 +145,17 @@ function DevilFruitsPage() {
           )}
         </div>
       ),
+    },
+    {
+      key: 'fruit_model',
+      label: 'Model',
+      sortValue: (row) => row.fruit_model ?? '',
+      render: (row) =>
+        row.fruit_model ? (
+          <span className="text-gray-700 text-sm">{row.fruit_model}</span>
+        ) : (
+          <span className="text-gray-300">&ndash;</span>
+        ),
     },
     {
       key: 'meaning',
@@ -174,14 +206,33 @@ function DevilFruitsPage() {
       key: 'character_id',
       label: 'User',
       sortValue: (row) => formatCharacterName(row.character_id),
-      render: (row) => (
-        <Link
-          to={`/characters/${row.character_id}`}
-          className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
-        >
-          {formatCharacterName(row.character_id)}
-        </Link>
-      ),
+      render: (row) => {
+        const deceased = isDeceased(row.character_id)
+        return (
+          <div className="flex items-center gap-2">
+            <Link
+              to={`/characters/${row.character_id}`}
+              className={`font-medium hover:underline ${
+                deceased
+                  ? 'text-red-700 hover:text-red-900'
+                  : 'text-blue-600 hover:text-blue-800'
+              }`}
+              title={deceased ? 'Deceased' : undefined}
+            >
+              {formatCharacterName(row.character_id)}
+            </Link>
+            {deceased && (
+              <span
+                className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-100 text-red-700 text-xs font-bold"
+                title="Deceased"
+                aria-label="Deceased"
+              >
+                ✕
+              </span>
+            )}
+          </div>
+        )
+      },
     },
   ]
 

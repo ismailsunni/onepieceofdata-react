@@ -1239,6 +1239,11 @@ function CharacterDetailPage() {
                                 </span>
                               )}
                             </div>
+                            {fruit.fruit_model && (
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                Model: {fruit.fruit_model}
+                              </p>
+                            )}
                             {fruit.english_name && (
                               <p className="text-sm text-gray-600">
                                 {fruit.english_name}

@@ -63,6 +63,7 @@ CREATE TABLE public.character_affiliation (
 CREATE TABLE public.character_devil_fruit (
   character_id text NOT NULL,
   fruit_name text NOT NULL,
+  fruit_model text,
   english_name text,
   meaning text,
   fruit_type text,
