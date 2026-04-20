@@ -1,16 +1,25 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faInstagram } from '@fortawesome/free-brands-svg-icons'
+
 function AboutPage() {
   return (
     <main className="container mx-auto px-4 py-6 md:py-10">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex items-center gap-4 mb-3">
           <img
             src={`${import.meta.env.BASE_URL}graph-skull.svg`}
             alt="One Piece of Data"
             className="w-20 h-20 md:w-24 md:h-24 rounded-xl shadow-sm flex-shrink-0"
           />
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-800">
-            About One Piece of Data
-          </h2>
+          <div>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800">
+              About One Piece of Data
+            </h2>
+            <p className="mt-2 text-base md:text-lg text-gray-600 italic">
+              🏴‍☠️ Your Log Pose to Laugh Tale — characters, arcs, chapters &amp;
+              bounties, decoded &amp; mapped.
+            </p>
+          </div>
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-6 md:p-8 space-y-6">
@@ -101,6 +110,18 @@ function AboutPage() {
                     for database
                   </li>
                 </ul>
+              </div>
+              <div>
+                <p className="font-semibold">Follow us:</p>
+                <a
+                  href="https://instagram.com/onepieceofdata"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 hover:underline"
+                >
+                  <FontAwesomeIcon icon={faInstagram} className="w-4 h-4" />
+                  @onepieceofdata
+                </a>
               </div>
               <div>
                 <p className="font-semibold">Special Thanks:</p>

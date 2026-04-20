@@ -23,6 +23,35 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled
 }
 
+const MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+]
+
+function parseBirthMonth(birthDate: string | null | undefined): string | null {
+  if (!birthDate) return null
+  const lower = birthDate.trim().toLowerCase()
+  for (let i = 0; i < MONTH_NAMES.length; i++) {
+    if (lower.startsWith(MONTH_NAMES[i].toLowerCase())) return MONTH_NAMES[i]
+  }
+  const m = birthDate.match(/^(\d{1,2})[-/]/)
+  if (m) {
+    const n = parseInt(m[1], 10)
+    if (n >= 1 && n <= 12) return MONTH_NAMES[n - 1]
+  }
+  return null
+}
+
 function formatBounty(bounty: number): string {
   if (bounty >= 1_000_000_000) {
     const b = bounty / 1_000_000_000
@@ -43,8 +72,9 @@ function generateHints(
 ): WhoAmIHint[] {
   const hints: WhoAmIHint[] = []
 
-  // Hint 1: Top arc by chapter count (min 2 chapters in that arc)
+  // Hint 1: Total appearances + top arcs
   const chapterList = char.chapter_list ?? []
+  const totalAppearances = char.appearance_count ?? chapterList.length
   const arcCounts = new Map<string, number>()
   for (const arcId of char.arc_list ?? []) {
     const arc = arcMap.get(arcId)
@@ -57,9 +87,11 @@ function generateHints(
     }
   }
 
+  const appearancePrefix = `Appeared in ${totalAppearances} chapter${
+    totalAppearances === 1 ? '' : 's'
+  }`
+
   if (arcCounts.size > 0) {
-    const totalAppearances = char.appearance_count ?? chapterList.length
-    // Sort by count descending, take top 3
     const topArcs = [...arcCounts.entries()]
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3)
@@ -72,8 +104,8 @@ function generateHints(
         return `${name} Arc (${pct}%)`
       })
     hints.push({
-      label: 'Top Arcs',
-      value: `Most appeared in: ${topArcs.join(', ')}`,
+      label: 'Appearances & Top Arcs',
+      value: `${appearancePrefix}. Most seen in: ${topArcs.join(', ')}`,
       type: 'text',
     })
   } else {
@@ -81,17 +113,16 @@ function generateHints(
       .map((id) => arcMap.get(id)?.title)
       .filter(Boolean) as string[]
     hints.push({
-      label: 'Arc Appearances',
+      label: 'Appearances & Arcs',
       value:
         arcNames.length > 0
-          ? `Appears in ${arcNames.length} arc(s)`
-          : 'Arc information unavailable',
+          ? `${appearancePrefix} across ${arcNames.length} arc(s)`
+          : `${appearancePrefix}. Arc breakdown unavailable`,
       type: 'text',
     })
   }
 
-  // Hint 2: Appearance count + status + powers
-  const count = char.appearance_count ?? 0
+  // Hint 2: Status + powers
   const status = char.status ?? 'Unknown'
   const fruits = devilFruitMap.get(char.id) ?? []
   const hakiTypes: string[] = []
@@ -99,24 +130,35 @@ function generateHints(
   if (char.haki_armament) hakiTypes.push('Armament')
   if (char.haki_conqueror) hakiTypes.push("Conqueror's")
 
-  let powersText = ''
-  if (fruits.length > 0 && hakiTypes.length > 0) {
-    powersText = `. Devil Fruit user. Haki: ${hakiTypes.join(', ')}`
-  } else if (fruits.length > 0) {
-    powersText = '. Devil Fruit user (no known Haki)'
-  } else if (hakiTypes.length > 0) {
-    powersText = `. No Devil Fruit. Haki: ${hakiTypes.join(', ')}`
-  } else {
-    powersText = '. No known Devil Fruit or Haki'
+  const describeFruit = (f: CharacterDevilFruit): string => {
+    const parts: string[] = []
+    if (f.fruit_sub_type) parts.push(f.fruit_sub_type)
+    if (f.fruit_type) parts.push(f.fruit_type)
+    const typeLabel = parts.length > 0 ? parts.join(' ') : 'unknown-type'
+    const suffix = f.is_artificial ? ' (artificial)' : ''
+    return `${typeLabel}${suffix}`
   }
 
+  let fruitText = ''
+  if (fruits.length === 1) {
+    fruitText = `Wields a ${describeFruit(fruits[0])} Devil Fruit`
+  } else if (fruits.length > 1) {
+    const descriptions = fruits.map(describeFruit)
+    fruitText = `Wields ${fruits.length} Devil Fruits (${descriptions.join('; ')})`
+  } else {
+    fruitText = 'No known Devil Fruit'
+  }
+
+  const hakiText =
+    hakiTypes.length > 0 ? `Haki: ${hakiTypes.join(', ')}` : 'No known Haki'
+
   hints.push({
-    label: 'Appearances & Powers',
-    value: `Appeared in ${count} chapters. Status: ${status}${powersText}`,
+    label: 'Status & Powers',
+    value: `Status: ${status}. ${fruitText}. ${hakiText}.`,
     type: 'text',
   })
 
-  // Hint 3: Affiliation (fallback to origin)
+  // Hint 3: Affiliation + birth month (with fallback to origin)
   const affiliations = affiliationMap.get(char.id) ?? []
   const currentAffiliations = affiliations.filter((a) =>
     [
@@ -130,6 +172,8 @@ function generateHints(
   )
   const displayAffiliations =
     currentAffiliations.length > 0 ? currentAffiliations : affiliations
+  const birthMonth = parseBirthMonth(char.birth_date ?? char.birth)
+  const birthText = birthMonth ? ` Born in ${birthMonth}.` : ''
 
   if (displayAffiliations.length > 0) {
     const names = [
@@ -137,16 +181,19 @@ function generateHints(
     ].slice(0, 3)
     hints.push({
       label: 'Affiliation',
-      value:
-        names.length === 1
-          ? `Affiliated with: ${names[0]}`
-          : `Affiliated with: ${names.join(', ')}`,
+      value: `Affiliated with: ${names.join(', ')}.${birthText}`,
       type: 'text',
     })
   } else if (char.origin) {
     hints.push({
       label: 'Origin',
-      value: `Origin: ${char.origin}`,
+      value: `Origin: ${char.origin}.${birthText}`,
+      type: 'text',
+    })
+  } else if (birthMonth) {
+    hints.push({
+      label: 'Birth',
+      value: `Born in ${birthMonth}. No known affiliation.`,
       type: 'text',
     })
   } else {
