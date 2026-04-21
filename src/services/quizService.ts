@@ -3,6 +3,8 @@ import type { QuizCharacter, QuizQuestion } from '../types/quiz'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string
 
+export const TIME_PER_QUESTION = 10 // seconds
+
 // Difficulty tiers: Q1 easiest → Q5 hardest (~170 characters each)
 const TIERS = [
   { tier: 1, min: 37, max: Infinity }, // Main & major recurring cast
@@ -145,7 +147,7 @@ export function getShortName(name: string): string {
 /** Calculate points for a correct answer: 200 base + up to 800 speed bonus */
 export function calculatePoints(timeRemaining: number): number {
   if (timeRemaining <= 0) return 0
-  return 200 + Math.round(800 * (timeRemaining / 10))
+  return 200 + Math.round(800 * (timeRemaining / TIME_PER_QUESTION))
 }
 
 interface ScoreRating {

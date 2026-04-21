@@ -8,6 +8,7 @@ import {
   getCharacterImageUrl,
   getShortName,
   getScoreRating,
+  TIME_PER_QUESTION,
 } from '../../services/quizService'
 import QuizShareCard, { type ShareFormat } from './QuizShareCard'
 
@@ -179,7 +180,7 @@ export default function QuizResult({
               </p>
               <p className="text-xs text-gray-500">
                 {answer.isCorrect
-                  ? `+${answer.pointsEarned} pts (${answer.timeRemaining.toFixed(1)}s)`
+                  ? `+${answer.pointsEarned} pts (${(TIME_PER_QUESTION - answer.timeRemaining).toFixed(1)}s)`
                   : answer.selectedCharacterId === null
                     ? "Time's up"
                     : 'Wrong answer'}

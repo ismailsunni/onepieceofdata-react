@@ -116,10 +116,7 @@ export default function WhoAmIPage() {
       setTotalScore(newScore)
 
       if (currentRound < characters_.length - 1) {
-        // Short delay before advancing to next round
-        setTimeout(() => {
-          setCurrentRound((prev) => prev + 1)
-        }, 2000)
+        setCurrentRound((prev) => prev + 1)
       } else {
         // Game over
         const correctCount = newResults.filter((r) => r.guessedCorrectly).length
@@ -129,9 +126,7 @@ export default function WhoAmIPage() {
           newResults.length
         )
         setStats(updated)
-        setTimeout(() => {
-          setPhase('result')
-        }, 2000)
+        setPhase('result')
       }
     },
     [currentRound, characters_, roundResults, totalScore]

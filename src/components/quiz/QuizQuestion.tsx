@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import type { QuizQuestion as QuizQuestionType } from '../../types/quiz'
-import { calculatePoints } from '../../services/quizService'
-
-const TIME_PER_QUESTION = 10 // seconds
+import { calculatePoints, TIME_PER_QUESTION } from '../../services/quizService'
 
 interface QuizQuestionProps {
   question: QuizQuestionType

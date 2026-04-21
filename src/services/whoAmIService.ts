@@ -260,6 +260,7 @@ export async function generateWhoAmIRound(
       name: char.name!,
       imageUrl,
       hints,
+      bio: char.bio,
     })
   }
 

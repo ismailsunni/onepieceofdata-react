@@ -9,6 +9,7 @@ export interface WhoAmICharacter {
   name: string
   imageUrl: string
   hints: WhoAmIHint[]
+  bio: string | null
 }
 
 export interface WhoAmIRoundResult {
