@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faInstagram } from '@fortawesome/free-brands-svg-icons'
+import { faInstagram, faXTwitter } from '@fortawesome/free-brands-svg-icons'
 
 function AboutPage() {
   return (
@@ -113,15 +113,26 @@ function AboutPage() {
               </div>
               <div>
                 <p className="font-semibold">Follow us:</p>
-                <a
-                  href="https://instagram.com/onepieceofdata"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 hover:underline"
-                >
-                  <FontAwesomeIcon icon={faInstagram} className="w-4 h-4" />
-                  @onepieceofdata
-                </a>
+                <div className="flex flex-col gap-1 ml-2">
+                  <a
+                    href="https://instagram.com/onepieceofdata"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 hover:underline"
+                  >
+                    <FontAwesomeIcon icon={faInstagram} className="w-4 h-4" />
+                    @onepieceofdata
+                  </a>
+                  <a
+                    href="https://twitter.com/onepieceofdata"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 hover:underline"
+                  >
+                    <FontAwesomeIcon icon={faXTwitter} className="w-4 h-4" />
+                    @onepieceofdata
+                  </a>
+                </div>
               </div>
               <div>
                 <p className="font-semibold">Special Thanks:</p>
