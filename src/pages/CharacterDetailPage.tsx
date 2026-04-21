@@ -327,12 +327,12 @@ function CharacterDetailPage() {
 
     const bountyNumbers = bountiesStr
       .replace(/[₿Ƀ฿]/g, '')
-      .split(/[;,\->]+/)
+      .split(/[;>]+/)
       .map((s) => s.trim())
       .filter((s) => s.length > 0)
       .map((s) => {
-        const num = parseInt(s.replace(/,/g, ''), 10)
-        return isNaN(num) ? null : num
+        const num = parseInt(s.replace(/[^0-9]/g, ''), 10)
+        return isNaN(num) || num === 0 ? null : num
       })
       .filter((n) => n !== null) as number[]
 
@@ -638,8 +638,9 @@ function CharacterDetailPage() {
                     <div className="mt-2 text-xs text-amber-700">
                       {(() => {
                         const bountyCount = character.bounties
-                          .split(/[;,]/)
-                          .filter((b) => b.trim()).length
+                          .split(';')
+                          .map((s) => parseInt(s.replace(/[^0-9]/g, ''), 10))
+                          .filter((n) => !isNaN(n) && n > 0).length
                         return bountyCount > 1
                           ? `${bountyCount} bounty updates`
                           : 'Initial bounty'
