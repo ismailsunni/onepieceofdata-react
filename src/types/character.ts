@@ -27,4 +27,5 @@ export interface Character {
   haki_observation: boolean | null
   haki_armament: boolean | null
   haki_conqueror: boolean | null
+  bio: string | null
 }

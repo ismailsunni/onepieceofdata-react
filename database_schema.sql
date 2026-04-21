@@ -51,6 +51,7 @@ CREATE TABLE public.character (
   haki_observation boolean,
   haki_armament boolean,
   haki_conqueror boolean,
+  bio text,
   CONSTRAINT character_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.character_affiliation (

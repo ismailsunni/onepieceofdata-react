@@ -573,6 +573,12 @@ function CharacterDetailPage() {
                     </span>
                   )}
                 </div>
+
+                {character.bio && (
+                  <p className="mt-4 text-sm md:text-base text-gray-700 leading-relaxed whitespace-pre-line">
+                    {character.bio}
+                  </p>
+                )}
               </div>
 
               {/* Right: Bounty Display */}
