@@ -3,6 +3,7 @@ export interface QuizCharacter {
   name: string
   appearance_count: number
   bounty: number | null
+  bio: string | null
 }
 
 export interface QuizQuestion {

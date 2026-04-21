@@ -3,7 +3,6 @@ import type { QuizQuestion as QuizQuestionType } from '../../types/quiz'
 import { calculatePoints } from '../../services/quizService'
 
 const TIME_PER_QUESTION = 10 // seconds
-const FEEDBACK_DURATION = 1500 // ms
 
 interface QuizQuestionProps {
   question: QuizQuestionType
@@ -15,6 +14,34 @@ interface QuizQuestionProps {
     timeRemaining: number,
     points: number
   ) => void
+}
+
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function highlightName(text: string, name: string): React.ReactNode[] {
+  const terms = new Set<string>()
+  terms.add(name.trim())
+  for (const part of name.split(/\s+/)) {
+    const cleaned = part.replace(/[.,;:]$/, '')
+    if (cleaned.length >= 3) terms.add(cleaned)
+  }
+  const pattern = [...terms]
+    .sort((a, b) => b.length - a.length)
+    .map(escapeRegex)
+    .join('|')
+  if (!pattern) return [text]
+  const regex = new RegExp(`(${pattern})`, 'gi')
+  return text.split(regex).map((part, i) =>
+    i % 2 === 1 ? (
+      <strong key={i} className="font-semibold">
+        {part}
+      </strong>
+    ) : (
+      part
+    )
+  )
 }
 
 export default function QuizQuestion({
@@ -31,6 +58,12 @@ export default function QuizQuestion({
   const startTimeRef = useRef(0)
   const answeredRef = useRef(false)
   const timerRef = useRef<ReturnType<typeof setInterval>>(undefined)
+  const pendingResultRef = useRef<{
+    selectedId: string | null
+    isCorrect: boolean
+    timeRemaining: number
+    points: number
+  } | null>(null)
 
   // Start timer on mount
   useEffect(() => {
@@ -46,14 +79,17 @@ export default function QuizQuestion({
         clearInterval(timerRef.current)
         setSelectedId(null)
         setShowFeedback(true)
-        setTimeout(() => {
-          onAnswer(null, false, 0, 0)
-        }, FEEDBACK_DURATION)
+        pendingResultRef.current = {
+          selectedId: null,
+          isCorrect: false,
+          timeRemaining: 0,
+          points: 0,
+        }
       }
     }, 50)
 
     return () => clearInterval(timerRef.current)
-  }, [onAnswer])
+  }, [])
 
   const handleSelect = (characterId: string) => {
     if (answeredRef.current) return
@@ -65,12 +101,26 @@ export default function QuizQuestion({
 
     setSelectedId(characterId)
     setShowFeedback(true)
-
-    const capturedRemaining = timeRemaining
-    setTimeout(() => {
-      onAnswer(characterId, isCorrect, capturedRemaining, points)
-    }, FEEDBACK_DURATION)
+    pendingResultRef.current = {
+      selectedId: characterId,
+      isCorrect,
+      timeRemaining,
+      points,
+    }
   }
+
+  const handleNext = () => {
+    const result = pendingResultRef.current
+    if (!result) return
+    onAnswer(
+      result.selectedId,
+      result.isCorrect,
+      result.timeRemaining,
+      result.points
+    )
+  }
+
+  const isLastQuestion = questionIndex === totalQuestions - 1
 
   // Timer bar color
   const timerColor =
@@ -136,55 +186,65 @@ export default function QuizQuestion({
       </div>
 
       {/* Options */}
-      <div className="w-full max-w-sm space-y-3">
-        {question.options.map((option) => {
-          let buttonStyle =
-            'bg-white border-2 border-gray-200 text-gray-900 hover:border-blue-400 hover:bg-blue-50'
-
-          if (showFeedback) {
-            if (option.id === question.correctCharacter.id) {
-              buttonStyle =
-                'bg-green-50 border-2 border-green-500 text-green-900'
-            } else if (
-              option.id === selectedId &&
-              option.id !== question.correctCharacter.id
-            ) {
-              buttonStyle = 'bg-red-50 border-2 border-red-500 text-red-900'
-            } else {
-              buttonStyle =
-                'bg-white border-2 border-gray-200 text-gray-400 cursor-default'
-            }
-          }
-
-          return (
+      {!showFeedback && (
+        <div className="w-full max-w-sm space-y-3">
+          {question.options.map((option) => (
             <button
               key={option.id}
               onClick={() => handleSelect(option.id)}
-              disabled={showFeedback}
-              className={`w-full min-h-[56px] py-4 px-6 rounded-xl text-lg font-medium transition-all duration-200 ${buttonStyle} disabled:cursor-default`}
+              className="w-full min-h-[56px] py-4 px-6 rounded-xl text-lg font-medium transition-all duration-200 bg-white border-2 border-gray-200 text-gray-900 hover:border-blue-400 hover:bg-blue-50"
             >
               {option.name}
             </button>
-          )
-        })}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Feedback text */}
       {showFeedback && (
-        <div className="mt-4 text-center">
-          {selectedId === null ? (
-            <p className="text-red-600 font-medium">
-              Time's up! It was {question.correctCharacter.name}
-            </p>
-          ) : selectedId === question.correctCharacter.id ? (
-            <p className="text-green-600 font-medium">
-              Correct! +{calculatePoints(timeRemaining)} points
-            </p>
-          ) : (
-            <p className="text-red-600 font-medium">
-              Wrong! It was {question.correctCharacter.name}
-            </p>
+        <div className="mt-4 w-full max-w-sm">
+          <div className="text-center">
+            {selectedId === null ? (
+              <p className="text-red-600 font-medium">
+                Time's up! It was {question.correctCharacter.name}
+              </p>
+            ) : selectedId === question.correctCharacter.id ? (
+              <p className="text-green-600 font-medium">
+                Correct! +{calculatePoints(timeRemaining)} points
+              </p>
+            ) : (
+              <>
+                <p className="text-red-600 font-medium">
+                  Wrong! It was {question.correctCharacter.name}
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  You picked:{' '}
+                  {question.options.find((o) => o.id === selectedId)?.name}
+                </p>
+              </>
+            )}
+          </div>
+
+          {question.correctCharacter.bio && (
+            <div className="mt-4 bg-gray-50 border border-gray-200 rounded-xl p-4">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                About {question.correctCharacter.name}
+              </p>
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                {highlightName(
+                  question.correctCharacter.bio,
+                  question.correctCharacter.name
+                )}
+              </p>
+            </div>
           )}
+
+          <button
+            onClick={handleNext}
+            className="mt-4 w-full py-3 px-4 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors"
+          >
+            {isLastQuestion ? 'See Results' : 'Next Question'}
+          </button>
         </div>
       )}
     </div>

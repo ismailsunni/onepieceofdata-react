@@ -15,6 +15,12 @@ const EXPLORE_ITEMS: NavItem[] = [
   { to: '/devil-fruits', label: 'Devil Fruits' },
 ]
 
+const GAMES_ITEMS: NavItem[] = [
+  { to: '/games', label: 'All Games', exact: true },
+  { to: '/games/guess-character', label: 'Guess the Character' },
+  { to: '/games/who-am-i', label: 'Who Am I?' },
+]
+
 const ANALYTICS_ITEMS: NavItem[] = [
   { to: '/analytics', label: 'Dashboard', exact: true },
   { label: 'Topics', heading: true },
@@ -70,6 +76,7 @@ function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [exploreExpanded, setExploreExpanded] = useState(false)
   const [analyticsExpanded, setAnalyticsExpanded] = useState(false)
+  const [gamesExpanded, setGamesExpanded] = useState(false)
 
   const isExploreActive =
     location.pathname.startsWith('/characters') ||
@@ -80,6 +87,7 @@ function Navigation() {
     location.pathname.startsWith('/affiliations') ||
     location.pathname.startsWith('/devil-fruits')
   const isAnalyticsActive = location.pathname.startsWith('/analytics')
+  const isGamesActive = location.pathname.startsWith('/games')
 
   const closeMobileMenu = () => setMobileMenuOpen(false)
   const { user, signOut } = useAuth()
@@ -104,9 +112,12 @@ function Navigation() {
           width="w-64"
         />
 
-        <NavLink to="/games" className={getLinkClass}>
-          Games
-        </NavLink>
+        <DesktopDropdown
+          label="Games"
+          isActive={isGamesActive}
+          items={GAMES_ITEMS}
+          width="w-56"
+        />
 
         <NavLink to="/about" className={getLinkClass}>
           About
@@ -195,13 +206,13 @@ function Navigation() {
                 onClose={closeMobileMenu}
               />
 
-              <NavLink
-                to="/games"
-                className={getMobileLinkClass}
-                onClick={closeMobileMenu}
-              >
-                Games
-              </NavLink>
+              <MobileAccordion
+                label="Games"
+                expanded={gamesExpanded}
+                onToggle={() => setGamesExpanded((v) => !v)}
+                items={GAMES_ITEMS}
+                onClose={closeMobileMenu}
+              />
 
               <NavLink
                 to="/about"

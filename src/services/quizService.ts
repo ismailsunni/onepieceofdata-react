@@ -40,6 +40,7 @@ function toQuizCharacter(char: Character): QuizCharacter {
     name: char.name!,
     appearance_count: char.appearance_count ?? 0,
     bounty: char.bounty,
+    bio: char.bio,
   }
 }
 
