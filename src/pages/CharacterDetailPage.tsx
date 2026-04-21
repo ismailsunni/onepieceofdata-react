@@ -95,6 +95,36 @@ async function fetchSagas(): Promise<Saga[]> {
 // }
 
 // Tag component for appearance tags
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function highlightName(text: string, name: string | null): React.ReactNode[] {
+  if (!name || !text) return [text]
+  const terms = new Set<string>()
+  terms.add(name.trim())
+  for (const part of name.split(/\s+/)) {
+    const cleaned = part.replace(/[.,;:]$/, '')
+    if (cleaned.length >= 3) terms.add(cleaned)
+  }
+  const pattern = [...terms]
+    .sort((a, b) => b.length - a.length)
+    .map(escapeRegex)
+    .join('|')
+  if (!pattern) return [text]
+  const regex = new RegExp(`(${pattern})`, 'gi')
+  const parts = text.split(regex)
+  return parts.map((part, i) =>
+    i % 2 === 1 ? (
+      <strong key={i} className="font-semibold text-gray-900">
+        {part}
+      </strong>
+    ) : (
+      part
+    )
+  )
+}
+
 function Tag({
   children,
   to,
@@ -576,7 +606,7 @@ function CharacterDetailPage() {
 
                 {character.bio && (
                   <p className="mt-4 text-sm md:text-base text-gray-700 leading-relaxed whitespace-pre-line">
-                    {character.bio}
+                    {highlightName(character.bio, character.name)}
                   </p>
                 )}
               </div>
