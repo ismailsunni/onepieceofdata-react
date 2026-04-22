@@ -158,7 +158,7 @@ interface ScoreRating {
 }
 
 const RANKS: { min: number; label: string; characterId: string | null }[] = [
-  { min: 4750, label: 'One Piece!', characterId: 'Gol_D._Roger' },
+  { min: 4750, label: 'One Piece!', characterId: 'Buggy' },
   { min: 4500, label: 'Pirate King!', characterId: 'Gol_D._Roger' },
   { min: 4000, label: 'Yonko Level!', characterId: null },
   { min: 3500, label: 'Shichibukai!', characterId: null },
