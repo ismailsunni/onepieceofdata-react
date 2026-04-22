@@ -158,10 +158,10 @@ interface ScoreRating {
 }
 
 const RANKS: { min: number; label: string; characterId: string | null }[] = [
-  { min: 5000, label: 'One Piece!', characterId: 'Gol_D._Roger' },
-  { min: 4500, label: 'Pirate King!', characterId: 'Gol_D._Roger' },
-  { min: 4000, label: 'Yonko Level!', characterId: null },
-  { min: 3500, label: 'Shichibukai!', characterId: null },
+  { min: 4800, label: 'One Piece!', characterId: 'Gol_D._Roger' },
+  { min: 4600, label: 'Pirate King!', characterId: 'Gol_D._Roger' },
+  { min: 4200, label: 'Yonko Level!', characterId: null },
+  { min: 3800, label: 'Shichibukai!', characterId: null },
   { min: 3000, label: 'Supernova!', characterId: null },
   { min: 2000, label: 'New World Pirate!', characterId: null },
   { min: 1000, label: 'Rookie!', characterId: null },
