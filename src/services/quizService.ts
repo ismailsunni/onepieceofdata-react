@@ -144,10 +144,10 @@ export function getShortName(name: string): string {
   return parts[parts.length - 1]
 }
 
-/** Calculate points for a correct answer: 200 base + up to 800 speed bonus */
+/** Calculate points for a correct answer: pure speed bonus up to 1000 */
 export function calculatePoints(timeRemaining: number): number {
   if (timeRemaining <= 0) return 0
-  return 200 + Math.round(800 * (timeRemaining / TIME_PER_QUESTION))
+  return Math.round(1000 * (timeRemaining / TIME_PER_QUESTION))
 }
 
 interface ScoreRating {
@@ -158,13 +158,13 @@ interface ScoreRating {
 }
 
 const RANKS: { min: number; label: string; characterId: string | null }[] = [
-  { min: 4800, label: 'One Piece!', characterId: 'Gol_D._Roger' },
-  { min: 4600, label: 'Pirate King!', characterId: 'Gol_D._Roger' },
-  { min: 4200, label: 'Yonko Level!', characterId: null },
-  { min: 3800, label: 'Shichibukai!', characterId: null },
-  { min: 3000, label: 'Supernova!', characterId: null },
-  { min: 2000, label: 'New World Pirate!', characterId: null },
-  { min: 1000, label: 'Rookie!', characterId: null },
+  { min: 4750, label: 'One Piece!', characterId: 'Gol_D._Roger' },
+  { min: 4500, label: 'Pirate King!', characterId: 'Gol_D._Roger' },
+  { min: 4000, label: 'Yonko Level!', characterId: null },
+  { min: 3500, label: 'Shichibukai!', characterId: null },
+  { min: 2500, label: 'Supernova!', characterId: null },
+  { min: 1250, label: 'New World Pirate!', characterId: null },
+  { min: 500, label: 'Rookie!', characterId: null },
   { min: 1, label: 'Gaimon Level!', characterId: 'Gaimon' },
   { min: 0, label: "Foxy's Friend!", characterId: 'Foxy' },
 ]
