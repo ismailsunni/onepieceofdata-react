@@ -138,12 +138,25 @@ export default function WhoAmIRound({
         <p className="text-sm text-gray-500">
           Round {roundIndex + 1} of {totalRounds}
         </p>
-        {!roundComplete && (
-          <p className="text-xs text-blue-600 mt-1">
-            Current hint value: {potentialPoints}{' '}
-            {potentialPoints === 1 ? 'point' : 'points'}
-          </p>
-        )}
+        <div className="mt-1 flex items-center justify-center gap-2">
+          <span
+            className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium capitalize ${
+              character.difficulty === 'easy'
+                ? 'bg-green-100 text-green-700'
+                : character.difficulty === 'moderate'
+                  ? 'bg-amber-100 text-amber-700'
+                  : 'bg-red-100 text-red-700'
+            }`}
+          >
+            {character.difficulty}
+          </span>
+          {!roundComplete && (
+            <span className="text-xs text-blue-600">
+              Current hint value: {potentialPoints}{' '}
+              {potentialPoints === 1 ? 'point' : 'points'}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Hint dots */}

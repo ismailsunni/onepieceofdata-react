@@ -185,12 +185,12 @@ export default function QuizQuestion({
 
       {/* Options */}
       {!showFeedback && (
-        <div className="w-full max-w-sm space-y-3">
+        <div className="w-full max-w-sm grid grid-cols-2 gap-3">
           {question.options.map((option) => (
             <button
               key={option.id}
               onClick={() => handleSelect(option.id)}
-              className="w-full min-h-[56px] py-4 px-6 rounded-xl text-lg font-medium transition-all duration-200 bg-white border-2 border-gray-200 text-gray-900 hover:border-blue-400 hover:bg-blue-50"
+              className="min-h-[72px] py-3 px-4 rounded-xl text-base font-medium transition-all duration-200 bg-white border-2 border-gray-200 text-gray-900 hover:border-blue-400 hover:bg-blue-50"
             >
               {option.name}
             </button>

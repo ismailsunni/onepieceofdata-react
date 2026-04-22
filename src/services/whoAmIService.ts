@@ -2,11 +2,17 @@ import type { Character } from '../types/character'
 import type { Arc } from '../types/arc'
 import type { CharacterAffiliation } from '../types/affiliation'
 import type { CharacterDevilFruit } from '../types/devilFruit'
-import type { WhoAmIHint, WhoAmICharacter } from '../types/whoAmI'
+import type {
+  WhoAmIHint,
+  WhoAmICharacter,
+  WhoAmIDifficulty,
+} from '../types/whoAmI'
 import { getCharacterImageUrl, preloadImage } from './quizService'
 
 function isEligibleForWhoAmI(char: Character): boolean {
   if (!char.name) return false
+  if (!char.bio) return false
+  if (char.is_likely_character === false) return false
   if (!char.saga_list || char.saga_list.length === 0) return false
   if (char.appearance_count === null || char.appearance_count === undefined)
     return false
@@ -239,32 +245,51 @@ export async function generateWhoAmIRound(
   affiliationMap: Map<string, CharacterAffiliation[]>,
   devilFruitMap: Map<string, CharacterDevilFruit[]>
 ): Promise<WhoAmICharacter[] | null> {
-  const eligible = characters.filter(isEligibleForWhoAmI)
-  const shuffled = shuffleArray(eligible)
+  const eligible = characters
+    .filter(isEligibleForWhoAmI)
+    .sort((a, b) => (b.appearance_count ?? 0) - (a.appearance_count ?? 0))
+
+  if (eligible.length < 3) return null
+
+  // Split by appearance count into 1:2:3 tiers (most→least appearances).
+  const n = eligible.length
+  const easyEnd = Math.max(1, Math.ceil(n / 6))
+  const moderateEnd = Math.max(easyEnd + 1, Math.ceil(n / 2))
+  const pools: { difficulty: WhoAmIDifficulty; pool: Character[] }[] = [
+    { difficulty: 'easy', pool: shuffleArray(eligible.slice(0, easyEnd)) },
+    {
+      difficulty: 'moderate',
+      pool: shuffleArray(eligible.slice(easyEnd, moderateEnd)),
+    },
+    { difficulty: 'hard', pool: shuffleArray(eligible.slice(moderateEnd)) },
+  ]
 
   const result: WhoAmICharacter[] = []
-  let candidateIndex = 0
+  const used = new Set<string>()
 
-  const ROUNDS = 3
-  while (result.length < ROUNDS && candidateIndex < shuffled.length) {
-    const char = shuffled[candidateIndex]
-    candidateIndex++
-
-    const imageUrl = getCharacterImageUrl(char.id)
-    const loaded = await preloadImage(imageUrl)
-    if (!loaded) continue
-
-    const hints = generateHints(char, arcMap, affiliationMap, devilFruitMap)
-    result.push({
-      id: char.id,
-      name: char.name!,
-      imageUrl,
-      hints,
-      bio: char.bio,
-    })
+  for (const { difficulty, pool } of pools) {
+    let picked: WhoAmICharacter | null = null
+    for (const char of pool) {
+      if (used.has(char.id)) continue
+      const imageUrl = getCharacterImageUrl(char.id)
+      const loaded = await preloadImage(imageUrl)
+      if (!loaded) continue
+      const hints = generateHints(char, arcMap, affiliationMap, devilFruitMap)
+      picked = {
+        id: char.id,
+        name: char.name!,
+        imageUrl,
+        hints,
+        bio: char.bio,
+        difficulty,
+      }
+      used.add(char.id)
+      break
+    }
+    if (!picked) return null
+    result.push(picked)
   }
 
-  if (result.length < ROUNDS) return null
   return result
 }
 
