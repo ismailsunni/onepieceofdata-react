@@ -1208,7 +1208,7 @@ function ChapterReleaseCalendarPage() {
                   <div
                     className="w-8 h-8 rounded"
                     style={{
-                      backgroundColor: '#bfdbfe',
+                      backgroundColor: '#60a5fa',
                       border: '1px solid #d1d5db',
                     }}
                   ></div>
@@ -1476,7 +1476,7 @@ function ChapterReleaseCalendarPage() {
                               className="px-1 py-1 text-center align-middle"
                               style={{
                                 border: '2px solid #d1d5db',
-                                backgroundColor: '#bfdbfe', // blue-200
+                                backgroundColor: '#60a5fa', // blue-400
                               }}
                               title={`Predicted Ch. ${pred.chapterNum} — ${yearData.year} Issue ${predIssueEnd ? `${issueNum}–${predIssueEnd}` : issueNum}`}
                             >
@@ -1484,7 +1484,7 @@ function ChapterReleaseCalendarPage() {
                                 <span
                                   style={{
                                     fontSize: '0.75rem',
-                                    color: '#1e40af',
+                                    color: '#1e3a8a',
                                     fontWeight: 600,
                                   }}
                                 >
