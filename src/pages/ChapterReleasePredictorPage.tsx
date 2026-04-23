@@ -7,7 +7,171 @@ import { Link } from 'react-router-dom'
 import { useMemo, useState, useCallback } from 'react'
 import { StatCard } from '../components/analytics'
 
-// ─── Prediction types & hook ────────────────────────────────────────────────
+// ─── Prediction types & hooks ───────────────────────────────────────────────
+
+interface ScheduleEntry {
+  type: 'chapter' | 'break'
+  chapter?: number
+  issue: number
+  issueEnd: number | null // non-null if historically a double issue
+  year: number
+  date: Date
+  daysAway: number
+}
+
+interface JumpIssueStats {
+  schedule: ScheduleEntry[]
+  avgDays: number
+  daysPerIssue: number
+  breakRate: number
+  sampleSize: number
+  latestChapterNumber: number
+}
+
+function useJumpIssuePrediction(
+  releases: ChapterRelease[] | undefined
+): JumpIssueStats | null {
+  return useMemo(() => {
+    if (!releases || releases.length < 10) return null
+
+    const threeYearsAgo = new Date()
+    threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3)
+
+    const recent = releases
+      .filter(
+        (r) =>
+          r.date &&
+          r.issue != null &&
+          r.year != null &&
+          new Date(r.date) >= threeYearsAgo
+      )
+      .sort((a, b) => a.number - b.number)
+
+    if (recent.length < 5) return null
+
+    const dayGaps: number[] = []
+    const issueGaps: number[] = []
+
+    for (let i = 1; i < recent.length; i++) {
+      const prev = recent[i - 1]
+      const curr = recent[i]
+      const days =
+        (new Date(curr.date!).getTime() - new Date(prev.date!).getTime()) /
+        (1000 * 60 * 60 * 24)
+      dayGaps.push(days)
+      const prevEffective = prev.issueEnd ?? prev.issue!
+      const yearsDiff = curr.year! - prev.year!
+      const issueDiff = curr.issue! - prevEffective + yearsDiff * 52
+      if (issueDiff > 0 && issueDiff < 20) issueGaps.push(issueDiff)
+    }
+
+    if (issueGaps.length < 5) return null
+
+    const avgDays = dayGaps.reduce((s, g) => s + g, 0) / dayGaps.length
+    const totalDays = dayGaps.reduce((s, g) => s + g, 0)
+    const totalIssues = issueGaps.reduce((s, g) => s + g, 0)
+    const daysPerIssue = totalDays / totalIssues
+    const breakRate = issueGaps.filter((g) => g > 1).length / issueGaps.length
+
+    // Map from issue number → issueEnd for historically double issues
+    const doubleIssueMap = new Map<number, number>()
+    recent.forEach((r) => {
+      if (r.issueEnd != null && r.issueEnd > r.issue!) {
+        doubleIssueMap.set(r.issue!, r.issueEnd)
+      }
+    })
+
+    const latest = recent[recent.length - 1]
+    const latestDate = new Date(latest.date!)
+    const latestEffectiveIssue = latest.issueEnd ?? latest.issue!
+    const latestYear = latest.year!
+
+    // Use the last 10 actual gaps to replay the break pattern forward
+    const patternGaps = issueGaps.slice(-10)
+
+    const schedule: ScheduleEntry[] = []
+    let chaptersFound = 0
+    let gapIdx = 0
+    let currentIssue = latestEffectiveIssue
+    let currentYear = latestYear
+    let currentDate = latestDate
+
+    const advanceIssue = (
+      issue: number,
+      year: number
+    ): { issue: number; year: number } => {
+      issue++
+      if (issue > 52) {
+        issue = 1
+        year++
+      }
+      return { issue, year }
+    }
+
+    while (chaptersFound < 5) {
+      const gap = patternGaps[gapIdx % patternGaps.length]
+      gapIdx++
+
+      // Add break issues before the next chapter
+      for (let b = 1; b < gap; b++) {
+        ;({ issue: currentIssue, year: currentYear } = advanceIssue(
+          currentIssue,
+          currentYear
+        ))
+        const issueEnd = doubleIssueMap.get(currentIssue) ?? null
+        const breakDate = new Date(
+          currentDate.getTime() + daysPerIssue * 24 * 60 * 60 * 1000
+        )
+        schedule.push({
+          type: 'break',
+          issue: currentIssue,
+          issueEnd,
+          year: currentYear,
+          date: breakDate,
+          daysAway: Math.round(
+            (breakDate.getTime() - latestDate.getTime()) / (1000 * 60 * 60 * 24)
+          ),
+        })
+        currentDate = breakDate
+        // If double issue, skip to the end number
+        if (issueEnd != null) currentIssue = issueEnd
+      }
+
+      // Advance to the chapter issue
+      ;({ issue: currentIssue, year: currentYear } = advanceIssue(
+        currentIssue,
+        currentYear
+      ))
+      const chapterIssueEnd = doubleIssueMap.get(currentIssue) ?? null
+      const chapterDate = new Date(
+        currentDate.getTime() + daysPerIssue * 24 * 60 * 60 * 1000
+      )
+      schedule.push({
+        type: 'chapter',
+        chapter: latest.number + chaptersFound + 1,
+        issue: currentIssue,
+        issueEnd: chapterIssueEnd,
+        year: currentYear,
+        date: chapterDate,
+        daysAway: Math.round(
+          (chapterDate.getTime() - latestDate.getTime()) / (1000 * 60 * 60 * 24)
+        ),
+      })
+      if (chapterIssueEnd != null) currentIssue = chapterIssueEnd
+      currentDate = chapterDate
+      chaptersFound++
+    }
+
+    return {
+      schedule,
+      avgDays,
+      daysPerIssue,
+      breakRate,
+      sampleSize: recent.length,
+      latestChapterNumber: latest.number,
+    }
+  }, [releases])
+}
 
 interface PredictionResult {
   chapter: number
@@ -159,6 +323,7 @@ function ChapterReleasePredictorPage() {
 
   const { cadenceStats, predict, predictByDate } =
     useChapterPrediction(releases)
+  const jumpStats = useJumpIssuePrediction(releases)
   const [chapterInput, setChapterInput] = useState('')
   const [chapterResult, setChapterResult] = useState<ChapterResult | null>(null)
   const [dateInput, setDateInput] = useState('')
@@ -167,7 +332,9 @@ function ChapterReleasePredictorPage() {
   const sortedReleases = useMemo(
     () =>
       releases
-        ? [...releases].filter((r) => r.date).sort((a, b) => a.number - b.number)
+        ? [...releases]
+            .filter((r) => r.date)
+            .sort((a, b) => a.number - b.number)
         : [],
     [releases]
   )
@@ -448,6 +615,114 @@ function ChapterReleasePredictorPage() {
             color="emerald"
           />
         </div>
+
+        {/* Next 5 Chapters — Jump Issue Forecast */}
+        {jumpStats && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-base font-semibold text-gray-900">
+                  Next 5 Chapters — Jump Issue Forecast
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Based on {jumpStats.sampleSize} chapters over the last 3 years
+                  · avg {jumpStats.avgDays.toFixed(1)} days/chapter ·{' '}
+                  {Math.round(jumpStats.breakRate * 100)}% break rate ·{' '}
+                  {jumpStats.daysPerIssue.toFixed(1)} days/issue
+                </p>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    <th className="px-4 py-2 text-left font-semibold text-gray-600">
+                      Chapter
+                    </th>
+                    <th className="px-4 py-2 text-left font-semibold text-gray-600">
+                      Est. Date
+                    </th>
+                    <th className="px-4 py-2 text-left font-semibold text-gray-600">
+                      Jump Issue
+                    </th>
+                    <th className="px-4 py-2 text-left font-semibold text-gray-600">
+                      Days Away
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {jumpStats.schedule.map((entry, idx) =>
+                    entry.type === 'chapter' ? (
+                      <tr
+                        key={`ch-${entry.chapter}`}
+                        className="border-b border-gray-100 hover:bg-amber-50/40 transition-colors"
+                      >
+                        <td className="px-4 py-3 font-semibold text-amber-700">
+                          Ch. {entry.chapter}
+                        </td>
+                        <td className="px-4 py-3 text-gray-800">
+                          {formatDate(entry.date)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="font-medium text-gray-900">
+                            {entry.year} Issue{' '}
+                            {entry.issueEnd != null
+                              ? `${entry.issue}–${entry.issueEnd}`
+                              : entry.issue}
+                          </span>
+                          {entry.issueEnd != null && (
+                            <span className="ml-2 inline-block px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full">
+                              double
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-gray-500">
+                          {entry.daysAway === 0
+                            ? 'Today'
+                            : entry.daysAway === 1
+                              ? 'Tomorrow'
+                              : `~${entry.daysAway}d`}
+                        </td>
+                      </tr>
+                    ) : (
+                      <tr
+                        key={`break-${idx}`}
+                        className="border-b border-gray-100 bg-gray-50/60"
+                      >
+                        <td className="px-4 py-2">
+                          <span className="inline-block px-2 py-0.5 text-xs font-medium bg-gray-200 text-gray-500 rounded-full">
+                            break
+                          </span>
+                        </td>
+                        <td className="px-4 py-2 text-gray-400 text-xs">
+                          {formatDate(entry.date)}
+                        </td>
+                        <td className="px-4 py-2 text-gray-400 text-xs">
+                          {entry.year} Issue{' '}
+                          {entry.issueEnd != null
+                            ? `${entry.issue}–${entry.issueEnd}`
+                            : entry.issue}
+                          {entry.issueEnd != null && (
+                            <span className="ml-2 inline-block px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full">
+                              double
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2 text-gray-400 text-xs">
+                          ~{entry.daysAway}d
+                        </td>
+                      </tr>
+                    )
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-xs text-gray-400 mt-3">
+              Break weeks and double issues are inferred from 3-year historical
+              patterns. Dates are estimates.
+            </p>
+          </div>
+        )}
 
         {/* Predictor Card */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
