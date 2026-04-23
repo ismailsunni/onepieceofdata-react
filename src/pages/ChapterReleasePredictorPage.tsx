@@ -81,85 +81,71 @@ function useJumpIssuePrediction(
       }
     })
 
+    // Per-issue chapter rate: how often each issue number had a chapter
+    // across the years in the data. Double issues are counted at their start
+    // number only (issueEnd is consumed, not a separate week).
+    const issueChapterCount = new Map<number, number>()
+    recent.forEach((r) => {
+      const iss = r.issue!
+      issueChapterCount.set(iss, (issueChapterCount.get(iss) ?? 0) + 1)
+    })
+    const yearsInData = new Set(recent.map((r) => r.year!)).size || 1
+    const issueChapterRate = (iss: number) =>
+      (issueChapterCount.get(iss) ?? 0) / yearsInData
+
     const latest = recent[recent.length - 1]
     const latestDate = new Date(latest.date!)
     const latestEffectiveIssue = latest.issueEnd ?? latest.issue!
     const latestYear = latest.year!
 
-    // Use the last 10 actual gaps to replay the break pattern forward
-    const patternGaps = issueGaps.slice(-10)
-
     const schedule: ScheduleEntry[] = []
     let chaptersFound = 0
-    let gapIdx = 0
     let currentIssue = latestEffectiveIssue
     let currentYear = latestYear
     let currentDate = latestDate
 
-    const advanceIssue = (
-      issue: number,
-      year: number
-    ): { issue: number; year: number } => {
-      issue++
-      if (issue > 52) {
-        issue = 1
-        year++
-      }
-      return { issue, year }
-    }
-
     while (chaptersFound < 5) {
-      const gap = patternGaps[gapIdx % patternGaps.length]
-      gapIdx++
+      currentIssue++
+      if (currentIssue > 52) {
+        currentIssue = 1
+        currentYear++
+      }
 
-      // Add break issues before the next chapter
-      for (let b = 1; b < gap; b++) {
-        ;({ issue: currentIssue, year: currentYear } = advanceIssue(
-          currentIssue,
-          currentYear
-        ))
-        const issueEnd = doubleIssueMap.get(currentIssue) ?? null
-        const breakDate = new Date(
-          currentDate.getTime() + daysPerIssue * 24 * 60 * 60 * 1000
-        )
+      const issueEnd = doubleIssueMap.get(currentIssue) ?? null
+      const entryDate = new Date(
+        currentDate.getTime() + daysPerIssue * 24 * 60 * 60 * 1000
+      )
+      const daysAway = Math.round(
+        (entryDate.getTime() - latestDate.getTime()) / (1000 * 60 * 60 * 24)
+      )
+
+      const hasChapter = issueChapterRate(currentIssue) >= 0.5
+
+      if (hasChapter) {
+        schedule.push({
+          type: 'chapter',
+          chapter: latest.number + chaptersFound + 1,
+          issue: currentIssue,
+          issueEnd,
+          year: currentYear,
+          date: entryDate,
+          daysAway,
+        })
+        chaptersFound++
+      } else {
         schedule.push({
           type: 'break',
           issue: currentIssue,
           issueEnd,
           year: currentYear,
-          date: breakDate,
-          daysAway: Math.round(
-            (breakDate.getTime() - latestDate.getTime()) / (1000 * 60 * 60 * 24)
-          ),
+          date: entryDate,
+          daysAway,
         })
-        currentDate = breakDate
-        // If double issue, skip to the end number
-        if (issueEnd != null) currentIssue = issueEnd
       }
 
-      // Advance to the chapter issue
-      ;({ issue: currentIssue, year: currentYear } = advanceIssue(
-        currentIssue,
-        currentYear
-      ))
-      const chapterIssueEnd = doubleIssueMap.get(currentIssue) ?? null
-      const chapterDate = new Date(
-        currentDate.getTime() + daysPerIssue * 24 * 60 * 60 * 1000
-      )
-      schedule.push({
-        type: 'chapter',
-        chapter: latest.number + chaptersFound + 1,
-        issue: currentIssue,
-        issueEnd: chapterIssueEnd,
-        year: currentYear,
-        date: chapterDate,
-        daysAway: Math.round(
-          (chapterDate.getTime() - latestDate.getTime()) / (1000 * 60 * 60 * 24)
-        ),
-      })
-      if (chapterIssueEnd != null) currentIssue = chapterIssueEnd
-      currentDate = chapterDate
-      chaptersFound++
+      // After a double issue, skip to issueEnd so next step starts from there
+      if (issueEnd != null) currentIssue = issueEnd
+      currentDate = entryDate
     }
 
     return {
@@ -640,10 +626,10 @@ function ChapterReleasePredictorPage() {
                       Chapter
                     </th>
                     <th className="px-4 py-2 text-left font-semibold text-gray-600">
-                      Est. Date
+                      Jump Issue
                     </th>
                     <th className="px-4 py-2 text-left font-semibold text-gray-600">
-                      Jump Issue
+                      Est. Date
                     </th>
                     <th className="px-4 py-2 text-left font-semibold text-gray-600">
                       Days Away
@@ -660,9 +646,6 @@ function ChapterReleasePredictorPage() {
                         <td className="px-4 py-3 font-semibold text-amber-700">
                           Ch. {entry.chapter}
                         </td>
-                        <td className="px-4 py-3 text-gray-800">
-                          {formatDate(entry.date)}
-                        </td>
                         <td className="px-4 py-3">
                           <span className="font-medium text-gray-900">
                             {entry.year} Issue{' '}
@@ -675,6 +658,9 @@ function ChapterReleasePredictorPage() {
                               double
                             </span>
                           )}
+                        </td>
+                        <td className="px-4 py-3 text-gray-800">
+                          {formatDate(entry.date)}
                         </td>
                         <td className="px-4 py-3 text-gray-500">
                           {entry.daysAway === 0
@@ -695,9 +681,6 @@ function ChapterReleasePredictorPage() {
                           </span>
                         </td>
                         <td className="px-4 py-2 text-gray-400 text-xs">
-                          {formatDate(entry.date)}
-                        </td>
-                        <td className="px-4 py-2 text-gray-400 text-xs">
                           {entry.year} Issue{' '}
                           {entry.issueEnd != null
                             ? `${entry.issue}–${entry.issueEnd}`
@@ -707,6 +690,9 @@ function ChapterReleasePredictorPage() {
                               double
                             </span>
                           )}
+                        </td>
+                        <td className="px-4 py-2 text-gray-400 text-xs">
+                          {formatDate(entry.date)}
                         </td>
                         <td className="px-4 py-2 text-gray-400 text-xs">
                           ~{entry.daysAway}d
