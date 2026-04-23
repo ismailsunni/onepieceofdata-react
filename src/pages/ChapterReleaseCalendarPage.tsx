@@ -248,6 +248,105 @@ function ChapterReleaseCalendarPage() {
     [selectedCharacterChapters]
   )
 
+  // Compute predicted schedule: Map<"year-issue", 'chapter'|'break'>
+  // and double issue map: Map<"year-issue", issueEnd>
+  const { predictedMap, predictedDoubleMap } = useMemo(() => {
+    const predictedMap = new Map<
+      string,
+      { type: 'chapter' | 'break'; chapterNum?: number }
+    >()
+    const predictedDoubleMap = new Map<string, number>()
+
+    if (!releases || releases.length < 5)
+      return { predictedMap, predictedDoubleMap }
+
+    const threeYearsAgo = new Date()
+    threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3)
+
+    const recent = releases
+      .filter(
+        (r) =>
+          r.date &&
+          r.issue != null &&
+          r.year != null &&
+          new Date(r.date) >= threeYearsAgo
+      )
+      .sort((a, b) => a.number - b.number)
+
+    if (recent.length < 5) return { predictedMap, predictedDoubleMap }
+
+    const dayGaps: number[] = []
+    const issueGaps: number[] = []
+    for (let i = 1; i < recent.length; i++) {
+      const prev = recent[i - 1]
+      const curr = recent[i]
+      const days =
+        (new Date(curr.date!).getTime() - new Date(prev.date!).getTime()) /
+        (1000 * 60 * 60 * 24)
+      dayGaps.push(days)
+      const prevEffective = prev.issueEnd ?? prev.issue!
+      const issueDiff =
+        curr.issue! - prevEffective + (curr.year! - prev.year!) * 52
+      if (issueDiff > 0 && issueDiff < 20) issueGaps.push(issueDiff)
+    }
+    if (issueGaps.length < 5) return { predictedMap, predictedDoubleMap }
+
+    const daysPerIssue =
+      dayGaps.reduce((s, g) => s + g, 0) / issueGaps.reduce((s, g) => s + g, 0)
+
+    const doubleIssueMap = new Map<number, number>()
+    recent.forEach((r) => {
+      if (r.issueEnd != null && r.issueEnd > r.issue!)
+        doubleIssueMap.set(r.issue!, r.issueEnd)
+    })
+
+    const issueChapterCount = new Map<number, number>()
+    recent.forEach((r) => {
+      issueChapterCount.set(
+        r.issue!,
+        (issueChapterCount.get(r.issue!) ?? 0) + 1
+      )
+    })
+    const yearsInData = new Set(recent.map((r) => r.year!)).size || 1
+    const issueChapterRate = (iss: number) =>
+      (issueChapterCount.get(iss) ?? 0) / yearsInData
+
+    const latest = recent[recent.length - 1]
+    let currentIssue = latest.issueEnd ?? latest.issue!
+    let currentYear = latest.year!
+    let chaptersFound = 0
+
+    while (chaptersFound < 5) {
+      currentIssue++
+      if (currentIssue > 52) {
+        currentIssue = 1
+        currentYear++
+      }
+
+      const issueEnd = doubleIssueMap.get(currentIssue) ?? null
+      const hasChapter = issueChapterRate(currentIssue) >= 0.5
+      const key = `${currentYear}-${currentIssue}`
+
+      if (hasChapter) {
+        predictedMap.set(key, {
+          type: 'chapter',
+          chapterNum: latest.number + chaptersFound + 1,
+        })
+        chaptersFound++
+      } else {
+        predictedMap.set(key, { type: 'break' })
+      }
+      if (issueEnd != null) predictedDoubleMap.set(key, issueEnd)
+
+      if (issueEnd != null) currentIssue = issueEnd
+    }
+
+    // Suppress unused variable warning - daysPerIssue used for future extension
+    void daysPerIssue
+
+    return { predictedMap, predictedDoubleMap }
+  }, [releases])
+
   // Group chapters by year and Jump issue
   const yearData = useMemo(() => {
     if (!releases) return []
@@ -304,11 +403,39 @@ function ChapterReleaseCalendarPage() {
         })
       })
 
+      // Add predicted double issue spans for this year
+      predictedDoubleMap.forEach((issueEnd, key) => {
+        const [yearStr, issueStr] = key.split('-')
+        if (parseInt(yearStr) === year) {
+          const issueNum = parseInt(issueStr)
+          for (let i = issueNum + 1; i <= issueEnd; i++) {
+            doubleIssueSpans.add(i)
+          }
+        }
+      })
+
       years.push({ year, issues, doubleIssueSpans })
     })
 
-    return years
-  }, [releases])
+    // Add any predicted years not already in yearMap
+    predictedMap.forEach((_, key) => {
+      const year = parseInt(key.split('-')[0])
+      if (!sortedYears.includes(year)) {
+        const doubleIssueSpans = new Set<number>()
+        predictedDoubleMap.forEach((issueEnd, dKey) => {
+          const [dYearStr, dIssueStr] = dKey.split('-')
+          if (parseInt(dYearStr) === year) {
+            for (let i = parseInt(dIssueStr) + 1; i <= issueEnd; i++) {
+              doubleIssueSpans.add(i)
+            }
+          }
+        })
+        years.push({ year, issues: new Map(), doubleIssueSpans })
+      }
+    })
+
+    return years.sort((a, b) => a.year - b.year)
+  }, [releases, predictedMap, predictedDoubleMap])
 
   // Create color maps for sagas and arcs
   const { sagaColorMap, arcColorMap } = useMemo(() => {
@@ -349,11 +476,15 @@ function ChapterReleaseCalendarPage() {
   // Get all unique issue numbers across all years for the y-axis
   const allIssues = useMemo(() => {
     const issues = new Set<number>()
-    yearData.forEach((yearData) => {
-      yearData.issues.forEach((_, issue) => issues.add(issue))
+    yearData.forEach((yd) => {
+      yd.issues.forEach((_, issue) => issues.add(issue))
+    })
+    // Include predicted issue numbers (start issues only, not double-issue spans)
+    predictedMap.forEach((_, key) => {
+      issues.add(parseInt(key.split('-')[1]))
     })
     return Array.from(issues).sort((a, b) => a - b)
-  }, [yearData])
+  }, [yearData, predictedMap])
 
   // Calculate quick stats
   const stats = useMemo(() => {
@@ -904,6 +1035,30 @@ function ChapterReleaseCalendarPage() {
                     No Chapter (Planned Break/Holiday)
                   </span>
                 </div>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-8 h-8 rounded"
+                    style={{
+                      backgroundColor: '#bfdbfe',
+                      border: '1px solid #d1d5db',
+                    }}
+                  ></div>
+                  <span className="text-sm" style={{ color: '#4b5563' }}>
+                    Predicted Chapter
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-8 h-8 rounded"
+                    style={{
+                      backgroundColor: '#9ca3af',
+                      border: '1px solid #d1d5db',
+                    }}
+                  ></div>
+                  <span className="text-sm" style={{ color: '#4b5563' }}>
+                    Predicted Break
+                  </span>
+                </div>
               </div>
             )}
 
@@ -1136,10 +1291,71 @@ function ChapterReleaseCalendarPage() {
 
                       const issue = yearData.issues.get(issueNum)
                       if (!issue) {
-                        // No chapter this issue
+                        const predKey = `${yearData.year}-${issueNum}`
+                        const pred = predictedMap.get(predKey)
+                        const predIssueEnd =
+                          predictedDoubleMap.get(predKey) ?? null
+                        const predRowSpan = predIssueEnd
+                          ? predIssueEnd - issueNum + 1
+                          : 1
+
+                        if (pred?.type === 'chapter') {
+                          return (
+                            <td
+                              key={predKey}
+                              rowSpan={predRowSpan}
+                              className="px-1 py-1 text-center align-middle"
+                              style={{
+                                border: '2px solid #d1d5db',
+                                backgroundColor: '#bfdbfe', // blue-200
+                              }}
+                              title={`Predicted Ch. ${pred.chapterNum} — ${yearData.year} Issue ${predIssueEnd ? `${issueNum}–${predIssueEnd}` : issueNum}`}
+                            >
+                              {!isCompact && (
+                                <span
+                                  style={{
+                                    fontSize: '0.75rem',
+                                    color: '#1e40af',
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  ~{pred.chapterNum}
+                                </span>
+                              )}
+                            </td>
+                          )
+                        }
+
+                        if (pred?.type === 'break') {
+                          return (
+                            <td
+                              key={predKey}
+                              rowSpan={predRowSpan}
+                              className="px-1 py-1 text-center align-middle"
+                              style={{
+                                border: '2px solid #d1d5db',
+                                backgroundColor: '#9ca3af', // gray-400
+                              }}
+                              title={`Predicted break — ${yearData.year} Issue ${predIssueEnd ? `${issueNum}–${predIssueEnd}` : issueNum}`}
+                            >
+                              {!isCompact && (
+                                <span
+                                  style={{
+                                    fontSize: '0.75rem',
+                                    color: '#374151',
+                                  }}
+                                >
+                                  -
+                                </span>
+                              )}
+                            </td>
+                          )
+                        }
+
+                        // Past break
                         return (
                           <td
-                            key={`${yearData.year}-${issueNum}`}
+                            key={predKey}
                             className="px-1 py-1 text-center"
                             style={{
                               border: '2px solid #d1d5db',
@@ -1252,7 +1468,9 @@ function ChapterReleaseCalendarPage() {
           <p>
             This calendar shows the release schedule of One Piece chapters in
             Weekly Shonen Jump. Green cells indicate weeks with chapter
-            releases, while red cells show weeks without releases.
+            releases, red cells show weeks without releases, and amber/gray
+            cells show predicted future chapters and breaks based on 3-year
+            historical patterns.
           </p>
         </div>
       </div>
