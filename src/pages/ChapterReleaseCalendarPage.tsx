@@ -45,6 +45,15 @@ const ARC_COLORS = [
 
 type VisualizationTheme = 'jump' | 'saga' | 'arc' | 'character'
 
+function formatDate(date: Date): string {
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
 interface JumpIssue {
   jump: string
   chapters: ChapterRelease[]
@@ -250,102 +259,166 @@ function ChapterReleaseCalendarPage() {
 
   // Compute predicted schedule: Map<"year-issue", 'chapter'|'break'>
   // and double issue map: Map<"year-issue", issueEnd>
-  const { predictedMap, predictedDoubleMap } = useMemo(() => {
-    const predictedMap = new Map<
-      string,
-      { type: 'chapter' | 'break'; chapterNum?: number }
-    >()
-    const predictedDoubleMap = new Map<string, number>()
+  interface PredictedEntry {
+    type: 'chapter' | 'break'
+    chapterNum?: number
+    issue: number
+    issueEnd: number | null
+    year: number
+    date: Date
+    daysAway: number
+  }
 
-    if (!releases || releases.length < 5)
-      return { predictedMap, predictedDoubleMap }
-
-    const threeYearsAgo = new Date()
-    threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3)
-
-    const recent = releases
-      .filter(
-        (r) =>
-          r.date &&
-          r.issue != null &&
-          r.year != null &&
-          new Date(r.date) >= threeYearsAgo
-      )
-      .sort((a, b) => a.number - b.number)
-
-    if (recent.length < 5) return { predictedMap, predictedDoubleMap }
-
-    const dayGaps: number[] = []
-    const issueGaps: number[] = []
-    for (let i = 1; i < recent.length; i++) {
-      const prev = recent[i - 1]
-      const curr = recent[i]
-      const days =
-        (new Date(curr.date!).getTime() - new Date(prev.date!).getTime()) /
-        (1000 * 60 * 60 * 24)
-      dayGaps.push(days)
-      const prevEffective = prev.issueEnd ?? prev.issue!
-      const issueDiff =
-        curr.issue! - prevEffective + (curr.year! - prev.year!) * 52
-      if (issueDiff > 0 && issueDiff < 20) issueGaps.push(issueDiff)
-    }
-    if (issueGaps.length < 5) return { predictedMap, predictedDoubleMap }
-
-    const daysPerIssue =
-      dayGaps.reduce((s, g) => s + g, 0) / issueGaps.reduce((s, g) => s + g, 0)
-
-    const doubleIssueMap = new Map<number, number>()
-    recent.forEach((r) => {
-      if (r.issueEnd != null && r.issueEnd > r.issue!)
-        doubleIssueMap.set(r.issue!, r.issueEnd)
-    })
-
-    const issueChapterCount = new Map<number, number>()
-    recent.forEach((r) => {
-      issueChapterCount.set(
-        r.issue!,
-        (issueChapterCount.get(r.issue!) ?? 0) + 1
-      )
-    })
-    const yearsInData = new Set(recent.map((r) => r.year!)).size || 1
-    const issueChapterRate = (iss: number) =>
-      (issueChapterCount.get(iss) ?? 0) / yearsInData
-
-    const latest = recent[recent.length - 1]
-    let currentIssue = latest.issueEnd ?? latest.issue!
-    let currentYear = latest.year!
-    let chaptersFound = 0
-
-    while (chaptersFound < 5) {
-      currentIssue++
-      if (currentIssue > 52) {
-        currentIssue = 1
-        currentYear++
+  const { predictedMap, predictedDoubleMap, predictedSchedule, predStats } =
+    useMemo(() => {
+      const predictedMap = new Map<
+        string,
+        { type: 'chapter' | 'break'; chapterNum?: number }
+      >()
+      const predictedDoubleMap = new Map<string, number>()
+      const predictedSchedule: PredictedEntry[] = []
+      const predStats = {
+        sampleSize: 0,
+        avgDays: 0,
+        breakRate: 0,
+        daysPerIssue: 0,
       }
 
-      const issueEnd = doubleIssueMap.get(currentIssue) ?? null
-      const hasChapter = issueChapterRate(currentIssue) >= 0.5
-      const key = `${currentYear}-${currentIssue}`
+      if (!releases || releases.length < 5)
+        return {
+          predictedMap,
+          predictedDoubleMap,
+          predictedSchedule,
+          predStats,
+        }
 
-      if (hasChapter) {
-        predictedMap.set(key, {
-          type: 'chapter',
-          chapterNum: latest.number + chaptersFound + 1,
-        })
-        chaptersFound++
-      } else {
-        predictedMap.set(key, { type: 'break' })
+      const threeYearsAgo = new Date()
+      threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3)
+
+      const recent = releases
+        .filter(
+          (r) =>
+            r.date &&
+            r.issue != null &&
+            r.year != null &&
+            new Date(r.date) >= threeYearsAgo
+        )
+        .sort((a, b) => a.number - b.number)
+
+      if (recent.length < 5)
+        return {
+          predictedMap,
+          predictedDoubleMap,
+          predictedSchedule,
+          predStats,
+        }
+
+      const dayGaps: number[] = []
+      const issueGaps: number[] = []
+      for (let i = 1; i < recent.length; i++) {
+        const prev = recent[i - 1]
+        const curr = recent[i]
+        const days =
+          (new Date(curr.date!).getTime() - new Date(prev.date!).getTime()) /
+          (1000 * 60 * 60 * 24)
+        dayGaps.push(days)
+        const prevEffective = prev.issueEnd ?? prev.issue!
+        const issueDiff =
+          curr.issue! - prevEffective + (curr.year! - prev.year!) * 52
+        if (issueDiff > 0 && issueDiff < 20) issueGaps.push(issueDiff)
       }
-      if (issueEnd != null) predictedDoubleMap.set(key, issueEnd)
+      if (issueGaps.length < 5)
+        return {
+          predictedMap,
+          predictedDoubleMap,
+          predictedSchedule,
+          predStats,
+        }
 
-      if (issueEnd != null) currentIssue = issueEnd
-    }
+      const daysPerIssue =
+        dayGaps.reduce((s, g) => s + g, 0) /
+        issueGaps.reduce((s, g) => s + g, 0)
 
-    // Suppress unused variable warning - daysPerIssue used for future extension
-    void daysPerIssue
+      const doubleIssueMap = new Map<number, number>()
+      recent.forEach((r) => {
+        if (r.issueEnd != null && r.issueEnd > r.issue!)
+          doubleIssueMap.set(r.issue!, r.issueEnd)
+      })
 
-    return { predictedMap, predictedDoubleMap }
-  }, [releases])
+      const issueChapterCount = new Map<number, number>()
+      recent.forEach((r) => {
+        issueChapterCount.set(
+          r.issue!,
+          (issueChapterCount.get(r.issue!) ?? 0) + 1
+        )
+      })
+      const yearsInData = new Set(recent.map((r) => r.year!)).size || 1
+      const issueChapterRate = (iss: number) =>
+        (issueChapterCount.get(iss) ?? 0) / yearsInData
+
+      const avgDays = dayGaps.reduce((s, g) => s + g, 0) / dayGaps.length
+      const breakRate = issueGaps.filter((g) => g > 1).length / issueGaps.length
+      predStats.sampleSize = recent.length
+      predStats.avgDays = avgDays
+      predStats.breakRate = breakRate
+      predStats.daysPerIssue = daysPerIssue
+
+      const latest = recent[recent.length - 1]
+      const latestDate = new Date(latest.date!)
+      let currentIssue = latest.issueEnd ?? latest.issue!
+      let currentYear = latest.year!
+      let currentDate = latestDate
+      let chaptersFound = 0
+
+      while (chaptersFound < 5) {
+        currentIssue++
+        if (currentIssue > 52) {
+          currentIssue = 1
+          currentYear++
+        }
+
+        const issueEnd = doubleIssueMap.get(currentIssue) ?? null
+        const hasChapter = issueChapterRate(currentIssue) >= 0.5
+        const key = `${currentYear}-${currentIssue}`
+        const entryDate = new Date(
+          currentDate.getTime() + daysPerIssue * 24 * 60 * 60 * 1000
+        )
+        const daysAway = Math.round(
+          (entryDate.getTime() - latestDate.getTime()) / (1000 * 60 * 60 * 24)
+        )
+
+        if (hasChapter) {
+          const chapterNum = latest.number + chaptersFound + 1
+          predictedMap.set(key, { type: 'chapter', chapterNum })
+          predictedSchedule.push({
+            type: 'chapter',
+            chapterNum,
+            issue: currentIssue,
+            issueEnd,
+            year: currentYear,
+            date: entryDate,
+            daysAway,
+          })
+          chaptersFound++
+        } else {
+          predictedMap.set(key, { type: 'break' })
+          predictedSchedule.push({
+            type: 'break',
+            issue: currentIssue,
+            issueEnd,
+            year: currentYear,
+            date: entryDate,
+            daysAway,
+          })
+        }
+        if (issueEnd != null) predictedDoubleMap.set(key, issueEnd)
+
+        if (issueEnd != null) currentIssue = issueEnd
+        currentDate = entryDate
+      }
+
+      return { predictedMap, predictedDoubleMap, predictedSchedule, predStats }
+    }, [releases])
 
   // Group chapters by year and Jump issue
   const yearData = useMemo(() => {
@@ -814,6 +887,102 @@ function ChapterReleaseCalendarPage() {
             )}
           />
         </div>
+
+        {/* Next 5 Chapters — Jump Issue Forecast */}
+        {predictedSchedule.length > 0 && (
+          <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+              Next 5 Chapters — Jump Issue Forecast
+            </h3>
+            <p className="text-xs text-gray-500 mb-4">
+              Based on {predStats.sampleSize} chapters over the last 3 years ·
+              avg {predStats.avgDays.toFixed(1)} days/chapter ·{' '}
+              {Math.round(predStats.breakRate * 100)}% break rate. Break weeks,
+              double issues, and dates are estimates.
+            </p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    <th className="px-4 py-2 text-left font-semibold text-gray-600">
+                      Chapter
+                    </th>
+                    <th className="px-4 py-2 text-left font-semibold text-gray-600">
+                      Jump Issue
+                    </th>
+                    <th className="px-4 py-2 text-left font-semibold text-gray-600">
+                      Est. Date
+                    </th>
+                    <th className="px-4 py-2 text-left font-semibold text-gray-600">
+                      Days Away
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {predictedSchedule.map((entry, idx) =>
+                    entry.type === 'chapter' ? (
+                      <tr
+                        key={`ch-${entry.chapterNum}`}
+                        className="border-b border-gray-100 hover:bg-blue-50/40 transition-colors"
+                      >
+                        <td className="px-4 py-3 font-semibold text-blue-700">
+                          Ch. {entry.chapterNum}
+                        </td>
+                        <td className="px-4 py-3 font-medium text-gray-900">
+                          {entry.year} Issue{' '}
+                          {entry.issueEnd != null
+                            ? `${entry.issue}–${entry.issueEnd}`
+                            : entry.issue}
+                          {entry.issueEnd != null && (
+                            <span className="ml-2 inline-block px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full">
+                              double
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-gray-800">
+                          {formatDate(entry.date)}
+                        </td>
+                        <td className="px-4 py-3 text-gray-500">
+                          {entry.daysAway <= 1
+                            ? 'Tomorrow'
+                            : `~${entry.daysAway}d`}
+                        </td>
+                      </tr>
+                    ) : (
+                      <tr
+                        key={`break-${idx}`}
+                        className="border-b border-gray-100 bg-gray-50/60"
+                      >
+                        <td className="px-4 py-2">
+                          <span className="inline-block px-2 py-0.5 text-xs font-medium bg-gray-200 text-gray-500 rounded-full">
+                            break
+                          </span>
+                        </td>
+                        <td className="px-4 py-2 text-gray-400 text-xs">
+                          {entry.year} Issue{' '}
+                          {entry.issueEnd != null
+                            ? `${entry.issue}–${entry.issueEnd}`
+                            : entry.issue}
+                          {entry.issueEnd != null && (
+                            <span className="ml-2 inline-block px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full">
+                              double
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2 text-gray-400 text-xs">
+                          {formatDate(entry.date)}
+                        </td>
+                        <td className="px-4 py-2 text-gray-400 text-xs">
+                          ~{entry.daysAway}d
+                        </td>
+                      </tr>
+                    )
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Chart Card */}
         <ChartCard
