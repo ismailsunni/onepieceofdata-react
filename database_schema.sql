@@ -52,6 +52,9 @@ CREATE TABLE public.character (
   haki_armament boolean,
   haki_conqueror boolean,
   bio text,
+  occupation text,
+  importance_score double precision,
+  importance_tier text,
   CONSTRAINT character_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.character_affiliation (
@@ -71,6 +74,12 @@ CREATE TABLE public.character_devil_fruit (
   fruit_sub_type text,
   is_artificial boolean NOT NULL,
   CONSTRAINT character_devil_fruit_pkey PRIMARY KEY (character_id, fruit_name)
+);
+CREATE TABLE public.character_occupation (
+  character_id text NOT NULL,
+  role text NOT NULL,
+  status text NOT NULL,
+  CONSTRAINT character_occupation_pkey PRIMARY KEY (character_id, role)
 );
 CREATE TABLE public.profiles (
   id uuid NOT NULL,

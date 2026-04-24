@@ -47,6 +47,8 @@ const AffiliationsPage = lazy(() => import('./pages/AffiliationsPage'))
 const AffiliationDetailPage = lazy(
   () => import('./pages/AffiliationDetailPage')
 )
+const OccupationsPage = lazy(() => import('./pages/OccupationsPage'))
+const OccupationDetailPage = lazy(() => import('./pages/OccupationDetailPage'))
 // Topic-based analytics pages
 const BountyTopicPage = lazy(() => import('./pages/analytics/BountyTopicPage'))
 const AppearancesTopicPage = lazy(
@@ -282,6 +284,14 @@ function App() {
                             <Route
                               path="/affiliations/:groupName"
                               element={<AffiliationDetailPage />}
+                            />
+                            <Route
+                              path="/occupations"
+                              element={<OccupationsPage />}
+                            />
+                            <Route
+                              path="/occupations/:role"
+                              element={<OccupationDetailPage />}
                             />
                             <Route
                               path="/devil-fruits"

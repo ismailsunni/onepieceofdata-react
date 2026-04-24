@@ -12,6 +12,7 @@ const EXPLORE_ITEMS: NavItem[] = [
   { to: '/volumes', label: 'Volumes' },
   { to: '/chapters', label: 'Chapters' },
   { to: '/affiliations', label: 'Affiliations' },
+  { to: '/occupations', label: 'Occupations' },
   { to: '/devil-fruits', label: 'Devil Fruits' },
 ]
 
@@ -85,6 +86,7 @@ function Navigation() {
     location.pathname.startsWith('/chapters') ||
     location.pathname.startsWith('/volumes') ||
     location.pathname.startsWith('/affiliations') ||
+    location.pathname.startsWith('/occupations') ||
     location.pathname.startsWith('/devil-fruits')
   const isAnalyticsActive = location.pathname.startsWith('/analytics')
   const isGamesActive = location.pathname.startsWith('/games')
