@@ -12,6 +12,7 @@ import {
   OnChangeFn,
   PaginationState,
   ColumnFiltersState,
+  VisibilityState,
   Column,
 } from '@tanstack/react-table'
 import { Character } from '../types/character'
@@ -220,9 +221,51 @@ const multiselectFilter = (
   return filterValue.includes(val)
 }
 
+const booleanFilter = (
+  row: { getValue: (id: string) => unknown },
+  columnId: string,
+  filterValue: string[]
+): boolean => {
+  if (!filterValue || filterValue.length === 0) return true
+  const val = row.getValue(columnId) ? 'Yes' : 'No'
+  return filterValue.includes(val)
+}
+
+const renderHakiCell = (has: boolean | null) =>
+  has ? (
+    <span
+      className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 text-amber-700 text-xs font-bold"
+      title="Yes"
+    >
+      ✓
+    </span>
+  ) : (
+    <span
+      className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-50 text-gray-300 text-xs"
+      title="No"
+    >
+      &ndash;
+    </span>
+  )
+
 // Column filter types
 type ColumnFilterMeta = {
-  filterType?: 'range' | 'multiselect'
+  filterType?: 'range' | 'multiselect' | 'boolean'
+  label?: string
+}
+
+const COLUMN_STORAGE_KEY = 'characters-column-visibility'
+
+const DEFAULT_COLUMN_VISIBILITY: VisibilityState = {
+  haki_observation: false,
+  haki_armament: false,
+  haki_conqueror: false,
+  volume_appearance_count: false,
+  arc_list: false,
+  birth_date: false,
+  blood_type: false,
+  chapter_appearance_pct: false,
+  volume_appearance_pct: false,
 }
 
 function CharacterTable({
@@ -238,6 +281,62 @@ function CharacterTable({
 }: CharacterTableProps) {
   const navigate = useNavigate()
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
+    () => {
+      try {
+        const stored = localStorage.getItem(COLUMN_STORAGE_KEY)
+        if (stored)
+          return { ...DEFAULT_COLUMN_VISIBILITY, ...JSON.parse(stored) }
+      } catch {
+        // ignore malformed storage
+      }
+      return DEFAULT_COLUMN_VISIBILITY
+    }
+  )
+  const [columnsMenuOpen, setColumnsMenuOpen] = useState(false)
+  const columnsMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(COLUMN_STORAGE_KEY, JSON.stringify(columnVisibility))
+    } catch {
+      // ignore quota errors
+    }
+  }, [columnVisibility])
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (
+        columnsMenuRef.current &&
+        !columnsMenuRef.current.contains(e.target as Node)
+      ) {
+        setColumnsMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  // Total chapters/volumes published (derived from max number seen across characters)
+  const { totalChapters, totalVolumes } = useMemo(() => {
+    let maxCh = 0
+    let maxVol = 0
+    for (const c of characters) {
+      if (c.chapter_list) {
+        for (const n of c.chapter_list) if (n > maxCh) maxCh = n
+      }
+      if (c.volume_list) {
+        for (const n of c.volume_list) if (n > maxVol) maxVol = n
+      }
+    }
+    return { totalChapters: maxCh, totalVolumes: maxVol }
+  }, [characters])
+
+  const formatPct = (count: number | null | undefined, total: number) => {
+    if (!count || !total) return '-'
+    const pct = (count / total) * 100
+    return pct >= 10 ? `${pct.toFixed(1)}%` : `${pct.toFixed(2)}%`
+  }
 
   // Create arc lookup map
   const arcMap = useMemo(() => {
@@ -318,12 +417,15 @@ function CharacterTable({
                 : undefined
             }
           >
-            Appearances
+            Appearance Count
           </span>
         ),
         cell: (info) => info.getValue() || '-',
         filterFn: rangeFilter as never,
-        meta: { filterType: 'range' } as ColumnFilterMeta,
+        meta: {
+          filterType: 'range',
+          label: 'Appearance Count',
+        } as ColumnFilterMeta,
       }),
       columnHelper.accessor('saga_list', {
         header: 'Sagas',
@@ -378,6 +480,76 @@ function CharacterTable({
           )
         },
       }),
+      columnHelper.accessor('last_appearance', {
+        header: 'Last App.',
+        cell: (info) => {
+          const chapter = info.getValue()
+          const character = info.row.original
+          if (!chapter) return '-'
+          let arcName = ''
+          if (character.arc_list && character.arc_list.length > 0) {
+            const lastArcId = character.arc_list[character.arc_list.length - 1]
+            arcName = arcMap.get(lastArcId) || ''
+          }
+          return (
+            <div className="flex flex-col">
+              <span>Ch. {chapter}</span>
+              {arcName && (
+                <span className="text-xs text-gray-500 mt-0.5">{arcName}</span>
+              )}
+            </div>
+          )
+        },
+        filterFn: rangeFilter as never,
+        meta: {
+          filterType: 'range',
+          label: 'Last Appearance',
+        } as ColumnFilterMeta,
+      }),
+      columnHelper.accessor('volume_appearance_count', {
+        header: 'Volumes',
+        cell: (info) => info.getValue() || '-',
+        filterFn: rangeFilter as never,
+        meta: {
+          filterType: 'range',
+          label: 'Volume Count',
+        } as ColumnFilterMeta,
+      }),
+      columnHelper.accessor(
+        (row) =>
+          totalChapters && row.appearance_count
+            ? row.appearance_count / totalChapters
+            : 0,
+        {
+          id: 'chapter_appearance_pct',
+          header: 'Chapter %',
+          cell: (info) =>
+            formatPct(info.row.original.appearance_count, totalChapters),
+          meta: { label: 'Chapter Appearance %' } as ColumnFilterMeta,
+        }
+      ),
+      columnHelper.accessor(
+        (row) =>
+          totalVolumes && row.volume_appearance_count
+            ? row.volume_appearance_count / totalVolumes
+            : 0,
+        {
+          id: 'volume_appearance_pct',
+          header: 'Volume %',
+          cell: (info) =>
+            formatPct(info.row.original.volume_appearance_count, totalVolumes),
+          meta: { label: 'Volume Appearance %' } as ColumnFilterMeta,
+        }
+      ),
+      columnHelper.accessor('arc_list', {
+        header: 'Arcs',
+        cell: (info) => info.getValue()?.length || '-',
+        sortingFn: (a, b) =>
+          (a.original.arc_list?.length ?? 0) -
+          (b.original.arc_list?.length ?? 0),
+        filterFn: rangeFilter as never,
+        meta: { filterType: 'range', label: 'Arc Count' } as ColumnFilterMeta,
+      }),
       columnHelper.accessor('bounty', {
         header: 'Bounty',
         cell: (info) => {
@@ -393,14 +565,45 @@ function CharacterTable({
         filterFn: rangeFilter as never,
         meta: { filterType: 'range' } as ColumnFilterMeta,
       }),
+      columnHelper.accessor('birth_date', {
+        header: 'Birth Date',
+        cell: (info) => info.getValue() || '-',
+      }),
       columnHelper.accessor('blood_type', {
         header: 'Blood Type',
         cell: (info) => info.getValue() || '-',
         filterFn: multiselectFilter as never,
         meta: { filterType: 'multiselect' } as ColumnFilterMeta,
       }),
+      columnHelper.accessor('haki_observation', {
+        header: 'Observation',
+        cell: (info) => renderHakiCell(info.getValue()),
+        sortingFn: (a, b) =>
+          (a.original.haki_observation ? 1 : 0) -
+          (b.original.haki_observation ? 1 : 0),
+        filterFn: booleanFilter as never,
+        meta: { filterType: 'boolean' } as ColumnFilterMeta,
+      }),
+      columnHelper.accessor('haki_armament', {
+        header: 'Armament',
+        cell: (info) => renderHakiCell(info.getValue()),
+        sortingFn: (a, b) =>
+          (a.original.haki_armament ? 1 : 0) -
+          (b.original.haki_armament ? 1 : 0),
+        filterFn: booleanFilter as never,
+        meta: { filterType: 'boolean' } as ColumnFilterMeta,
+      }),
+      columnHelper.accessor('haki_conqueror', {
+        header: 'Conqueror',
+        cell: (info) => renderHakiCell(info.getValue()),
+        sortingFn: (a, b) =>
+          (a.original.haki_conqueror ? 1 : 0) -
+          (b.original.haki_conqueror ? 1 : 0),
+        filterFn: booleanFilter as never,
+        meta: { filterType: 'boolean' } as ColumnFilterMeta,
+      }),
     ],
-    [arcMap, isFiltered]
+    [arcMap, isFiltered, totalChapters, totalVolumes]
   )
 
   // Create table instance
@@ -412,11 +615,13 @@ function CharacterTable({
       globalFilter,
       pagination,
       columnFilters,
+      columnVisibility,
     },
     onSortingChange,
     onGlobalFilterChange,
     onPaginationChange,
     onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -450,6 +655,15 @@ function CharacterTable({
               onPaginationChange((p) => ({ ...p, pageIndex: 0 }))
             }}
           />
+        ) : meta.filterType === 'boolean' ? (
+          <MultiSelectFilterContent
+            options={['Yes', 'No']}
+            selected={(header.column.getFilterValue() as string[]) ?? []}
+            onChange={(val) => {
+              header.column.setFilterValue(val.length === 0 ? undefined : val)
+              onPaginationChange((p) => ({ ...p, pageIndex: 0 }))
+            }}
+          />
         ) : (
           <MultiSelectFilterContent
             options={
@@ -466,8 +680,110 @@ function CharacterTable({
     )
   }
 
+  const hiddenCount = table
+    .getAllLeafColumns()
+    .filter((c) => !c.getIsVisible()).length
+
+  const getColumnLabel = (col: Column<Character, unknown>) => {
+    const metaLabel = (col.columnDef.meta as ColumnFilterMeta | undefined)
+      ?.label
+    if (metaLabel) return metaLabel
+    if (typeof col.columnDef.header === 'string') return col.columnDef.header
+    return col.id
+  }
+
+  const isDefaultVisibility =
+    JSON.stringify(columnVisibility) ===
+    JSON.stringify(DEFAULT_COLUMN_VISIBILITY)
+
   return (
     <div className="overflow-x-auto">
+      {/* Toolbar */}
+      <div className="px-4 py-2 flex items-center justify-end gap-2 border-b border-gray-100">
+        <div ref={columnsMenuRef} className="relative">
+          <button
+            onClick={() => setColumnsMenuOpen((v) => !v)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 10h16M4 14h16M4 18h16"
+              />
+            </svg>
+            Columns
+            {hiddenCount > 0 && (
+              <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-blue-100 text-blue-700 rounded-full">
+                {hiddenCount} hidden
+              </span>
+            )}
+          </button>
+          {columnsMenuOpen && (
+            <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-30 p-3 min-w-[200px]">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-medium text-gray-500 uppercase">
+                  Show columns
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() =>
+                      table
+                        .getAllLeafColumns()
+                        .forEach((c) => c.toggleVisibility(true))
+                    }
+                    className="text-xs text-blue-600 hover:text-blue-800"
+                  >
+                    Show all
+                  </button>
+                  <button
+                    onClick={() =>
+                      table
+                        .getAllLeafColumns()
+                        .forEach((c) => c.toggleVisibility(c.id === 'name'))
+                    }
+                    className="text-xs text-blue-600 hover:text-blue-800"
+                  >
+                    Hide all
+                  </button>
+                  <button
+                    onClick={() =>
+                      setColumnVisibility(DEFAULT_COLUMN_VISIBILITY)
+                    }
+                    disabled={isDefaultVisibility}
+                    className="text-xs text-gray-500 hover:text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-0.5 max-h-64 overflow-auto">
+                {table.getAllLeafColumns().map((col) => (
+                  <label
+                    key={col.id}
+                    className="flex items-center gap-2 px-2 py-1.5 rounded text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={col.getIsVisible()}
+                      onChange={col.getToggleVisibilityHandler()}
+                      className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    {getColumnLabel(col)}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Active filters summary */}
       {columnFilters.length > 0 && (
         <div className="px-4 py-2 bg-blue-50 border-b border-blue-100 flex items-center gap-2 flex-wrap">
@@ -476,10 +792,7 @@ function CharacterTable({
           </span>
           {columnFilters.map((f) => {
             const col = table.getColumn(f.id)
-            const headerText =
-              typeof col?.columnDef.header === 'string'
-                ? col.columnDef.header
-                : f.id
+            const headerText = col ? getColumnLabel(col) : f.id
             return (
               <span
                 key={f.id}
