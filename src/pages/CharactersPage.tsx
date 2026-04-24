@@ -10,26 +10,36 @@ import { CACHE } from '../constants/cache'
 import { PAGINATION } from '../constants/pagination'
 import { MultiSelectCombobox } from '../components/common/MultiSelectCombobox'
 import { RangeSlider } from '../components/common/RangeSlider'
+import { usePersistedState } from '../hooks/usePersistedState'
 
 function CharactersPage() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: 'appearance_count', desc: true },
-  ])
+  const [sorting, setSorting] = usePersistedState<SortingState>(
+    'characters-sorting',
+    [{ id: 'appearance_count', desc: true }]
+  )
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: PAGINATION.DEFAULT_PAGE_INDEX,
     pageSize: PAGINATION.DEFAULT_PAGE_SIZE,
   })
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const [filterMode, setFilterMode] = useState<
+  const [filterMode, setFilterMode] = usePersistedState<
     'timeskip' | 'saga' | 'arc' | 'chapter'
-  >('timeskip')
-  const [selectedSagaTitles, setSelectedSagaTitles] = useState<string[]>([])
-  const [selectedArcTitles, setSelectedArcTitles] = useState<string[]>([])
-  const [selectedTimeSkip, setSelectedTimeSkip] = useState<string[]>([])
-  const [chapterRange, setChapterRange] = useState<[number, number] | null>(
-    null
+  >('characters-filter-mode', 'timeskip')
+  const [selectedSagaTitles, setSelectedSagaTitles] = usePersistedState<
+    string[]
+  >('characters-filter-sagas', [])
+  const [selectedArcTitles, setSelectedArcTitles] = usePersistedState<string[]>(
+    'characters-filter-arcs',
+    []
   )
+  const [selectedTimeSkip, setSelectedTimeSkip] = usePersistedState<string[]>(
+    'characters-filter-timeskip',
+    []
+  )
+  const [chapterRange, setChapterRange] = usePersistedState<
+    [number, number] | null
+  >('characters-filter-chapter-range', null)
 
   const TIME_SKIP_CHAPTER = 598
 

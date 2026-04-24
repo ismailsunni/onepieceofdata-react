@@ -17,6 +17,7 @@ import {
 } from '@tanstack/react-table'
 import { Character } from '../types/character'
 import { Arc } from '../types/arc'
+import { usePersistedState } from '../hooks/usePersistedState'
 
 /* ── Filter popover wrapper ── */
 
@@ -280,29 +281,15 @@ function CharacterTable({
   isFiltered = false,
 }: CharacterTableProps) {
   const navigate = useNavigate()
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
-    () => {
-      try {
-        const stored = localStorage.getItem(COLUMN_STORAGE_KEY)
-        if (stored)
-          return { ...DEFAULT_COLUMN_VISIBILITY, ...JSON.parse(stored) }
-      } catch {
-        // ignore malformed storage
-      }
-      return DEFAULT_COLUMN_VISIBILITY
-    }
-  )
+  const [columnFilters, setColumnFilters] =
+    usePersistedState<ColumnFiltersState>('characters-column-filters', [])
+  const [columnVisibility, setColumnVisibility] =
+    usePersistedState<VisibilityState>(
+      COLUMN_STORAGE_KEY,
+      DEFAULT_COLUMN_VISIBILITY
+    )
   const [columnsMenuOpen, setColumnsMenuOpen] = useState(false)
   const columnsMenuRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(COLUMN_STORAGE_KEY, JSON.stringify(columnVisibility))
-    } catch {
-      // ignore quota errors
-    }
-  }, [columnVisibility])
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
