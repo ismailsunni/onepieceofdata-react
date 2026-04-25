@@ -186,6 +186,7 @@ function MultiSelectFilterContent({
 interface CharacterTableProps {
   characters: Character[]
   arcs: Arc[]
+  devilFruitsByCharacter?: Map<string, string[]>
   sorting: SortingState
   onSortingChange: OnChangeFn<SortingState>
   globalFilter: string
@@ -267,11 +268,13 @@ const DEFAULT_COLUMN_VISIBILITY: VisibilityState = {
   blood_type: false,
   chapter_appearance_pct: false,
   volume_appearance_pct: false,
+  devil_fruit: false,
 }
 
 function CharacterTable({
   characters,
   arcs,
+  devilFruitsByCharacter,
   sorting,
   onSortingChange,
   globalFilter,
@@ -562,6 +565,30 @@ function CharacterTable({
         filterFn: multiselectFilter as never,
         meta: { filterType: 'multiselect' } as ColumnFilterMeta,
       }),
+      columnHelper.accessor(
+        (row) => devilFruitsByCharacter?.get(row.id)?.join(', ') ?? '',
+        {
+          id: 'devil_fruit',
+          header: 'Devil Fruit',
+          cell: (info) => {
+            const fruits = devilFruitsByCharacter?.get(info.row.original.id)
+            if (!fruits || fruits.length === 0) return '-'
+            return (
+              <div className="flex flex-wrap gap-1">
+                {fruits.map((f) => (
+                  <span
+                    key={f}
+                    className="inline-block px-1.5 py-0.5 rounded text-[11px] font-medium bg-purple-50 text-purple-700"
+                  >
+                    {f}
+                  </span>
+                ))}
+              </div>
+            )
+          },
+          meta: { label: 'Devil Fruit' } as ColumnFilterMeta,
+        }
+      ),
       columnHelper.accessor('haki_observation', {
         header: 'Observation',
         cell: (info) => renderHakiCell(info.getValue()),
@@ -590,7 +617,7 @@ function CharacterTable({
         meta: { filterType: 'boolean' } as ColumnFilterMeta,
       }),
     ],
-    [arcMap, isFiltered, totalChapters, totalVolumes]
+    [arcMap, isFiltered, totalChapters, totalVolumes, devilFruitsByCharacter]
   )
 
   // Create table instance

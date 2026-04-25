@@ -2,6 +2,7 @@ import { useState, useMemo, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { fetchCharacters } from '../services/characterService'
+import { fetchAllDevilFruits } from '../services/devilFruitService'
 import type { Character } from '../types/character'
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -38,7 +39,11 @@ interface CompareCategory {
   fields: CompareField[]
 }
 
-const CATEGORIES: CompareCategory[] = [
+const yesNo = (b: boolean | null) => (b ? 'Yes' : '—')
+
+const buildCategories = (
+  devilFruitsByCharacter: Map<string, string[]>
+): CompareCategory[] => [
   {
     heading: 'Identity',
     fields: [
@@ -75,6 +80,29 @@ const CATEGORIES: CompareCategory[] = [
         type: 'numeric',
         label: 'Bounty Count',
         getValue: (c) => countBounties(c.bounties),
+      },
+      {
+        type: 'identity',
+        label: 'Devil Fruit',
+        getValue: (c) => {
+          const fruits = devilFruitsByCharacter.get(c.id)
+          return fruits && fruits.length > 0 ? fruits.join(', ') : '—'
+        },
+      },
+      {
+        type: 'identity',
+        label: 'Observation Haki',
+        getValue: (c) => yesNo(c.haki_observation),
+      },
+      {
+        type: 'identity',
+        label: 'Armament Haki',
+        getValue: (c) => yesNo(c.haki_armament),
+      },
+      {
+        type: 'identity',
+        label: 'Conqueror Haki',
+        getValue: (c) => yesNo(c.haki_conqueror),
       },
     ],
   },
@@ -356,6 +384,30 @@ function CharacterComparePage() {
     queryFn: fetchCharacters,
   })
 
+  const { data: devilFruits = [] } = useQuery({
+    queryKey: ['all-devil-fruits'],
+    queryFn: fetchAllDevilFruits,
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const devilFruitsByCharacter = useMemo(() => {
+    const map = new Map<string, string[]>()
+    for (const df of devilFruits) {
+      const existing = map.get(df.character_id)
+      if (existing) {
+        if (!existing.includes(df.fruit_name)) existing.push(df.fruit_name)
+      } else {
+        map.set(df.character_id, [df.fruit_name])
+      }
+    }
+    return map
+  }, [devilFruits])
+
+  const categories = useMemo(
+    () => buildCategories(devilFruitsByCharacter),
+    [devilFruitsByCharacter]
+  )
+
   // Compute a stable random pair once characters are loaded
   const randomPair = useMemo(() => {
     if (characters.length === 0) return null
@@ -502,7 +554,7 @@ function CharacterComparePage() {
               </div>
             </div>
 
-            {CATEGORIES.map((cat) => (
+            {categories.map((cat) => (
               <div key={cat.heading}>
                 {/* Category separator */}
                 <div className="bg-amber-50 px-4 py-2 text-xs font-bold uppercase tracking-widest text-amber-700 border-b border-amber-100">

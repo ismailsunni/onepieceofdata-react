@@ -6,6 +6,7 @@ import CharacterTable from '../components/CharacterTable'
 import { fetchCharacters } from '../services/characterService'
 import { fetchArcs } from '../services/arcService'
 import { fetchSagas } from '../services/sagaService'
+import { fetchAllDevilFruits } from '../services/devilFruitService'
 import { CACHE } from '../constants/cache'
 import { PAGINATION } from '../constants/pagination'
 import { MultiSelectCombobox } from '../components/common/MultiSelectCombobox'
@@ -67,6 +68,26 @@ function CharactersPage() {
     staleTime: CACHE.REFERENCE_STALE,
     gcTime: CACHE.REFERENCE_GC,
   })
+
+  const { data: devilFruits = [] } = useQuery({
+    queryKey: ['all-devil-fruits'],
+    queryFn: fetchAllDevilFruits,
+    staleTime: CACHE.REFERENCE_STALE,
+    gcTime: CACHE.REFERENCE_GC,
+  })
+
+  const devilFruitsByCharacter = useMemo(() => {
+    const map = new Map<string, string[]>()
+    for (const df of devilFruits) {
+      const existing = map.get(df.character_id)
+      if (existing) {
+        if (!existing.includes(df.fruit_name)) existing.push(df.fruit_name)
+      } else {
+        map.set(df.character_id, [df.fruit_name])
+      }
+    }
+    return map
+  }, [devilFruits])
 
   // Build saga mappings: title↔id and title→chapter range
   const { sagaTitleToId, sagaTitles, sagaTitleToRange } = useMemo(() => {
@@ -662,6 +683,7 @@ function CharactersPage() {
             <CharacterTable
               characters={filteredCharacters}
               arcs={arcs}
+              devilFruitsByCharacter={devilFruitsByCharacter}
               sorting={sorting}
               onSortingChange={setSorting}
               globalFilter={globalFilter}
