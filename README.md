@@ -1,108 +1,103 @@
-# One Piece of Data - React
+# One Piece of Data
 
-A modern React-based data exploration application for the One Piece universe.
+A data-exploration site for the One Piece universe — characters, arcs, devil fruits, haki, occupations, affiliations, and analytics — built with React and Supabase.
+
+🌐 **Live:** https://ismailsunni.github.io/onepieceofdata-react/
 
 ## Features
 
-- 🎨 Built with React 18 and TypeScript
-- 💨 Powered by Vite for fast development
-- 🎯 Styled with TailwindCSS
-- ✅ ESLint and Prettier for code quality
-- 📦 Ready for GitHub Pages deployment
+### Explore
+
+- **Characters** — sortable/filterable table with persisted column visibility, advanced filters by saga / arc / chapter / time-skip, and detail pages with bio, appearances, devil fruit, haki, affiliations, and occupations
+- **Devil Fruits** — merged by name + model, with paginated list, type/sub-type filters, and all known users per fruit
+- **Affiliations** & **Occupations** — group/role rosters with status breakdowns and example holders
+- **Sagas / Arcs / Volumes / Chapters** — cross-linked detail pages with featured character portraits
+
+### Analytics
+
+- Topic dashboards: bounty, appearances, demographics, story, character rankings, affiliations, data quality
+- Interactive tools: character compare, character network, timeline, word cloud, appearance race, release predictor
+- Per-character calendar with appearance streaks and Jump-issue release forecasting
+
+### Games
+
+- **Guess the Character** (image quiz) and **Who Am I?** (progressive hints) — local stats, score tiers, shareable result images
+
+### Other
+
+- Global search with real-time results
+- AI chat assistant
+- Embeddable insight charts (`/embed/insights/:chartId`)
+
+## Tech Stack
+
+- **React 19** + TypeScript, **Vite**
+- **React Router v7** (HashRouter for GitHub Pages)
+- **TanStack Query** (data fetching) and **TanStack Table** (tables)
+- **TailwindCSS v4** + Headless UI + Radix
+- **Recharts**, **Sigma.js** + Graphology, **vis-network**
+- **Supabase** (PostgreSQL backend)
+- **Vitest** + React Testing Library
+- ESLint, Prettier, Husky pre-commit hooks
+- Deployed via GitHub Actions to GitHub Pages
 
 ## Getting Started
 
-### Prerequisites
-
-- Node.js 18 or higher
-- npm or yarn
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone <your-repo-url>
-cd onepieceofdata-react
-```
-
-2. Install dependencies:
 ```bash
 npm install
-```
-
-3. Start the development server:
-```bash
+cp .env.local.example .env.local  # then fill in Supabase credentials
 npm run dev
 ```
 
-The app will be available at `http://localhost:5173`
+App runs at `http://localhost:5173`.
 
-## Available Scripts
+### Environment
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build locally
-- `npm run lint` - Run ESLint
-- `npm run format` - Format code with Prettier
+Create `.env.local`:
+
+```env
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_ANON_KEY=...
+```
+
+## Scripts
+
+| Command                 | Description                      |
+| ----------------------- | -------------------------------- |
+| `npm run dev`           | Start dev server                 |
+| `npm run build`         | Production build                 |
+| `npm run preview`       | Preview production build locally |
+| `npm test`              | Run Vitest                       |
+| `npm run test:watch`    | Vitest in watch mode             |
+| `npm run test:coverage` | Vitest with coverage             |
+| `npm run lint`          | ESLint                           |
+| `npm run format`        | Prettier                         |
 
 ## Project Structure
 
 ```
 src/
-├── components/     # Reusable React components
-├── styles/         # CSS and styling files
-├── App.tsx         # Main application component
-├── main.tsx        # Application entry point
-└── index.css       # Global styles with Tailwind directives
+├── pages/          # Route-level pages (page-based architecture)
+├── components/     # Shared UI (analytics/, common/, navigation/)
+├── services/       # Supabase clients and data services
+├── hooks/          # Custom hooks
+├── contexts/       # React Context providers
+├── types/          # TypeScript types
+├── utils/          # Helpers
+└── constants/      # Shared constants
 ```
 
-## Tech Stack
-
-- **React** - UI library
-- **TypeScript** - Type safety
-- **Vite** - Build tool and dev server
-- **TailwindCSS** - Utility-first CSS framework
-- **ESLint** - Code linting
-- **Prettier** - Code formatting
+See `CLAUDE.md` for architecture, design system, and contribution conventions.
 
 ## Deployment
 
-This project uses **GitHub Actions** for automatic deployment to GitHub Pages.
+Every push to `master` triggers a GitHub Actions workflow that builds and deploys to GitHub Pages.
 
-### Automatic Deployment
+First-time setup: **Settings → Pages → Source: GitHub Actions**.
 
-Every push to the `master` branch automatically triggers a deployment. The workflow:
-1. Checks out your code
-2. Installs dependencies
-3. Builds the production bundle
-4. Deploys to GitHub Pages
+## Data Source & Attribution
 
-### First-Time Setup
-
-To enable GitHub Pages, you need to configure it once in your repository:
-
-1. Go to your repository on GitHub
-2. Click **Settings** → **Pages**
-3. Under **Source**, select **GitHub Actions**
-4. The site will be available at: `https://ismailsunni.github.io/onepieceofdata-react/`
-
-That's it! Every future push to `master` will automatically deploy your changes.
-
-## Learning React
-
-This project structure is beginner-friendly and demonstrates:
-
-- **Component-based architecture** - See `Header.tsx` and `Card.tsx`
-- **Props and TypeScript interfaces** - Check the `Card` component
-- **TailwindCSS styling** - Utility classes for responsive design
-- **Project organization** - Clean folder structure
-
-## Next Steps
-
-- Add routing with React Router
-- Integrate with Supabase for data
-- Create data tables with TanStack Table
-- Add data visualization with Recharts
+Character, arc, and chapter data is scraped from the [One Piece Fandom Wiki](https://onepiece.fandom.com/) and used under fair use for non-commercial educational purposes. One Piece is © Eiichiro Oda / Shueisha / Toei Animation.
 
 ## License
 
