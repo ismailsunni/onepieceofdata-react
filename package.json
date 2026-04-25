@@ -74,8 +74,8 @@
     "@types/d3-cloud": "^1.2.9",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
-    "@vitejs/plugin-react": "^5.1.0",
-    "@vitest/coverage-v8": "^4.1.4",
+    "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/coverage-v8": "^4.1.5",
     "autoprefixer": "^10.5.0",
     "baseline-browser-mapping": "^2.9.15",
     "eslint": "^9.39.1",
@@ -93,7 +93,7 @@
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.4",
-    "vite": "^7.2.2",
+    "vite": "^8.0.10",
     "vitest": "^4.0.18"
   }
 }
