@@ -2,7 +2,7 @@
 
 A data-exploration site for the One Piece universe — characters, arcs, devil fruits, haki, occupations, affiliations, and analytics — built with React and Supabase.
 
-🌐 **Live:** https://ismailsunni.github.io/onepieceofdata-react/
+🌐 **Live:** https://onepieceofdata.com
 
 ## Features
 
@@ -101,4 +101,6 @@ Character, arc, and chapter data is scraped from the [One Piece Fandom Wiki](htt
 
 ## License
 
-ISC
+[GNU Affero General Public License v3.0 or later](LICENSE) (AGPL-3.0-or-later).
+
+This is a strong copyleft license: you may use, modify, and redistribute the code, but any modified version — including one hosted as a network service — must be released under the same license with its source available.
