@@ -81,6 +81,26 @@ CREATE TABLE public.character_occupation (
   status text NOT NULL,
   CONSTRAINT character_occupation_pkey PRIMARY KEY (character_id, role)
 );
+CREATE TABLE public.graph_edges (
+  id integer NOT NULL,
+  subject_id integer NOT NULL,
+  relation text NOT NULL,
+  object_id integer NOT NULL,
+  evidence_chapter integer,
+  evidence_text text,
+  confidence double precision,
+  source_extraction_id integer,
+  CONSTRAINT graph_edges_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.graph_nodes (
+  id integer NOT NULL,
+  type text NOT NULL,
+  canonical_name text NOT NULL,
+  aliases ARRAY,
+  source_table text,
+  source_id text,
+  CONSTRAINT graph_nodes_pkey PRIMARY KEY (id)
+);
 CREATE TABLE public.profiles (
   id uuid NOT NULL,
   full_name text DEFAULT (chr(39) || chr(39)),

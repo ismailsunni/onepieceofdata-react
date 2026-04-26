@@ -32,6 +32,7 @@ const ChapterReleasePredictorPage = lazy(
   () => import('./pages/ChapterReleasePredictorPage')
 )
 const NetworkAnalysisPage = lazy(() => import('./pages/NetworkAnalysisPage'))
+const StoryGraphPage = lazy(() => import('./pages/StoryGraphPage'))
 const CharacterWordCloudPage = lazy(
   () => import('./pages/CharacterWordCloudPage')
 )
@@ -182,6 +183,10 @@ function App() {
                             <Route
                               path="/analytics/network"
                               element={<NetworkAnalysisPage />}
+                            />
+                            <Route
+                              path="/analytics/story-graph"
+                              element={<StoryGraphPage />}
                             />
                             <Route
                               path="/analytics/character-timeline"
