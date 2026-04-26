@@ -260,6 +260,31 @@ function AnalyticsPage() {
       iconColor: 'text-indigo-600',
     },
     {
+      title: 'Story Graph',
+      description:
+        'LLM-extracted relationship network: who fought whom, allies, enemies, family, and crew across the full story',
+      path: '/analytics/story-graph',
+      icon: (
+        <svg
+          className="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.24 17 7c1 2-.5 4 .657 5.657z"
+          />
+        </svg>
+      ),
+      gradient: 'from-fuchsia-500 to-purple-600',
+      bgColor: 'bg-fuchsia-50',
+      borderColor: 'border-fuchsia-200',
+      iconColor: 'text-fuchsia-600',
+    },
+    {
       title: 'Character Timeline',
       description:
         'Compare chapter appearance timelines for multiple characters side by side with preset groups',

@@ -44,6 +44,12 @@ const ANALYTICS_ITEMS: NavItem[] = [
   },
   { to: '/analytics/network', label: 'Character Network', exact: true },
   {
+    to: '/analytics/story-graph',
+    label: 'Story Graph',
+    exact: true,
+    badge: 'beta',
+  },
+  {
     to: '/analytics/character-timeline',
     label: 'Character Timeline',
     exact: true,
