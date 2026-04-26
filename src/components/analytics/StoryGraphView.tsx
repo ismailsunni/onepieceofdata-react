@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Network, DataSet } from 'vis-network/standalone'
 import { fetchStoryGraph } from '../../services/storyGraphService'
 import { GraphEdge, GraphNode } from '../../types/storyGraph'
+import SortableTable, { Column } from '../common/SortableTable'
 
 // ─── Visual encodings ────────────────────────────────────────────────────────
 
@@ -113,6 +114,9 @@ export function StoryGraphView() {
   const [search, setSearch] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
+  const [edgeSearch, setEdgeSearch] = useState('')
+  const [edgeSearchOpen, setEdgeSearchOpen] = useState(false)
+  const edgeSearchRef = useRef<HTMLDivElement>(null)
   const [selectedEdge, setSelectedEdge] = useState<GraphEdge | null>(null)
   const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null)
 
@@ -314,10 +318,78 @@ export function StoryGraphView() {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
         setSearchOpen(false)
       }
+      if (
+        edgeSearchRef.current &&
+        !edgeSearchRef.current.contains(e.target as Node)
+      ) {
+        setEdgeSearchOpen(false)
+      }
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
+
+  // ─── Imperative graph actions ──────────────────────────────────────────
+
+  /** Highlight an edge in the network and pan to it. */
+  const selectEdgeInGraph = useCallback((edge: GraphEdge) => {
+    const net = networkRef.current
+    if (!net) return
+    net.unselectAll()
+    net.selectEdges([edge.id])
+    // Pan to the midpoint of the two endpoints by focusing one and zooming.
+    net.focus(edge.subject_id, { scale: 1.4, animation: true })
+    setSelectedEdge(edge)
+    setSelectedNodeId(null)
+  }, [])
+
+  // ─── Edge search (target node already in the visible subgraph) ─────────
+
+  /** Nodes that have at least one visible edge with the focus node. */
+  const focusNeighbors = useMemo(() => {
+    if (focusId == null || !data) return new Map<number, GraphEdge[]>()
+    const m = new Map<number, GraphEdge[]>()
+    for (const e of visibleEdges) {
+      let other: number | null = null
+      if (e.subject_id === focusId) other = e.object_id
+      else if (e.object_id === focusId) other = e.subject_id
+      if (other == null) continue
+      const list = m.get(other) ?? []
+      list.push(e)
+      m.set(other, list)
+    }
+    return m
+  }, [visibleEdges, focusId, data])
+
+  const edgeSearchResults = useMemo(() => {
+    if (!edgeSearch.trim() || focusNeighbors.size === 0) return []
+    const q = edgeSearch.toLowerCase()
+    const out: { node: GraphNode; edges: GraphEdge[] }[] = []
+    for (const [nodeId, edges] of focusNeighbors) {
+      const node = nodesById.get(nodeId)
+      if (!node) continue
+      const matches =
+        node.canonical_name.toLowerCase().includes(q) ||
+        (node.aliases ?? []).some((a) => a.toLowerCase().includes(q))
+      if (matches) out.push({ node, edges })
+    }
+    out.sort((a, b) => b.edges.length - a.edges.length)
+    return out.slice(0, 12)
+  }, [edgeSearch, focusNeighbors, nodesById])
+
+  /** Pick the highest-confidence edge between focus and target, then highlight. */
+  const pickEdgeTarget = useCallback(
+    (entry: { node: GraphNode; edges: GraphEdge[] }) => {
+      const sorted = [...entry.edges].sort(
+        (a, b) => b.confidence - a.confidence
+      )
+      const best = sorted[0]
+      if (best) selectEdgeInGraph(best)
+      setEdgeSearch('')
+      setEdgeSearchOpen(false)
+    },
+    [selectEdgeInGraph]
+  )
 
   // ─── Selected detail ──────────────────────────────────────────────────
   const selectedNodeInfo = useMemo(() => {
@@ -374,6 +446,60 @@ export function StoryGraphView() {
                   <span className="ml-2 text-xs text-gray-400 flex-shrink-0">
                     {n.type}
                   </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Edge target search — find an edge between the focus and another node */}
+        <div ref={edgeSearchRef} className="relative">
+          <label className="block text-xs font-medium text-gray-600 mb-1">
+            Highlight edge to
+          </label>
+          <input
+            type="text"
+            placeholder={
+              focusNeighbors.size === 0
+                ? 'no neighbors visible'
+                : `${focusNeighbors.size} connected…`
+            }
+            value={edgeSearch}
+            onChange={(e) => {
+              setEdgeSearch(e.target.value)
+              setEdgeSearchOpen(true)
+            }}
+            onFocus={() => edgeSearch.trim() && setEdgeSearchOpen(true)}
+            disabled={focusNeighbors.size === 0}
+            className="w-56 px-3 py-1.5 border border-gray-300 rounded-lg text-sm placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-50 disabled:text-gray-400"
+            aria-label="Search a node connected to the focus to highlight that edge"
+          />
+          {edgeSearchOpen && edgeSearchResults.length > 0 && (
+            <div className="absolute z-20 mt-1 w-80 bg-white border border-gray-200 rounded-lg shadow-lg max-h-72 overflow-y-auto">
+              {edgeSearchResults.map((entry) => (
+                <button
+                  key={entry.node.id}
+                  onClick={() => pickEdgeTarget(entry)}
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="truncate text-gray-900 font-medium">
+                      {entry.node.canonical_name}
+                    </span>
+                    <span className="ml-2 text-xs text-gray-400 flex-shrink-0">
+                      {entry.edges.length}{' '}
+                      {entry.edges.length === 1 ? 'edge' : 'edges'}
+                    </span>
+                  </div>
+                  <div className="mt-1 text-xs text-gray-500 truncate">
+                    {entry.edges
+                      .slice(0, 3)
+                      .map((e) => e.relation)
+                      .join(', ')}
+                    {entry.edges.length > 3
+                      ? ` +${entry.edges.length - 3}`
+                      : ''}
+                  </div>
                 </button>
               ))}
             </div>
@@ -631,6 +757,136 @@ export function StoryGraphView() {
           </div>
         </aside>
       </div>
+
+      {/* Edge table */}
+      <div className="mt-8">
+        <div className="flex items-end justify-between mb-3">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Visible edges
+            </h2>
+            <p className="text-sm text-gray-500">
+              Click a row to zoom in on that edge in the graph above. Sortable
+              columns.
+            </p>
+          </div>
+          <div className="text-sm text-gray-500">
+            {visibleEdges.length.toLocaleString()} rows
+          </div>
+        </div>
+        <EdgeTable
+          edges={visibleEdges}
+          nodesById={nodesById}
+          selectedEdgeId={selectedEdge?.id ?? null}
+          onRowClick={selectEdgeInGraph}
+        />
+      </div>
     </>
+  )
+}
+
+// ─── Edge table ────────────────────────────────────────────────────────────
+
+interface EdgeRow {
+  edge: GraphEdge
+  subject: string
+  object: string
+}
+
+function EdgeTable({
+  edges,
+  nodesById,
+  selectedEdgeId,
+  onRowClick,
+}: {
+  edges: GraphEdge[]
+  nodesById: Map<number, GraphNode>
+  selectedEdgeId: number | null
+  onRowClick: (e: GraphEdge) => void
+}) {
+  const rows = useMemo<EdgeRow[]>(
+    () =>
+      edges.map((e) => ({
+        edge: e,
+        subject:
+          nodesById.get(e.subject_id)?.canonical_name ?? `#${e.subject_id}`,
+        object: nodesById.get(e.object_id)?.canonical_name ?? `#${e.object_id}`,
+      })),
+    [edges, nodesById]
+  )
+
+  const columns = useMemo<Column<EdgeRow>[]>(
+    () => [
+      {
+        key: 'subject',
+        label: 'Subject',
+        render: (r) => <span className="text-gray-900">{r.subject}</span>,
+        sortValue: (r) => r.subject,
+      },
+      {
+        key: 'relation',
+        label: 'Relation',
+        render: (r) => (
+          <span
+            className="px-2 py-0.5 rounded-full text-xs font-medium"
+            style={{
+              backgroundColor:
+                (REL_COLORS[r.edge.relation] ?? DEFAULT_REL_COLOR) + '22',
+              color: REL_COLORS[r.edge.relation] ?? DEFAULT_REL_COLOR,
+            }}
+          >
+            {r.edge.relation}
+          </span>
+        ),
+        sortValue: (r) => r.edge.relation,
+      },
+      {
+        key: 'object',
+        label: 'Object',
+        render: (r) => <span className="text-gray-900">{r.object}</span>,
+        sortValue: (r) => r.object,
+      },
+      {
+        key: 'confidence',
+        label: 'Conf',
+        render: (r) => r.edge.confidence.toFixed(2),
+        sortValue: (r) => r.edge.confidence,
+      },
+      {
+        key: 'chapter',
+        label: 'Ch',
+        render: (r) =>
+          r.edge.evidence_chapter != null ? r.edge.evidence_chapter : '—',
+        sortValue: (r) => r.edge.evidence_chapter ?? null,
+      },
+      {
+        key: 'evidence',
+        label: 'Evidence',
+        sortable: false,
+        render: (r) => (
+          <span
+            className="block max-w-md truncate text-gray-500 text-xs"
+            title={r.edge.evidence_text ?? ''}
+          >
+            {r.edge.evidence_text ?? ''}
+          </span>
+        ),
+      },
+    ],
+    []
+  )
+
+  return (
+    <SortableTable
+      columns={columns}
+      data={rows}
+      rowKey={(r) => r.edge.id}
+      defaultSortField="confidence"
+      defaultSortDirection="desc"
+      pageSize={25}
+      maxHeight="500px"
+      onRowClick={(r) => onRowClick(r.edge)}
+      isRowSelected={(r) => r.edge.id === selectedEdgeId}
+    />
   )
 }

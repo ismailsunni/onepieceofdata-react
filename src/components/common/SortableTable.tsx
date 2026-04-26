@@ -16,6 +16,10 @@ interface SortableTableProps<T> {
   maxHeight?: string
   rowKey: (row: T) => string | number
   pageSize?: number
+  /** Called when a row is clicked. Adds clickable hover + cursor styling. */
+  onRowClick?: (row: T) => void
+  /** Returns true if the row should render in a selected style. */
+  isRowSelected?: (row: T) => boolean
 }
 
 export default function SortableTable<T>({
@@ -26,6 +30,8 @@ export default function SortableTable<T>({
   maxHeight,
   rowKey,
   pageSize,
+  onRowClick,
+  isRowSelected,
 }: SortableTableProps<T>) {
   const [sortField, setSortField] = useState(defaultSortField ?? '')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(
@@ -114,21 +120,31 @@ export default function SortableTable<T>({
             </tr>
           </thead>
           <tbody>
-            {pagedData.map((row) => (
-              <tr
-                key={rowKey(row)}
-                className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-              >
-                {columns.map((col) => (
-                  <td
-                    key={col.key}
-                    className="px-4 py-3 text-gray-700 whitespace-nowrap"
-                  >
-                    {col.render(row)}
-                  </td>
-                ))}
-              </tr>
-            ))}
+            {pagedData.map((row) => {
+              const selected = isRowSelected?.(row) ?? false
+              return (
+                <tr
+                  key={rowKey(row)}
+                  onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  className={`border-b border-gray-100 transition-colors ${
+                    onRowClick ? 'cursor-pointer' : ''
+                  } ${
+                    selected
+                      ? 'bg-blue-50 hover:bg-blue-100'
+                      : 'hover:bg-gray-50'
+                  }`}
+                >
+                  {columns.map((col) => (
+                    <td
+                      key={col.key}
+                      className="px-4 py-3 text-gray-700 whitespace-nowrap"
+                    >
+                      {col.render(row)}
+                    </td>
+                  ))}
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>
