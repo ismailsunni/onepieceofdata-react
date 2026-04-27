@@ -245,6 +245,30 @@ export function StoryGraphView() {
     [sagaArcFilter, sagaArcMembership]
   )
 
+  /**
+   * Resolve the selected saga/arc to its chapter range so we can also drop
+   * events (edges) that didn't actually happen during it. Edges with no
+   * evidence_chapter are kept regardless — most narrative edges (allies,
+   * family, crew membership) lack a specific chapter and would be wrongly
+   * dropped by a strict filter.
+   */
+  const selectedChapterRange = useMemo<{
+    start: number
+    end: number
+  } | null>(() => {
+    if (!sagaArcFilter) return null
+    const [kind, slug] = sagaArcFilter.split(':')
+    if (kind === 'saga') {
+      const s = sagas?.find((x) => x.saga_id === slug)
+      return s ? { start: s.start_chapter, end: s.end_chapter } : null
+    }
+    if (kind === 'arc') {
+      const a = arcs?.find((x) => x.arc_id === slug)
+      return a ? { start: a.start_chapter, end: a.end_chapter } : null
+    }
+    return null
+  }, [sagaArcFilter, sagas, arcs])
+
   // Filter then BFS
   const visibleEdges = useMemo(() => {
     if (!data) return []
@@ -263,6 +287,18 @@ export function StoryGraphView() {
         const objOk = isCharacterInScope(obj)
         if (subj.type === 'character' && !subjOk) return false
         if (obj.type === 'character' && !objOk) return false
+        // Event-time scope: drop edges whose evidence_chapter falls outside
+        // the saga/arc range. Edges with no evidence_chapter are kept since
+        // many extracted relations (family, crew membership, mentor) don't
+        // refer to a specific chapter.
+        if (selectedChapterRange && e.evidence_chapter != null) {
+          if (
+            e.evidence_chapter < selectedChapterRange.start ||
+            e.evidence_chapter > selectedChapterRange.end
+          ) {
+            return false
+          }
+        }
       }
       return true
     })
@@ -277,6 +313,7 @@ export function StoryGraphView() {
     maxEdges,
     nodesById,
     sagaArcFilter,
+    selectedChapterRange,
     isCharacterInScope,
   ])
 
