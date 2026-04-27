@@ -17,9 +17,11 @@ export default function StoryGraphPage() {
         <h1 className="text-3xl font-bold text-gray-900">Story Graph</h1>
         <p className="mt-2 text-gray-600 max-w-3xl">
           A relationship network of characters, crews, organizations, sagas and
-          arcs, built from LLM-extracted triples over the One Piece wiki. Use
-          the controls to focus on a character, expand by hops, or filter by
-          confidence and relation type.
+          arcs, built from LLM-extracted triples over the One Piece wiki. The
+          default view is fights between characters in the East Blue saga —
+          change the saga/arc selector to switch arcs, toggle relation or
+          node-type chips to widen the view, or pick a focus character to zoom
+          into their network.
         </p>
       </div>
 

@@ -107,19 +107,21 @@ export function StoryGraphView() {
   const containerRef = useRef<HTMLDivElement>(null)
   const networkRef = useRef<Network | null>(null)
 
-  // Allow deep-linking from elsewhere via /analytics/story-graph?focus=Name
+  // Allow deep-linking from elsewhere via /analytics/story-graph?focus=Name.
+  // Default is no focus — the saga/arc filter is the primary scoping tool.
   const [searchParams] = useSearchParams()
-  const initialFocus = searchParams.get('focus') ?? 'Monkey D. Luffy'
+  const initialFocus = searchParams.get('focus') ?? ''
   const [focusName, setFocusName] = useState(initialFocus)
   const [hops, setHops] = useState(2)
   const [minConf, setMinConf] = useState(0.7)
   const [maxEdges, setMaxEdges] = useState(400)
-  const [excludedRelations, setExcludedRelations] = useState<Set<string>>(
-    new Set()
-  )
-  const [excludedNodeTypes, setExcludedNodeTypes] = useState<Set<string>>(
-    new Set()
-  )
+  // We store user overrides as nullable. When null, defaults apply: only
+  // "fought" relation + only "character" node type are visible. This way
+  // the defaults react to data load without a set-state-in-effect.
+  const [userExcludedRelations, setUserExcludedRelations] =
+    useState<Set<string> | null>(null)
+  const [userExcludedNodeTypes, setUserExcludedNodeTypes] =
+    useState<Set<string> | null>(null)
   /**
    * Saga/arc filter. Format: "saga:east_blue" / "arc:romance_dawn" / "" (none).
    * Default: East Blue saga so the initial view isn't overwhelmed by every
@@ -182,6 +184,45 @@ export function StoryGraphView() {
     for (const n of data?.nodes ?? []) s.add(n.type)
     return Array.from(s).sort()
   }, [data])
+
+  // Default view: only "fought" relation, only "character" nodes.
+  // These are computed from the loaded data and overridden by user toggles.
+  const excludedRelations = useMemo<Set<string>>(() => {
+    if (userExcludedRelations) return userExcludedRelations
+    return new Set(allRelations.filter((r) => r !== 'fought'))
+  }, [userExcludedRelations, allRelations])
+  const excludedNodeTypes = useMemo<Set<string>>(() => {
+    if (userExcludedNodeTypes) return userExcludedNodeTypes
+    return new Set(allNodeTypes.filter((t) => t !== 'character'))
+  }, [userExcludedNodeTypes, allNodeTypes])
+
+  /**
+   * Toggle a chip in either filter set. We materialize the current effective
+   * exclusion set into a user override on first toggle, so subsequent
+   * toggles operate on a stable base.
+   */
+  const toggleExcludedRelation = useCallback(
+    (rel: string) => {
+      setUserExcludedRelations((prev) => {
+        const base = new Set(prev ?? excludedRelations)
+        if (base.has(rel)) base.delete(rel)
+        else base.add(rel)
+        return base
+      })
+    },
+    [excludedRelations]
+  )
+  const toggleExcludedNodeType = useCallback(
+    (t: string) => {
+      setUserExcludedNodeTypes((prev) => {
+        const base = new Set(prev ?? excludedNodeTypes)
+        if (base.has(t)) base.delete(t)
+        else base.add(t)
+        return base
+      })
+    },
+    [excludedNodeTypes]
+  )
 
   const focusId = nameToId.get(focusName) ?? null
 
@@ -483,7 +524,7 @@ export function StoryGraphView() {
           </label>
           <input
             type="text"
-            placeholder={focusName}
+            placeholder={focusName || 'no focus — type to pick one'}
             value={search}
             onChange={(e) => {
               setSearch(e.target.value)
@@ -679,14 +720,7 @@ export function StoryGraphView() {
               return (
                 <button
                   key={rel}
-                  onClick={() => {
-                    setExcludedRelations((prev) => {
-                      const next = new Set(prev)
-                      if (next.has(rel)) next.delete(rel)
-                      else next.add(rel)
-                      return next
-                    })
-                  }}
+                  onClick={() => toggleExcludedRelation(rel)}
                   className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
                     on
                       ? 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
@@ -713,14 +747,7 @@ export function StoryGraphView() {
               return (
                 <button
                   key={t}
-                  onClick={() => {
-                    setExcludedNodeTypes((prev) => {
-                      const next = new Set(prev)
-                      if (next.has(t)) next.delete(t)
-                      else next.add(t)
-                      return next
-                    })
-                  }}
+                  onClick={() => toggleExcludedNodeType(t)}
                   className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
                     on ? '' : 'opacity-40'
                   }`}
