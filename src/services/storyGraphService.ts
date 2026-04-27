@@ -54,3 +54,36 @@ export async function fetchStoryGraph(): Promise<StoryGraphData> {
   ])
   return { nodes, edges }
 }
+
+export interface CharacterArcMembership {
+  /** character.id → list of saga slugs (e.g. "east_blue") */
+  sagas: Map<string, Set<string>>
+  /** character.id → list of arc slugs (e.g. "romance_dawn") */
+  arcs: Map<string, Set<string>>
+}
+
+interface CharacterMembershipRow {
+  id: string
+  saga_list: string[] | null
+  arc_list: string[] | null
+}
+
+/**
+ * Fetch saga and arc slug membership for every character.
+ *
+ * Used by the Story Graph saga/arc filter to restrict the visible character
+ * set to those who appeared in a chosen saga or arc. Cached aggressively.
+ */
+export async function fetchCharacterArcMembership(): Promise<CharacterArcMembership> {
+  const rows = await fetchAllRows<CharacterMembershipRow>(
+    'character',
+    'id, saga_list, arc_list'
+  )
+  const sagas = new Map<string, Set<string>>()
+  const arcs = new Map<string, Set<string>>()
+  for (const r of rows) {
+    if (r.saga_list?.length) sagas.set(r.id, new Set(r.saga_list))
+    if (r.arc_list?.length) arcs.set(r.id, new Set(r.arc_list))
+  }
+  return { sagas, arcs }
+}

@@ -27,6 +27,7 @@ import { Character } from '../types/character'
 import { fetchArcs } from '../services/arcService'
 import { Arc, Saga } from '../types/arc'
 import { fetchAffiliationsByCharacter } from '../services/affiliationService'
+import { CharacterRelationships } from '../components/analytics/CharacterRelationships'
 import { CharacterAffiliation } from '../types/affiliation'
 import { fetchOccupationsByCharacter } from '../services/occupationService'
 import { CharacterOccupation } from '../types/occupation'
@@ -1420,6 +1421,14 @@ function CharacterDetailPage() {
         {/* Occupations */}
         {occupations.length > 0 && (
           <OccupationsSection occupations={occupations} />
+        )}
+
+        {/* Story Graph relationships */}
+        {character.id && character.name && (
+          <CharacterRelationships
+            characterId={character.id}
+            characterName={character.name}
+          />
         )}
 
         {/* Appearance Details */}

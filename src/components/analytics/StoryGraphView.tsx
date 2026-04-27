@@ -4,8 +4,12 @@ import { useQuery } from '@tanstack/react-query'
 import { Network, DataSet } from 'vis-network/standalone'
 import { fetchStoryGraph } from '../../services/storyGraphService'
 import { fetchCharacterById } from '../../services/characterService'
+import { fetchCharacterArcMembership } from '../../services/storyGraphService'
+import { fetchSagas } from '../../services/sagaService'
+import { fetchArcs } from '../../services/arcService'
 import { GraphEdge, GraphNode } from '../../types/storyGraph'
 import SortableTable, { Column } from '../common/SortableTable'
+import { formatNodeType, formatRelation } from '../../utils/formatRelation'
 
 // ─── Visual encodings ────────────────────────────────────────────────────────
 
@@ -116,6 +120,12 @@ export function StoryGraphView() {
   const [excludedNodeTypes, setExcludedNodeTypes] = useState<Set<string>>(
     new Set()
   )
+  /**
+   * Saga/arc filter. Format: "saga:east_blue" / "arc:romance_dawn" / "" (none).
+   * Default: East Blue saga so the initial view isn't overwhelmed by every
+   * saga's cast at once.
+   */
+  const [sagaArcFilter, setSagaArcFilter] = useState<string>('saga:east_blue')
   const [search, setSearch] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
@@ -129,6 +139,24 @@ export function StoryGraphView() {
     queryKey: ['story-graph'],
     queryFn: fetchStoryGraph,
     staleTime: 10 * 60 * 1000,
+  })
+
+  const { data: sagaArcMembership } = useQuery({
+    queryKey: ['character-saga-arc-membership'],
+    queryFn: fetchCharacterArcMembership,
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const { data: sagas } = useQuery({
+    queryKey: ['sagas'],
+    queryFn: fetchSagas,
+    staleTime: 60 * 60 * 1000,
+  })
+
+  const { data: arcs } = useQuery({
+    queryKey: ['arcs'],
+    queryFn: fetchArcs,
+    staleTime: 60 * 60 * 1000,
   })
 
   const nodesById = useMemo(() => {
@@ -157,6 +185,24 @@ export function StoryGraphView() {
 
   const focusId = nameToId.get(focusName) ?? null
 
+  /**
+   * Decide whether a character node passes the saga/arc filter. Non-character
+   * nodes always pass — they're kept in the view if any visible edge connects
+   * them to a passing character.
+   */
+  const isCharacterInScope = useCallback(
+    (node: GraphNode): boolean => {
+      if (!sagaArcFilter) return true
+      if (node.type !== 'character') return true
+      if (!node.source_id || !sagaArcMembership) return false
+      const [kind, slug] = sagaArcFilter.split(':')
+      const map =
+        kind === 'arc' ? sagaArcMembership.arcs : sagaArcMembership.sagas
+      return map.get(node.source_id)?.has(slug) ?? false
+    },
+    [sagaArcFilter, sagaArcMembership]
+  )
+
   // Filter then BFS
   const visibleEdges = useMemo(() => {
     if (!data) return []
@@ -168,6 +214,14 @@ export function StoryGraphView() {
       if (!subj || !obj) return false
       if (excludedNodeTypes.has(subj.type)) return false
       if (excludedNodeTypes.has(obj.type)) return false
+      // Saga/arc scope: at least one endpoint must be a character in scope
+      // (or both endpoints non-character and edge already filtered above).
+      if (sagaArcFilter) {
+        const subjOk = isCharacterInScope(subj)
+        const objOk = isCharacterInScope(obj)
+        if (subj.type === 'character' && !subjOk) return false
+        if (obj.type === 'character' && !objOk) return false
+      }
       return true
     })
     return bfsSubgraph(focusId, filtered, hops, maxEdges)
@@ -180,6 +234,8 @@ export function StoryGraphView() {
     hops,
     maxEdges,
     nodesById,
+    sagaArcFilter,
+    isCharacterInScope,
   ])
 
   const visibleNodeIds = useMemo(() => {
@@ -204,7 +260,7 @@ export function StoryGraphView() {
         return {
           id,
           label: n.canonical_name,
-          title: `${n.canonical_name} (${n.type})`,
+          title: `${n.canonical_name} (${formatNodeType(n.type)})`,
           color: {
             background: colors.background,
             border: colors.border,
@@ -231,8 +287,8 @@ export function StoryGraphView() {
           id: e.id,
           from: e.subject_id,
           to: e.object_id,
-          label: e.relation,
-          title: `${e.relation} · conf ${e.confidence.toFixed(2)}${
+          label: formatRelation(e.relation),
+          title: `${formatRelation(e.relation)} · conf ${e.confidence.toFixed(2)}${
             evShort ? `\n\n${evShort}` : ''
           }`,
           color: { color, highlight: '#111827', opacity: 0.7 },
@@ -449,7 +505,7 @@ export function StoryGraphView() {
                     {n.canonical_name}
                   </span>
                   <span className="ml-2 text-xs text-gray-400 flex-shrink-0">
-                    {n.type}
+                    {formatNodeType(n.type)}
                   </span>
                 </button>
               ))}
@@ -499,7 +555,7 @@ export function StoryGraphView() {
                   <div className="mt-1 text-xs text-gray-500 truncate">
                     {entry.edges
                       .slice(0, 3)
-                      .map((e) => e.relation)
+                      .map((e) => formatRelation(e.relation))
                       .join(', ')}
                     {entry.edges.length > 3
                       ? ` +${entry.edges.length - 3}`
@@ -562,6 +618,39 @@ export function StoryGraphView() {
           />
         </div>
 
+        {/* Saga / Arc filter */}
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">
+            Saga / Arc
+          </label>
+          <select
+            value={sagaArcFilter}
+            onChange={(e) => setSagaArcFilter(e.target.value)}
+            className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            aria-label="Filter characters by saga or arc"
+          >
+            <option value="">All sagas / arcs</option>
+            {sagas && sagas.length > 0 && (
+              <optgroup label="Sagas">
+                {sagas.map((s) => (
+                  <option key={`saga-${s.saga_id}`} value={`saga:${s.saga_id}`}>
+                    {s.title}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+            {arcs && arcs.length > 0 && (
+              <optgroup label="Arcs">
+                {arcs.map((a) => (
+                  <option key={`arc-${a.arc_id}`} value={`arc:${a.arc_id}`}>
+                    {a.title}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+          </select>
+        </div>
+
         {/* Reset zoom */}
         <button
           onClick={() => networkRef.current?.fit({ animation: true })}
@@ -606,7 +695,7 @@ export function StoryGraphView() {
                   style={on ? { borderColor: color, color } : undefined}
                   aria-pressed={on}
                 >
-                  {rel}
+                  {formatRelation(rel)}
                 </button>
               )
             })}
@@ -642,7 +731,7 @@ export function StoryGraphView() {
                   }}
                   aria-pressed={on}
                 >
-                  {t}
+                  {formatNodeType(t)}
                 </button>
               )
             })}
@@ -684,7 +773,7 @@ export function StoryGraphView() {
                     color: '#fff',
                   }}
                 >
-                  {selectedEdge.relation}
+                  {formatRelation(selectedEdge.relation)}
                 </span>
                 {nodesById.get(selectedEdge.object_id)?.canonical_name}
               </div>
@@ -705,7 +794,7 @@ export function StoryGraphView() {
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <div className="text-xs uppercase tracking-wide text-gray-500 mb-1">
-                    Selected node ({selectedNodeInfo.node.type})
+                    Selected node ({formatNodeType(selectedNodeInfo.node.type)})
                   </div>
                   <div className="text-base font-semibold text-gray-900">
                     {selectedNodeInfo.node.canonical_name}
@@ -751,7 +840,7 @@ export function StoryGraphView() {
                           color: REL_COLORS[e.relation] ?? DEFAULT_REL_COLOR,
                         }}
                       >
-                        {e.relation}
+                        {formatRelation(e.relation)}
                       </span>{' '}
                       {other?.canonical_name ?? `#${otherId}`}
                     </div>
@@ -964,7 +1053,7 @@ function EdgeTable({
               color: REL_COLORS[r.edge.relation] ?? DEFAULT_REL_COLOR,
             }}
           >
-            {r.edge.relation}
+            {formatRelation(r.edge.relation)}
           </span>
         ),
         sortValue: (r) => r.edge.relation,
