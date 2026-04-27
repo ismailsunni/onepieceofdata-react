@@ -7,6 +7,7 @@ import { fetchCharacterById } from '../../services/characterService'
 import { fetchCharacterArcMembership } from '../../services/storyGraphService'
 import { fetchSagas } from '../../services/sagaService'
 import { fetchArcs } from '../../services/arcService'
+import { getCharacterImageUrl } from '../../services/quizService'
 import { GraphEdge, GraphNode } from '../../types/storyGraph'
 import SortableTable, { Column } from '../common/SortableTable'
 import { formatNodeType, formatRelation } from '../../utils/formatRelation'
@@ -842,6 +843,7 @@ export function StoryGraphView() {
               {selectedNodeInfo.node.type === 'character' &&
               selectedNodeInfo.node.source_id ? (
                 <CharacterMiniProfile
+                  key={selectedNodeInfo.node.source_id}
                   characterId={selectedNodeInfo.node.source_id}
                 />
               ) : null}
@@ -949,8 +951,20 @@ function CharacterMiniProfile({ characterId }: { characterId: string }) {
     staleTime: 10 * 60 * 1000,
   })
 
+  // Re-uses the cached arcs query from StoryGraphView so we can resolve
+  // the debut arc slug to its display title without an extra fetch.
+  const { data: arcs } = useQuery({
+    queryKey: ['arcs'],
+    queryFn: fetchArcs,
+    staleTime: 60 * 60 * 1000,
+  })
+
+  // Image-failure state. The parent passes key={characterId} so this resets
+  // automatically when the selected character changes — no effect needed.
+  const [imgFailed, setImgFailed] = useState(false)
+
   if (isLoading) {
-    return <div className="mt-3 h-16 bg-gray-100 rounded animate-pulse" />
+    return <div className="mt-3 h-24 bg-gray-100 rounded animate-pulse" />
   }
   if (!data) return null
 
@@ -966,6 +980,13 @@ function CharacterMiniProfile({ characterId }: { characterId: string }) {
     return b.toLocaleString()
   }
 
+  // Resolve first arc slug → display title (fallback: title-cased slug)
+  const firstArcSlug = data.arc_list?.[0] ?? null
+  const firstArcTitle = firstArcSlug
+    ? (arcs?.find((a) => a.arc_id === firstArcSlug)?.title ??
+      firstArcSlug.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()))
+    : null
+
   const items: { label: string; value: string }[] = []
   if (data.status) items.push({ label: 'Status', value: data.status })
   if (data.bounty) {
@@ -974,6 +995,9 @@ function CharacterMiniProfile({ characterId }: { characterId: string }) {
   }
   if (data.importance_tier) {
     items.push({ label: 'Tier', value: data.importance_tier })
+  }
+  if (firstArcTitle) {
+    items.push({ label: 'Debut arc', value: firstArcTitle })
   }
   if (data.appearance_count != null) {
     const range =
@@ -987,37 +1011,49 @@ function CharacterMiniProfile({ characterId }: { characterId: string }) {
   }
   if (data.occupation) items.push({ label: 'Role', value: data.occupation })
 
-  if (items.length === 0 && haki.length === 0) return null
+  const showImage = !imgFailed
+  if (items.length === 0 && haki.length === 0 && !showImage) return null
 
   return (
-    <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
-      {items.map((it) => (
-        <div key={it.label} className="flex flex-col">
-          <span className="text-gray-400 uppercase tracking-wide text-[10px]">
-            {it.label}
-          </span>
-          <span className="text-gray-800 truncate" title={it.value}>
-            {it.value}
-          </span>
-        </div>
-      ))}
-      {haki.length > 0 && (
-        <div className="col-span-2 flex flex-col">
-          <span className="text-gray-400 uppercase tracking-wide text-[10px]">
-            Haki
-          </span>
-          <span className="flex flex-wrap gap-1 mt-0.5">
-            {haki.map((h) => (
-              <span
-                key={h}
-                className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-medium"
-              >
-                {h}
-              </span>
-            ))}
-          </span>
-        </div>
+    <div className="mt-3 flex gap-3">
+      {showImage && (
+        <img
+          src={getCharacterImageUrl(characterId)}
+          alt={data.name ?? 'Character portrait'}
+          loading="lazy"
+          onError={() => setImgFailed(true)}
+          className="flex-shrink-0 w-20 h-24 rounded-md object-contain bg-gray-100 border border-gray-200"
+        />
       )}
+      <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs flex-1">
+        {items.map((it) => (
+          <div key={it.label} className="flex flex-col">
+            <span className="text-gray-400 uppercase tracking-wide text-[10px]">
+              {it.label}
+            </span>
+            <span className="text-gray-800 truncate" title={it.value}>
+              {it.value}
+            </span>
+          </div>
+        ))}
+        {haki.length > 0 && (
+          <div className="col-span-2 flex flex-col">
+            <span className="text-gray-400 uppercase tracking-wide text-[10px]">
+              Haki
+            </span>
+            <span className="flex flex-wrap gap-1 mt-0.5">
+              {haki.map((h) => (
+                <span
+                  key={h}
+                  className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-medium"
+                >
+                  {h}
+                </span>
+              ))}
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
