@@ -28,4 +28,7 @@ export interface Character {
   haki_armament: boolean | null
   haki_conqueror: boolean | null
   bio: string | null
+  occupation: string | null
+  importance_score: number | null
+  importance_tier: string | null
 }

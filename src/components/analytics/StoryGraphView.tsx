@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Network, DataSet } from 'vis-network/standalone'
 import { fetchStoryGraph } from '../../services/storyGraphService'
+import { fetchCharacterById } from '../../services/characterService'
 import { GraphEdge, GraphNode } from '../../types/storyGraph'
 import SortableTable, { Column } from '../common/SortableTable'
 
@@ -101,7 +103,10 @@ export function StoryGraphView() {
   const containerRef = useRef<HTMLDivElement>(null)
   const networkRef = useRef<Network | null>(null)
 
-  const [focusName, setFocusName] = useState('Monkey D. Luffy')
+  // Allow deep-linking from elsewhere via /analytics/story-graph?focus=Name
+  const [searchParams] = useSearchParams()
+  const initialFocus = searchParams.get('focus') ?? 'Monkey D. Luffy'
+  const [focusName, setFocusName] = useState(initialFocus)
   const [hops, setHops] = useState(2)
   const [minConf, setMinConf] = useState(0.7)
   const [maxEdges, setMaxEdges] = useState(400)
@@ -697,13 +702,35 @@ export function StoryGraphView() {
             </div>
           ) : selectedNodeInfo ? (
             <div className="bg-white border border-gray-200 rounded-xl p-4">
-              <div className="text-xs uppercase tracking-wide text-gray-500 mb-1">
-                Selected node ({selectedNodeInfo.node.type})
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <div className="text-xs uppercase tracking-wide text-gray-500 mb-1">
+                    Selected node ({selectedNodeInfo.node.type})
+                  </div>
+                  <div className="text-base font-semibold text-gray-900">
+                    {selectedNodeInfo.node.canonical_name}
+                  </div>
+                </div>
+                {selectedNodeInfo.node.type === 'character' &&
+                selectedNodeInfo.node.source_id ? (
+                  <Link
+                    to={`/characters/${selectedNodeInfo.node.source_id}`}
+                    className="flex-shrink-0 px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
+                  >
+                    Profile →
+                  </Link>
+                ) : null}
               </div>
-              <div className="text-base font-semibold text-gray-900">
-                {selectedNodeInfo.node.canonical_name}
-              </div>
-              <div className="mt-1 text-xs text-gray-500">
+
+              {/* C: inline mini-profile for character nodes */}
+              {selectedNodeInfo.node.type === 'character' &&
+              selectedNodeInfo.node.source_id ? (
+                <CharacterMiniProfile
+                  characterId={selectedNodeInfo.node.source_id}
+                />
+              ) : null}
+
+              <div className="mt-3 text-xs text-gray-500">
                 {selectedNodeInfo.connectedEdges.length} connected edges visible
                 · double-click in the graph to focus a node
               </div>
@@ -785,6 +812,88 @@ export function StoryGraphView() {
   )
 }
 
+// ─── Character mini-profile ───────────────────────────────────────────────
+
+function CharacterMiniProfile({ characterId }: { characterId: string }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ['character', characterId],
+    queryFn: () => fetchCharacterById(characterId),
+    staleTime: 10 * 60 * 1000,
+  })
+
+  if (isLoading) {
+    return <div className="mt-3 h-16 bg-gray-100 rounded animate-pulse" />
+  }
+  if (!data) return null
+
+  const haki: string[] = []
+  if (data.haki_observation) haki.push('Obs')
+  if (data.haki_armament) haki.push('Arm')
+  if (data.haki_conqueror) haki.push('Conq')
+
+  const formatBounty = (b: number | null) => {
+    if (b == null) return null
+    if (b >= 1_000_000_000) return `${(b / 1_000_000_000).toFixed(2)}B`
+    if (b >= 1_000_000) return `${(b / 1_000_000).toFixed(0)}M`
+    return b.toLocaleString()
+  }
+
+  const items: { label: string; value: string }[] = []
+  if (data.status) items.push({ label: 'Status', value: data.status })
+  if (data.bounty) {
+    const b = formatBounty(data.bounty)
+    if (b) items.push({ label: 'Bounty', value: `฿ ${b}` })
+  }
+  if (data.importance_tier) {
+    items.push({ label: 'Tier', value: data.importance_tier })
+  }
+  if (data.appearance_count != null) {
+    const range =
+      data.first_appearance && data.last_appearance
+        ? ` (ch ${data.first_appearance}–${data.last_appearance})`
+        : ''
+    items.push({
+      label: 'Appearances',
+      value: `${data.appearance_count}${range}`,
+    })
+  }
+  if (data.occupation) items.push({ label: 'Role', value: data.occupation })
+
+  if (items.length === 0 && haki.length === 0) return null
+
+  return (
+    <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
+      {items.map((it) => (
+        <div key={it.label} className="flex flex-col">
+          <span className="text-gray-400 uppercase tracking-wide text-[10px]">
+            {it.label}
+          </span>
+          <span className="text-gray-800 truncate" title={it.value}>
+            {it.value}
+          </span>
+        </div>
+      ))}
+      {haki.length > 0 && (
+        <div className="col-span-2 flex flex-col">
+          <span className="text-gray-400 uppercase tracking-wide text-[10px]">
+            Haki
+          </span>
+          <span className="flex flex-wrap gap-1 mt-0.5">
+            {haki.map((h) => (
+              <span
+                key={h}
+                className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-medium"
+              >
+                {h}
+              </span>
+            ))}
+          </span>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Edge table ────────────────────────────────────────────────────────────
 
 interface EdgeRow {
@@ -815,12 +924,32 @@ function EdgeTable({
     [edges, nodesById]
   )
 
+  /** Render a node label as a profile link if it's a character, else plain. */
+  const nodeLabel = useCallback(
+    (nodeId: number, fallback: string) => {
+      const n = nodesById.get(nodeId)
+      if (n?.type === 'character' && n.source_id) {
+        return (
+          <Link
+            to={`/characters/${n.source_id}`}
+            onClick={(e) => e.stopPropagation()}
+            className="text-gray-900 hover:text-blue-600 hover:underline transition-colors"
+          >
+            {fallback}
+          </Link>
+        )
+      }
+      return <span className="text-gray-900">{fallback}</span>
+    },
+    [nodesById]
+  )
+
   const columns = useMemo<Column<EdgeRow>[]>(
     () => [
       {
         key: 'subject',
         label: 'Subject',
-        render: (r) => <span className="text-gray-900">{r.subject}</span>,
+        render: (r) => nodeLabel(r.edge.subject_id, r.subject),
         sortValue: (r) => r.subject,
       },
       {
@@ -843,7 +972,7 @@ function EdgeTable({
       {
         key: 'object',
         label: 'Object',
-        render: (r) => <span className="text-gray-900">{r.object}</span>,
+        render: (r) => nodeLabel(r.edge.object_id, r.object),
         sortValue: (r) => r.object,
       },
       {
@@ -873,7 +1002,7 @@ function EdgeTable({
         ),
       },
     ],
-    []
+    [nodeLabel]
   )
 
   return (

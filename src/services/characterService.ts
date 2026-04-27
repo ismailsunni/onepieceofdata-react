@@ -30,3 +30,32 @@ export async function fetchCharacters(): Promise<Character[]> {
     return []
   }
 }
+
+/**
+ * Fetch a single character by primary key.
+ *
+ * @returns The matching Character row or null if not found / on error.
+ */
+export async function fetchCharacterById(
+  id: string
+): Promise<Character | null> {
+  try {
+    if (!supabase) {
+      logger.error('Supabase client is not initialized')
+      return null
+    }
+    const { data, error } = await supabase
+      .from('character')
+      .select('*')
+      .eq('id', id)
+      .single()
+    if (error) {
+      logger.error('Error fetching character by id:', error)
+      return null
+    }
+    return data
+  } catch (error) {
+    logger.error('Error in fetchCharacterById:', error)
+    return null
+  }
+}

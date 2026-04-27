@@ -579,6 +579,28 @@ function CharacterDetailPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3 mt-4">
+                  {character.name && (
+                    <Link
+                      to={`/analytics/story-graph?focus=${encodeURIComponent(character.name)}`}
+                      className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-200 hover:bg-fuchsia-100 transition-colors shadow-sm"
+                      title="Open this character in the Story Graph"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.24 17 7c1 2-.5 4 .657 5.657z"
+                        />
+                      </svg>
+                      View in Story Graph
+                    </Link>
+                  )}
                   {character.status && (
                     <span
                       className={`inline-flex items-center px-4 py-1.5 rounded-full text-sm font-semibold shadow-sm ${getStatusColor(character.status)}`}
