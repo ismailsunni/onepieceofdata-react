@@ -855,6 +855,9 @@ export function StoryGraphView() {
                   const isOut = e.subject_id === selectedNodeInfo.node.id
                   const otherId = isOut ? e.object_id : e.subject_id
                   const other = nodesById.get(otherId)
+                  const otherName = other?.canonical_name ?? `#${otherId}`
+                  const otherIsLinkable =
+                    other?.type === 'character' && !!other.source_id
                   return (
                     <div
                       key={e.id}
@@ -869,7 +872,16 @@ export function StoryGraphView() {
                       >
                         {formatRelation(e.relation)}
                       </span>{' '}
-                      {other?.canonical_name ?? `#${otherId}`}
+                      {otherIsLinkable ? (
+                        <Link
+                          to={`/characters/${other.source_id}`}
+                          className="text-gray-700 hover:text-blue-600 hover:underline transition-colors"
+                        >
+                          {otherName}
+                        </Link>
+                      ) : (
+                        otherName
+                      )}
                     </div>
                   )
                 })}
