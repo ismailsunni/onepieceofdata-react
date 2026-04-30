@@ -15,6 +15,7 @@ import { Chapter } from '../types/chapter'
 import { Character } from '../types/character'
 import { Arc } from '../types/arc'
 import { fetchChapters } from '../services/chapterService'
+import { fetchArcs } from '../services/arcService'
 import { STRAW_HAT_IDS } from '../constants/characters'
 import SortableTable, { Column } from '../components/common/SortableTable'
 
@@ -226,6 +227,15 @@ function ChapterDetailPage() {
     queryFn: fetchChapters,
   })
 
+  const { data: allArcs = [] } = useQuery({
+    queryKey: ['arcs'],
+    queryFn: fetchArcs,
+  })
+
+  // Resolve a chapter number to its containing arc.
+  const arcForChapter = (ch: number) =>
+    allArcs.find((a) => ch >= a.start_chapter && ch <= a.end_chapter)
+
   const handleRandomChapter = () => {
     if (allChapters.length > 0) {
       const randomChapter =
@@ -388,8 +398,26 @@ function ChapterDetailPage() {
       key: 'first_appearance',
       label: 'First Appearance',
       sortValue: (row) => row.first_appearance ?? 0,
-      render: (row) =>
-        row.first_appearance ? `Ch. ${row.first_appearance}` : '-',
+      render: (row) => {
+        if (!row.first_appearance) return '-'
+        const debutArc = arcForChapter(row.first_appearance)
+        return (
+          <span>
+            Ch. {row.first_appearance}
+            {debutArc && (
+              <>
+                {' · '}
+                <Link
+                  to={`/arcs/${debutArc.arc_id}`}
+                  className="text-blue-600 hover:text-blue-800 hover:underline"
+                >
+                  {debutArc.title}
+                </Link>
+              </>
+            )}
+          </span>
+        )
+      },
     },
     {
       key: 'appearance_count',
