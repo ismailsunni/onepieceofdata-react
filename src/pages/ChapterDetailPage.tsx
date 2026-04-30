@@ -74,8 +74,14 @@ async function fetchCharactersByChapter(
   }
 }
 
+type ArcWithSagaRange = Arc & {
+  saga?: { title: string; start_chapter: number; end_chapter: number }
+}
+
 // Service function to fetch arc for this chapter
-async function fetchArcByChapter(chapterNumber: number): Promise<Arc | null> {
+async function fetchArcByChapter(
+  chapterNumber: number
+): Promise<ArcWithSagaRange | null> {
   try {
     if (!supabase) {
       logger.error('Supabase client is not initialized')
@@ -84,7 +90,7 @@ async function fetchArcByChapter(chapterNumber: number): Promise<Arc | null> {
 
     const { data, error } = await supabase
       .from('arc')
-      .select('*, saga:saga_id(title)')
+      .select('*, saga:saga_id(title, start_chapter, end_chapter)')
       .lte('start_chapter', chapterNumber)
       .gte('end_chapter', chapterNumber)
       .single()
@@ -99,6 +105,40 @@ async function fetchArcByChapter(chapterNumber: number): Promise<Arc | null> {
     logger.error('Error in fetchArcByChapter:', error)
     return null
   }
+}
+
+// Threshold for showing streak / absence badges on the character list.
+const APPEARANCE_BADGE_THRESHOLD = 10
+
+/**
+ * Given a character's sorted appearance list and the current chapter,
+ * return the consecutive-appearance streak ending at this chapter
+ * and the gap (in chapters) since the previous appearance.
+ *
+ * - streak counts how many chapters in a row (including this one) the
+ *   character appeared in, treating chapter numbers as sequential.
+ * - gap is undefined when this is the first appearance, otherwise
+ *   currentChapter - previousAppearance - 1.
+ */
+function appearanceContext(
+  chapterList: number[] | null | undefined,
+  currentChapter: number
+): { streak: number; gap?: number } {
+  if (!chapterList || chapterList.length === 0) return { streak: 1 }
+  const sorted = [...chapterList].sort((a, b) => a - b)
+  const idx = sorted.indexOf(currentChapter)
+  if (idx === -1) return { streak: 1 }
+
+  let streak = 1
+  while (
+    idx - streak >= 0 &&
+    sorted[idx - streak] === currentChapter - streak
+  ) {
+    streak++
+  }
+
+  const gap = idx > 0 ? currentChapter - sorted[idx - 1] - 1 : undefined
+  return { streak, gap }
 }
 
 // ===== REUSABLE COMPONENTS =====
@@ -260,6 +300,22 @@ function ChapterDetailPage() {
     ? characters.filter((c) => !STRAW_HAT_IDS.has(c.id))
     : characters
 
+  // Position of this chapter within its arc and saga (1-indexed).
+  const arcPosition =
+    arc && chapterNumber
+      ? {
+          index: chapterNumber - arc.start_chapter + 1,
+          total: arc.end_chapter - arc.start_chapter + 1,
+        }
+      : null
+  const sagaPosition =
+    arc?.saga && chapterNumber
+      ? {
+          index: chapterNumber - arc.saga.start_chapter + 1,
+          total: arc.saga.end_chapter - arc.saga.start_chapter + 1,
+        }
+      : null
+
   const characterColumns: Column<Character>[] = [
     {
       key: 'name',
@@ -270,8 +326,18 @@ function ChapterDetailPage() {
           row.chapter_list &&
           row.chapter_list.length > 0 &&
           Math.min(...row.chapter_list) === chapterNumber
+        const { streak, gap } = appearanceContext(
+          row.chapter_list,
+          chapterNumber!
+        )
+        const showStreak = streak >= APPEARANCE_BADGE_THRESHOLD
+        const showGap =
+          !isDebut &&
+          streak === 1 &&
+          gap !== undefined &&
+          gap >= APPEARANCE_BADGE_THRESHOLD
         return (
-          <span className="inline-flex items-center gap-2">
+          <span className="inline-flex items-center gap-2 flex-wrap">
             <Link
               to={`/characters/${row.id}`}
               className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
@@ -281,6 +347,22 @@ function ChapterDetailPage() {
             {isDebut && (
               <span className="px-1.5 py-0.5 bg-yellow-400 text-yellow-900 text-[10px] font-bold rounded">
                 DEBUT
+              </span>
+            )}
+            {showStreak && (
+              <span
+                className="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-semibold rounded"
+                title={`${streak} consecutive chapters`}
+              >
+                STREAK {streak}
+              </span>
+            )}
+            {showGap && (
+              <span
+                className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-semibold rounded"
+                title={`Last seen in chapter ${chapterNumber! - gap - 1}`}
+              >
+                BACK AFTER {gap} CHAPTER{gap === 1 ? '' : 'S'}
               </span>
             )}
           </span>
@@ -468,6 +550,31 @@ function ChapterDetailPage() {
                       </Tag>
                     )}
                   </div>
+                )}
+                {(arcPosition || sagaPosition) && (
+                  <p className="mt-3 text-sm text-gray-600">
+                    {arcPosition && (
+                      <>
+                        Chapter{' '}
+                        <span className="font-semibold text-gray-900">
+                          {arcPosition.index}
+                        </span>{' '}
+                        of {arcPosition.total} in arc
+                      </>
+                    )}
+                    {arcPosition && sagaPosition && (
+                      <span className="mx-2 text-gray-400">·</span>
+                    )}
+                    {sagaPosition && (
+                      <>
+                        Chapter{' '}
+                        <span className="font-semibold text-gray-900">
+                          {sagaPosition.index}
+                        </span>{' '}
+                        of {sagaPosition.total} in saga
+                      </>
+                    )}
+                  </p>
                 )}
               </div>
 
