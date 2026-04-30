@@ -10,7 +10,11 @@ import { fetchArcs } from '../../services/arcService'
 import { getCharacterImageUrl } from '../../services/quizService'
 import { GraphEdge, GraphNode } from '../../types/storyGraph'
 import SortableTable, { Column } from '../common/SortableTable'
-import { formatNodeType, formatRelation } from '../../utils/formatRelation'
+import {
+  formatNodeType,
+  formatRelation,
+  formatRelationDirected,
+} from '../../utils/formatRelation'
 
 // ─── Visual encodings ────────────────────────────────────────────────────────
 
@@ -897,19 +901,19 @@ export function StoryGraphView() {
                   const otherName = other?.canonical_name ?? `#${otherId}`
                   const otherIsLinkable =
                     other?.type === 'character' && !!other.source_id
+                  const directional = formatRelationDirected(e.relation, isOut)
                   return (
                     <div
                       key={e.id}
                       className="text-xs text-gray-700 leading-snug"
                     >
-                      <span className="text-gray-400">{isOut ? '→' : '←'}</span>{' '}
                       <span
                         className="font-medium"
                         style={{
                           color: REL_COLORS[e.relation] ?? DEFAULT_REL_COLOR,
                         }}
                       >
-                        {formatRelation(e.relation)}
+                        {directional.label}
                       </span>{' '}
                       {otherIsLinkable ? (
                         <Link

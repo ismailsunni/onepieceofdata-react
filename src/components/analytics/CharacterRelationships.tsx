@@ -3,25 +3,32 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { fetchStoryGraph } from '../../services/storyGraphService'
 import { GraphEdge, GraphNode } from '../../types/storyGraph'
-import { formatRelation } from '../../utils/formatRelation'
+import { formatRelationDirected } from '../../utils/formatRelation'
 
 const MIN_CONFIDENCE = 0.7
 const MAX_PER_GROUP = 12
 
-/** Order in which relation groups are presented on the character page. */
-const GROUPS: { title: string; relations: string[] }[] = [
-  {
-    title: 'Crew & affiliations',
-    relations: ['member_of_crew', 'captain_of', 'affiliated_with'],
-  },
-  { title: 'Allies', relations: ['ally_of'] },
-  { title: 'Enemies', relations: ['enemy_of'] },
-  { title: 'Fights', relations: ['fought', 'defeated_by'] },
-  { title: 'Family', relations: ['family_of'] },
-  { title: 'Mentors', relations: ['mentor_of'] },
+/**
+ * Sections shown on a character profile, listed in display order. Each section
+ * pulls in items whose directional bucket (from formatRelationDirected) is
+ * listed here. Asymmetric relations are split: e.g. "Defeats" pulls only the
+ * `defeated` bucket (this character won), while "Defeated by" pulls `lost_to`
+ * (this character lost).
+ */
+const GROUPS: { title: string; buckets: string[] }[] = [
+  { title: 'Crew', buckets: ['member_of_crew', 'captain_of', 'captained_by'] },
+  { title: 'Affiliations', buckets: ['affiliated_with'] },
+  { title: 'Allies', buckets: ['ally_of'] },
+  { title: 'Enemies', buckets: ['enemy_of'] },
+  { title: 'Fought', buckets: ['fought'] },
+  { title: 'Defeats (won)', buckets: ['defeated'] },
+  { title: 'Defeated by (lost)', buckets: ['lost_to'] },
+  { title: 'Family', buckets: ['family_of'] },
+  { title: 'Mentor of', buckets: ['mentor_of'] },
+  { title: 'Apprentice of', buckets: ['apprentice_of'] },
   {
     title: 'Origin & devil fruit',
-    relations: ['originates_from', 'ate_devil_fruit'],
+    buckets: ['originates_from', 'ate_devil_fruit'],
   },
 ]
 
@@ -31,6 +38,10 @@ interface RelationItem {
   otherNode: GraphNode
   /** Whether this character is the subject of the edge (edge points outward). */
   isOutgoing: boolean
+  /** Pre-computed directional label for this item ("Defeated", "Defeated by", ...). */
+  label: string
+  /** Pre-computed bucket key used to assign the item to a section. */
+  bucket: string
 }
 
 interface RelationGroup {
@@ -63,8 +74,9 @@ export function CharacterRelationships({
       data.nodes.map((n) => [n.id, n])
     )
 
-    // Bucket edges by relation, keeping only ones above the threshold
-    const byRelation = new Map<string, RelationItem[]>()
+    // Bucket items by their *directional* bucket key, so wins and losses
+    // (etc.) split into separate sections.
+    const byBucket = new Map<string, RelationItem[]>()
     for (const e of data.edges) {
       if (e.confidence < MIN_CONFIDENCE) continue
       let otherId: number | null = null
@@ -80,19 +92,26 @@ export function CharacterRelationships({
       }
       const otherNode = nodesById.get(otherId)
       if (!otherNode) continue
-      const list = byRelation.get(e.relation) ?? []
-      list.push({ edge: e, otherNode, isOutgoing })
-      byRelation.set(e.relation, list)
+      const directional = formatRelationDirected(e.relation, isOutgoing)
+      const list = byBucket.get(directional.bucket) ?? []
+      list.push({
+        edge: e,
+        otherNode,
+        isOutgoing,
+        label: directional.label,
+        bucket: directional.bucket,
+      })
+      byBucket.set(directional.bucket, list)
     }
 
-    // Assemble groups in defined order, sorted by confidence DESC, deduped by other node
+    // Assemble sections in defined order, sorted by confidence DESC,
+    // deduped by other-node id within a section.
     const out: RelationGroup[] = []
     for (const g of GROUPS) {
       const merged: RelationItem[] = []
       const seenOtherIds = new Set<number>()
-      for (const rel of g.relations) {
-        const items = byRelation.get(rel) ?? []
-        for (const it of items) {
+      for (const bucket of g.buckets) {
+        for (const it of byBucket.get(bucket) ?? []) {
           if (seenOtherIds.has(it.otherNode.id)) continue
           seenOtherIds.add(it.otherNode.id)
           merged.push(it)
@@ -165,12 +184,7 @@ export function CharacterRelationships({
                 )
                 return (
                   <li key={it.edge.id} className="leading-snug">
-                    <span className="text-gray-400 mr-1.5">
-                      {it.isOutgoing ? '→' : '←'}
-                    </span>
-                    <span className="text-gray-500 mr-1.5">
-                      {formatRelation(it.edge.relation)}
-                    </span>
+                    <span className="text-gray-500 mr-1.5">{it.label}</span>
                     {nameEl}
                   </li>
                 )

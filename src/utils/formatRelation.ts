@@ -43,3 +43,48 @@ export function formatRelation(rel: string): string {
 export function formatNodeType(type: string): string {
   return NODE_TYPE_LABELS[type] ?? titleCase(type)
 }
+
+export interface DirectionalRelation {
+  /** Human-readable label written from the perspective of the *current* node. */
+  label: string
+  /**
+   * Stable bucket key used for grouping. Asymmetric relations have a different
+   * bucket per direction (e.g. defeated -> 'defeated' vs 'lost_to') so they
+   * can be split into two sections; symmetric relations share one bucket.
+   */
+  bucket: string
+}
+
+/**
+ * Format a relation from the perspective of one endpoint (the "current" node).
+ *
+ * For asymmetric relations the label changes by direction:
+ *   - defeated_by outgoing  -> "Defeated by" (this node lost)
+ *   - defeated_by incoming  -> "Defeated"    (this node won)
+ *   - mentor_of  outgoing   -> "Mentor of"
+ *   - mentor_of  incoming   -> "Apprentice of"
+ *
+ * For symmetric relations (ally, enemy, family, fought, ...) the label and
+ * bucket are the same regardless of direction.
+ */
+export function formatRelationDirected(
+  relation: string,
+  isOutgoing: boolean
+): DirectionalRelation {
+  switch (relation) {
+    case 'defeated_by':
+      return isOutgoing
+        ? { label: 'Defeated by', bucket: 'lost_to' }
+        : { label: 'Defeated', bucket: 'defeated' }
+    case 'mentor_of':
+      return isOutgoing
+        ? { label: 'Mentor of', bucket: 'mentor_of' }
+        : { label: 'Apprentice of', bucket: 'apprentice_of' }
+    case 'captain_of':
+      return isOutgoing
+        ? { label: 'Captain of', bucket: 'captain_of' }
+        : { label: 'Captained by', bucket: 'captained_by' }
+    default:
+      return { label: formatRelation(relation), bucket: relation }
+  }
+}
