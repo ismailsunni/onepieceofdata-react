@@ -150,13 +150,10 @@ export function CharacterRelationships({
 
   if (isLoading) {
     return (
-      <section className="bg-white border border-gray-200 rounded-xl p-6 animate-pulse">
-        <div className="h-6 w-48 bg-gray-200 rounded mb-4" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="h-24 bg-gray-100 rounded" />
-          <div className="h-24 bg-gray-100 rounded" />
-        </div>
-      </section>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse">
+        <div className="h-32 bg-gray-100 rounded-xl border border-gray-200" />
+        <div className="h-32 bg-gray-100 rounded-xl border border-gray-200" />
+      </div>
     )
   }
 
@@ -165,15 +162,12 @@ export function CharacterRelationships({
   }
 
   return (
-    <section className="bg-white border border-gray-200 rounded-xl p-6">
+    <>
       <div className="flex items-start justify-between gap-3 mb-4">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900">Relationships</h2>
-          <p className="text-sm text-gray-500 mt-0.5">
-            From the LLM-extracted Story Graph (confidence ≥{' '}
-            {MIN_CONFIDENCE.toFixed(1)}).
-          </p>
-        </div>
+        <p className="text-sm text-gray-500">
+          From the LLM-extracted Story Graph (confidence ≥{' '}
+          {MIN_CONFIDENCE.toFixed(1)}).
+        </p>
         <Link
           to={`/analytics/story-graph?focus=${encodeURIComponent(characterName)}`}
           className="flex-shrink-0 px-3 py-1.5 rounded-md text-sm font-medium bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-200 hover:bg-fuchsia-100 transition-colors whitespace-nowrap"
@@ -182,7 +176,7 @@ export function CharacterRelationships({
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {groups.map((g) => {
           const visible = g.items.slice(0, MAX_PER_GROUP)
           const overflow = g.items.length - visible.length
@@ -191,11 +185,11 @@ export function CharacterRelationships({
           return (
             <div
               key={g.config.title}
-              className="bg-gray-50 border border-gray-200 rounded-xl p-4"
+              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
             >
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <div className={`p-1.5 ${g.config.iconBg} rounded-lg`}>
+                  <div className={`p-2 ${g.config.iconBg} rounded-lg`}>
                     <svg
                       className={`w-4 h-4 ${g.config.iconColor}`}
                       fill="none"
@@ -210,12 +204,12 @@ export function CharacterRelationships({
                       />
                     </svg>
                   </div>
-                  <h3 className="text-sm font-semibold text-gray-900">
+                  <h3 className="text-lg font-semibold text-gray-900">
                     {g.config.title}
                   </h3>
                 </div>
                 <span
-                  className={`inline-flex items-center justify-center min-w-[1.75rem] h-7 px-2 rounded-full ${g.config.countBg} ${g.config.countText} text-xs font-semibold`}
+                  className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${g.config.countBg} ${g.config.countText} text-sm font-semibold`}
                 >
                   {g.items.length}
                 </span>
@@ -254,6 +248,6 @@ export function CharacterRelationships({
           )
         })}
       </div>
-    </section>
+    </>
   )
 }

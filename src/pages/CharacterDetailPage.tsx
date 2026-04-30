@@ -1413,22 +1413,84 @@ function CharacterDetailPage() {
           </>
         )}
 
-        {/* Affiliations */}
-        {affiliations.length > 0 && (
-          <AffiliationsSection affiliations={affiliations} />
-        )}
+        {/* Affiliations & Occupations (combined) */}
+        {(affiliations.length > 0 || occupations.length > 0) && (
+          <>
+            <div className="relative my-10">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-gray-50 px-6 py-2 rounded-full border border-gray-300">
+                  <div className="flex items-center gap-2">
+                    <svg
+                      className="w-5 h-5 text-gray-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                      />
+                    </svg>
+                    <h2 className="text-xl font-semibold text-gray-900">
+                      Affiliations & Occupations
+                    </h2>
+                  </div>
+                </span>
+              </div>
+            </div>
 
-        {/* Occupations */}
-        {occupations.length > 0 && (
-          <OccupationsSection occupations={occupations} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {affiliations.length > 0 && (
+                <AffiliationsCard affiliations={affiliations} />
+              )}
+              {occupations.length > 0 && (
+                <OccupationsCard occupations={occupations} />
+              )}
+            </div>
+          </>
         )}
 
         {/* Story Graph relationships */}
         {character.id && character.name && (
-          <CharacterRelationships
-            characterId={character.id}
-            characterName={character.name}
-          />
+          <>
+            <div className="relative my-10">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-gray-50 px-6 py-2 rounded-full border border-gray-300">
+                  <div className="flex items-center gap-2">
+                    <svg
+                      className="w-5 h-5 text-gray-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                      />
+                    </svg>
+                    <h2 className="text-xl font-semibold text-gray-900">
+                      Relationships
+                    </h2>
+                  </div>
+                </span>
+              </div>
+            </div>
+
+            <CharacterRelationships
+              characterId={character.id}
+              characterName={character.name}
+            />
+          </>
         )}
 
         {/* Appearance Details */}
@@ -1750,7 +1812,7 @@ function getStatusBadge(status: string) {
   return styles[status] || 'bg-gray-100 text-gray-600'
 }
 
-function AffiliationsSection({
+function AffiliationsCard({
   affiliations,
 }: {
   affiliations: CharacterAffiliation[]
@@ -1774,88 +1836,58 @@ function AffiliationsSection({
   })
 
   return (
-    <>
-      <div className="relative my-10">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-300"></div>
-        </div>
-        <div className="relative flex justify-center">
-          <span className="bg-gray-50 px-6 py-2 rounded-full border border-gray-300">
-            <div className="flex items-center gap-2">
-              <svg
-                className="w-5 h-5 text-gray-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-              <h2 className="text-xl font-semibold text-gray-900">
-                Affiliations
-              </h2>
-            </div>
-          </span>
-        </div>
-      </div>
-
-      <Card>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-rose-100 rounded-lg">
-              <svg
-                className="w-4 h-4 text-rose-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              Groups & Organizations
-            </h3>
-          </div>
-          <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-rose-100 text-rose-700 text-sm font-semibold">
-            {sorted.length}
-          </span>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {sorted.map((aff) => (
-            <Tag
-              key={`${aff.group_name}-${aff.status}`}
-              to={`/affiliations/${encodeURIComponent(aff.group_name)}`}
-              variant="affiliation"
+    <Card className="hover:shadow-md transition-shadow">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="p-2 bg-rose-100 rounded-lg">
+            <svg
+              className="w-4 h-4 text-rose-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <span className="flex items-center gap-1.5">
-                {aff.group_name}
-                {aff.sub_group && (
-                  <span className="text-rose-400">({aff.sub_group})</span>
-                )}
-                <span
-                  className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium ${getStatusBadge(aff.status)}`}
-                >
-                  {aff.status}
-                </span>
-              </span>
-            </Tag>
-          ))}
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+              />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900">
+            Groups & Organizations
+          </h3>
         </div>
-      </Card>
-    </>
+        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-rose-100 text-rose-700 text-sm font-semibold">
+          {sorted.length}
+        </span>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {sorted.map((aff) => (
+          <Tag
+            key={`${aff.group_name}-${aff.status}`}
+            to={`/affiliations/${encodeURIComponent(aff.group_name)}`}
+            variant="affiliation"
+          >
+            <span className="flex items-center gap-1.5">
+              {aff.group_name}
+              {aff.sub_group && (
+                <span className="text-rose-400">({aff.sub_group})</span>
+              )}
+              <span
+                className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium ${getStatusBadge(aff.status)}`}
+              >
+                {aff.status}
+              </span>
+            </span>
+          </Tag>
+        ))}
+      </div>
+    </Card>
   )
 }
 
-function OccupationsSection({
+function OccupationsCard({
   occupations,
 }: {
   occupations: CharacterOccupation[]
@@ -1878,81 +1910,51 @@ function OccupationsSection({
   })
 
   return (
-    <>
-      <div className="relative my-10">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-300"></div>
-        </div>
-        <div className="relative flex justify-center">
-          <span className="bg-gray-50 px-6 py-2 rounded-full border border-gray-300">
-            <div className="flex items-center gap-2">
-              <svg
-                className="w-5 h-5 text-gray-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                />
-              </svg>
-              <h2 className="text-xl font-semibold text-gray-900">
-                Occupations
-              </h2>
-            </div>
-          </span>
-        </div>
-      </div>
-
-      <Card>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-teal-100 rounded-lg">
-              <svg
-                className="w-4 h-4 text-teal-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              Roles & Occupations
-            </h3>
-          </div>
-          <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-teal-100 text-teal-700 text-sm font-semibold">
-            {sorted.length}
-          </span>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {sorted.map((occ) => (
-            <Tag
-              key={`${occ.role}-${occ.status}`}
-              to={`/occupations/${encodeURIComponent(occ.role)}`}
-              variant="occupation"
+    <Card className="hover:shadow-md transition-shadow">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="p-2 bg-teal-100 rounded-lg">
+            <svg
+              className="w-4 h-4 text-teal-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <span className="flex items-center gap-1.5">
-                {occ.role}
-                <span
-                  className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium ${getStatusBadge(occ.status)}`}
-                >
-                  {occ.status}
-                </span>
-              </span>
-            </Tag>
-          ))}
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900">
+            Roles & Occupations
+          </h3>
         </div>
-      </Card>
-    </>
+        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-teal-100 text-teal-700 text-sm font-semibold">
+          {sorted.length}
+        </span>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {sorted.map((occ) => (
+          <Tag
+            key={`${occ.role}-${occ.status}`}
+            to={`/occupations/${encodeURIComponent(occ.role)}`}
+            variant="occupation"
+          >
+            <span className="flex items-center gap-1.5">
+              {occ.role}
+              <span
+                className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium ${getStatusBadge(occ.status)}`}
+              >
+                {occ.status}
+              </span>
+            </span>
+          </Tag>
+        ))}
+      </div>
+    </Card>
   )
 }
 
