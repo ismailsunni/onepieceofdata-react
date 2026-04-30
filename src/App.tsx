@@ -1,6 +1,12 @@
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
+import {
+  HashRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Toaster } from 'react-hot-toast'
 import Header from './components/Header'
 import ErrorBoundary from './components/common/ErrorBoundary'
@@ -72,6 +78,33 @@ const GamesIndexPage = lazy(() => import('./pages/GamesIndexPage'))
 const CharacterQuizPage = lazy(() => import('./pages/CharacterQuizPage'))
 const WhoAmIPage = lazy(() => import('./pages/WhoAmIPage'))
 
+// Tracks SPA route changes as Umami pageviews. HashRouter changes the URL
+// hash, which Umami's auto-tracker ignores, so we send them manually.
+declare global {
+  interface Window {
+    umami?: {
+      track: (
+        payload:
+          | string
+          | Record<string, unknown>
+          | ((props: Record<string, unknown>) => Record<string, unknown>)
+      ) => void
+    }
+  }
+}
+
+const RouteTracker = () => {
+  const location = useLocation()
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.umami) return
+    const url = `/#${location.pathname}${location.search}`
+    window.umami.track((props) => ({ ...props, url }))
+  }, [location.pathname, location.search])
+
+  return null
+}
+
 // Loading fallback component
 const PageLoader = () => (
   <div className="flex justify-center items-center min-h-screen">
@@ -96,6 +129,7 @@ function App() {
     <AuthProvider>
       <QueryClientProvider client={queryClient}>
         <HashRouter>
+          <RouteTracker />
           <ErrorBoundary>
             <Suspense fallback={<PageLoader />}>
               <Routes>
