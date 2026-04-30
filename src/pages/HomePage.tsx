@@ -3,14 +3,47 @@ import { Link } from 'react-router-dom'
 import Card from '../components/Card'
 import StatCard from '../components/StatCard'
 import { fetchDatabaseStats } from '../services/statsService'
+import { supabase } from '../services/supabase'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faImage, faQuestion } from '@fortawesome/free-solid-svg-icons'
+
+interface LatestRelease {
+  chapter: number | null
+  volume: number | null
+}
+
+async function fetchLatestRelease(): Promise<LatestRelease> {
+  if (!supabase) return { chapter: null, volume: null }
+  const [chapterRes, volumeRes] = await Promise.all([
+    supabase
+      .from('chapter')
+      .select('number')
+      .order('number', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('volume')
+      .select('number')
+      .order('number', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ])
+  return {
+    chapter: chapterRes.data?.number ?? null,
+    volume: volumeRes.data?.number ?? null,
+  }
+}
 
 function HomePage() {
   // Use React Query to fetch and cache database statistics
   const { data: stats, isLoading } = useQuery({
     queryKey: ['stats'],
     queryFn: fetchDatabaseStats,
+  })
+
+  const { data: latest } = useQuery({
+    queryKey: ['latest-release'],
+    queryFn: fetchLatestRelease,
   })
 
   return (
@@ -26,6 +59,30 @@ function HomePage() {
               Your comprehensive data exploration platform for characters, story
               arcs, chapters, and analytics from the world of One Piece.
             </p>
+            {(latest?.chapter || latest?.volume) && (
+              <div className="mt-5 inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200 text-sm text-emerald-800">
+                <span className="font-medium">Data up to date through</span>
+                {latest.chapter && (
+                  <Link
+                    to={`/chapters/${latest.chapter}`}
+                    className="font-semibold underline decoration-emerald-300 underline-offset-2 hover:decoration-emerald-600"
+                  >
+                    Chapter {latest.chapter}
+                  </Link>
+                )}
+                {latest.chapter && latest.volume && (
+                  <span className="text-emerald-400">·</span>
+                )}
+                {latest.volume && (
+                  <Link
+                    to={`/volumes/${latest.volume}`}
+                    className="font-semibold underline decoration-emerald-300 underline-offset-2 hover:decoration-emerald-600"
+                  >
+                    Volume {latest.volume}
+                  </Link>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </section>
