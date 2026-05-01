@@ -42,7 +42,12 @@ const ANALYTICS_ITEMS: NavItem[] = [
     label: 'Character Comparison',
     exact: true,
   },
-  { to: '/analytics/network', label: 'Character Network', exact: true },
+  {
+    to: '/analytics/network',
+    label: 'Character Network',
+    exact: true,
+    badge: 'beta',
+  },
   {
     to: '/analytics/story-graph',
     label: 'Story Graph',
