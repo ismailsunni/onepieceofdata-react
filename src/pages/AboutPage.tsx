@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faInstagram, faXTwitter } from '@fortawesome/free-brands-svg-icons'
 
@@ -49,6 +50,16 @@ function AboutPage() {
                   This website is currently in <strong>beta</strong>. Features
                   are actively being developed and improved. You may encounter
                   bugs or incomplete features.
+                </p>
+                <p className="text-orange-700 text-sm leading-relaxed">
+                  See the{' '}
+                  <Link
+                    to="/changelog"
+                    className="text-orange-800 underline hover:text-orange-900 font-medium"
+                  >
+                    changelog
+                  </Link>{' '}
+                  for what's new.
                 </p>
               </div>
             </div>
