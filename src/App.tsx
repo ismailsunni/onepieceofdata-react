@@ -47,6 +47,7 @@ const CharacterAppearanceRacePage = lazy(
 )
 const DevilFruitsPage = lazy(() => import('./pages/DevilFruitsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
+const ChangelogPage = lazy(() => import('./pages/ChangelogPage'))
 const ChatPage = lazy(() => import('./pages/ChatPage'))
 const CharacterComparePage = lazy(() => import('./pages/CharacterComparePage'))
 const EmbedInsightPage = lazy(() => import('./pages/EmbedInsightPage'))
@@ -346,6 +347,10 @@ function App() {
                               element={<WhoAmIPage />}
                             />
                             <Route path="/about" element={<AboutPage />} />
+                            <Route
+                              path="/changelog"
+                              element={<ChangelogPage />}
+                            />
                             <Route path="/chat" element={<ChatPage />} />
                           </Routes>
                         </Suspense>
