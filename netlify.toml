@@ -1,0 +1,21 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Production stays on GitHub Pages — skip Netlify production builds.
+# `ignore = "exit 0"` always exits 0, which tells Netlify to skip the build.
+[context.production]
+  ignore = "exit 0"
+
+# Build deploy previews for every pull request.
+[context.deploy-preview]
+  command = "npm run build"
+
+# SPA fallback so direct (non-hash) URLs serve index.html.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
