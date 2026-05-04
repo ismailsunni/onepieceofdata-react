@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faInstagram, faXTwitter } from '@fortawesome/free-brands-svg-icons'
 
@@ -33,6 +34,16 @@ function AboutPage() {
               dedicated to the One Piece universe. This website provides an
               interactive way to explore characters, story arcs, chapters, and
               statistical insights from Eiichiro Oda's legendary manga series.
+            </p>
+            <p className="text-gray-700 leading-relaxed mt-3">
+              See the{' '}
+              <Link
+                to="/changelog"
+                className="text-blue-600 hover:text-blue-700 hover:underline font-medium"
+              >
+                changelog
+              </Link>{' '}
+              for what's new.
             </p>
           </section>
 
