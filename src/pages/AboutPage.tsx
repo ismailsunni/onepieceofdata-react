@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faInstagram, faXTwitter } from '@fortawesome/free-brands-svg-icons'
 
@@ -24,47 +23,6 @@ function AboutPage() {
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-6 md:p-8 space-y-6">
-          {/* Beta Notice */}
-          <section className="bg-orange-50 border-l-4 border-orange-500 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 mt-1">
-                <svg
-                  className="w-6 h-6 text-orange-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h4 className="text-lg font-bold text-orange-800 mb-2">
-                  Beta Version Notice
-                </h4>
-                <p className="text-orange-700 text-sm leading-relaxed mb-2">
-                  This website is currently in <strong>beta</strong>. Features
-                  are actively being developed and improved. You may encounter
-                  bugs or incomplete features.
-                </p>
-                <p className="text-orange-700 text-sm leading-relaxed">
-                  See the{' '}
-                  <Link
-                    to="/changelog"
-                    className="text-orange-800 underline hover:text-orange-900 font-medium"
-                  >
-                    changelog
-                  </Link>{' '}
-                  for what's new.
-                </p>
-              </div>
-            </div>
-          </section>
-
           {/* Introduction */}
           <section>
             <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-3">
