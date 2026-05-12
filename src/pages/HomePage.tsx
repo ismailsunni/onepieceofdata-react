@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import StatCard from '../components/StatCard'
 import HomeSpotlight from '../components/HomeSpotlight'
 import { fetchDatabaseStats } from '../services/statsService'
 import { supabase } from '../services/supabase'
@@ -15,7 +14,6 @@ import {
   faFlag,
   faArrowRight,
   faCalendarDay,
-  faFileLines,
 } from '@fortawesome/free-solid-svg-icons'
 
 interface LatestRelease {
@@ -106,24 +104,65 @@ function HomePage() {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      {/* Hero — split layout: pitch on the left, latest release card on the right */}
+      {/* Hero — pitch on the left, live rankings on the right (above the fold) */}
       <section className="bg-gradient-to-br from-blue-50 via-white to-emerald-50 border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-6 py-10 md:py-14">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">
-            <div className="lg:col-span-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold mb-4">
+        <div className="max-w-6xl mx-auto px-6 py-8 md:py-10">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8 items-start">
+            <div className="lg:col-span-2 lg:pt-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold mb-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
-                One Piece, in data
+                Your Log Pose to Laugh Tale
               </div>
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 leading-tight">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 leading-tight">
                 Explore the One Piece universe
                 <span className="block text-blue-600">through data.</span>
               </h1>
-              <p className="text-lg text-gray-600 leading-relaxed mb-6 max-w-2xl">
-                Characters, arcs, chapters, devil fruits, affiliations — all
+              <p className="text-base text-gray-600 leading-relaxed mb-4">
+                Characters, arcs, chapters, devil fruits, bounties — all
                 cross-linked and ready to dig into.
               </p>
-              <div className="flex flex-wrap gap-3">
+
+              {/* Inline latest strip — what was the standalone card */}
+              {latest?.chapter && (
+                <div className="mb-5 flex flex-wrap items-center gap-2 text-xs">
+                  <span className="inline-flex items-center gap-1.5 font-semibold uppercase tracking-wide text-emerald-700">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    Latest
+                  </span>
+                  <Link
+                    to={`/chapters/${latest.chapter.number}`}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white text-gray-800 border border-gray-200 hover:border-gray-300 hover:text-blue-600 transition-colors"
+                    title={
+                      latest.chapter.date ? formatDate(latest.chapter.date) : ''
+                    }
+                  >
+                    <FontAwesomeIcon
+                      icon={faCalendarDay}
+                      className="w-3 h-3 text-gray-400"
+                    />
+                    Ch. {latest.chapter.number}
+                    {latest.chapter.title ? ` · ${latest.chapter.title}` : ''}
+                  </Link>
+                  {latest.arc && (
+                    <Link
+                      to={`/arcs/${latest.arc.arc_id}`}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors"
+                    >
+                      {latest.arc.title}
+                    </Link>
+                  )}
+                  {latest.volume && (
+                    <Link
+                      to={`/volumes/${latest.volume}`}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
+                    >
+                      Vol. {latest.volume}
+                    </Link>
+                  )}
+                </div>
+              )}
+
+              <div className="flex flex-wrap gap-3 mb-6">
                 <Link
                   to="/characters"
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
@@ -138,111 +177,60 @@ function HomePage() {
                   See analytics
                 </Link>
               </div>
+
+              {/* Inline stat row — text-only so it fills the leftover vertical space without bulk */}
+              <dl className="grid grid-cols-2 sm:grid-cols-4 gap-y-3 pt-5 border-t border-gray-200/70">
+                <Link
+                  to="/chapters"
+                  className="group"
+                  aria-label={`${stats?.chapters || 0} chapters`}
+                >
+                  <dt className="text-xs font-medium text-gray-500 group-hover:text-blue-600 transition-colors">
+                    Chapters
+                  </dt>
+                  <dd className="text-xl font-bold text-gray-900 tabular-nums">
+                    {statsLoading
+                      ? '…'
+                      : (stats?.chapters || 0).toLocaleString()}
+                  </dd>
+                </Link>
+                <Link to="/characters" className="group">
+                  <dt className="text-xs font-medium text-gray-500 group-hover:text-blue-600 transition-colors">
+                    Characters
+                  </dt>
+                  <dd className="text-xl font-bold text-gray-900 tabular-nums">
+                    {statsLoading
+                      ? '…'
+                      : (stats?.characters || 0).toLocaleString()}
+                  </dd>
+                </Link>
+                <Link to="/arcs" className="group">
+                  <dt className="text-xs font-medium text-gray-500 group-hover:text-blue-600 transition-colors">
+                    Arcs
+                  </dt>
+                  <dd className="text-xl font-bold text-gray-900 tabular-nums">
+                    {statsLoading ? '…' : (stats?.arcs || 0).toLocaleString()}
+                  </dd>
+                </Link>
+                <Link to="/devil-fruits" className="group">
+                  <dt className="text-xs font-medium text-gray-500 group-hover:text-blue-600 transition-colors">
+                    Devil Fruits
+                  </dt>
+                  <dd className="text-xl font-bold text-gray-900 tabular-nums">
+                    {statsLoading
+                      ? '…'
+                      : (stats?.devilFruits || 0).toLocaleString()}
+                  </dd>
+                </Link>
+              </dl>
             </div>
 
-            {/* Latest release card */}
-            <div className="lg:col-span-2">
-              <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-700 mb-3">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  Latest in the data
-                </div>
-                {latest?.chapter ? (
-                  <Link
-                    to={`/chapters/${latest.chapter.number}`}
-                    className="block group"
-                  >
-                    <div className="text-sm text-gray-500 mb-1">
-                      Chapter {latest.chapter.number}
-                    </div>
-                    <div className="text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-3 line-clamp-2">
-                      {latest.chapter.title || 'Untitled'}
-                    </div>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-600">
-                      {latest.chapter.date && (
-                        <span className="inline-flex items-center gap-1.5">
-                          <FontAwesomeIcon
-                            icon={faCalendarDay}
-                            className="w-3 h-3 text-gray-400"
-                          />
-                          {formatDate(latest.chapter.date)}
-                        </span>
-                      )}
-                      {latest.chapter.num_page && (
-                        <span className="inline-flex items-center gap-1.5">
-                          <FontAwesomeIcon
-                            icon={faFileLines}
-                            className="w-3 h-3 text-gray-400"
-                          />
-                          {latest.chapter.num_page} pages
-                        </span>
-                      )}
-                    </div>
-                  </Link>
-                ) : (
-                  <div className="text-sm text-gray-400">Loading…</div>
-                )}
-
-                <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center gap-2 text-xs">
-                  {latest?.arc && (
-                    <Link
-                      to={`/arcs/${latest.arc.arc_id}`}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors"
-                    >
-                      Current arc: {latest.arc.title}
-                    </Link>
-                  )}
-                  {latest?.volume && (
-                    <Link
-                      to={`/volumes/${latest.volume}`}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
-                    >
-                      Volume {latest.volume}
-                    </Link>
-                  )}
-                </div>
+            {/* Rankings carousel — promoted above the fold */}
+            <div className="lg:col-span-3">
+              <div className="bg-white border border-gray-200 rounded-xl p-5 sm:p-6 shadow-sm">
+                <HomeSpotlight />
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Compact stats strip — 4 primary, link-through */}
-      <section className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-6 py-5">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <StatCard
-              variant="simple"
-              icon="📚"
-              label="Chapters"
-              value={stats?.chapters || 0}
-              loading={statsLoading}
-              link="/chapters"
-            />
-            <StatCard
-              variant="simple"
-              icon="👥"
-              label="Characters"
-              value={stats?.characters || 0}
-              loading={statsLoading}
-              link="/characters"
-            />
-            <StatCard
-              variant="simple"
-              icon="🎭"
-              label="Arcs"
-              value={stats?.arcs || 0}
-              loading={statsLoading}
-              link="/arcs"
-            />
-            <StatCard
-              variant="simple"
-              icon="🏴"
-              label="Affiliations"
-              value={stats?.affiliations || 0}
-              loading={statsLoading}
-              link="/affiliations"
-            />
           </div>
         </div>
       </section>
@@ -308,42 +296,35 @@ function HomePage() {
       </section>
 
       {/* Spotlight + Did you know */}
+      {/* Did you know — wide strip of standout stats */}
       <section className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-6 py-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Top rankings carousel */}
-          <div className="lg:col-span-2">
-            <HomeSpotlight />
-          </div>
-
-          {/* Did you know */}
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Did you know?
-            </h2>
-            <div className="space-y-3">
-              <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-200 rounded-xl p-4">
-                <div className="text-3xl font-bold text-amber-900">
-                  {stats?.totalPages.toLocaleString() || '—'}
-                </div>
-                <div className="text-sm text-amber-800 mt-1">
-                  total pages of manga in the database
-                </div>
+        <div className="max-w-6xl mx-auto px-6 py-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            Did you know?
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-200 rounded-xl p-4">
+              <div className="text-3xl font-bold text-amber-900">
+                {stats?.totalPages.toLocaleString() || '—'}
               </div>
-              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-200 rounded-xl p-4">
-                <div className="text-3xl font-bold text-emerald-900">
-                  {publicationYears !== null ? `${publicationYears}+` : '—'}
-                </div>
-                <div className="text-sm text-emerald-800 mt-1">
-                  years of publication covered
-                </div>
+              <div className="text-sm text-amber-800 mt-1">
+                total pages of manga in the database
               </div>
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 border border-purple-200 rounded-xl p-4">
-                <div className="text-3xl font-bold text-purple-900">
-                  {stats?.sagas || '—'}
-                </div>
-                <div className="text-sm text-purple-800 mt-1">
-                  sagas spanning {stats?.arcs || 0} arcs
-                </div>
+            </div>
+            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-200 rounded-xl p-4">
+              <div className="text-3xl font-bold text-emerald-900">
+                {publicationYears !== null ? `${publicationYears}+` : '—'}
+              </div>
+              <div className="text-sm text-emerald-800 mt-1">
+                years of publication covered
+              </div>
+            </div>
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 border border-purple-200 rounded-xl p-4">
+              <div className="text-3xl font-bold text-purple-900">
+                {stats?.sagas || '—'}
+              </div>
+              <div className="text-sm text-purple-800 mt-1">
+                sagas spanning {stats?.arcs || 0} arcs
               </div>
             </div>
           </div>

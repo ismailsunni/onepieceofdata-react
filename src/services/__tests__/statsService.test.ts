@@ -17,6 +17,7 @@ const defaultStats = {
   sagas: 0,
   characters: 0,
   affiliations: 0,
+  devilFruits: 0,
   totalPages: 0,
   publicationSpan: 'Unknown',
 }
@@ -60,11 +61,21 @@ describe('fetchDatabaseStats', () => {
           { group_name: 'Revolutionary Army' },
           { group_name: null },
         ]) as never
-      // Call 7: num_page select for totalPages
-      if (callIndex === 7) return buildPagesChain([{ num_page: 20 }, { num_page: 30 }]) as never
-      // Call 8: first chapter date
-      if (callIndex === 8) return buildDataChain({ date: '1997-07-19' }) as never
-      // Call 9: last chapter date
+      // Call 7: character_devil_fruit select (for distinct count)
+      if (callIndex === 7)
+        return buildPagesChain([
+          { fruit_name: 'Gomu Gomu no Mi', fruit_model: null },
+          { fruit_name: 'Hito Hito no Mi', fruit_model: 'Model: Daibutsu' },
+          { fruit_name: 'Hito Hito no Mi', fruit_model: 'Model: Daibutsu' },
+          { fruit_name: null, fruit_model: null },
+        ]) as never
+      // Call 8: num_page select for totalPages
+      if (callIndex === 8)
+        return buildPagesChain([{ num_page: 20 }, { num_page: 30 }]) as never
+      // Call 9: first chapter date
+      if (callIndex === 9)
+        return buildDataChain({ date: '1997-07-19' }) as never
+      // Call 10: last chapter date
       return buildDataChain({ date: '2024-01-01' }) as never
     })
 
@@ -76,6 +87,7 @@ describe('fetchDatabaseStats', () => {
     expect(result.sagas).toBe(40)
     expect(result.characters).toBe(50)
     expect(result.affiliations).toBe(2) // distinct group_name values (nulls filtered)
+    expect(result.devilFruits).toBe(2) // distinct (fruit_name, fruit_model) tuples
     expect(result.totalPages).toBe(50) // 20 + 30
     expect(result.publicationSpan).toMatch(/\d+/) // a number (days)
     expect(result.publicationSpan).not.toBe('Unknown')
@@ -88,6 +100,7 @@ describe('fetchDatabaseStats', () => {
       if (callIndex <= 5) return buildCountChain(0) as never
       if (callIndex === 6) return buildPagesChain([]) as never
       if (callIndex === 7) return buildPagesChain([]) as never
+      if (callIndex === 8) return buildPagesChain([]) as never
       return buildDataChain(null) as never
     })
 
@@ -103,6 +116,7 @@ describe('fetchDatabaseStats', () => {
       if (callIndex <= 5) return buildCountChain(0) as never
       if (callIndex === 6) return buildPagesChain([]) as never
       if (callIndex === 7) return buildPagesChain([]) as never
+      if (callIndex === 8) return buildPagesChain([]) as never
       return buildDataChain(null) as never
     })
 

@@ -8,6 +8,7 @@ export interface DatabaseStats {
   sagas: number
   characters: number
   affiliations: number
+  devilFruits: number
   totalPages: number
   publicationSpan: string
 }
@@ -45,6 +46,7 @@ export async function fetchDatabaseStats(): Promise<DatabaseStats> {
       sagasResult,
       charactersResult,
       affiliationsResult,
+      devilFruitsResult,
     ] = await Promise.all([
       supabase.from('chapter').select('*', { count: 'exact', head: true }),
       supabase.from('volume').select('*', { count: 'exact', head: true }),
@@ -52,6 +54,7 @@ export async function fetchDatabaseStats(): Promise<DatabaseStats> {
       supabase.from('saga').select('*', { count: 'exact', head: true }),
       supabase.from('character').select('*', { count: 'exact', head: true }),
       supabase.from('character_affiliation').select('group_name'),
+      supabase.from('character_devil_fruit').select('fruit_name, fruit_model'),
     ])
 
     // Check for errors in any of the queries
@@ -76,6 +79,19 @@ export async function fetchDatabaseStats(): Promise<DatabaseStats> {
       (affiliationsResult.data || [])
         .map((row: { group_name: string | null }) => row.group_name)
         .filter((name): name is string => !!name)
+    ).size
+
+    // Devil fruits are unique by (fruit_name, fruit_model) — the same Zoan
+    // fruit can have multiple users, so dedupe before counting.
+    const uniqueDevilFruits = new Set(
+      (
+        (devilFruitsResult.data || []) as {
+          fruit_name: string | null
+          fruit_model: string | null
+        }[]
+      )
+        .filter((row) => !!row.fruit_name)
+        .map((row) => `${row.fruit_name}::${row.fruit_model ?? ''}`)
     ).size
 
     // Calculate total pages from chapters (column is num_page)
@@ -125,6 +141,7 @@ export async function fetchDatabaseStats(): Promise<DatabaseStats> {
       sagas: sagasResult.count || 0,
       characters: charactersResult.count || 0,
       affiliations: uniqueAffiliations,
+      devilFruits: uniqueDevilFruits,
       totalPages,
       publicationSpan,
     }
@@ -138,6 +155,7 @@ export async function fetchDatabaseStats(): Promise<DatabaseStats> {
       sagas: 0,
       characters: 0,
       affiliations: 0,
+      devilFruits: 0,
       totalPages: 0,
       publicationSpan: 'Unknown',
     }
