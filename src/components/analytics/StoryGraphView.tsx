@@ -46,6 +46,24 @@ const REL_COLORS: Record<string, string> = {
 const DEFAULT_NODE_COLOR = { background: '#f3f4f6', border: '#9ca3af' }
 const DEFAULT_REL_COLOR = '#9ca3af'
 
+// Relations and node types we hide from the graph entirely — they're either
+// noisy, low-signal, or duplicated by dedicated pages (devil-fruit details,
+// bounty rankings, origin region charts). Dropping them before the filter
+// chips are built keeps the UI focused on narrative connections.
+const HIDDEN_RELATIONS = new Set<string>([
+  'has_bounty_of',
+  'ate_devil_fruit',
+  'originates_from',
+  'family_of',
+  'affiliated_with',
+])
+const HIDDEN_NODE_TYPES = new Set<string>([
+  'devil_fruit',
+  'saga',
+  'arc',
+  'location',
+])
+
 // ─── BFS subgraph ───────────────────────────────────────────────────────────
 
 /** Bidirectional BFS up to `hops` hops from focusId, capped at maxEdges. */
@@ -180,13 +198,19 @@ export function StoryGraphView() {
 
   const allRelations = useMemo(() => {
     const s = new Set<string>()
-    for (const e of data?.edges ?? []) s.add(e.relation)
+    for (const e of data?.edges ?? []) {
+      if (HIDDEN_RELATIONS.has(e.relation)) continue
+      s.add(e.relation)
+    }
     return Array.from(s).sort()
   }, [data])
 
   const allNodeTypes = useMemo(() => {
     const s = new Set<string>()
-    for (const n of data?.nodes ?? []) s.add(n.type)
+    for (const n of data?.nodes ?? []) {
+      if (HIDDEN_NODE_TYPES.has(n.type)) continue
+      s.add(n.type)
+    }
     return Array.from(s).sort()
   }, [data])
 
@@ -277,11 +301,14 @@ export function StoryGraphView() {
   const visibleEdges = useMemo(() => {
     if (!data) return []
     const filtered = data.edges.filter((e) => {
+      if (HIDDEN_RELATIONS.has(e.relation)) return false
       if (e.confidence < minConf) return false
       if (excludedRelations.has(e.relation)) return false
       const subj = nodesById.get(e.subject_id)
       const obj = nodesById.get(e.object_id)
       if (!subj || !obj) return false
+      if (HIDDEN_NODE_TYPES.has(subj.type)) return false
+      if (HIDDEN_NODE_TYPES.has(obj.type)) return false
       if (excludedNodeTypes.has(subj.type)) return false
       if (excludedNodeTypes.has(obj.type)) return false
       // Saga/arc scope: at least one endpoint must be a character in scope
