@@ -25,9 +25,6 @@ export const STRAW_HAT_COLORS: Record<string, string> = {
   Jinbe: '#C99A60', // Ochre (黄土色)
 }
 
-/** Straw-hat emoji used as an inline marker next to SHP names. */
-export const STRAW_HAT_MARKER = '\u{1F452}' // 👒
-
 /** Lookup helper — returns undefined for non-SHP characters. */
 export function getStrawHatColor(id: string): string | undefined {
   return STRAW_HAT_COLORS[id]

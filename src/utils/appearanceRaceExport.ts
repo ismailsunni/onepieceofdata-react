@@ -13,7 +13,15 @@
  */
 import type { RaceFrame } from './appearanceRace'
 import { wordColor } from './wordCloud'
-import { isLightColor, STRAW_HAT_MARKER } from '../constants/strawHatColors'
+import { isLightColor } from '../constants/strawHatColors'
+import {
+  JOLLY_ROGER_PATH,
+  JOLLY_ROGER_VIEWBOX_H,
+  JOLLY_ROGER_VIEWBOX_W,
+} from '../constants/jollyRoger'
+
+// Gap between the Jolly Roger glyph and the name. Tuned visually at 14px.
+const SHP_ICON_GAP = 4
 
 export interface RaceExportOpts {
   width: number
@@ -95,6 +103,27 @@ function formatScore(n: number): string {
 
 /** Canvas-compatible 2D context — works with browser Canvas and @napi-rs/canvas. */
 type Ctx2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
+
+/**
+ * Draw the Jolly Roger glyph at (x, y) at the requested pixel size. Uses
+ * Path2D so the same path string the React component renders also drives
+ * the canvas exports — no emoji-font dependency.
+ */
+function drawJollyRoger(
+  ctx: Ctx2D,
+  x: number,
+  y: number,
+  size: number,
+  fill: string
+): void {
+  const scale = size / JOLLY_ROGER_VIEWBOX_H
+  ctx.save()
+  ctx.translate(x, y)
+  ctx.scale(scale, scale)
+  ctx.fillStyle = fill
+  ctx.fill(new Path2D(JOLLY_ROGER_PATH))
+  ctx.restore()
+}
 
 /**
  * Draw a single chapter frame (header + top-N rows + progress bar) onto any
@@ -184,23 +213,37 @@ export function drawRaceFrameCanvas(
     ctx.fill()
 
     // Name — inside bar if it fits, otherwise just right of the bar edge.
-    const nameLabel = entry.isSHP
-      ? `${STRAW_HAT_MARKER} ${entry.name}`
-      : entry.name
+    // SHP entries get the Jolly Roger glyph drawn as a Path2D so the icon
+    // matches the in-browser <JollyRogerIcon /> exactly instead of relying on
+    // emoji fonts (which canvas in Node famously lacks).
     ctx.font = `700 ${sz(14)}px ${fontFamily}`
-    const nameWidth = ctx.measureText(nameLabel).width
-    const insideFits = barWidth - BAR_INSET * 2 >= nameWidth
-    if (insideFits) {
-      ctx.fillStyle = isLightColor(color) ? '#111827' : '#ffffff'
-      ctx.fillText(nameLabel, barsLeft + BAR_INSET, barY + barHeight / 2 + 5)
-    } else {
-      ctx.fillStyle = '#111827'
-      ctx.fillText(
-        nameLabel,
-        barsLeft + barWidth + BAR_INSET,
-        barY + barHeight / 2 + 5
+    const iconSize = 14 * fontScale
+    const iconWidth = entry.isSHP
+      ? iconSize * (JOLLY_ROGER_VIEWBOX_W / JOLLY_ROGER_VIEWBOX_H) +
+        SHP_ICON_GAP
+      : 0
+    const nameWidth = ctx.measureText(entry.name).width
+    const labelWidth = iconWidth + nameWidth
+    const insideFits = barWidth - BAR_INSET * 2 >= labelWidth
+    const labelX = insideFits
+      ? barsLeft + BAR_INSET
+      : barsLeft + barWidth + BAR_INSET
+    const textColor = insideFits
+      ? isLightColor(color)
+        ? '#111827'
+        : '#ffffff'
+      : '#111827'
+    if (entry.isSHP) {
+      drawJollyRoger(
+        ctx,
+        labelX,
+        barY + barHeight / 2 - iconSize / 2,
+        iconSize,
+        textColor
       )
     }
+    ctx.fillStyle = textColor
+    ctx.fillText(entry.name, labelX + iconWidth, barY + barHeight / 2 + 5)
 
     // Score — right-aligned in dedicated gutter.
     ctx.textAlign = 'right'
@@ -423,26 +466,35 @@ export function exportRaceAsSvg(frame: RaceFrame, opts: RaceSvgOpts): string {
     // Estimate label width at the bar font size. Canvas uses ctx.measureText;
     // here we approximate with ~0.58 × fontSize per char, which is close
     // enough for sans-serif fonts and sidesteps needing a layout engine.
-    const nameLabel = entry.isSHP
-      ? `${STRAW_HAT_MARKER} ${entry.name}`
-      : entry.name
     const labelFontSize = 14 * fontScale
-    const approxNameW = nameLabel.length * labelFontSize * 0.58
-    const insideFits = barWidth - BAR_INSET * 2 >= approxNameW
-    if (insideFits) {
+    const iconSize = labelFontSize
+    const iconWidth = entry.isSHP
+      ? iconSize * (JOLLY_ROGER_VIEWBOX_W / JOLLY_ROGER_VIEWBOX_H) +
+        SHP_ICON_GAP
+      : 0
+    const approxNameW = entry.name.length * labelFontSize * 0.58
+    const insideFits = barWidth - BAR_INSET * 2 >= iconWidth + approxNameW
+    const labelX = insideFits
+      ? barsLeft + BAR_INSET
+      : barsLeft + barWidth + BAR_INSET
+    const textColor = insideFits
+      ? isLightColor(color)
+        ? '#111827'
+        : '#ffffff'
+      : '#111827'
+    if (entry.isSHP) {
+      const scale = iconSize / JOLLY_ROGER_VIEWBOX_H
+      const iconY = barY + barHeight / 2 - iconSize / 2
       parts.push(
-        `<text x="${barsLeft + BAR_INSET}" y="${barY + barHeight / 2 + 5}" ` +
-          `font-family="${esc(fontFamily)}" font-weight="700" ` +
-          `font-size="${fontSz(14)}" fill="${isLightColor(color) ? '#111827' : '#ffffff'}">` +
-          `${esc(nameLabel)}</text>`
-      )
-    } else {
-      parts.push(
-        `<text x="${barsLeft + barWidth + BAR_INSET}" y="${barY + barHeight / 2 + 5}" ` +
-          `font-family="${esc(fontFamily)}" font-weight="700" ` +
-          `font-size="${fontSz(14)}" fill="#111827">${esc(nameLabel)}</text>`
+        `<g transform="translate(${labelX.toFixed(2)} ${iconY.toFixed(2)}) scale(${scale.toFixed(4)})" fill="${textColor}">` +
+          `<path d="${JOLLY_ROGER_PATH}"/></g>`
       )
     }
+    parts.push(
+      `<text x="${(labelX + iconWidth).toFixed(2)}" y="${barY + barHeight / 2 + 5}" ` +
+        `font-family="${esc(fontFamily)}" font-weight="700" ` +
+        `font-size="${fontSz(14)}" fill="${textColor}">${esc(entry.name)}</text>`
+    )
 
     parts.push(
       `<text x="${width - PADDING_X}" y="${barY + barHeight / 2 + 5}" ` +

@@ -9,7 +9,8 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { fetchInsightsRawData } from '../../services/analyticsService'
 import { STRAW_HAT_IDS } from '../../constants/characters'
-import { STRAW_HAT_MARKER, isLightColor } from '../../constants/strawHatColors'
+import { isLightColor } from '../../constants/strawHatColors'
+import JollyRogerIcon from '../JollyRogerIcon'
 import { ChartCard } from '../common/ChartCard'
 import { wordColor } from '../../utils/wordCloud'
 import {
@@ -209,13 +210,10 @@ function RaceRow({
               }}
             >
               {entry.isSHP && (
-                <span
-                  aria-label="Straw Hat Pirate"
-                  className="mr-1"
-                  style={{ textShadow: 'none' }}
-                >
-                  {STRAW_HAT_MARKER}
-                </span>
+                <JollyRogerIcon
+                  size={14}
+                  className="mr-1 inline-block align-[-0.15em]"
+                />
               )}
               {entry.name}
             </span>
@@ -238,9 +236,10 @@ function RaceRow({
             onClick={!nameInside ? onClick : undefined}
           >
             {entry.isSHP && (
-              <span aria-label="Straw Hat Pirate" className="mr-1">
-                {STRAW_HAT_MARKER}
-              </span>
+              <JollyRogerIcon
+                size={14}
+                className="mr-1 inline-block align-[-0.15em]"
+              />
             )}
             {entry.name}
           </span>
@@ -404,9 +403,8 @@ export function CharacterAppearanceRaceSection({
     if (exporting || frames.length === 0) return
     setExporting(format)
     try {
-      const { exportRaceAsGif, exportRaceAsSvg } = await import(
-        '../../utils/appearanceRaceExport'
-      )
+      const { exportRaceAsGif, exportRaceAsSvg } =
+        await import('../../utils/appearanceRaceExport')
       const { downloadBlob } = await import('../../utils/wordCloudExport')
       // Height math mirrors appearanceRaceExport.ts layout (~90 header with
       // the stacked chapter+subtitle + 42 per row + ~30 bottom for progress
