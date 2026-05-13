@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext'
 
 function Header() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
-  const { user, signIn, signOut } = useAuth()
+  const { user, signOut } = useAuth()
   // Auth UI is in the header (desktop) and Navigation (mobile)
 
   return (
@@ -67,38 +67,31 @@ function Header() {
 
             <Navigation />
 
-            {/* Auth Section — desktop only */}
-            <div className="hidden lg:flex items-center gap-3 border-l border-gray-200 pl-3">
-              {user ? (
-                <>
-                  {user.user_metadata?.avatar_url ? (
-                    <img
-                      src={user.user_metadata.avatar_url}
-                      alt={user.user_metadata?.full_name || 'User'}
-                      className="w-7 h-7 rounded-full"
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-medium">
-                      {user.email?.[0]?.toUpperCase() || 'U'}
-                    </div>
-                  )}
-                  <button
-                    onClick={signOut}
-                    className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
-                  >
-                    Sign out
-                  </button>
-                </>
-              ) : (
+            {/* Auth Section — only shown to signed-in users. The Sign In entry
+                point now lives inside the AI Chat menu so unauthenticated
+                visitors don't see a top-level auth wall in the header. */}
+            {user && (
+              <div className="hidden lg:flex items-center gap-3 border-l border-gray-200 pl-3">
+                {user.user_metadata?.avatar_url ? (
+                  <img
+                    src={user.user_metadata.avatar_url}
+                    alt={user.user_metadata?.full_name || 'User'}
+                    className="w-7 h-7 rounded-full"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-medium">
+                    {user.email?.[0]?.toUpperCase() || 'U'}
+                  </div>
+                )}
                 <button
-                  onClick={signIn}
-                  className="text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                  onClick={signOut}
+                  className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
                 >
-                  Sign In
+                  Sign out
                 </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -82,7 +82,15 @@ function ChatPage() {
             </p>
             <ol className="text-sm text-amber-700 space-y-1 list-decimal list-inside">
               <li>Register with your Google account</li>
-              <li>Wait for admin approval</li>
+              <li>
+                Wait for admin approval, or send message to{' '}
+                <a
+                  href="mailto:onepieceofdata@gmail.com"
+                  className="font-medium underline decoration-amber-400 underline-offset-2 hover:text-amber-900"
+                >
+                  onepieceofdata@gmail.com
+                </a>
+              </li>
               <li>You will be notified once approved</li>
             </ol>
           </div>
