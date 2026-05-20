@@ -93,13 +93,18 @@ function HomePage() {
     queryFn: fetchDatabaseStats,
   })
 
-  const { data: latest } = useQuery({
+  const { data: latest, isError: latestError } = useQuery({
     queryKey: ['latest-release-v2'],
     queryFn: fetchLatestRelease,
   })
 
-  const publicationYears = stats?.publicationSpan
-    ? Math.floor(parseInt(stats.publicationSpan.replace(/,/g, ''), 10) / 365)
+  // publicationSpan is a locale-formatted day count string ("1,234" / "1.234") or "Unknown".
+  // Strip all non-digits so locale separators don't poison the parse.
+  const publicationDays = stats?.publicationSpan
+    ? parseInt(stats.publicationSpan.replace(/\D/g, ''), 10)
+    : NaN
+  const publicationYears = Number.isFinite(publicationDays)
+    ? Math.floor(publicationDays / 365)
     : null
 
   return (
@@ -123,6 +128,14 @@ function HomePage() {
               </p>
 
               {/* Inline latest strip — what was the standalone card */}
+              {latestError && !latest?.chapter && (
+                <div
+                  role="status"
+                  className="mb-5 text-xs text-gray-500 italic"
+                >
+                  Couldn't load latest chapter.
+                </div>
+              )}
               {latest?.chapter && (
                 <div className="mb-5 flex flex-wrap items-center gap-2 text-xs">
                   <span className="inline-flex items-center gap-1.5 font-semibold uppercase tracking-wide text-emerald-700">
@@ -131,17 +144,20 @@ function HomePage() {
                   </span>
                   <Link
                     to={`/chapters/${latest.chapter.number}`}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white text-gray-800 border border-gray-200 hover:border-gray-300 hover:text-blue-600 transition-colors"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white text-gray-800 border border-gray-200 hover:border-gray-300 hover:text-blue-600 transition-colors max-w-full"
                     title={
                       latest.chapter.date ? formatDate(latest.chapter.date) : ''
                     }
                   >
                     <FontAwesomeIcon
                       icon={faCalendarDay}
-                      className="w-3 h-3 text-gray-400"
+                      aria-hidden="true"
+                      className="w-3 h-3 text-gray-400 shrink-0"
                     />
-                    Ch. {latest.chapter.number}
-                    {latest.chapter.title ? ` · ${latest.chapter.title}` : ''}
+                    <span className="truncate">
+                      Ch. {latest.chapter.number}
+                      {latest.chapter.title ? ` · ${latest.chapter.title}` : ''}
+                    </span>
                   </Link>
                   {latest.arc && (
                     <Link
@@ -168,7 +184,11 @@ function HomePage() {
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
                 >
                   Browse characters
-                  <FontAwesomeIcon icon={faArrowRight} className="w-4 h-4" />
+                  <FontAwesomeIcon
+                    icon={faArrowRight}
+                    aria-hidden="true"
+                    className="w-4 h-4"
+                  />
                 </Link>
                 <Link
                   to="/analytics"
@@ -179,50 +199,58 @@ function HomePage() {
               </div>
 
               {/* Inline stat row — text-only so it fills the leftover vertical space without bulk */}
-              <dl className="grid grid-cols-2 sm:grid-cols-4 gap-y-3 pt-5 border-t border-gray-200/70">
-                <Link
-                  to="/chapters"
-                  className="group"
-                  aria-label={`${stats?.chapters || 0} chapters`}
-                >
-                  <dt className="text-xs font-medium text-gray-500 group-hover:text-blue-600 transition-colors">
-                    Chapters
-                  </dt>
-                  <dd className="text-xl font-bold text-gray-900 tabular-nums">
-                    {statsLoading
-                      ? '…'
-                      : (stats?.chapters || 0).toLocaleString()}
-                  </dd>
-                </Link>
-                <Link to="/characters" className="group">
-                  <dt className="text-xs font-medium text-gray-500 group-hover:text-blue-600 transition-colors">
-                    Characters
-                  </dt>
-                  <dd className="text-xl font-bold text-gray-900 tabular-nums">
-                    {statsLoading
-                      ? '…'
-                      : (stats?.characters || 0).toLocaleString()}
-                  </dd>
-                </Link>
-                <Link to="/arcs" className="group">
-                  <dt className="text-xs font-medium text-gray-500 group-hover:text-blue-600 transition-colors">
-                    Arcs
-                  </dt>
-                  <dd className="text-xl font-bold text-gray-900 tabular-nums">
-                    {statsLoading ? '…' : (stats?.arcs || 0).toLocaleString()}
-                  </dd>
-                </Link>
-                <Link to="/devil-fruits" className="group">
-                  <dt className="text-xs font-medium text-gray-500 group-hover:text-blue-600 transition-colors">
-                    Devil Fruits
-                  </dt>
-                  <dd className="text-xl font-bold text-gray-900 tabular-nums">
-                    {statsLoading
-                      ? '…'
-                      : (stats?.devilFruits || 0).toLocaleString()}
-                  </dd>
-                </Link>
-              </dl>
+              <ul className="grid grid-cols-2 sm:grid-cols-4 gap-y-3 pt-5 border-t border-gray-200/70 list-none">
+                <li>
+                  <Link
+                    to="/chapters"
+                    className="group block"
+                    aria-label={`${stats?.chapters || 0} chapters`}
+                  >
+                    <div className="text-xs font-medium text-gray-600 group-hover:text-blue-600 transition-colors">
+                      Chapters
+                    </div>
+                    <div className="text-xl font-bold text-gray-900 tabular-nums min-h-[1.75rem] min-w-[3ch]">
+                      {statsLoading
+                        ? '…'
+                        : (stats?.chapters || 0).toLocaleString()}
+                    </div>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/characters" className="group block">
+                    <div className="text-xs font-medium text-gray-600 group-hover:text-blue-600 transition-colors">
+                      Characters
+                    </div>
+                    <div className="text-xl font-bold text-gray-900 tabular-nums min-h-[1.75rem] min-w-[3ch]">
+                      {statsLoading
+                        ? '…'
+                        : (stats?.characters || 0).toLocaleString()}
+                    </div>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/arcs" className="group block">
+                    <div className="text-xs font-medium text-gray-600 group-hover:text-blue-600 transition-colors">
+                      Arcs
+                    </div>
+                    <div className="text-xl font-bold text-gray-900 tabular-nums min-h-[1.75rem] min-w-[3ch]">
+                      {statsLoading ? '…' : (stats?.arcs || 0).toLocaleString()}
+                    </div>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/devil-fruits" className="group block">
+                    <div className="text-xs font-medium text-gray-600 group-hover:text-blue-600 transition-colors">
+                      Devil Fruits
+                    </div>
+                    <div className="text-xl font-bold text-gray-900 tabular-nums min-h-[1.75rem] min-w-[3ch]">
+                      {statsLoading
+                        ? '…'
+                        : (stats?.devilFruits || 0).toLocaleString()}
+                    </div>
+                  </Link>
+                </li>
+              </ul>
             </div>
 
             {/* Rankings carousel — promoted above the fold */}
@@ -266,7 +294,8 @@ function HomePage() {
               </div>
               <FontAwesomeIcon
                 icon={faArrowRight}
-                className="w-4 h-4 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all mt-1"
+                aria-hidden="true"
+                className="w-4 h-4 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all self-center"
               />
             </Link>
 
@@ -288,7 +317,8 @@ function HomePage() {
               </div>
               <FontAwesomeIcon
                 icon={faArrowRight}
-                className="w-4 h-4 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all mt-1"
+                aria-hidden="true"
+                className="w-4 h-4 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all self-center"
               />
             </Link>
           </div>
@@ -305,7 +335,7 @@ function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-200 rounded-xl p-4">
               <div className="text-3xl font-bold text-amber-900">
-                {stats?.totalPages.toLocaleString() || '—'}
+                {stats?.totalPages?.toLocaleString() ?? '—'}
               </div>
               <div className="text-sm text-amber-800 mt-1">
                 total pages of manga in the database
@@ -376,7 +406,9 @@ function HomePage() {
               </div>
               <h3 className="text-base font-semibold text-gray-900 mb-1">
                 Character Network
-                <sup className="text-[10px] text-orange-500 ml-1">beta</sup>
+                <sup className="text-xs font-semibold text-orange-700 ml-1">
+                  beta
+                </sup>
               </h3>
               <p className="text-xs text-gray-500">
                 Co-appearance graph across chapters.
@@ -402,9 +434,17 @@ function HomePage() {
               to="/analytics"
               className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700"
             >
-              <FontAwesomeIcon icon={faChartLine} className="w-4 h-4" />
+              <FontAwesomeIcon
+                icon={faChartLine}
+                aria-hidden="true"
+                className="w-4 h-4"
+              />
               Explore all analytics
-              <FontAwesomeIcon icon={faArrowRight} className="w-3 h-3" />
+              <FontAwesomeIcon
+                icon={faArrowRight}
+                aria-hidden="true"
+                className="w-3 h-3"
+              />
             </Link>
           </div>
         </div>
