@@ -1,4 +1,6 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCheck, faXmark } from '@fortawesome/free-solid-svg-icons'
 import type { Character } from '../../types/character'
 import type { WhoAmICharacter, WhoAmIRoundResult } from '../../types/whoAmI'
 import { calculateWhoAmIPoints } from '../../services/whoAmIService'
@@ -56,9 +58,18 @@ export default function WhoAmIRound({
   const [wrongGuesses, setWrongGuesses] = useState<string[]>([])
   const [wrongFeedback, setWrongFeedback] = useState(false)
   const pendingResultRef = useRef<WhoAmIRoundResult | null>(null)
+  const advanceButtonRef = useRef<HTMLButtonElement>(null)
 
   const isLastHint = currentHintIndex >= character.hints.length - 1
   const isLastRound = roundIndex === totalRounds - 1
+
+  // When the round wraps up, move focus to the advance button so SR /
+  // keyboard users land on the next actionable element.
+  useEffect(() => {
+    if (roundComplete) {
+      advanceButtonRef.current?.focus()
+    }
+  }, [roundComplete])
 
   const handleGuess = (characterId: string, characterName: string) => {
     if (roundComplete) return
@@ -135,7 +146,7 @@ export default function WhoAmIRound({
     <div className="flex flex-col w-full pb-40">
       {/* Progress */}
       <div className="text-center mb-4">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-600">
           Round {roundIndex + 1} of {totalRounds}
         </p>
         <div className="mt-1 flex items-center justify-center gap-2">
@@ -160,24 +171,31 @@ export default function WhoAmIRound({
       </div>
 
       {/* Hint dots */}
-      <div className="flex justify-center gap-2 mb-6">
+      <div className="flex justify-center gap-2 mb-2" aria-hidden="true">
         {character.hints.map((_, i) => (
           <div
             key={i}
-            className={`w-2.5 h-2.5 rounded-full transition-colors ${
+            className={`w-2.5 h-2.5 rounded-full motion-safe:transition-colors ${
               i <= currentHintIndex ? 'bg-blue-600' : 'bg-gray-200'
             }`}
           />
         ))}
       </div>
+      <p className="text-center text-xs text-gray-600 mb-6" aria-live="polite">
+        Hint {currentHintIndex + 1} of {character.hints.length}
+      </p>
 
       {/* Hints — expanded while playing, hidden after round ends (summary below) */}
       {!roundComplete && (
-        <div className="space-y-3 mb-6">
+        <div
+          className="space-y-3 mb-6"
+          aria-live="polite"
+          aria-relevant="additions"
+        >
           {visibleHints.map((hint, i) => (
             <div
               key={i}
-              className="bg-white border border-gray-200 rounded-xl p-4 animate-[fadeIn_0.3s_ease-in]"
+              className="bg-white border border-gray-200 rounded-xl p-4 motion-safe:animate-[fadeIn_0.3s_ease-in]"
             >
               <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">
                 Hint {i + 1}: {hint.label}
@@ -214,6 +232,8 @@ export default function WhoAmIRound({
           </div>
 
           <div
+            role="status"
+            aria-live="polite"
             className={`text-center p-4 rounded-xl mb-4 ${
               guessedCorrectly
                 ? 'bg-green-50 border border-green-200'
@@ -222,18 +242,25 @@ export default function WhoAmIRound({
           >
             {guessedCorrectly ? (
               <>
-                <p className="text-green-700 font-semibold text-lg">Correct!</p>
-                <p className="text-green-600 text-sm mt-1">
+                <p className="text-green-700 font-semibold text-lg inline-flex items-center gap-2 justify-center">
+                  <FontAwesomeIcon icon={faCheck} aria-hidden="true" />
+                  <span className="sr-only">Correct. </span>
+                  Correct!
+                </p>
+                <p className="text-green-700 text-sm mt-1">
                   +{calculateWhoAmIPoints(currentHintIndex)} points (guessed on
                   hint {currentHintIndex + 1})
                 </p>
               </>
             ) : (
               <>
-                <p className="text-red-700 font-semibold text-lg">
-                  The answer was {character.name}
+                <p className="text-red-700 font-semibold text-lg inline-flex items-center gap-2 justify-center">
+                  <FontAwesomeIcon icon={faXmark} aria-hidden="true" />
+                  <span className="sr-only">Incorrect. </span>
+                  The answer was{' '}
+                  <span className="font-bold">{character.name}</span>
                 </p>
-                <p className="text-red-600 text-sm mt-1">0 points</p>
+                <p className="text-red-700 text-sm mt-1">0 points</p>
               </>
             )}
           </div>
@@ -305,8 +332,10 @@ export default function WhoAmIRound({
 
       {/* Wrong guess feedback toast */}
       {wrongFeedback && !roundComplete && (
-        <div className="text-center mb-4">
-          <p className="text-red-600 text-sm font-medium animate-pulse">
+        <div className="text-center mb-4" role="status" aria-live="polite">
+          <p className="text-red-700 text-sm font-medium motion-safe:animate-pulse inline-flex items-center gap-2 justify-center">
+            <FontAwesomeIcon icon={faXmark} aria-hidden="true" />
+            <span className="sr-only">Incorrect. </span>
             Wrong!
             {wrongCount < MAX_WRONG_PER_HINT &&
               ` (${MAX_WRONG_PER_HINT - wrongCount} ${MAX_WRONG_PER_HINT - wrongCount === 1 ? 'try' : 'tries'} left on this hint)`}
@@ -315,7 +344,12 @@ export default function WhoAmIRound({
       )}
 
       {/* Input + action buttons — sticky bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 max-w-lg mx-auto">
+      <div
+        className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 max-w-lg mx-auto"
+        style={{
+          paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))',
+        }}
+      >
         {!roundComplete ? (
           <>
             <CharacterGuessInput
@@ -326,16 +360,18 @@ export default function WhoAmIRound({
             <div className="flex gap-3 mt-3">
               {!isLastHint && (
                 <button
+                  type="button"
                   onClick={handleNextHint}
-                  className="flex-1 py-2.5 px-4 border border-gray-300 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
+                  className="flex-1 min-h-[44px] py-2.5 px-4 border border-gray-300 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 >
                   Next Hint
                 </button>
               )}
               {isLastHint && (
                 <button
+                  type="button"
                   onClick={handleGiveUp}
-                  className="flex-1 py-2.5 px-4 border border-red-300 text-red-600 text-sm font-medium rounded-xl hover:bg-red-50 transition-colors"
+                  className="flex-1 min-h-[44px] py-2.5 px-4 border border-red-300 text-red-700 text-sm font-medium rounded-xl hover:bg-red-50 motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
                 >
                   Give Up
                 </button>
@@ -344,8 +380,10 @@ export default function WhoAmIRound({
           </>
         ) : (
           <button
+            ref={advanceButtonRef}
+            type="button"
             onClick={handleAdvance}
-            className="w-full py-3 px-4 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors"
+            className="w-full min-h-[44px] py-3 px-4 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
           >
             {isLastRound ? 'See Results' : 'Next Round'}
           </button>

@@ -12,6 +12,7 @@ import type { QuizQuestion, QuizAnswer } from '../types/quiz'
 import QuizIntro from '../components/quiz/QuizIntro'
 import QuizQuestionComponent from '../components/quiz/QuizQuestion'
 import QuizResult from '../components/quiz/QuizResult'
+import ErrorState from '../components/common/ErrorState'
 
 type Phase = 'intro' | 'playing' | 'result'
 
@@ -24,7 +25,12 @@ export default function CharacterQuizPage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [stats, setStats] = useState<QuizStats>(loadStats)
 
-  const { data: characters, isLoading: isLoadingCharacters } = useQuery({
+  const {
+    data: characters,
+    isLoading: isLoadingCharacters,
+    isError: isCharactersError,
+    refetch: refetchCharacters,
+  } = useQuery({
     queryKey: ['characters'],
     queryFn: fetchCharacters,
     staleTime: CACHE.DEFAULT_STALE,
@@ -97,7 +103,14 @@ export default function CharacterQuizPage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6">
-      {phase === 'intro' && (
+      {isCharactersError ? (
+        <ErrorState
+          message="Failed to load characters. Please try again."
+          onRetry={() => refetchCharacters()}
+        />
+      ) : null}
+
+      {!isCharactersError && phase === 'intro' && (
         <QuizIntro
           onStart={startQuiz}
           isLoading={isLoadingCharacters || isGenerating}
