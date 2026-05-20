@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query'
 import { fetchAllOccupations } from '../services/occupationService'
 import { fetchCharacters } from '../services/characterService'
 import SortableTable, { Column } from '../components/common/SortableTable'
+import SkeletonTable from '../components/common/SkeletonTable'
+import ErrorState from '../components/common/ErrorState'
 import { Character } from '../types/character'
 
 interface ExampleHolder {
@@ -27,18 +29,29 @@ const MAX_EXAMPLES = 3
 function OccupationsPage() {
   const [search, setSearch] = useState('')
 
-  const { data: occupations = [], isLoading: loadingOcc } = useQuery({
+  const {
+    data: occupations = [],
+    isLoading: loadingOcc,
+    isError: errorOcc,
+    refetch: refetchOcc,
+  } = useQuery({
     queryKey: ['all-occupations'],
     queryFn: fetchAllOccupations,
     staleTime: 10 * 60 * 1000,
   })
 
-  const { data: characters = [], isLoading: loadingChars } = useQuery({
+  const {
+    data: characters = [],
+    isLoading: loadingChars,
+    isError: errorChars,
+    refetch: refetchChars,
+  } = useQuery({
     queryKey: ['characters'],
     queryFn: fetchCharacters,
   })
 
   const isLoading = loadingOcc || loadingChars
+  const isError = errorOcc || errorChars
 
   const groups = useMemo(() => {
     const charMap = new Map<string, Character>()
@@ -158,7 +171,7 @@ function OccupationsPage() {
             </Link>
           ))}
           {row.totalHolders > row.examples.length && (
-            <span className="text-xs text-gray-400 self-center">
+            <span className="text-xs text-gray-600 self-center">
               +{row.totalHolders - row.examples.length} more
             </span>
           )}
@@ -197,7 +210,7 @@ function OccupationsPage() {
           <p className="text-lg text-gray-600">
             All roles and occupations held by characters in the One Piece world
             {groups.length > 0 && (
-              <span className="ml-2 text-sm text-gray-400">
+              <span className="ml-2 text-sm text-gray-600">
                 ({groups.length} roles, {occupations.length} assignments)
               </span>
             )}
@@ -223,7 +236,8 @@ function OccupationsPage() {
               </svg>
             </div>
             <input
-              type="text"
+              type="search"
+              aria-label="Search occupations"
               placeholder="Search occupations..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -233,10 +247,16 @@ function OccupationsPage() {
         </div>
 
         {/* Table */}
-        {isLoading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
-          </div>
+        {isError ? (
+          <ErrorState
+            message="Failed to load occupations. Please try again."
+            onRetry={() => {
+              if (errorOcc) refetchOcc()
+              if (errorChars) refetchChars()
+            }}
+          />
+        ) : isLoading ? (
+          <SkeletonTable rows={8} cols={6} />
         ) : (
           <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
             <SortableTable<OccupationGroup>

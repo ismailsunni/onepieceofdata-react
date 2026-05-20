@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { SortingState, PaginationState } from '@tanstack/react-table'
 import ChapterTable from '../components/ChapterTable'
+import ErrorState from '../components/common/ErrorState'
 import { fetchChapters } from '../services/chapterService'
 
 function ChaptersPage() {
@@ -14,7 +15,12 @@ function ChaptersPage() {
   })
 
   // Use React Query to fetch and cache chapters
-  const { data: chapters = [], isLoading } = useQuery({
+  const {
+    data: chapters = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ['chapters'],
     queryFn: fetchChapters,
   })
@@ -27,8 +33,18 @@ function ChaptersPage() {
           <Link to="/" className="hover:text-gray-900 transition-colors">
             Home
           </Link>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
           </svg>
           <span className="text-gray-900 font-medium">Chapters</span>
         </nav>
@@ -37,7 +53,8 @@ function ChaptersPage() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-3">Chapters</h1>
           <p className="text-lg text-gray-600">
-            Explore all One Piece manga chapters with release dates and character appearances
+            Explore all One Piece manga chapters with release dates and
+            character appearances
           </p>
         </div>
 
@@ -45,12 +62,23 @@ function ChaptersPage() {
         <div className="mb-6">
           <div className="relative max-w-md">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <svg
+                className="w-5 h-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
               </svg>
             </div>
             <input
-              type="text"
+              type="search"
+              aria-label="Search chapters by title"
               placeholder="Search chapters by title…"
               value={globalFilter}
               onChange={(e) => setGlobalFilter(e.target.value)}
@@ -59,14 +87,25 @@ function ChaptersPage() {
           </div>
         </div>
 
-        {/* Loading State with Skeleton */}
-        {isLoading ? (
+        {/* Error / Loading / Table */}
+        {isError ? (
+          <ErrorState
+            message="Failed to load chapters. Please try again."
+            onRetry={() => refetch()}
+          />
+        ) : isLoading ? (
           <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    {['Chapter', 'Title', 'Release Date', 'Arc', 'Characters'].map((header) => (
+                    {[
+                      'Chapter',
+                      'Title',
+                      'Release Date',
+                      'Arc',
+                      'Characters',
+                    ].map((header) => (
                       <th key={header} className="px-4 py-3 text-left">
                         <div className="h-3 bg-gray-200 rounded w-20 animate-pulse"></div>
                       </th>
