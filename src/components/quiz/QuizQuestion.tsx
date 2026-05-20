@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCheck, faXmark } from '@fortawesome/free-solid-svg-icons'
 import type { QuizQuestion as QuizQuestionType } from '../../types/quiz'
 import { calculatePoints, TIME_PER_QUESTION } from '../../services/quizService'
 
@@ -56,6 +58,7 @@ export default function QuizQuestion({
   const startTimeRef = useRef(0)
   const answeredRef = useRef(false)
   const timerRef = useRef<ReturnType<typeof setInterval>>(undefined)
+  const nextButtonRef = useRef<HTMLButtonElement>(null)
   const pendingResultRef = useRef<{
     selectedId: string | null
     isCorrect: boolean
@@ -88,6 +91,14 @@ export default function QuizQuestion({
 
     return () => clearInterval(timerRef.current)
   }, [])
+
+  // Move focus to the Next button when feedback appears so SR users land on
+  // the actionable element instead of the now-removed answer button.
+  useEffect(() => {
+    if (showFeedback) {
+      nextButtonRef.current?.focus()
+    }
+  }, [showFeedback])
 
   const handleSelect = (characterId: string) => {
     if (answeredRef.current) return
@@ -135,12 +146,12 @@ export default function QuizQuestion({
 
   return (
     <div className="flex flex-col items-center w-full">
-      {/* Progress dots */}
-      <div className="flex items-center gap-2 mb-4">
+      {/* Progress dots — decorative, paired with text below for SR */}
+      <div className="flex items-center gap-2 mb-4" aria-hidden="true">
         {dots.map((i) => (
           <div
             key={i}
-            className={`w-2.5 h-2.5 rounded-full transition-colors ${
+            className={`w-2.5 h-2.5 rounded-full motion-safe:transition-colors ${
               i < questionIndex
                 ? 'bg-blue-600'
                 : i === questionIndex
@@ -150,7 +161,7 @@ export default function QuizQuestion({
           />
         ))}
       </div>
-      <p className="text-sm text-gray-500 mb-4">
+      <p className="text-sm text-gray-600 mb-4" aria-live="polite">
         Question {questionIndex + 1} of {totalQuestions}
       </p>
 
@@ -158,7 +169,9 @@ export default function QuizQuestion({
       <div className="w-full max-w-[280px] aspect-square bg-gray-100 rounded-2xl overflow-hidden mb-4 flex items-center justify-center">
         {imgError ? (
           <svg
-            className="w-24 h-24 text-gray-300"
+            role="img"
+            aria-label="Character portrait unavailable"
+            className="w-24 h-24 text-gray-400"
             fill="currentColor"
             viewBox="0 0 24 24"
           >
@@ -176,21 +189,39 @@ export default function QuizQuestion({
       </div>
 
       {/* Timer bar */}
-      <div className="w-full max-w-[280px] h-2 bg-gray-200 rounded-full mb-6 overflow-hidden">
+      <div
+        role="timer"
+        aria-label={`Time remaining: ${Math.ceil(timeRemaining)} seconds`}
+        className="w-full max-w-[280px] h-2 bg-gray-200 rounded-full mb-6 overflow-hidden"
+      >
         <div
-          className={`h-full rounded-full transition-all duration-100 ${timerColor}`}
+          aria-hidden="true"
+          className={`h-full rounded-full motion-safe:transition-all motion-safe:duration-100 ${timerColor}`}
           style={{ width: `${timerPercent}%` }}
         />
       </div>
+      {/* Polite live region for screen readers — announces every 5s and when ≤3s */}
+      <span className="sr-only" aria-live="polite">
+        {Math.ceil(timeRemaining) <= 3
+          ? `${Math.ceil(timeRemaining)} seconds left`
+          : Math.ceil(timeRemaining) % 5 === 0
+            ? `${Math.ceil(timeRemaining)} seconds left`
+            : ''}
+      </span>
 
       {/* Options */}
       {!showFeedback && (
-        <div className="w-full max-w-sm grid grid-cols-2 gap-3">
+        <div
+          role="group"
+          aria-label="Answer choices"
+          className="w-full max-w-sm grid grid-cols-2 gap-3"
+        >
           {question.options.map((option) => (
             <button
               key={option.id}
+              type="button"
               onClick={() => handleSelect(option.id)}
-              className="min-h-[72px] py-3 px-4 rounded-xl text-base font-medium transition-all duration-200 bg-white border-2 border-gray-200 text-gray-900 hover:border-blue-400 hover:bg-blue-50"
+              className="min-h-[72px] py-3 px-4 rounded-xl text-base font-medium motion-safe:transition-all motion-safe:duration-200 bg-white border-2 border-gray-200 text-gray-900 hover:border-blue-400 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:border-blue-500"
             >
               {option.name}
             </button>
@@ -201,21 +232,33 @@ export default function QuizQuestion({
       {/* Feedback text */}
       {showFeedback && (
         <div className="mt-4 w-full max-w-sm">
-          <div className="text-center">
+          <div role="status" aria-live="polite" className="text-center">
             {selectedId === null ? (
-              <p className="text-red-600 font-medium">
-                Time's up! It was {question.correctCharacter.name}
+              <p className="text-red-700 font-medium inline-flex items-center gap-2 justify-center">
+                <FontAwesomeIcon icon={faXmark} aria-hidden="true" />
+                <span className="sr-only">Incorrect. </span>
+                Time's up! It was{' '}
+                <span className="font-bold">
+                  {question.correctCharacter.name}
+                </span>
               </p>
             ) : selectedId === question.correctCharacter.id ? (
-              <p className="text-green-600 font-medium">
+              <p className="text-green-700 font-medium inline-flex items-center gap-2 justify-center">
+                <FontAwesomeIcon icon={faCheck} aria-hidden="true" />
+                <span className="sr-only">Correct. </span>
                 Correct! +{calculatePoints(timeRemaining)} points
               </p>
             ) : (
               <>
-                <p className="text-red-600 font-medium">
-                  Wrong! It was {question.correctCharacter.name}
+                <p className="text-red-700 font-medium inline-flex items-center gap-2 justify-center">
+                  <FontAwesomeIcon icon={faXmark} aria-hidden="true" />
+                  <span className="sr-only">Incorrect. </span>
+                  Wrong! It was{' '}
+                  <span className="font-bold">
+                    {question.correctCharacter.name}
+                  </span>
                 </p>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-600 mt-1">
                   You picked:{' '}
                   {question.options.find((o) => o.id === selectedId)?.name}
                 </p>
@@ -238,8 +281,10 @@ export default function QuizQuestion({
           )}
 
           <button
+            ref={nextButtonRef}
+            type="button"
             onClick={handleNext}
-            className="mt-4 w-full py-3 px-4 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors"
+            className="mt-4 w-full py-3 px-4 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
           >
             {isLastQuestion ? 'See Results' : 'Next Question'}
           </button>

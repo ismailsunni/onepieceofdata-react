@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
+import { useId, useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import type { Character } from '../../types/character'
 
 interface CharacterGuessInputProps {
@@ -18,6 +18,8 @@ export default function CharacterGuessInput({
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
+  const listboxId = useId()
+  const optionId = (i: number) => `${listboxId}-opt-${i}`
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim()
@@ -99,6 +101,14 @@ export default function CharacterGuessInput({
         <input
           ref={inputRef}
           type="text"
+          role="combobox"
+          aria-label="Guess the character by name"
+          aria-autocomplete="list"
+          aria-expanded={open && filtered.length > 0}
+          aria-controls={listboxId}
+          aria-activedescendant={
+            open && highlightIndex >= 0 ? optionId(highlightIndex) : undefined
+          }
           value={query}
           onChange={(e) => {
             setQuery(e.target.value)
@@ -115,22 +125,31 @@ export default function CharacterGuessInput({
           autoCorrect="off"
           autoCapitalize="off"
           spellCheck={false}
-          className="w-full pl-9 pr-4 py-3 bg-white border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full pl-9 pr-4 py-3 bg-white border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
         />
       </div>
 
       {open && filtered.length > 0 && (
-        <div className="absolute bottom-full mb-1 left-0 right-0 z-50 bg-white border border-gray-200 rounded-lg shadow-lg">
+        <div
+          id={listboxId}
+          role="listbox"
+          aria-label="Character suggestions"
+          className="absolute bottom-full mb-1 left-0 right-0 z-50 bg-white border border-gray-200 rounded-lg shadow-lg"
+        >
           <div ref={listRef} className="max-h-48 overflow-y-auto">
-            <p className="px-3 py-1.5 text-xs text-gray-400">
+            <p className="px-3 py-1.5 text-xs text-gray-600" aria-live="polite">
               {filtered.length} matches
             </p>
             {filtered.map((c, i) => (
               <button
                 key={c.id}
+                id={optionId(i)}
+                role="option"
+                aria-selected={i === highlightIndex}
                 data-item
+                type="button"
                 onClick={() => handleSelect(c)}
-                className={`w-full px-3 py-2 text-left text-sm transition-colors ${
+                className={`w-full px-3 py-2 text-left text-sm motion-safe:transition-colors ${
                   i === highlightIndex
                     ? 'bg-blue-50 text-blue-700'
                     : 'text-gray-700 hover:bg-gray-50'
@@ -144,7 +163,11 @@ export default function CharacterGuessInput({
       )}
 
       {open && query.trim().length > 0 && filtered.length === 0 && (
-        <div className="absolute bottom-full mb-1 left-0 right-0 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-sm text-gray-500 text-center">
+        <div
+          role="status"
+          aria-live="polite"
+          className="absolute bottom-full mb-1 left-0 right-0 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-sm text-gray-600 text-center"
+        >
           No characters found
         </div>
       )}

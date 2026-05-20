@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router-dom'
+import { Navigate, Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faImage, faQuestion } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
@@ -36,21 +36,25 @@ export default function GamesIndexPage() {
       <h1 className="text-3xl font-bold text-gray-900 mb-6">Games</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {GAMES.map((game) => (
-          <a
+          <Link
             key={game.path}
-            href={`#${game.path}`}
-            className="bg-white border border-gray-200 rounded-xl p-6 hover:border-gray-300 hover:shadow-md transition-all duration-200 group"
+            to={game.path}
+            className="bg-white border border-gray-200 rounded-xl p-6 hover:border-gray-300 hover:shadow-md transition-all duration-200 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             <div className="flex items-center gap-4 mb-3">
               <div className="inline-flex items-center justify-center w-10 h-10 bg-blue-100 text-blue-600 rounded-lg group-hover:bg-blue-200 transition-colors">
-                <FontAwesomeIcon icon={game.icon} className="w-5 h-5" />
+                <FontAwesomeIcon
+                  icon={game.icon}
+                  aria-hidden="true"
+                  className="w-5 h-5"
+                />
               </div>
               <h2 className="text-lg font-semibold text-gray-900">
                 {game.label}
               </h2>
             </div>
-            <p className="text-sm text-gray-500">{game.description}</p>
-          </a>
+            <p className="text-sm text-gray-700">{game.description}</p>
+          </Link>
         ))}
       </div>
     </div>
