@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { fetchAllAffiliations } from '../services/affiliationService'
 import SortableTable, { Column } from '../components/common/SortableTable'
+import SkeletonTable from '../components/common/SkeletonTable'
+import ErrorState from '../components/common/ErrorState'
 
 interface AffiliationGroup {
   groupName: string
@@ -16,7 +18,12 @@ interface AffiliationGroup {
 function AffiliationsPage() {
   const [search, setSearch] = useState('')
 
-  const { data: affiliations = [], isLoading } = useQuery({
+  const {
+    data: affiliations = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ['all-affiliations'],
     queryFn: fetchAllAffiliations,
     staleTime: 10 * 60 * 1000,
@@ -109,7 +116,7 @@ function AffiliationsPage() {
             {row.subGroups.length > 3 && ` +${row.subGroups.length - 3}`}
           </span>
         ) : (
-          <span className="text-gray-300">&ndash;</span>
+          <span className="text-gray-500">&ndash;</span>
         ),
     },
   ]
@@ -146,7 +153,7 @@ function AffiliationsPage() {
           <p className="text-lg text-gray-600">
             All crews, organizations, and groups in the One Piece world
             {groups.length > 0 && (
-              <span className="ml-2 text-sm text-gray-400">
+              <span className="ml-2 text-sm text-gray-600">
                 ({groups.length} groups, {affiliations.length} memberships)
               </span>
             )}
@@ -172,7 +179,8 @@ function AffiliationsPage() {
               </svg>
             </div>
             <input
-              type="text"
+              type="search"
+              aria-label="Search affiliations"
               placeholder="Search groups..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -182,10 +190,13 @@ function AffiliationsPage() {
         </div>
 
         {/* Table */}
-        {isLoading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
-          </div>
+        {isError ? (
+          <ErrorState
+            message="Failed to load affiliations. Please try again."
+            onRetry={() => refetch()}
+          />
+        ) : isLoading ? (
+          <SkeletonTable rows={8} cols={5} />
         ) : (
           <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
             <SortableTable<AffiliationGroup>

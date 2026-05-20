@@ -80,9 +80,25 @@ export default function SortableTable<T>({
   }, [sortedData, safePageIndex, pageSize])
 
   const indicator = (key: string) => {
-    if (sortField !== key) return <span className="text-gray-300 ml-1">▲</span>
-    return <span className="ml-1">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+    if (sortField !== key)
+      return (
+        <span aria-hidden="true" className="text-gray-400 ml-1">
+          ↕
+        </span>
+      )
+    return (
+      <span aria-hidden="true" className="ml-1">
+        {sortDirection === 'asc' ? '▲' : '▼'}
+      </span>
+    )
   }
+
+  const ariaSortFor = (key: string): 'ascending' | 'descending' | 'none' =>
+    sortField === key
+      ? sortDirection === 'asc'
+        ? 'ascending'
+        : 'descending'
+      : 'none'
 
   const useScroll = maxHeight && pagedData.length > 20
 
@@ -97,54 +113,71 @@ export default function SortableTable<T>({
         <table className="w-full text-sm border-collapse">
           <thead className="sticky top-0 z-10">
             <tr className="bg-gray-50 border-b border-gray-200">
-              {columns.map((col) => (
-                <th
-                  key={col.key}
-                  className={`px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap ${
-                    col.sortable !== false
-                      ? 'cursor-pointer select-none hover:bg-gray-100'
-                      : ''
-                  }`}
-                  onClick={
-                    col.sortable !== false
-                      ? () => handleSort(col.key)
-                      : undefined
-                  }
-                >
-                  <span className="inline-flex items-center">
-                    {col.label}
-                    {col.sortable !== false && indicator(col.key)}
-                  </span>
-                </th>
-              ))}
+              {columns.map((col) => {
+                const sortable = col.sortable !== false
+                return (
+                  <th
+                    key={col.key}
+                    scope="col"
+                    aria-sort={sortable ? ariaSortFor(col.key) : undefined}
+                    className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap"
+                  >
+                    {sortable ? (
+                      <button
+                        type="button"
+                        onClick={() => handleSort(col.key)}
+                        className="inline-flex items-center font-semibold uppercase tracking-wider text-gray-700 hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+                      >
+                        {col.label}
+                        {indicator(col.key)}
+                      </button>
+                    ) : (
+                      <span className="inline-flex items-center">
+                        {col.label}
+                      </span>
+                    )}
+                  </th>
+                )
+              })}
             </tr>
           </thead>
           <tbody>
-            {pagedData.map((row) => {
-              const selected = isRowSelected?.(row) ?? false
-              return (
-                <tr
-                  key={rowKey(row)}
-                  onClick={onRowClick ? () => onRowClick(row) : undefined}
-                  className={`border-b border-gray-100 transition-colors ${
-                    onRowClick ? 'cursor-pointer' : ''
-                  } ${
-                    selected
-                      ? 'bg-blue-50 hover:bg-blue-100'
-                      : 'hover:bg-gray-50'
-                  }`}
+            {pagedData.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={columns.length}
+                  className="px-4 py-10 text-center text-sm text-gray-600"
                 >
-                  {columns.map((col) => (
-                    <td
-                      key={col.key}
-                      className="px-4 py-3 text-gray-700 whitespace-nowrap"
-                    >
-                      {col.render(row)}
-                    </td>
-                  ))}
-                </tr>
-              )
-            })}
+                  No results.
+                </td>
+              </tr>
+            ) : (
+              pagedData.map((row) => {
+                const selected = isRowSelected?.(row) ?? false
+                return (
+                  <tr
+                    key={rowKey(row)}
+                    onClick={onRowClick ? () => onRowClick(row) : undefined}
+                    className={`border-b border-gray-100 transition-colors ${
+                      onRowClick ? 'cursor-pointer' : ''
+                    } ${
+                      selected
+                        ? 'bg-blue-50 hover:bg-blue-100'
+                        : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    {columns.map((col) => (
+                      <td
+                        key={col.key}
+                        className="px-4 py-3 text-gray-700 align-top"
+                      >
+                        {col.render(row)}
+                      </td>
+                    ))}
+                  </tr>
+                )
+              })
+            )}
           </tbody>
         </table>
       </div>
@@ -160,7 +193,7 @@ export default function SortableTable<T>({
             <button
               onClick={() => setPageIndex(0)}
               disabled={safePageIndex === 0}
-              className="p-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] p-2.5 border border-gray-300 rounded-lg bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               title="First page"
               aria-label="First page"
             >
@@ -181,7 +214,7 @@ export default function SortableTable<T>({
             <button
               onClick={() => setPageIndex(Math.max(0, safePageIndex - 1))}
               disabled={safePageIndex === 0}
-              className="p-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] p-2.5 border border-gray-300 rounded-lg bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               title="Previous page"
               aria-label="Previous page"
             >
@@ -208,7 +241,7 @@ export default function SortableTable<T>({
                 setPageIndex(Math.min(pageCount - 1, safePageIndex + 1))
               }
               disabled={safePageIndex >= pageCount - 1}
-              className="p-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] p-2.5 border border-gray-300 rounded-lg bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               title="Next page"
               aria-label="Next page"
             >
@@ -229,7 +262,7 @@ export default function SortableTable<T>({
             <button
               onClick={() => setPageIndex(pageCount - 1)}
               disabled={safePageIndex >= pageCount - 1}
-              className="p-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] p-2.5 border border-gray-300 rounded-lg bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               title="Last page"
               aria-label="Last page"
             >

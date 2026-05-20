@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { SortingState, PaginationState } from '@tanstack/react-table'
 import CharacterTable from '../components/CharacterTable'
+import ErrorState from '../components/common/ErrorState'
 import { fetchCharacters } from '../services/characterService'
 import { fetchArcs } from '../services/arcService'
 import { fetchSagas } from '../services/sagaService'
@@ -50,12 +51,22 @@ function CharactersPage() {
     setPagination((p) => ({ ...p, pageIndex: 0 }))
   }
 
-  const { data: characters = [], isLoading } = useQuery({
+  const {
+    data: characters = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ['characters'],
     queryFn: fetchCharacters,
   })
 
-  const { data: arcs = [], isLoading: arcsLoading } = useQuery({
+  const {
+    data: arcs = [],
+    isLoading: arcsLoading,
+    isError: arcsError,
+    refetch: refetchArcs,
+  } = useQuery({
     queryKey: ['arcs'],
     queryFn: fetchArcs,
     staleTime: CACHE.REFERENCE_STALE,
@@ -370,7 +381,8 @@ function CharactersPage() {
               </svg>
             </div>
             <input
-              type="text"
+              type="search"
+              aria-label="Search characters by name"
               placeholder="Search characters by name…"
               value={globalFilter}
               onChange={(e) => setGlobalFilter(e.target.value)}
@@ -411,6 +423,7 @@ function CharactersPage() {
               {/* Filter by Time Skip */}
               <div className="flex items-center gap-3">
                 <input
+                  id="filter-mode-timeskip"
                   type="radio"
                   name="filterMode"
                   checked={filterMode === 'timeskip'}
@@ -420,9 +433,12 @@ function CharactersPage() {
                   }}
                   className="w-4 h-4 text-blue-600 flex-shrink-0"
                 />
-                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide flex-shrink-0 w-28">
+                <label
+                  htmlFor="filter-mode-timeskip"
+                  className="text-xs font-medium text-gray-600 uppercase tracking-wide flex-shrink-0 w-28 cursor-pointer"
+                >
                   Time Skip
-                </span>
+                </label>
                 <div
                   className={`flex-1 flex items-center gap-4 ${
                     filterMode !== 'timeskip'
@@ -463,6 +479,7 @@ function CharactersPage() {
               {/* Filter by Saga */}
               <div className="flex items-center gap-3">
                 <input
+                  id="filter-mode-saga"
                   type="radio"
                   name="filterMode"
                   checked={filterMode === 'saga'}
@@ -472,9 +489,12 @@ function CharactersPage() {
                   }}
                   className="w-4 h-4 text-blue-600 flex-shrink-0"
                 />
-                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide flex-shrink-0 w-28">
+                <label
+                  htmlFor="filter-mode-saga"
+                  className="text-xs font-medium text-gray-600 uppercase tracking-wide flex-shrink-0 w-28 cursor-pointer"
+                >
                   Saga
-                </span>
+                </label>
                 <div
                   className={`flex-1 flex items-center gap-4 ${
                     filterMode !== 'saga'
@@ -510,6 +530,7 @@ function CharactersPage() {
               {/* Filter by Arc */}
               <div className="flex items-center gap-3">
                 <input
+                  id="filter-mode-arc"
                   type="radio"
                   name="filterMode"
                   checked={filterMode === 'arc'}
@@ -519,9 +540,12 @@ function CharactersPage() {
                   }}
                   className="w-4 h-4 text-blue-600 flex-shrink-0"
                 />
-                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide flex-shrink-0 w-28">
+                <label
+                  htmlFor="filter-mode-arc"
+                  className="text-xs font-medium text-gray-600 uppercase tracking-wide flex-shrink-0 w-28 cursor-pointer"
+                >
                   Arc
-                </span>
+                </label>
                 <div
                   className={`flex-1 flex items-center gap-4 ${
                     filterMode !== 'arc' ? 'opacity-40 pointer-events-none' : ''
@@ -555,6 +579,7 @@ function CharactersPage() {
               {/* Filter by Chapter Range */}
               <div className="flex items-center gap-3">
                 <input
+                  id="filter-mode-chapter"
                   type="radio"
                   name="filterMode"
                   checked={filterMode === 'chapter'}
@@ -564,9 +589,12 @@ function CharactersPage() {
                   }}
                   className="w-4 h-4 text-blue-600 flex-shrink-0"
                 />
-                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide flex-shrink-0 w-28">
+                <label
+                  htmlFor="filter-mode-chapter"
+                  className="text-xs font-medium text-gray-600 uppercase tracking-wide flex-shrink-0 w-28 cursor-pointer"
+                >
                   Chapter Range
-                </span>
+                </label>
                 <div
                   className={`flex-1 flex items-center gap-3 ${
                     filterMode !== 'chapter'
@@ -590,7 +618,7 @@ function CharactersPage() {
                       setChapterRange([v, effectiveChapterRange[1]])
                       setPagination((p) => ({ ...p, pageIndex: 0 }))
                     }}
-                    className="w-20 px-2 py-1 text-sm border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-24 px-2 py-1.5 text-sm border border-gray-300 rounded-lg text-center tabular-nums focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <div className="flex-1">
                     <RangeSlider
@@ -621,7 +649,7 @@ function CharactersPage() {
                       setChapterRange([effectiveChapterRange[0], v])
                       setPagination((p) => ({ ...p, pageIndex: 0 }))
                     }}
-                    className="w-20 px-2 py-1 text-sm border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-24 px-2 py-1.5 text-sm border border-gray-300 rounded-lg text-center tabular-nums focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -641,8 +669,16 @@ function CharactersPage() {
           )}
         </div>
 
-        {/* Loading State */}
-        {isLoading || arcsLoading ? (
+        {/* Error / Loading / Table */}
+        {isError || arcsError ? (
+          <ErrorState
+            message="Failed to load characters. Please try again."
+            onRetry={() => {
+              if (isError) refetch()
+              if (arcsError) refetchArcs()
+            }}
+          />
+        ) : isLoading || arcsLoading ? (
           <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full">

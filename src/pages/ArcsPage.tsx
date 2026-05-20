@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { SortingState, PaginationState } from '@tanstack/react-table'
 import ArcTable from '../components/ArcTable'
+import ErrorState from '../components/common/ErrorState'
 import { fetchArcs } from '../services/arcService'
 import { CACHE } from '../constants/cache'
 import { PAGINATION } from '../constants/pagination'
@@ -18,10 +19,15 @@ function ArcsPage() {
   const globalFilter = searchParams.get('q') || ''
   const setGlobalFilter = (value: string) => {
     setSearchParams(value ? { q: value } : {}, { replace: true })
-    setPagination(p => ({ ...p, pageIndex: 0 }))
+    setPagination((p) => ({ ...p, pageIndex: 0 }))
   }
 
-  const { data: arcs = [], isLoading } = useQuery({
+  const {
+    data: arcs = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ['arcs'],
     queryFn: fetchArcs,
     staleTime: CACHE.REFERENCE_STALE,
@@ -33,9 +39,21 @@ function ArcsPage() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-          <Link to="/" className="hover:text-gray-900 transition-colors">Home</Link>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          <Link to="/" className="hover:text-gray-900 transition-colors">
+            Home
+          </Link>
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
           </svg>
           <span className="text-gray-900 font-medium">Story Arcs</span>
         </nav>
@@ -43,19 +61,32 @@ function ArcsPage() {
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-3">Story Arcs</h1>
-          <p className="text-lg text-gray-600">Follow the journey through each saga and arc of One Piece</p>
+          <p className="text-lg text-gray-600">
+            Follow the journey through each saga and arc of One Piece
+          </p>
         </div>
 
         {/* Search Box */}
         <div className="mb-6">
           <div className="relative max-w-md">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <svg
+                className="w-5 h-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
               </svg>
             </div>
             <input
-              type="text"
+              type="search"
+              aria-label="Search arcs by name"
               placeholder="Search arcs by name…"
               value={globalFilter}
               onChange={(e) => setGlobalFilter(e.target.value)}
@@ -64,14 +95,25 @@ function ArcsPage() {
           </div>
         </div>
 
-        {/* Loading State */}
-        {isLoading ? (
+        {/* Error / Loading / Table */}
+        {isError ? (
+          <ErrorState
+            message="Failed to load arcs. Please try again."
+            onRetry={() => refetch()}
+          />
+        ) : isLoading ? (
           <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    {['Arc Name', 'Start Chapter', 'Last Chapter', 'Number of Chapters', 'Saga Name'].map((header) => (
+                    {[
+                      'Arc Name',
+                      'Start Chapter',
+                      'Last Chapter',
+                      'Number of Chapters',
+                      'Saga Name',
+                    ].map((header) => (
                       <th key={header} className="px-4 py-3 text-left">
                         <div className="h-3 bg-gray-200 rounded w-20 animate-pulse"></div>
                       </th>
