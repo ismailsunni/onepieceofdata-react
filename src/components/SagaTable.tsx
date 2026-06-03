@@ -162,7 +162,7 @@ function SagaTable({
             table.getRowModel().rows.map((row, index) => (
               <tr
                 key={row.id}
-                className={`cursor-pointer transition-colors ${
+                className={`cursor-pointer border-gray-100 transition-colors ${
                   index % 2 === 0
                     ? 'bg-white hover:bg-gray-50'
                     : 'bg-gray-50/50 hover:bg-gray-100/50'
