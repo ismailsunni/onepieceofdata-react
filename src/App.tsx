@@ -106,6 +106,39 @@ const RouteTracker = () => {
   return null
 }
 
+// Scrolls to the element matching the URL hash (e.g. chart permalinks like
+// /#/analytics/characters#top-characters-per-arc). The app scrolls inside
+// #main-content, not the window, so native anchor scrolling never fires.
+// Pages are lazy-loaded, so poll briefly until the target element mounts.
+const ScrollToHash = () => {
+  const { pathname, hash } = useLocation()
+
+  useEffect(() => {
+    if (!hash) return
+    const id = decodeURIComponent(hash.slice(1))
+    if (!id) return
+
+    let frame = 0
+    const start = performance.now()
+    const tryScroll = () => {
+      const el = document.getElementById(id)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        return
+      }
+      // Keep retrying for up to ~3s while the lazy page/data loads.
+      if (performance.now() - start < 3000) {
+        frame = requestAnimationFrame(tryScroll)
+      }
+    }
+    frame = requestAnimationFrame(tryScroll)
+
+    return () => cancelAnimationFrame(frame)
+  }, [pathname, hash])
+
+  return null
+}
+
 // Loading fallback component
 const PageLoader = () => (
   <div className="flex justify-center items-center min-h-screen">
@@ -131,6 +164,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <HashRouter>
           <RouteTracker />
+          <ScrollToHash />
           <ErrorBoundary>
             <Suspense fallback={<PageLoader />}>
               <Routes>
