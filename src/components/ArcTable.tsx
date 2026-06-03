@@ -56,14 +56,10 @@ function ArcTable({
         header: 'Last Chapter',
         cell: (info) => info.getValue() || '-',
       }),
-      columnHelper.display({
+      columnHelper.accessor((row) => row.end_chapter - row.start_chapter + 1, {
         id: 'chapter_count',
         header: 'Number of Chapters',
-        cell: (info) => {
-          const row = info.row.original
-          const count = row.end_chapter - row.start_chapter + 1
-          return count
-        },
+        cell: (info) => info.getValue(),
       }),
       columnHelper.accessor('saga', {
         header: 'Saga Name',
@@ -121,16 +117,41 @@ function ArcTable({
                       header.getContext()
                     )}
                     {header.column.getIsSorted() ? (
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg
+                        className="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
                         {header.column.getIsSorted() === 'asc' ? (
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 15l7-7 7 7"
+                          />
                         ) : (
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
                         )}
                       </svg>
                     ) : (
-                      <svg className="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+                      <svg
+                        className="w-3 h-3 text-gray-300"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 9l4-4 4 4m0 6l-4 4-4-4"
+                        />
                       </svg>
                     )}
                   </div>
@@ -154,16 +175,15 @@ function ArcTable({
               <tr
                 key={row.id}
                 className={`cursor-pointer transition-colors ${
-                  index % 2 === 0 ? 'bg-white hover:bg-gray-50' : 'bg-gray-50/50 hover:bg-gray-100/50'
+                  index % 2 === 0
+                    ? 'bg-white hover:bg-gray-50'
+                    : 'bg-gray-50/50 hover:bg-gray-100/50'
                 }`}
                 onClick={() => navigate(`/arcs/${row.original.arc_id}`)}
                 title="Click to view details"
               >
                 {row.getVisibleCells().map((cell) => (
-                  <td
-                    key={cell.id}
-                    className="px-4 py-3 text-sm text-gray-700"
-                  >
+                  <td key={cell.id} className="px-4 py-3 text-sm text-gray-700">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
@@ -176,14 +196,25 @@ function ArcTable({
       {/* Pagination Controls */}
       <div className="px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-200 bg-gray-50">
         <div className="text-sm text-gray-600 text-center sm:text-left">
-          Showing <span className="font-medium">{table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}</span> to{' '}
+          Showing{' '}
+          <span className="font-medium">
+            {table.getState().pagination.pageIndex *
+              table.getState().pagination.pageSize +
+              1}
+          </span>{' '}
+          to{' '}
           <span className="font-medium">
             {Math.min(
-              (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+              (table.getState().pagination.pageIndex + 1) *
+                table.getState().pagination.pageSize,
               table.getFilteredRowModel().rows.length
             )}
           </span>{' '}
-          of <span className="font-medium">{table.getFilteredRowModel().rows.length}</span> arcs
+          of{' '}
+          <span className="font-medium">
+            {table.getFilteredRowModel().rows.length}
+          </span>{' '}
+          arcs
         </div>
 
         <div className="flex items-center gap-2">
@@ -193,8 +224,18 @@ function ArcTable({
             className="p-2 border border-gray-300 rounded-lg hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             title="First page"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+              />
             </svg>
           </button>
           <button
@@ -203,13 +244,26 @@ function ArcTable({
             className="p-2 border border-gray-300 rounded-lg hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             title="Previous page"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
           </button>
           <span className="text-sm text-gray-700 px-3 py-1 bg-white border border-gray-300 rounded-lg min-w-[120px] text-center">
-            Page <span className="font-medium">{table.getState().pagination.pageIndex + 1}</span> of{' '}
-            <span className="font-medium">{table.getPageCount()}</span>
+            Page{' '}
+            <span className="font-medium">
+              {table.getState().pagination.pageIndex + 1}
+            </span>{' '}
+            of <span className="font-medium">{table.getPageCount()}</span>
           </span>
           <button
             onClick={() => table.nextPage()}
@@ -217,8 +271,18 @@ function ArcTable({
             className="p-2 border border-gray-300 rounded-lg hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             title="Next page"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </button>
           <button
@@ -227,8 +291,18 @@ function ArcTable({
             className="p-2 border border-gray-300 rounded-lg hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             title="Last page"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 5l7 7-7 7M5 5l7 7-7 7"
+              />
             </svg>
           </button>
         </div>
