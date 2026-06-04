@@ -2,6 +2,7 @@ import {
   CartesianGrid,
   Line,
   LineChart,
+  ReferenceDot,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -105,75 +106,112 @@ export function CumulativeDebutChartBody({
   const X_AXIS_BAND = 140
 
   return (
-    <ResponsiveContainer width="100%" height={resolvedHeight}>
-      <LineChart
-        data={series.points}
-        margin={{ top: 5, right: 30, left: 10, bottom: 6 }}
-      >
-        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-        {isChapter ? (
-          <XAxis
-            dataKey="x"
-            type="number"
-            domain={[1, 'dataMax']}
-            height={X_AXIS_BAND}
+    <>
+      <ResponsiveContainer width="100%" height={resolvedHeight}>
+        <LineChart
+          data={series.points}
+          margin={{ top: 5, right: 30, left: 10, bottom: 6 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          {isChapter ? (
+            <XAxis
+              dataKey="x"
+              type="number"
+              domain={[1, 'dataMax']}
+              height={X_AXIS_BAND}
+              tick={{ fontSize: 11 }}
+              stroke="#6b7280"
+              label={{
+                value: 'Chapter',
+                position: 'insideBottom',
+                offset: 12,
+                style: { fontSize: 12, fill: '#6b7280' },
+              }}
+            />
+          ) : (
+            <XAxis
+              dataKey="label"
+              type="category"
+              interval={0}
+              angle={-45}
+              textAnchor="end"
+              height={X_AXIS_BAND}
+              tick={{ fontSize: 11 }}
+              stroke="#6b7280"
+            />
+          )}
+          <YAxis
             tick={{ fontSize: 11 }}
             stroke="#6b7280"
+            allowDecimals={false}
+            width={48}
             label={{
-              value: 'Chapter',
-              position: 'insideBottom',
-              offset: 12,
-              style: { fontSize: 12, fill: '#6b7280' },
+              value: 'Characters debuted',
+              angle: -90,
+              position: 'insideLeft',
+              style: { fontSize: 12, fill: '#6b7280', textAnchor: 'middle' },
             }}
           />
-        ) : (
-          <XAxis
-            dataKey="label"
-            type="category"
-            interval={0}
-            angle={-45}
-            textAnchor="end"
-            height={X_AXIS_BAND}
-            tick={{ fontSize: 11 }}
-            stroke="#6b7280"
+          <Tooltip
+            labelFormatter={(_label, payload) =>
+              payload && payload.length ? payload[0].payload.label : ''
+            }
+            formatter={(value, _name, item) => {
+              const total = Number(value) || 0
+              const delta = (item?.payload?.delta as number) ?? 0
+              return [
+                `${total.toLocaleString()} total (+${delta.toLocaleString()} new)`,
+                'Debuted',
+              ]
+            }}
           />
-        )}
-        <YAxis
-          tick={{ fontSize: 11 }}
-          stroke="#6b7280"
-          allowDecimals={false}
-          width={48}
-          label={{
-            value: 'Characters debuted',
-            angle: -90,
-            position: 'insideLeft',
-            style: { fontSize: 12, fill: '#6b7280', textAnchor: 'middle' },
-          }}
-        />
-        <Tooltip
-          labelFormatter={(_label, payload) =>
-            payload && payload.length ? payload[0].payload.label : ''
-          }
-          formatter={(value, _name, item) => {
-            const total = Number(value) || 0
-            const delta = (item?.payload?.delta as number) ?? 0
-            return [
-              `${total.toLocaleString()} total (+${delta.toLocaleString()} new)`,
-              'Debuted',
-            ]
-          }}
-        />
-        <Line
-          type="monotone"
-          dataKey="cumulative"
-          name="Cumulative debuts"
-          stroke="#059669"
-          strokeWidth={2}
-          dot={isChapter ? false : { r: 3, fill: '#059669' }}
-          activeDot={{ r: 5 }}
-          isAnimationActive={false}
-        />
-      </LineChart>
-    </ResponsiveContainer>
+          <Line
+            type="monotone"
+            dataKey="cumulative"
+            name="Cumulative debuts"
+            stroke="#059669"
+            strokeWidth={2}
+            dot={isChapter ? false : { r: 3, fill: '#059669' }}
+            activeDot={{ r: 5 }}
+            isAnimationActive={false}
+          />
+          {/* Mark the buckets with the most debuts */}
+          {series.topBuckets.map((b, i) => (
+            <ReferenceDot
+              key={b.label}
+              x={isChapter ? b.x : b.label}
+              y={b.cumulative}
+              r={6}
+              fill="#f59e0b"
+              stroke="#ffffff"
+              strokeWidth={2}
+              label={{
+                value: `#${i + 1} +${b.delta}`,
+                position: 'top',
+                fontSize: 11,
+                fontWeight: 600,
+                fill: '#b45309',
+              }}
+            />
+          ))}
+        </LineChart>
+      </ResponsiveContainer>
+      {series.topBuckets.length > 0 && (
+        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-600">
+          <span className="font-medium text-gray-700">
+            Top debut {granularity}s:
+          </span>
+          {series.topBuckets.map((b, i) => (
+            <span key={b.label}>
+              <span className="font-semibold text-amber-700">#{i + 1}</span>{' '}
+              {b.label}{' '}
+              <span className="text-gray-500">
+                (+{b.delta.toLocaleString()} new)
+              </span>
+            </span>
+          ))}
+        </div>
+      )}
+    </>
   )
 }

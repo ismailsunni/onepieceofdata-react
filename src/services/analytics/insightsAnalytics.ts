@@ -1330,6 +1330,7 @@ export interface CumulativeDebutSeries {
   points: CumulativeDebutPoint[]
   hiddenCount: number // characters confined to a single bucket at this granularity
   total: number // final cumulative total (after filtering)
+  topBuckets: CumulativeDebutPoint[] // up to 3 buckets with the most debuts (delta)
 }
 
 /**
@@ -1387,7 +1388,14 @@ export function computeCumulativeDebutSeries(
     })
   }
 
-  return { points, hiddenCount, total }
+  // Top 3 buckets by number of debuts in that bucket (the delta). Ties broken
+  // by chronological order (earlier bucket first, via the original index).
+  const topBuckets = points
+    .filter((p) => p.delta > 0)
+    .sort((a, b) => b.delta - a.delta || a.x - b.x)
+    .slice(0, 3)
+
+  return { points, hiddenCount, total, topBuckets }
 }
 
 // ── #23 Largest Crews / Organizations ──────────────────────────────────────
