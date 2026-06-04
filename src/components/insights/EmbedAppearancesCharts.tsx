@@ -17,6 +17,13 @@ import {
   type SagaIntroRate,
   type CharacterGap,
 } from '../../services/analyticsService'
+import {
+  CumulativeDebutChartBody,
+  CumulativeDebutControls,
+} from '../analytics/CumulativeDebutChart'
+import { useCumulativeDebuts } from '../analytics/useCumulativeDebuts'
+import type { Character } from '../../types/character'
+import type { Arc, Saga } from '../../types/arc'
 import { EmbedFooter } from './EmbedFooter'
 
 // ── #5 Most Loyal ───────────────────────────────────────────────────────────
@@ -282,6 +289,47 @@ export function EmbedSagaIntroRate({ data }: { data: SagaIntroRate[] }) {
           )}
         </BarChart>
       </ResponsiveContainer>
+      <EmbedFooter />
+    </div>
+  )
+}
+
+// ── Cumulative Character Debuts ─────────────────────────────────────────────
+
+export function EmbedCumulativeDebuts({
+  characters,
+  arcs,
+  sagas,
+}: {
+  characters: Character[]
+  arcs: Arc[]
+  sagas: Saga[]
+}) {
+  const { granularity, setGranularity, filterOn, setFilterOn, series } =
+    useCumulativeDebuts(characters, arcs, sagas)
+
+  return (
+    <div className="p-4 font-sans">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <h2 className="text-lg font-semibold text-gray-900">
+          Cumulative Character Debuts
+        </h2>
+      </div>
+      <div className="mb-3">
+        <CumulativeDebutControls
+          granularity={granularity}
+          setGranularity={setGranularity}
+          filterOn={filterOn}
+          setFilterOn={setFilterOn}
+          hiddenCount={series.hiddenCount}
+          size="sm"
+        />
+      </div>
+      <CumulativeDebutChartBody
+        series={series}
+        granularity={granularity}
+        height={420}
+      />
       <EmbedFooter />
     </div>
   )

@@ -11,6 +11,7 @@ import {
   computeLongestGaps,
 } from '../../services/analyticsService'
 import { AppearancesSection } from '../../components/insights/AppearancesSection'
+import { CumulativeDebutSection } from '../../components/analytics/CumulativeDebutSection'
 import { AppearanceChartsSection } from '../../components/analytics/AppearanceChartsSection'
 import { SagaMatrixSection } from '../../components/analytics/SagaMatrixSection'
 import { AppearanceConcentrationSection } from '../../components/analytics/AppearanceConcentrationSection'
@@ -169,6 +170,16 @@ function AppearancesTopicPage() {
           arcCountDist={arcCountDist}
           sagaCountDist={sagaCountDist}
         />
+
+        {/* Cumulative Character Debuts */}
+        <SectionTitle title="Character Debuts" />
+        {raw && (
+          <CumulativeDebutSection
+            characters={raw.characters}
+            arcs={raw.arcs}
+            sagas={raw.sagas}
+          />
+        )}
 
         {/* Section 3: Deep Dives */}
         <SectionTitle title="Deep Dives" />

@@ -1238,6 +1238,158 @@ export function computeMainCharacterMoments(
   )
 }
 
+// ── Cumulative Character Debuts ─────────────────────────────────────────────
+
+export type DebutGranularity = 'chapter' | 'arc' | 'saga'
+
+/**
+ * Per-character stats needed for the cumulative-debut chart. Computed once and
+ * independent of the selected granularity / filter.
+ */
+export interface CharacterDebutStat {
+  debutChapter: number // first mappable chapter the character appears in
+  chapterCount: number // distinct chapters in chapter_list
+  arcSpanCount: number // distinct arcs spanned by appearances
+  sagaSpanCount: number // distinct sagas spanned by appearances
+}
+
+export interface DebutDataset {
+  stats: CharacterDebutStat[]
+  latestChapter: number
+}
+
+/**
+ * Build the per-character debut stats. Drops characters with no name, no
+ * appearances, or no appearances that map to a known arc/saga range.
+ */
+export function computeDebutStats(
+  characters: Character[],
+  arcs: Arc[],
+  sagas: Saga[]
+): DebutDataset {
+  // Build chapter → arc id / chapter → saga id lookups from the contiguous,
+  // non-overlapping ranges.
+  const chapterArc = new Map<number, string>()
+  for (const arc of arcs) {
+    for (let ch = arc.start_chapter; ch <= arc.end_chapter; ch++) {
+      chapterArc.set(ch, arc.arc_id)
+    }
+  }
+  const chapterSaga = new Map<number, string>()
+  for (const saga of sagas) {
+    for (let ch = saga.start_chapter; ch <= saga.end_chapter; ch++) {
+      chapterSaga.set(ch, saga.saga_id)
+    }
+  }
+
+  const latestChapter = Math.max(
+    0,
+    ...arcs.map((a) => a.end_chapter),
+    ...sagas.map((s) => s.end_chapter)
+  )
+
+  const stats: CharacterDebutStat[] = []
+  for (const c of characters) {
+    if (!c.name) continue
+    if (!c.chapter_list || c.chapter_list.length === 0) continue
+
+    const distinctChapters = Array.from(new Set(c.chapter_list))
+    const arcIds = new Set<string>()
+    const sagaIds = new Set<string>()
+    const mappable: number[] = []
+    for (const ch of distinctChapters) {
+      const arcId = chapterArc.get(ch)
+      const sagaId = chapterSaga.get(ch)
+      if (arcId === undefined || sagaId === undefined) continue
+      arcIds.add(arcId)
+      sagaIds.add(sagaId)
+      mappable.push(ch)
+    }
+    // No appearances fall in a known arc/saga range → drop.
+    if (mappable.length === 0) continue
+
+    stats.push({
+      debutChapter: Math.min(...mappable),
+      chapterCount: distinctChapters.length,
+      arcSpanCount: arcIds.size,
+      sagaSpanCount: sagaIds.size,
+    })
+  }
+
+  return { stats, latestChapter }
+}
+
+export interface CumulativeDebutPoint {
+  x: number // numeric chapter (chapter mode) or bucket index (arc/saga mode)
+  label: string // bucket label for the tooltip / category axis
+  cumulative: number // distinct characters debuted up to and including this bucket
+  delta: number // characters debuting within this bucket
+}
+
+export interface CumulativeDebutSeries {
+  points: CumulativeDebutPoint[]
+  hiddenCount: number // characters confined to a single bucket at this granularity
+  total: number // final cumulative total (after filtering)
+}
+
+/**
+ * Build the cumulative-debut series for a granularity. When filterOn, characters
+ * confined to a single bucket (per the granularity) are removed before counting,
+ * so the whole curve shifts down — not just the endpoint.
+ */
+export function computeCumulativeDebutSeries(
+  dataset: DebutDataset,
+  arcs: Arc[],
+  sagas: Saga[],
+  granularity: DebutGranularity,
+  filterOn: boolean
+): CumulativeDebutSeries {
+  const { stats, latestChapter } = dataset
+
+  const isConfined = (s: CharacterDebutStat): boolean => {
+    if (granularity === 'chapter') return s.chapterCount === 1
+    if (granularity === 'arc') return s.arcSpanCount === 1
+    return s.sagaSpanCount === 1
+  }
+
+  const hiddenCount = stats.filter(isConfined).length
+  const included = filterOn ? stats.filter((s) => !isConfined(s)) : stats
+  const total = included.length
+
+  // Debut counts keyed by chapter number; every debutChapter maps to a bucket.
+  const debutsByChapter = new Map<number, number>()
+  for (const s of included) {
+    debutsByChapter.set(
+      s.debutChapter,
+      (debutsByChapter.get(s.debutChapter) || 0) + 1
+    )
+  }
+
+  const points: CumulativeDebutPoint[] = []
+
+  if (granularity === 'chapter') {
+    let cumulative = 0
+    for (let ch = 1; ch <= latestChapter; ch++) {
+      const delta = debutsByChapter.get(ch) || 0
+      cumulative += delta
+      points.push({ x: ch, label: `Chapter ${ch}`, cumulative, delta })
+    }
+  } else {
+    const buckets = granularity === 'arc' ? arcs : sagas
+    let cumulative = 0
+    buckets.forEach((b, i) => {
+      let delta = 0
+      for (let ch = b.start_chapter; ch <= b.end_chapter; ch++) {
+        delta += debutsByChapter.get(ch) || 0
+      }
+      cumulative += delta
+      points.push({ x: i, label: b.title, cumulative, delta })
+    })
+  }
+
+  return { points, hiddenCount, total }
+}
+
 // ── #23 Largest Crews / Organizations ──────────────────────────────────────
 
 export interface GroupSize {

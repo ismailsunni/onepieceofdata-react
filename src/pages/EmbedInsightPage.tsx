@@ -9,6 +9,7 @@
  * ├────────────────────────────────────────────────┼────────────────────────────┼────────────────────────────┤
  * │ Age Distribution by Status                     │ age-distribution           │ —                          │
  * │ Age vs Bounty                                  │ age-vs-bounty              │ —                          │
+ * │ Appearance Concentration                       │ appearance-concentration   │ —                          │
  * │ Blood Type Bounty Breakdown                    │ blood-type-bounty-table    │ All / Alive Only           │
  * │ Blood Type Distribution                        │ blood-type-comparison      │ —                          │
  * │ Bounty Distribution by Power Tier              │ bounty-distribution        │ —                          │
@@ -23,7 +24,9 @@
  * │ Characters per Saga (New vs Returning)         │ saga-intro-rate            │ Both / New / Returning     │
  * │ Cover Appearances per Volume                   │ cover-per-volume           │ SHP toggle                 │
  * │ Crew Loyalty vs Turnover                       │ crew-loyalty               │ —                          │
+ * │ Cumulative Character Debuts                    │ cumulative-debuts          │ —                          │
  * │ Detailed Completeness Statistics               │ completeness               │ —                          │
+ * │ Do Volume Covers Represent the Story?          │ cover-representativeness   │ —                          │
  * │ Largest Crews & Organizations                  │ largest-groups             │ —                          │
  * │ Longest Disappearances                         │ gap-analysis               │ Sortable table             │
  * │ Main Character Moments                         │ main-character-moments     │ SHP 3-way + Sortable table │
@@ -92,6 +95,7 @@ import {
   EmbedArcIntroRate,
   EmbedSagaIntroRate,
   EmbedGapAnalysis,
+  EmbedCumulativeDebuts,
 } from '../components/insights/EmbedAppearancesCharts'
 import { EmbedSagaPacing } from '../components/insights/EmbedStoryCharts'
 import {
@@ -134,6 +138,9 @@ function EmbedInsightPage() {
     if (!raw) return null
     const { characters, arcs, sagas, chapters } = raw
     return {
+      characters,
+      arcs,
+      sagas,
       chapterComplexity: computeChapterComplexity(
         characters,
         arcs,
@@ -200,6 +207,13 @@ function EmbedInsightPage() {
     'arc-intro-rate': <EmbedArcIntroRate data={insights.arcIntroRate} />,
     'saga-intro-rate': <EmbedSagaIntroRate data={insights.sagaIntroRate} />,
     'gap-analysis': <EmbedGapAnalysis data={insights.longestGaps} />,
+    'cumulative-debuts': (
+      <EmbedCumulativeDebuts
+        characters={insights.characters}
+        arcs={insights.arcs}
+        sagas={insights.sagas}
+      />
+    ),
     'saga-pacing': <EmbedSagaPacing data={insights.sagaPacing} />,
     'blood-type-comparison': (
       <EmbedBloodTypeComparison data={insights.bloodType} />
