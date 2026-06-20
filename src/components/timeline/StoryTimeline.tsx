@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Network, DataSet } from 'vis-network/standalone'
 import { useTimelineData, SAGA_COLORS } from '../../hooks/useTimelineData'
 import TimelineModal, { type TimelineSelection } from './TimelineModal'
+import type { Character } from '../../types/character'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -83,12 +85,24 @@ export default function StoryTimeline() {
     [arcs, focusedArcId]
   )
 
-  const applyView = useCallback((v: View) => {
-    setLevel(v.level)
-    setFocusedSagaId(v.sagaId)
-    setFocusedArcId(v.arcId)
-    setPanelSel(null)
-  }, [])
+  const applyView = useCallback(
+    (v: View) => {
+      setLevel(v.level)
+      setFocusedSagaId(v.sagaId)
+      setFocusedArcId(v.arcId)
+      // Default the side panel to the focused saga/arc so its detail is shown.
+      if (v.level === 'arc' && v.sagaId) {
+        const s = sagas.find((x) => x.saga_id === v.sagaId)
+        setPanelSel(s ? { type: 'saga', saga: s } : null)
+      } else if (v.level === 'chapter' && v.arcId) {
+        const a = arcs.find((x) => x.arc_id === v.arcId)
+        setPanelSel(a ? { type: 'arc', arc: a } : null)
+      } else {
+        setPanelSel(null)
+      }
+    },
+    [sagas, arcs]
+  )
   /** Navigate to a view and record it in history (drops any forward entries). */
   const pushView = useCallback(
     (v: View) => {
@@ -130,14 +144,6 @@ export default function StoryTimeline() {
     setHist((h) => ({ ...h, i: ni }))
     applyView(v)
   }
-  const resetToSagas = () => {
-    if (level === 'saga') {
-      networkRef.current?.fit({ animation: true })
-      return
-    }
-    zoomOutThen(goToSagas)
-  }
-
   const zoomOutThen = (fn: () => void) => {
     const net = networkRef.current
     if (!net) return fn()
@@ -489,9 +495,17 @@ export default function StoryTimeline() {
       window.setTimeout(fn, 440)
     }
 
+    // When nothing is clicked, fall back to the focused saga/arc's detail.
+    const focusSel: TimelineSelection | null =
+      level === 'arc' && focusedSaga
+        ? { type: 'saga', saga: focusedSaga }
+        : level === 'chapter' && focusedArc
+          ? { type: 'arc', arc: focusedArc }
+          : null
+
     net.on('click', (params: any) => {
       if (!params.nodes || params.nodes.length === 0) {
-        setPanelSel(null)
+        setPanelSel(focusSel)
         return
       }
       const id = String(params.nodes[0])
@@ -523,15 +537,6 @@ export default function StoryTimeline() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items])
 
-  const childCount =
-    level === 'saga' ? items.length : items.filter((it) => !it.isContext).length
-  const levelLabel =
-    level === 'saga'
-      ? `${childCount} Sagas`
-      : level === 'arc'
-        ? `${childCount} Arcs`
-        : `${childCount} Chapters`
-
   if (isError) {
     return (
       <div className="py-12 text-center text-gray-500">
@@ -550,7 +555,7 @@ export default function StoryTimeline() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+      <div className="flex flex-wrap items-center gap-3 mb-4">
         <div className="flex items-center flex-wrap gap-2">
           <div className="flex items-center gap-1">
             <button
@@ -572,12 +577,12 @@ export default function StoryTimeline() {
               →
             </button>
             <button
-              onClick={resetToSagas}
-              aria-label="Reset to all sagas"
-              title="Reset to all sagas"
-              className="px-3 h-8 flex items-center justify-center gap-1 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
+              onClick={() => networkRef.current?.fit({ animation: true })}
+              aria-label="Fit view"
+              title="Fit view"
+              className="px-3 h-8 flex items-center justify-center rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
             >
-              ⟲ All sagas
+              Fit
             </button>
           </div>
           <nav
@@ -622,17 +627,6 @@ export default function StoryTimeline() {
             )}
           </nav>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => networkRef.current?.fit({ animation: true })}
-            className="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-          >
-            Fit view
-          </button>
-          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-            {levelLabel}
-          </span>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4">
@@ -644,6 +638,7 @@ export default function StoryTimeline() {
           {panelSel ? (
             <PanelCard
               selection={panelSel}
+              characters={characters}
               onOpenDetails={() => setModalSel(panelSel)}
             />
           ) : (
@@ -679,9 +674,11 @@ export default function StoryTimeline() {
 /** Compact summary card shown in the side panel for the clicked node. */
 function PanelCard({
   selection,
+  characters,
   onOpenDetails,
 }: {
   selection: TimelineSelection
+  characters: Character[]
   onOpenDetails: () => void
 }) {
   const meta =
@@ -691,8 +688,10 @@ function PanelCard({
           title: selection.saga.title,
           sub: selection.saga.japanese_title,
           range: `Ch. ${selection.saga.start_chapter}–${selection.saga.end_chapter}`,
+          chapterCount:
+            selection.saga.end_chapter - selection.saga.start_chapter + 1,
           desc: selection.saga.description,
-          hint: 'Click the node to fly into its arcs.',
+          detailPath: `/sagas/${selection.saga.saga_id}`,
         }
       : selection.type === 'arc'
         ? {
@@ -700,8 +699,10 @@ function PanelCard({
             title: selection.arc.title,
             sub: selection.arc.japanese_title,
             range: `Ch. ${selection.arc.start_chapter}–${selection.arc.end_chapter}`,
+            chapterCount:
+              selection.arc.end_chapter - selection.arc.start_chapter + 1,
             desc: selection.arc.description,
-            hint: 'Click the node to fly into its chapters.',
+            detailPath: `/arcs/${selection.arc.arc_id}`,
           }
         : {
             label: 'Chapter',
@@ -713,9 +714,39 @@ function PanelCard({
               selection.chapter.volume != null
                 ? `Volume ${selection.chapter.volume}`
                 : `Chapter ${selection.chapter.number}`,
+            chapterCount: null,
             desc: null,
-            hint: null,
+            detailPath: `/chapters/${selection.chapter.number}`,
           }
+
+  // Top characters appearing in this saga/arc (by appearances within its range).
+  const topChars = useMemo(() => {
+    if (selection.type === 'chapter') {
+      const n = selection.chapter.number
+      return characters
+        .filter((c) => c.chapter_list?.includes(n))
+        .sort((a, b) => (b.appearance_count ?? 0) - (a.appearance_count ?? 0))
+        .slice(0, 8)
+        .map((c) => ({ c, count: 0 }))
+    }
+    const start =
+      selection.type === 'saga'
+        ? selection.saga.start_chapter
+        : selection.arc.start_chapter
+    const end =
+      selection.type === 'saga'
+        ? selection.saga.end_chapter
+        : selection.arc.end_chapter
+    return characters
+      .map((c) => ({
+        c,
+        count:
+          c.chapter_list?.filter((ch) => ch >= start && ch <= end).length ?? 0,
+      }))
+      .filter((x) => x.count > 0)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8)
+  }, [selection, characters])
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-4">
@@ -728,21 +759,63 @@ function PanelCard({
       {meta.sub && (
         <div className="text-sm text-gray-500 mt-0.5">{meta.sub}</div>
       )}
-      <div className="mt-2 inline-block text-xs font-medium px-2 py-1 rounded bg-gray-100 text-gray-700">
-        {meta.range}
+
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        <span className="text-xs font-medium px-2 py-1 rounded bg-gray-100 text-gray-700">
+          {meta.range}
+        </span>
+        {meta.chapterCount != null && (
+          <span className="text-xs font-medium px-2 py-1 rounded bg-gray-100 text-gray-700">
+            {meta.chapterCount} chapters
+          </span>
+        )}
       </div>
+
       {meta.desc && (
-        <p className="mt-3 text-sm text-gray-600 leading-relaxed line-clamp-5">
+        <p className="mt-3 text-sm text-gray-600 leading-relaxed line-clamp-4">
           {meta.desc}
         </p>
       )}
-      {meta.hint && <p className="mt-3 text-xs text-gray-400">{meta.hint}</p>}
-      <button
-        onClick={onOpenDetails}
-        className="mt-3 w-full px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
-      >
-        View details & characters
-      </button>
+
+      {topChars.length > 0 && (
+        <div className="mt-3">
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+            Main characters
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {topChars.map(({ c, count }) => (
+              <Link
+                key={c.id}
+                to={`/characters/${c.id}`}
+                title={
+                  count > 0
+                    ? `${c.name} — ${count} appearances here`
+                    : (c.name ?? '')
+                }
+                className="inline-flex items-center gap-1 pl-1 pr-2 py-0.5 rounded-full border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors text-xs text-gray-700"
+              >
+                <span className="truncate max-w-[120px]">{c.name}</span>
+                {count > 0 && <span className="text-gray-400">{count}</span>}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="mt-3 flex gap-2">
+        <button
+          onClick={onOpenDetails}
+          className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          More details
+        </button>
+        <Link
+          to={meta.detailPath}
+          className="px-3 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          Full page →
+        </Link>
+      </div>
     </div>
   )
 }
