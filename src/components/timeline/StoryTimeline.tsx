@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Network, DataSet } from 'vis-network/standalone'
 import { useTimelineData, SAGA_COLORS } from '../../hooks/useTimelineData'
 import TimelineModal, { type TimelineSelection } from './TimelineModal'
@@ -6,6 +6,12 @@ import TimelineModal, { type TimelineSelection } from './TimelineModal'
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 type Level = 'saga' | 'arc' | 'chapter'
+
+interface View {
+  level: Level
+  sagaId: string | null
+  arcId: string | null
+}
 
 const GOLDEN_ANGLE = 2.399963229728653
 
@@ -57,6 +63,14 @@ export default function StoryTimeline() {
   const [panelSel, setPanelSel] = useState<TimelineSelection | null>(null)
   const [modalSel, setModalSel] = useState<TimelineSelection | null>(null)
 
+  // Navigation history (browser-style back / forward).
+  const [hist, setHist] = useState<{ stack: View[]; i: number }>({
+    stack: [{ level: 'saga', sagaId: null, arcId: null }],
+    i: 0,
+  })
+  const canBack = hist.i > 0
+  const canForward = hist.i < hist.stack.length - 1
+
   const containerRef = useRef<HTMLDivElement>(null)
   const networkRef = useRef<Network | null>(null)
 
@@ -69,23 +83,59 @@ export default function StoryTimeline() {
     [arcs, focusedArcId]
   )
 
-  const goToSagas = () => {
-    setLevel('saga')
-    setFocusedSagaId(null)
-    setFocusedArcId(null)
+  const applyView = useCallback((v: View) => {
+    setLevel(v.level)
+    setFocusedSagaId(v.sagaId)
+    setFocusedArcId(v.arcId)
     setPanelSel(null)
+  }, [])
+  /** Navigate to a view and record it in history (drops any forward entries). */
+  const pushView = useCallback(
+    (v: View) => {
+      setHist((h) => {
+        const stack = h.stack.slice(0, h.i + 1)
+        stack.push(v)
+        return { stack, i: stack.length - 1 }
+      })
+      applyView(v)
+    },
+    [applyView]
+  )
+
+  const goToSagas = useCallback(
+    () => pushView({ level: 'saga', sagaId: null, arcId: null }),
+    [pushView]
+  )
+  const goToArcs = useCallback(
+    (sagaId: string) => pushView({ level: 'arc', sagaId, arcId: null }),
+    [pushView]
+  )
+  const goToChapters = useCallback(
+    (sagaId: string, arcId: string) =>
+      pushView({ level: 'chapter', sagaId, arcId }),
+    [pushView]
+  )
+
+  const goBack = () => {
+    if (hist.i <= 0) return
+    const ni = hist.i - 1
+    const v = hist.stack[ni]
+    setHist((h) => ({ ...h, i: ni }))
+    zoomOutThen(() => applyView(v))
   }
-  const goToArcs = (sagaId: string) => {
-    setLevel('arc')
-    setFocusedSagaId(sagaId)
-    setFocusedArcId(null)
-    setPanelSel(null)
+  const goForward = () => {
+    if (hist.i >= hist.stack.length - 1) return
+    const ni = hist.i + 1
+    const v = hist.stack[ni]
+    setHist((h) => ({ ...h, i: ni }))
+    applyView(v)
   }
-  const goToChapters = (sagaId: string, arcId: string) => {
-    setLevel('chapter')
-    setFocusedSagaId(sagaId)
-    setFocusedArcId(arcId)
-    setPanelSel(null)
+  const resetToSagas = () => {
+    if (level === 'saga') {
+      networkRef.current?.fit({ animation: true })
+      return
+    }
+    zoomOutThen(goToSagas)
   }
 
   const zoomOutThen = (fn: () => void) => {
@@ -222,6 +272,8 @@ export default function StoryTimeline() {
     focusedArc,
     arcSagaId,
     sagaColor,
+    goToArcs,
+    goToChapters,
   ])
 
   // ---- Build / rebuild the graph for the current level --------------------
@@ -499,47 +551,77 @@ export default function StoryTimeline() {
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <nav
-          className="flex items-center flex-wrap gap-1 text-sm"
-          aria-label="Timeline breadcrumb"
-        >
-          <button
-            onClick={() => level !== 'saga' && zoomOutThen(goToSagas)}
-            className={`px-2 py-1 rounded transition-colors ${
-              level === 'saga'
-                ? 'font-semibold text-gray-900'
-                : 'text-blue-600 hover:bg-blue-50'
-            }`}
+        <div className="flex items-center flex-wrap gap-2">
+          <div className="flex items-center gap-1">
+            <button
+              onClick={goBack}
+              disabled={!canBack}
+              aria-label="Back"
+              title="Back"
+              className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              ←
+            </button>
+            <button
+              onClick={goForward}
+              disabled={!canForward}
+              aria-label="Forward"
+              title="Forward"
+              className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              →
+            </button>
+            <button
+              onClick={resetToSagas}
+              aria-label="Reset to all sagas"
+              title="Reset to all sagas"
+              className="px-3 h-8 flex items-center justify-center gap-1 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
+            >
+              ⟲ All sagas
+            </button>
+          </div>
+          <nav
+            className="flex items-center flex-wrap gap-1 text-sm"
+            aria-label="Timeline breadcrumb"
           >
-            All Sagas
-          </button>
-          {focusedSaga && (
-            <>
-              <span className="text-gray-300">›</span>
-              <button
-                onClick={() =>
-                  level === 'chapter' &&
-                  zoomOutThen(() => goToArcs(focusedSaga.saga_id))
-                }
-                className={`px-2 py-1 rounded transition-colors ${
-                  level === 'arc'
-                    ? 'font-semibold text-gray-900'
-                    : 'text-blue-600 hover:bg-blue-50'
-                }`}
-              >
-                {focusedSaga.title}
-              </button>
-            </>
-          )}
-          {level === 'chapter' && focusedArc && (
-            <>
-              <span className="text-gray-300">›</span>
-              <span className="px-2 py-1 font-semibold text-gray-900">
-                {focusedArc.title}
-              </span>
-            </>
-          )}
-        </nav>
+            <button
+              onClick={() => level !== 'saga' && zoomOutThen(goToSagas)}
+              className={`px-2 py-1 rounded transition-colors ${
+                level === 'saga'
+                  ? 'font-semibold text-gray-900'
+                  : 'text-blue-600 hover:bg-blue-50'
+              }`}
+            >
+              All Sagas
+            </button>
+            {focusedSaga && (
+              <>
+                <span className="text-gray-300">›</span>
+                <button
+                  onClick={() =>
+                    level === 'chapter' &&
+                    zoomOutThen(() => goToArcs(focusedSaga.saga_id))
+                  }
+                  className={`px-2 py-1 rounded transition-colors ${
+                    level === 'arc'
+                      ? 'font-semibold text-gray-900'
+                      : 'text-blue-600 hover:bg-blue-50'
+                  }`}
+                >
+                  {focusedSaga.title}
+                </button>
+              </>
+            )}
+            {level === 'chapter' && focusedArc && (
+              <>
+                <span className="text-gray-300">›</span>
+                <span className="px-2 py-1 font-semibold text-gray-900">
+                  {focusedArc.title}
+                </span>
+              </>
+            )}
+          </nav>
+        </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => networkRef.current?.fit({ animation: true })}
