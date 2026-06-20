@@ -279,7 +279,7 @@ export default function StoryTimeline() {
 
       nodeArr.push({
         id: CONTAINER_ID,
-        label: parentTitle,
+        label: '',
         shape: 'dot',
         size: R,
         x: 0,
@@ -294,12 +294,20 @@ export default function StoryTimeline() {
           },
         },
         borderWidth: 3,
-        font: {
-          size: 20,
-          color: '#374151',
-          vadjust: R + 16,
-          face: 'system-ui',
-        },
+        chosen: false,
+      })
+
+      // The focused saga/arc name, placed inside the container near the top
+      // (above the children cluster).
+      nodeArr.push({
+        id: 'container-title',
+        label: parentTitle,
+        shape: 'text',
+        x: 0,
+        y: -(R - 30),
+        fixed: true,
+        widthConstraint: { maximum: Math.max(160, R * 1.3) },
+        font: { size: 22, color: '#374151', face: 'system-ui' },
         chosen: false,
       })
 
@@ -360,15 +368,24 @@ export default function StoryTimeline() {
           margin: 12,
           font: { size: 14, color: '#475569', face: 'system-ui' },
         })
-        edgeArr.push({
-          id: `cn-${it.id}`,
-          from: CONTAINER_ID,
-          to: it.id,
-          color: { color: '#e2e8f0' },
-          dashes: true,
-          width: 1.5,
-          arrows: { to: { enabled: true, scaleFactor: 0.4 } },
-        })
+        // Connect the neighbour to the boundary arc so the chain stays
+        // continuous: previous saga → first arc, last arc → next saga, with
+        // the arrow pointing the way the story flows.
+        if (children.length > 0) {
+          const boundaryChild =
+            it.side === 'prev' ? children[0] : children[children.length - 1]
+          const from = it.side === 'prev' ? it.id : boundaryChild.id
+          const to = it.side === 'prev' ? boundaryChild.id : it.id
+          edgeArr.push({
+            id: `cn-${it.id}`,
+            from,
+            to,
+            color: { color: '#cbd5e1', highlight: '#94a3b8' },
+            dashes: true,
+            width: 2,
+            arrows: { to: { enabled: true, scaleFactor: 0.45 } },
+          })
+        }
       })
     }
 
