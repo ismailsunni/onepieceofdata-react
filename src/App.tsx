@@ -31,6 +31,7 @@ const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
 const CharacterTimelinePage = lazy(
   () => import('./pages/CharacterTimelinePage')
 )
+const StoryTimelinePage = lazy(() => import('./pages/StoryTimelinePage'))
 const ChapterReleaseCalendarPage = lazy(
   () => import('./pages/ChapterReleaseCalendarPage')
 )
@@ -184,6 +185,10 @@ function App() {
                         <Suspense fallback={<PageLoader />}>
                           <Routes>
                             <Route path="/" element={<HomePage />} />
+                            <Route
+                              path="/timeline"
+                              element={<StoryTimelinePage />}
+                            />
                             <Route
                               path="/characters"
                               element={<CharactersPage />}

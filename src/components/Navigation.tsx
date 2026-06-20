@@ -118,6 +118,9 @@ function Navigation() {
           isActive={isExploreActive}
           items={EXPLORE_ITEMS}
         />
+        <NavLink to="/timeline" className={getLinkClass}>
+          Timeline
+        </NavLink>
         <DesktopDropdown
           label="Analytics"
           isActive={isAnalyticsActive}
@@ -211,6 +214,13 @@ function Navigation() {
                 items={EXPLORE_ITEMS}
                 onClose={closeMobileMenu}
               />
+              <NavLink
+                to="/timeline"
+                className={getMobileLinkClass}
+                onClick={closeMobileMenu}
+              >
+                Timeline
+              </NavLink>
               <MobileAccordion
                 label="Analytics"
                 expanded={analyticsExpanded}

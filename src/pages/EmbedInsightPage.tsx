@@ -27,6 +27,7 @@
  * │ Cumulative Character Debuts                    │ cumulative-debuts          │ —                          │
  * │ Detailed Completeness Statistics               │ completeness               │ —                          │
  * │ Do Volume Covers Represent the Story?          │ cover-representativeness   │ —                          │
+ * │ Interactive Story Timeline                     │ story-timeline             │ —                          │
  * │ Largest Crews & Organizations                  │ largest-groups             │ —                          │
  * │ Longest Disappearances                         │ gap-analysis               │ Sortable table             │
  * │ Main Character Moments                         │ main-character-moments     │ SHP 3-way + Sortable table │
@@ -124,6 +125,7 @@ import {
   EmbedCompleteness,
   EmbedAgeBounty,
 } from '../components/insights/EmbedAnalyticsCharts'
+import StoryTimeline from '../components/timeline/StoryTimeline'
 
 function EmbedInsightPage() {
   const { chartId } = useParams<{ chartId: string }>()
@@ -239,6 +241,11 @@ function EmbedInsightPage() {
     'publication-rate-by-year': <EmbedPublicationRate />,
     completeness: <EmbedCompleteness />,
     'age-vs-bounty': <EmbedAgeBounty />,
+    'story-timeline': (
+      <div className="p-4 h-full overflow-auto">
+        <StoryTimeline />
+      </div>
+    ),
   }
 
   const chart = chartId ? chartMap[chartId] : null
