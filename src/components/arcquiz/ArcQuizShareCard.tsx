@@ -182,22 +182,41 @@ const ArcQuizShareCard = forwardRef<HTMLDivElement, ArcQuizShareCardProps>(
                 }`,
               }}
             >
-              <p
+              <div
                 style={{
-                  fontSize: isStory ? '32px' : '24px',
-                  fontWeight: 600,
-                  margin: 0,
                   flex: 1,
                   minWidth: 0,
                   overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
                 }}
               >
-                {a.mode === 'chapter'
-                  ? `Chapter ${a.character.chapter}`
-                  : a.correctArc.title}
-              </p>
+                <p
+                  style={{
+                    fontSize: isStory ? '32px' : '24px',
+                    fontWeight: 700,
+                    margin: 0,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {a.character.name}
+                </p>
+                <p
+                  style={{
+                    fontSize: isStory ? '26px' : '20px',
+                    fontWeight: 500,
+                    margin: '4px 0 0 0',
+                    opacity: 0.75,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {a.mode === 'chapter'
+                    ? `Chapter ${a.character.chapter}`
+                    : a.correctArc.title}
+                </p>
+              </div>
               <span style={{ fontSize: isStory ? '44px' : '32px' }}>
                 {a.isCorrect ? '✅' : '❌'}
               </span>
