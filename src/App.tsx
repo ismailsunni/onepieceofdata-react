@@ -79,6 +79,7 @@ const DataQualityTopicPage = lazy(
 const GamesIndexPage = lazy(() => import('./pages/GamesIndexPage'))
 const CharacterQuizPage = lazy(() => import('./pages/CharacterQuizPage'))
 const WhoAmIPage = lazy(() => import('./pages/WhoAmIPage'))
+const ArcQuizPage = lazy(() => import('./pages/ArcQuizPage'))
 
 // Tracks SPA route changes as Umami pageviews. HashRouter changes the URL
 // hash, which Umami's auto-tracker ignores, so we send them manually.
@@ -384,6 +385,10 @@ function App() {
                             <Route
                               path="/games/who-am-i"
                               element={<WhoAmIPage />}
+                            />
+                            <Route
+                              path="/games/one-chapter-wonders"
+                              element={<ArcQuizPage />}
                             />
                             <Route path="/about" element={<AboutPage />} />
                             <Route

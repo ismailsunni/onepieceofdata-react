@@ -1,6 +1,10 @@
 import { Navigate, Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faImage, faQuestion } from '@fortawesome/free-solid-svg-icons'
+import {
+  faImage,
+  faQuestion,
+  faBookOpen,
+} from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 
 const GAMES: {
@@ -22,6 +26,13 @@ const GAMES: {
     description:
       'Guess the character from progressive hints. Fewer hints = more points!',
     icon: faQuestion,
+  },
+  {
+    path: '/games/one-chapter-wonders',
+    label: 'One-Chapter Wonders',
+    description:
+      'A character appears in just one chapter — place where they showed up. Three modes: 4 options, all arcs, or guess the chapter.',
+    icon: faBookOpen,
   },
 ]
 

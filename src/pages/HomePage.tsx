@@ -272,11 +272,11 @@ function HomePage() {
                 Test your knowledge
               </h2>
               <p className="text-sm text-gray-600 mt-1">
-                Two quick games built on the same data.
+                Three quick games built on the same data.
               </p>
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <Link
               to="/games/guess-character"
               className="bg-white border border-gray-200 rounded-xl p-5 hover:border-blue-300 hover:shadow-md transition-all duration-200 group flex items-start gap-4"
@@ -313,6 +313,29 @@ function HomePage() {
                 <p className="text-sm text-gray-500">
                   Guess the character from progressive hints. Fewer hints, more
                   points.
+                </p>
+              </div>
+              <FontAwesomeIcon
+                icon={faArrowRight}
+                aria-hidden="true"
+                className="w-4 h-4 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all self-center"
+              />
+            </Link>
+
+            <Link
+              to="/games/one-chapter-wonders"
+              className="bg-white border border-gray-200 rounded-xl p-5 hover:border-blue-300 hover:shadow-md transition-all duration-200 group flex items-start gap-4"
+            >
+              <div className="inline-flex shrink-0 items-center justify-center w-11 h-11 bg-emerald-100 text-emerald-600 rounded-lg group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                <FontAwesomeIcon icon={faBookOpen} className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-semibold text-gray-900 mb-1">
+                  One-Chapter Wonders
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Place a one-chapter character. Guess the arc or the chapter.
+                  Three modes.
                 </p>
               </div>
               <FontAwesomeIcon
