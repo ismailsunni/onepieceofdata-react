@@ -57,6 +57,7 @@ const AffiliationDetailPage = lazy(
   () => import('./pages/AffiliationDetailPage')
 )
 const OccupationsPage = lazy(() => import('./pages/OccupationsPage'))
+const WorldTopPollPage = lazy(() => import('./pages/WorldTopPollPage'))
 const OccupationDetailPage = lazy(() => import('./pages/OccupationDetailPage'))
 // Topic-based analytics pages
 const BountyTopicPage = lazy(() => import('./pages/analytics/BountyTopicPage'))
@@ -376,6 +377,10 @@ function App() {
                             <Route
                               path="/devil-fruits"
                               element={<DevilFruitsPage />}
+                            />
+                            <Route
+                              path="/world-top-100"
+                              element={<WorldTopPollPage />}
                             />
                             <Route path="/games" element={<GamesIndexPage />} />
                             <Route

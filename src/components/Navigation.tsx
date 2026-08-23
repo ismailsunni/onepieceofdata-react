@@ -14,6 +14,7 @@ const EXPLORE_ITEMS: NavItem[] = [
   { to: '/affiliations', label: 'Affiliations' },
   { to: '/occupations', label: 'Occupations' },
   { to: '/devil-fruits', label: 'Devil Fruits' },
+  { to: '/world-top-100', label: 'World Top 100' },
 ]
 
 const GAMES_ITEMS: NavItem[] = [
@@ -99,7 +100,8 @@ function Navigation() {
     location.pathname.startsWith('/volumes') ||
     location.pathname.startsWith('/affiliations') ||
     location.pathname.startsWith('/occupations') ||
-    location.pathname.startsWith('/devil-fruits')
+    location.pathname.startsWith('/devil-fruits') ||
+    location.pathname.startsWith('/world-top-100')
   const isAnalyticsActive = location.pathname.startsWith('/analytics')
   const isGamesActive = location.pathname.startsWith('/games')
 
