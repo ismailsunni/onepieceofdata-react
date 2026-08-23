@@ -21,6 +21,7 @@ import {
 import SortableTable, { Column } from '../components/common/SortableTable'
 import SkeletonTable from '../components/common/SkeletonTable'
 import ErrorState from '../components/common/ErrorState'
+import EmptyState from '../components/common/EmptyState'
 import StatCard from '../components/common/StatCard'
 import { ChartCard } from '../components/common/ChartCard'
 
@@ -45,14 +46,25 @@ function isBanner(url: string): boolean {
   return url.includes('/final-rankings/')
 }
 
+type MatchFilter = 'all' | 'matched' | 'unmatched'
+type FormFilter = 'all' | 'hide' | 'only'
+type PresenceFilter = 'all' | 'new' | 'returning'
+
+/** New / returning is only knowable for entries matched to a character and not
+ *  voted as an alternate form, since only those compare across editions. */
+function isComparable(row: PollRow): boolean {
+  return row.character_id !== null && !row.is_variant
+}
+
 const MOVER_SCOPE = 200
 const MOVER_COUNT = 8
 
 function WorldTopPollPage() {
   const [pollId, setPollId] = useState(LATEST_POLL_ID)
   const [search, setSearch] = useState('')
-  const [charactersOnly, setCharactersOnly] = useState(false)
-  const [hideVariants, setHideVariants] = useState(false)
+  const [matchFilter, setMatchFilter] = useState<MatchFilter>('all')
+  const [formFilter, setFormFilter] = useState<FormFilter>('all')
+  const [presenceFilter, setPresenceFilter] = useState<PresenceFilter>('all')
 
   const {
     data: entries = [],
@@ -67,6 +79,20 @@ function WorldTopPollPage() {
 
   const edition = POLL_EDITIONS.find((e) => e.id === pollId)
   const isLatest = pollId === LATEST_POLL_ID
+  const otherEdition = POLL_EDITIONS.find((e) => e.id !== pollId)
+
+  const isFiltered =
+    search.trim() !== '' ||
+    matchFilter !== 'all' ||
+    formFilter !== 'all' ||
+    presenceFilter !== 'all'
+
+  const resetFilters = () => {
+    setSearch('')
+    setMatchFilter('all')
+    setFormFilter('all')
+    setPresenceFilter('all')
+  }
 
   /** character_id -> rank, per edition. Variants are excluded so a base
    *  character maps to exactly one rank. */
@@ -153,12 +179,20 @@ function WorldTopPollPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     return rows.filter((r) => {
-      if (charactersOnly && !r.character_id) return false
-      if (hideVariants && r.is_variant) return false
+      if (matchFilter === 'matched' && !r.character_id) return false
+      if (matchFilter === 'unmatched' && r.character_id) return false
+      if (formFilter === 'hide' && r.is_variant) return false
+      if (formFilter === 'only' && !r.is_variant) return false
+      if (presenceFilter !== 'all') {
+        if (!isComparable(r)) return false
+        const isNew = r.otherRank === null
+        if (presenceFilter === 'new' && !isNew) return false
+        if (presenceFilter === 'returning' && isNew) return false
+      }
       if (q && !r.displayName.toLowerCase().includes(q)) return false
       return true
     })
-  }, [rows, search, charactersOnly, hideVariants])
+  }, [rows, search, matchFilter, formFilter, presenceFilter])
 
   const faceColumn: Column<PollRow> = {
     key: 'face',
@@ -417,38 +451,100 @@ function WorldTopPollPage() {
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full sm:w-80 px-4 py-2.5 bg-white border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               />
-              <label className="flex items-center gap-2 text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={charactersOnly}
-                  onChange={(e) => setCharactersOnly(e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                Matched characters only
-              </label>
-              <label className="flex items-center gap-2 text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={hideVariants}
-                  onChange={(e) => setHideVariants(e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                Hide alternate forms
-              </label>
               <span className="text-sm text-gray-600">
                 {filtered.length.toLocaleString()} of{' '}
                 {stats.total.toLocaleString()} entries
               </span>
+              {isFiltered && (
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                >
+                  Reset filters
+                </button>
+              )}
             </div>
 
-            <SortableTable
-              columns={columns}
-              data={filtered}
-              defaultSortField="rank"
-              defaultSortDirection="asc"
-              rowKey={(row) => `${row.poll_id}-${row.rank}-${row.name}`}
-              pageSize={50}
-            />
+            <div className="flex flex-wrap gap-x-8 gap-y-4 mb-6">
+              <FilterGroup
+                label="Match"
+                value={matchFilter}
+                onChange={setMatchFilter}
+                options={[
+                  { value: 'all', label: 'All' },
+                  { value: 'matched', label: 'Matched' },
+                  {
+                    value: 'unmatched',
+                    label: 'Unmatched',
+                    // Every alternate form is matched, and only matched
+                    // entries can be compared across editions.
+                    disabled: formFilter === 'only' || presenceFilter !== 'all',
+                  },
+                ]}
+              />
+              <FilterGroup
+                label="Alternate forms"
+                value={formFilter}
+                onChange={setFormFilter}
+                options={[
+                  { value: 'all', label: 'Include' },
+                  { value: 'hide', label: 'Hide' },
+                  {
+                    value: 'only',
+                    label: 'Only',
+                    disabled:
+                      matchFilter === 'unmatched' || presenceFilter !== 'all',
+                  },
+                ]}
+              />
+              <FilterGroup
+                label={`Compared with ${otherEdition?.shortLabel}`}
+                value={presenceFilter}
+                onChange={setPresenceFilter}
+                options={[
+                  { value: 'all', label: 'All' },
+                  {
+                    value: 'new',
+                    label: isLatest ? 'New' : 'Absent in 2026',
+                    disabled:
+                      matchFilter === 'unmatched' || formFilter === 'only',
+                  },
+                  {
+                    value: 'returning',
+                    label: isLatest ? 'Returning' : 'Also in 2026',
+                    disabled:
+                      matchFilter === 'unmatched' || formFilter === 'only',
+                  },
+                ]}
+              />
+            </div>
+
+            {filtered.length === 0 ? (
+              <div className="bg-white border border-gray-200 rounded-xl">
+                <EmptyState
+                  message="No entries match this combination of filters."
+                  action={
+                    <button
+                      type="button"
+                      onClick={resetFilters}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                    >
+                      Reset filters
+                    </button>
+                  }
+                />
+              </div>
+            ) : (
+              <SortableTable
+                columns={columns}
+                data={filtered}
+                defaultSortField="rank"
+                defaultSortDirection="asc"
+                rowKey={(row) => `${row.poll_id}-${row.rank}-${row.name}`}
+                pageSize={50}
+              />
+            )}
 
             <section className="mt-8 bg-white border border-gray-200 rounded-xl p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-3">
@@ -507,6 +603,61 @@ function WorldTopPollPage() {
         )}
       </div>
     </main>
+  )
+}
+
+interface FilterOption<T> {
+  value: T
+  label: string
+  disabled?: boolean
+}
+
+function FilterGroup<T extends string>({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string
+  value: T
+  onChange: (value: T) => void
+  options: FilterOption<T>[]
+}) {
+  return (
+    <div>
+      <span className="block text-xs font-medium text-gray-600 uppercase tracking-wide mb-1.5">
+        {label}
+      </span>
+      <div
+        className="inline-flex gap-1 p-1 bg-white border border-gray-200 rounded-lg"
+        role="group"
+        aria-label={label}
+      >
+        {options.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            disabled={opt.disabled}
+            onClick={() => onChange(opt.value)}
+            aria-pressed={value === opt.value}
+            title={
+              opt.disabled
+                ? 'Not available with the other filters currently selected'
+                : undefined
+            }
+            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              value === opt.value
+                ? 'bg-blue-600 text-white'
+                : opt.disabled
+                  ? 'text-gray-300 cursor-not-allowed'
+                  : 'text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }
 
