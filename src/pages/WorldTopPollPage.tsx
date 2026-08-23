@@ -441,18 +441,23 @@ function WorldTopPollPage() {
                 <li>
                   Vote counts are only published for the top{' '}
                   {edition?.pointsUpTo} of the {edition?.shortLabel} edition —
-                  every other entry has a rank but no score.
+                  every other entry has a rank but no score. A score of{' '}
+                  <span className="font-medium">0</span> is a real result (a few
+                  entries at the bottom of the 2021 list drew no votes at all)
+                  and is not the same as a missing one, shown as{' '}
+                  <span className="font-medium">—</span>.
                 </li>
                 <li>
-                  The two editions ranked very different numbers of entries (433
-                  in 2021 vs 1,567 in 2026), so a large rank change deep in the
-                  list mostly reflects the bigger field, not a real swing. The
-                  climber and drop lists above are limited to entries inside the
-                  top {MOVER_SCOPE} of at least one edition.
+                  The 2026 edition ranked more entries than 2021 (1,567 vs
+                  1,178), and rank changes deep in the list are noisy for that
+                  reason. The climber and drop lists above are limited to
+                  entries inside the top {MOVER_SCOPE} of at least one edition,
+                  where the movement is meaningful.
                 </li>
                 <li>
                   Ranks marked <span className="font-semibold">=</span> are
-                  shared by several entries that finished on equal votes.
+                  shared by several entries that finished on equal votes — in
+                  2026 the bottom ranks are shared by 30+ entries each.
                 </li>
                 <li>
                   Entries tagged <span className="font-medium">alt form</span>{' '}
