@@ -39,6 +39,12 @@ function displayName(name: string): string {
   return name.toLowerCase().replace(/\b[a-z]/g, (c) => c.toUpperCase())
 }
 
+/** Ranks 1-3 use a wide 750x660 podium banner rather than a square face crop,
+ *  so they need letterboxing instead of a centre crop. */
+function isBanner(url: string): boolean {
+  return url.includes('/final-rankings/')
+}
+
 const MOVER_SCOPE = 200
 const MOVER_COUNT = 8
 
@@ -116,6 +122,8 @@ function WorldTopPollPage() {
     }
   }, [rows])
 
+  const hasImages = useMemo(() => rows.some((r) => r.image_url), [rows])
+
   const votesChartData = useMemo(
     () =>
       rows
@@ -152,6 +160,37 @@ function WorldTopPollPage() {
     })
   }, [rows, search, charactersOnly, hideVariants])
 
+  const faceColumn: Column<PollRow> = {
+    key: 'face',
+    label: '',
+    sortable: false,
+    render: (row) =>
+      row.image_url ? (
+        <div
+          className={`flex items-center justify-center h-12 rounded-lg bg-gray-100 overflow-hidden ${
+            isBanner(row.image_url) ? 'w-20' : 'w-12'
+          }`}
+        >
+          <img
+            src={row.image_url}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            className={
+              isBanner(row.image_url)
+                ? 'max-h-full max-w-full object-contain'
+                : 'w-full h-full object-cover'
+            }
+            onError={(e) => {
+              e.currentTarget.style.visibility = 'hidden'
+            }}
+          />
+        </div>
+      ) : (
+        <div className="w-12 h-12 rounded-lg bg-gray-100" aria-hidden="true" />
+      ),
+  }
+
   const columns: Column<PollRow>[] = [
     {
       key: 'rank',
@@ -166,29 +205,7 @@ function WorldTopPollPage() {
         </span>
       ),
     },
-    {
-      key: 'face',
-      label: '',
-      sortable: false,
-      render: (row) =>
-        row.image_url ? (
-          <img
-            src={row.image_url}
-            alt=""
-            aria-hidden="true"
-            loading="lazy"
-            className="w-10 h-10 rounded-lg object-cover bg-gray-100"
-            onError={(e) => {
-              e.currentTarget.style.visibility = 'hidden'
-            }}
-          />
-        ) : (
-          <div
-            className="w-10 h-10 rounded-lg bg-gray-100"
-            aria-hidden="true"
-          />
-        ),
-    },
+    ...(hasImages ? [faceColumn] : []),
     {
       key: 'name',
       label: 'Character',
