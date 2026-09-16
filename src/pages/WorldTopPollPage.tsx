@@ -12,6 +12,7 @@ import {
   LabelList,
 } from 'recharts'
 import { fetchCharacterPoll } from '../services/characterPollService'
+import { getCharacterImageUrl } from '../utils/characterImage'
 import {
   CharacterPollEntry,
   LATEST_POLL_ID,
@@ -65,6 +66,7 @@ function WorldTopPollPage() {
   const [matchFilter, setMatchFilter] = useState<MatchFilter>('all')
   const [formFilter, setFormFilter] = useState<FormFilter>('all')
   const [presenceFilter, setPresenceFilter] = useState<PresenceFilter>('all')
+  const [showOurImage, setShowOurImage] = useState(false)
 
   const {
     data: entries = [],
@@ -196,7 +198,7 @@ function WorldTopPollPage() {
 
   const faceColumn: Column<PollRow> = {
     key: 'face',
-    label: '',
+    label: showOurImage ? 'Poll' : '',
     sortable: false,
     render: (row) =>
       row.image_url ? (
@@ -225,6 +227,13 @@ function WorldTopPollPage() {
       ),
   }
 
+  const ourFaceColumn: Column<PollRow> = {
+    key: 'ourFace',
+    label: 'Ours',
+    sortable: false,
+    render: (row) => <OurFace characterId={row.character_id} />,
+  }
+
   const columns: Column<PollRow>[] = [
     {
       key: 'rank',
@@ -240,6 +249,7 @@ function WorldTopPollPage() {
       ),
     },
     ...(hasImages ? [faceColumn] : []),
+    ...(showOurImage ? [ourFaceColumn] : []),
     {
       key: 'name',
       label: 'Character',
@@ -455,6 +465,15 @@ function WorldTopPollPage() {
                 {filtered.length.toLocaleString()} of{' '}
                 {stats.total.toLocaleString()} entries
               </span>
+              <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showOurImage}
+                  onChange={(e) => setShowOurImage(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                />
+                Show our character image
+              </label>
               {isFiltered && (
                 <button
                   type="button"
@@ -723,6 +742,28 @@ function MoverList({
           ))}
         </ul>
       )}
+    </div>
+  )
+}
+
+/** Same crop as the top-character avatars on the arc and saga pages. */
+function OurFace({ characterId }: { characterId: string | null }) {
+  const [imgError, setImgError] = useState(false)
+  if (!characterId || imgError) {
+    return (
+      <div className="w-12 h-12 rounded-full bg-gray-100" aria-hidden="true" />
+    )
+  }
+  return (
+    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-200 bg-gray-100">
+      <img
+        src={getCharacterImageUrl(characterId)}
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        className="w-full h-full object-cover object-top"
+        onError={() => setImgError(true)}
+      />
     </div>
   )
 }
