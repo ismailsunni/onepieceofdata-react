@@ -1,7 +1,8 @@
 import type { Character } from '../types/character'
 import type { QuizCharacter, QuizQuestion } from '../types/quiz'
+import { getCharacterImageUrl } from '../utils/characterImage'
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string
+export { getCharacterImageUrl }
 
 export const TIME_PER_QUESTION = 10 // seconds
 
@@ -13,10 +14,6 @@ const TIERS = [
   { tier: 4, min: 7, max: 9 }, // Rare characters
   { tier: 5, min: 0, max: 6 }, // Obscure characters (filtered by eligibility)
 ]
-
-export function getCharacterImageUrl(characterId: string): string {
-  return `${SUPABASE_URL}/storage/v1/object/public/character-images/${encodeURIComponent(characterId)}.png`
-}
 
 function isEligibleForQuiz(char: Character): boolean {
   if (!char.name) return false

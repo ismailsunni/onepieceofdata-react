@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import type { Saga, Arc } from '../../types/arc'
 import type { Chapter } from '../../types/chapter'
 import type { Character } from '../../types/character'
+import { getCharacterImageUrl } from '../../utils/characterImage'
 
 export type TimelineSelection =
   | { type: 'saga'; saga: Saga }
@@ -28,10 +29,7 @@ function CharacterChip({
   onNavigate: () => void
 }) {
   const [imgError, setImgError] = useState(false)
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
-  const imageUrl = `${supabaseUrl}/storage/v1/object/public/character-images/${encodeURIComponent(
-    character.id
-  )}.png`
+  const imageUrl = getCharacterImageUrl(character.id)
 
   return (
     <Link

@@ -17,6 +17,7 @@ import { Character } from '../types/character'
 import { Chapter } from '../types/chapter'
 import { fetchArcs } from '../services/arcService'
 import SortableTable, { Column } from '../components/common/SortableTable'
+import { getCharacterImageUrl } from '../utils/characterImage'
 
 // Service functions
 async function fetchArcById(id: string): Promise<Arc | null> {
@@ -145,8 +146,7 @@ function CharacterPortrait({
   appearances: number
 }) {
   const [imgError, setImgError] = useState(false)
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
-  const imageUrl = `${supabaseUrl}/storage/v1/object/public/character-images/${encodeURIComponent(character.id)}.png`
+  const imageUrl = getCharacterImageUrl(character.id)
 
   return (
     <Link

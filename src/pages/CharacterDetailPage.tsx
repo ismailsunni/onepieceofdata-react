@@ -33,6 +33,7 @@ import { fetchOccupationsByCharacter } from '../services/occupationService'
 import { CharacterOccupation } from '../types/occupation'
 import { fetchDevilFruitsByCharacter } from '../services/devilFruitService'
 import { CharacterDevilFruit } from '../types/devilFruit'
+import { getCharacterImageUrl } from '../utils/characterImage'
 
 // Service function to fetch a single character by ID
 async function fetchCharacterById(id: string): Promise<Character | null> {
@@ -312,8 +313,7 @@ function CharacterDetailPage() {
   const wikiUrl = `https://onepiece.fandom.com/wiki/${wikiName}`
 
   // Character portrait from Supabase storage bucket.
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
-  const characterImageUrl = `${supabaseUrl}/storage/v1/object/public/character-images/${encodeURIComponent(character.id)}.png`
+  const characterImageUrl = getCharacterImageUrl(character.id)
 
   // Copy link handler
   const handleCopyLink = () => {

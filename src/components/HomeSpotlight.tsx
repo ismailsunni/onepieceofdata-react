@@ -10,6 +10,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { supabase } from '../services/supabase'
 import { STRAW_HAT_COLORS } from '../constants/strawHatColors'
+import { getCharacterImageUrl } from '../utils/characterImage'
 
 interface CharacterRow {
   id: string
@@ -151,8 +152,7 @@ function formatBounty(bounty: number | null): string {
 
 function CharacterAvatar({ id, name }: { id: string; name: string | null }) {
   const [errored, setErrored] = useState(false)
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
-  const url = `${supabaseUrl}/storage/v1/object/public/character-images/${encodeURIComponent(id)}.png`
+  const url = getCharacterImageUrl(id)
 
   return (
     <div className="shrink-0 w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200 bg-gray-100 shadow-sm">
