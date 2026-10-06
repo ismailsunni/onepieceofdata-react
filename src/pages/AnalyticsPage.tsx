@@ -51,7 +51,6 @@ function AnalyticsPage() {
           />
         </svg>
       ),
-      gradient: 'from-amber-500 to-orange-600',
       bgColor: 'bg-amber-50',
       borderColor: 'border-amber-200',
       iconColor: 'text-amber-600',
@@ -76,7 +75,6 @@ function AnalyticsPage() {
           />
         </svg>
       ),
-      gradient: 'from-emerald-500 to-green-600',
       bgColor: 'bg-emerald-50',
       borderColor: 'border-emerald-200',
       iconColor: 'text-emerald-600',
@@ -101,7 +99,6 @@ function AnalyticsPage() {
           />
         </svg>
       ),
-      gradient: 'from-purple-500 to-purple-600',
       bgColor: 'bg-purple-50',
       borderColor: 'border-purple-200',
       iconColor: 'text-purple-600',
@@ -126,7 +123,6 @@ function AnalyticsPage() {
           />
         </svg>
       ),
-      gradient: 'from-pink-500 to-pink-600',
       bgColor: 'bg-pink-50',
       borderColor: 'border-pink-200',
       iconColor: 'text-pink-600',
@@ -151,7 +147,6 @@ function AnalyticsPage() {
           />
         </svg>
       ),
-      gradient: 'from-indigo-500 to-blue-600',
       bgColor: 'bg-indigo-50',
       borderColor: 'border-indigo-200',
       iconColor: 'text-indigo-600',
@@ -176,7 +171,6 @@ function AnalyticsPage() {
           />
         </svg>
       ),
-      gradient: 'from-rose-500 to-pink-600',
       bgColor: 'bg-rose-50',
       borderColor: 'border-rose-200',
       iconColor: 'text-rose-600',
@@ -201,7 +195,6 @@ function AnalyticsPage() {
           />
         </svg>
       ),
-      gradient: 'from-slate-500 to-gray-600',
       bgColor: 'bg-slate-50',
       borderColor: 'border-slate-200',
       iconColor: 'text-slate-600',
@@ -229,7 +222,6 @@ function AnalyticsPage() {
           />
         </svg>
       ),
-      gradient: 'from-sky-500 to-blue-600',
       bgColor: 'bg-sky-50',
       borderColor: 'border-sky-200',
       iconColor: 'text-sky-600',
@@ -254,7 +246,6 @@ function AnalyticsPage() {
           />
         </svg>
       ),
-      gradient: 'from-indigo-500 to-violet-600',
       bgColor: 'bg-indigo-50',
       borderColor: 'border-indigo-200',
       iconColor: 'text-indigo-600',
@@ -279,7 +270,6 @@ function AnalyticsPage() {
           />
         </svg>
       ),
-      gradient: 'from-fuchsia-500 to-purple-600',
       bgColor: 'bg-fuchsia-50',
       borderColor: 'border-fuchsia-200',
       iconColor: 'text-fuchsia-600',
@@ -304,7 +294,6 @@ function AnalyticsPage() {
           />
         </svg>
       ),
-      gradient: 'from-teal-500 to-cyan-600',
       bgColor: 'bg-teal-50',
       borderColor: 'border-teal-200',
       iconColor: 'text-teal-600',
@@ -329,7 +318,6 @@ function AnalyticsPage() {
           />
         </svg>
       ),
-      gradient: 'from-fuchsia-500 to-rose-600',
       bgColor: 'bg-fuchsia-50',
       borderColor: 'border-fuchsia-200',
       iconColor: 'text-fuchsia-600',
@@ -354,7 +342,6 @@ function AnalyticsPage() {
           />
         </svg>
       ),
-      gradient: 'from-amber-500 to-red-600',
       bgColor: 'bg-amber-50',
       borderColor: 'border-amber-200',
       iconColor: 'text-amber-600',
@@ -379,7 +366,6 @@ function AnalyticsPage() {
           />
         </svg>
       ),
-      gradient: 'from-amber-500 to-orange-600',
       bgColor: 'bg-amber-50',
       borderColor: 'border-amber-200',
       iconColor: 'text-amber-600',
@@ -404,7 +390,6 @@ function AnalyticsPage() {
           />
         </svg>
       ),
-      gradient: 'from-amber-500 to-yellow-600',
       bgColor: 'bg-amber-50',
       borderColor: 'border-amber-200',
       iconColor: 'text-amber-600',
@@ -412,16 +397,15 @@ function AnalyticsPage() {
   ]
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+    <main className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Hero Section */}
-        <div className="relative mb-6 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 opacity-60 rounded-2xl"></div>
-          <div className="relative bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-2xl p-5 shadow-sm">
+        <div className="mb-6">
+          <div className="bg-white border border-gray-200 rounded-xl p-5">
             <div className="flex items-center gap-4 mb-4">
-              <div className="flex-shrink-0 w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="flex-shrink-0 w-12 h-12 md:w-16 md:h-16 bg-blue-50 rounded-xl flex items-center justify-center">
                 <svg
-                  className="w-6 h-6 md:w-9 md:h-9 text-white"
+                  className="w-6 h-6 md:w-9 md:h-9 text-blue-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -435,7 +419,7 @@ function AnalyticsPage() {
                 </svg>
               </div>
               <div>
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600">
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900">
                   Analytics Dashboard
                 </h1>
                 <p className="text-gray-600 text-lg mt-2">
@@ -557,14 +541,14 @@ function AnalyticsPage() {
               <div className="flex items-start gap-4">
                 {/* Icon */}
                 <div
-                  className={`${category.bgColor} ${category.iconColor} p-3 rounded-lg flex-shrink-0 transition-transform duration-200 group-hover:scale-110`}
+                  className={`${category.bgColor} ${category.iconColor} p-3 rounded-lg flex-shrink-0`}
                 >
                   {category.icon}
                 </div>
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
                     {category.title}
                   </h3>
                   <p className="text-gray-600 text-sm leading-relaxed">
@@ -614,14 +598,14 @@ function AnalyticsPage() {
               <div className="flex items-start gap-4">
                 {/* Icon */}
                 <div
-                  className={`${tool.bgColor} ${tool.iconColor} p-3 rounded-lg flex-shrink-0 transition-transform duration-200 group-hover:scale-110`}
+                  className={`${tool.bgColor} ${tool.iconColor} p-3 rounded-lg flex-shrink-0`}
                 >
                   {tool.icon}
                 </div>
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
                     {tool.title}
                   </h3>
                   <p className="text-gray-600 text-sm leading-relaxed">
@@ -651,7 +635,7 @@ function AnalyticsPage() {
         </div>
 
         {/* Getting Started Section */}
-        <div className="bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-100 rounded-xl p-6">
+        <div className="bg-blue-50 border border-blue-100 rounded-xl p-6">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
               <svg

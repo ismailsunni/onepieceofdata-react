@@ -14,6 +14,7 @@ import type {
   GroupSize,
   CrewLoyalty,
 } from '../../services/analytics/insightsAnalytics'
+import { CHART_COLORS } from '../../constants/chartColors'
 
 interface AffiliationsSectionProps {
   largestGroups: GroupSize[]
@@ -44,14 +45,18 @@ export function AffiliationsSection({
               layout="vertical"
               margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis type="number" tick={{ fontSize: 11 }} stroke="#6b7280" />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
+              <XAxis
+                type="number"
+                tick={{ fontSize: 11 }}
+                stroke={CHART_COLORS.axis}
+              />
               <YAxis
                 dataKey="groupName"
                 type="category"
                 width={150}
                 tick={{ fontSize: 9 }}
-                stroke="#6b7280"
+                stroke={CHART_COLORS.axis}
               />
               <Tooltip />
               <Legend />
@@ -59,19 +64,19 @@ export function AffiliationsSection({
                 dataKey="currentMembers"
                 name="Current"
                 stackId="members"
-                fill="#10b981"
+                fill={CHART_COLORS.emerald500}
               />
               <Bar
                 dataKey="formerMembers"
                 name="Former / Defected"
                 stackId="members"
-                fill="#f59e0b"
+                fill={CHART_COLORS.amber500}
               />
               <Bar
                 dataKey="totalMembers"
                 name="Total"
                 fill="transparent"
-                stroke="#6b7280"
+                stroke={CHART_COLORS.gray500}
                 strokeWidth={1}
                 strokeDasharray="3 3"
               />
@@ -95,14 +100,18 @@ export function AffiliationsSection({
               layout="vertical"
               margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis type="number" tick={{ fontSize: 11 }} stroke="#6b7280" />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
+              <XAxis
+                type="number"
+                tick={{ fontSize: 11 }}
+                stroke={CHART_COLORS.axis}
+              />
               <YAxis
                 dataKey="groupName"
                 type="category"
                 width={150}
                 tick={{ fontSize: 9 }}
-                stroke="#6b7280"
+                stroke={CHART_COLORS.axis}
               />
               <Tooltip />
               <Legend />
@@ -110,25 +119,25 @@ export function AffiliationsSection({
                 dataKey="current"
                 name="Current"
                 stackId="status"
-                fill="#10b981"
+                fill={CHART_COLORS.emerald500}
               />
               <Bar
                 dataKey="former"
                 name="Former"
                 stackId="status"
-                fill="#fbbf24"
+                fill={CHART_COLORS.amber400}
               />
               <Bar
                 dataKey="defected"
                 name="Defected"
                 stackId="status"
-                fill="#ef4444"
+                fill={CHART_COLORS.red500}
               />
               <Bar
                 dataKey="other"
                 name="Other"
                 stackId="status"
-                fill="#9ca3af"
+                fill={CHART_COLORS.gray400}
               />
             </BarChart>
           </ResponsiveContainer>

@@ -16,6 +16,7 @@ import type {
   CoverStar,
   CoverVsMain,
 } from '../../services/analytics/insightsAnalytics'
+import { CHART_COLORS } from '../../constants/chartColors'
 
 interface CoverMetaSectionProps {
   coverStars: CoverStar[]
@@ -53,19 +54,23 @@ export function CoverMetaSection({
               layout="vertical"
               margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis type="number" tick={{ fontSize: 11 }} stroke="#6b7280" />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
+              <XAxis
+                type="number"
+                tick={{ fontSize: 11 }}
+                stroke={CHART_COLORS.axis}
+              />
               <YAxis
                 dataKey="name"
                 type="category"
                 width={110}
                 tick={{ fontSize: 10 }}
-                stroke="#6b7280"
+                stroke={CHART_COLORS.axis}
               />
               <Tooltip />
               <Bar
                 dataKey="coverAppearances"
-                fill="#f59e0b"
+                fill={CHART_COLORS.amber500}
                 name="Cover Appearances"
                 radius={[0, 8, 8, 0]}
               />
@@ -102,20 +107,20 @@ export function CoverMetaSection({
           </style>
           <ResponsiveContainer width="100%" height={400}>
             <ScatterChart margin={{ top: 10, right: 30, left: 20, bottom: 10 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
               <XAxis
                 type="number"
                 dataKey="main"
                 name="Main Story Appearances"
                 tick={{ fontSize: 11 }}
-                stroke="#6b7280"
+                stroke={CHART_COLORS.axis}
               />
               <YAxis
                 type="number"
                 dataKey="cover"
                 name="Volume Cover Appearances"
                 tick={{ fontSize: 11 }}
-                stroke="#6b7280"
+                stroke={CHART_COLORS.axis}
               />
               <Tooltip
                 cursor={{ strokeDasharray: '3 3' }}
@@ -153,9 +158,9 @@ export function CoverMetaSection({
               />
               <Scatter
                 data={filteredCoverVsMain}
-                fill="#8b5cf6"
+                fill={CHART_COLORS.violet500}
                 fillOpacity={0.6}
-                stroke="#7c3aed"
+                stroke={CHART_COLORS.violet600}
                 strokeWidth={1.5}
                 isAnimationActive={false}
               />

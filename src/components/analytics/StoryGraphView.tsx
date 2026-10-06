@@ -15,36 +15,46 @@ import {
   formatRelation,
   formatRelationDirected,
 } from '../../utils/formatRelation'
+import { CHART_COLORS } from '../../constants/chartColors'
 
 // ─── Visual encodings ────────────────────────────────────────────────────────
 
 const NODE_COLORS: Record<string, { background: string; border: string }> = {
-  character: { background: '#dbeafe', border: '#3b82f6' },
-  crew: { background: '#fee2e2', border: '#ef4444' },
-  organization: { background: '#fef3c7', border: '#f59e0b' },
-  saga: { background: '#ede9fe', border: '#8b5cf6' },
-  arc: { background: '#e5e7eb', border: '#6b7280' },
-  devil_fruit: { background: '#d1fae5', border: '#10b981' },
-  location: { background: '#ccfbf1', border: '#14b8a6' },
+  character: { background: CHART_COLORS.blue100, border: CHART_COLORS.blue500 },
+  crew: { background: CHART_COLORS.red100, border: CHART_COLORS.red500 },
+  organization: {
+    background: CHART_COLORS.amber100,
+    border: CHART_COLORS.amber500,
+  },
+  saga: { background: CHART_COLORS.violet100, border: CHART_COLORS.violet500 },
+  arc: { background: CHART_COLORS.gray200, border: CHART_COLORS.gray500 },
+  devil_fruit: {
+    background: CHART_COLORS.emerald100,
+    border: CHART_COLORS.emerald500,
+  },
+  location: { background: CHART_COLORS.teal100, border: CHART_COLORS.teal500 },
 }
 
 const REL_COLORS: Record<string, string> = {
-  fought: '#dc2626',
-  defeated_by: '#991b1b',
-  enemy_of: '#ef4444',
-  ally_of: '#10b981',
-  member_of_crew: '#3b82f6',
-  captain_of: '#1d4ed8',
-  affiliated_with: '#60a5fa',
-  family_of: '#a855f7',
-  mentor_of: '#ca8a04',
-  ate_devil_fruit: '#0d9488',
-  originates_from: '#6b7280',
-  has_bounty_of: '#334155',
+  fought: CHART_COLORS.red600,
+  defeated_by: CHART_COLORS.red800,
+  enemy_of: CHART_COLORS.red500,
+  ally_of: CHART_COLORS.emerald500,
+  member_of_crew: CHART_COLORS.blue500,
+  captain_of: CHART_COLORS.blue700,
+  affiliated_with: CHART_COLORS.blue400,
+  family_of: CHART_COLORS.purple500,
+  mentor_of: CHART_COLORS.yellow600,
+  ate_devil_fruit: CHART_COLORS.teal600,
+  originates_from: CHART_COLORS.gray500,
+  has_bounty_of: CHART_COLORS.slate700,
 }
 
-const DEFAULT_NODE_COLOR = { background: '#f3f4f6', border: '#9ca3af' }
-const DEFAULT_REL_COLOR = '#9ca3af'
+const DEFAULT_NODE_COLOR = {
+  background: CHART_COLORS.gray100,
+  border: CHART_COLORS.gray400,
+}
+const DEFAULT_REL_COLOR = CHART_COLORS.gray400
 
 // Relations and node types we hide from the graph entirely — they're either
 // noisy, low-signal, or duplicated by dedicated pages (devil-fruit details,
@@ -374,14 +384,17 @@ export function StoryGraphView() {
           color: {
             background: colors.background,
             border: colors.border,
-            highlight: { background: colors.background, border: '#1f2937' },
+            highlight: {
+              background: colors.background,
+              border: CHART_COLORS.gray800,
+            },
           },
           size: isFocus ? 28 : 14,
           borderWidth: isFocus ? 4 : 1,
           font: {
             size: isFocus ? 16 : 11,
             face: 'system-ui',
-            color: '#1f2937',
+            color: CHART_COLORS.gray800,
           },
         }
       })
@@ -401,10 +414,15 @@ export function StoryGraphView() {
           title: `${formatRelation(e.relation)} · conf ${e.confidence.toFixed(2)}${
             evShort ? `\n\n${evShort}` : ''
           }`,
-          color: { color, highlight: '#111827', opacity: 0.7 },
+          color: { color, highlight: CHART_COLORS.gray900, opacity: 0.7 },
           width: 1 + e.confidence * 2,
           arrows: 'to',
-          font: { size: 9, color: '#6b7280', strokeWidth: 0, align: 'middle' },
+          font: {
+            size: 9,
+            color: CHART_COLORS.gray500,
+            strokeWidth: 0,
+            align: 'middle',
+          },
         }
       })
     )
@@ -822,7 +840,9 @@ export function StoryGraphView() {
                   }`}
                   style={{
                     borderColor: colors.border,
-                    backgroundColor: on ? colors.background : '#f3f4f6',
+                    backgroundColor: on
+                      ? colors.background
+                      : CHART_COLORS.gray100,
                     color: colors.border,
                   }}
                   aria-pressed={on}
@@ -1113,7 +1133,7 @@ function CharacterMiniProfile({ characterId }: { characterId: string }) {
               {haki.map((h) => (
                 <span
                   key={h}
-                  className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-medium"
+                  className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-xs font-medium"
                 >
                   {h}
                 </span>

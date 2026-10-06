@@ -15,6 +15,7 @@ import { ChartCard } from './common/ChartCard'
 import { supabase } from '../services/supabase'
 import { fetchDatabaseStats } from '../services/statsService'
 import type { Saga } from '../types/arc'
+import { CHART_COLORS } from '../constants/chartColors'
 
 interface CharacterTimelineChartProps {
   characters: Character[]
@@ -43,18 +44,18 @@ interface AxisTickProps {
 
 // Light background colors for saga bands (alternating)
 const SAGA_COLORS = [
-  '#EFF6FF', // blue-50
-  '#FFF7ED', // orange-50
-  '#F0FDF4', // green-50
-  '#FDF2F8', // pink-50
-  '#F5F3FF', // violet-50
-  '#ECFDF5', // emerald-50
-  '#FEF3C7', // amber-100
-  '#E0F2FE', // sky-100
-  '#FCE7F3', // pink-100
-  '#EDE9FE', // violet-100
-  '#DBEAFE', // blue-100
-  '#FFEDD5', // orange-100
+  CHART_COLORS.blue50, // blue-50
+  CHART_COLORS.orange50, // orange-50
+  CHART_COLORS.green50, // green-50
+  CHART_COLORS.pink50, // pink-50
+  CHART_COLORS.violet50, // violet-50
+  CHART_COLORS.emerald50, // emerald-50
+  CHART_COLORS.amber100, // amber-100
+  CHART_COLORS.sky100, // sky-100
+  CHART_COLORS.pink100, // pink-100
+  CHART_COLORS.violet100, // violet-100
+  CHART_COLORS.blue100, // blue-100
+  CHART_COLORS.orange100, // orange-100
 ]
 
 async function fetchSagasForChart(): Promise<Saga[]> {
@@ -69,21 +70,21 @@ async function fetchSagasForChart(): Promise<Saga[]> {
 
 // Generate a consistent color for each character
 const COLORS = [
-  '#3B82F6', // blue
-  '#EF4444', // red
-  '#10B981', // green
-  '#F59E0B', // amber
-  '#8B5CF6', // purple
-  '#EC4899', // pink
-  '#14B8A6', // teal
-  '#F97316', // orange
-  '#6366F1', // indigo
-  '#84CC16', // lime
-  '#06B6D4', // cyan
-  '#F43F5E', // rose
-  '#A855F7', // violet
-  '#22D3EE', // sky
-  '#FB923C', // orange-400
+  CHART_COLORS.blue500, // blue
+  CHART_COLORS.red500, // red
+  CHART_COLORS.emerald500, // green
+  CHART_COLORS.amber500, // amber
+  CHART_COLORS.violet500, // purple
+  CHART_COLORS.pink500, // pink
+  CHART_COLORS.teal500, // teal
+  CHART_COLORS.orange500, // orange
+  CHART_COLORS.indigo500, // indigo
+  CHART_COLORS.lime500, // lime
+  CHART_COLORS.cyan500, // cyan
+  CHART_COLORS.rose500, // rose
+  CHART_COLORS.purple500, // violet
+  CHART_COLORS.cyan400, // sky
+  CHART_COLORS.orange400, // orange-400
 ]
 
 // Custom tooltip component (must be defined outside to avoid recreating on each render)
@@ -238,7 +239,7 @@ const CharacterTimelineChart = memo(
                 ifOverflow="hidden"
               />
             ))}
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
             <XAxis
               type="number"
               dataKey="chapter"

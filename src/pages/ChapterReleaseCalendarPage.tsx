@@ -9,38 +9,39 @@ import { Link } from 'react-router-dom'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { StatCard, FilterButton } from '../components/analytics'
 import { ChartCard } from '../components/common/ChartCard'
+import { CHART_COLORS } from '../constants/chartColors'
 
 // Color palette for sagas (matching SagaAppearanceChart)
 const SAGA_COLORS = [
-  '#3b82f6', // blue-500
-  '#10b981', // green-500
-  '#f59e0b', // amber-500
-  '#ef4444', // red-500
-  '#8b5cf6', // violet-500
-  '#ec4899', // pink-500
-  '#06b6d4', // cyan-500
-  '#84cc16', // lime-500
-  '#f97316', // orange-500
-  '#6366f1', // indigo-500
-  '#14b8a6', // teal-500
+  CHART_COLORS.blue500, // blue-500
+  CHART_COLORS.emerald500, // green-500
+  CHART_COLORS.amber500, // amber-500
+  CHART_COLORS.red500, // red-500
+  CHART_COLORS.violet500, // violet-500
+  CHART_COLORS.pink500, // pink-500
+  CHART_COLORS.cyan500, // cyan-500
+  CHART_COLORS.lime500, // lime-500
+  CHART_COLORS.orange500, // orange-500
+  CHART_COLORS.indigo500, // indigo-500
+  CHART_COLORS.teal500, // teal-500
 ]
 
 // Color palette for arcs
 const ARC_COLORS = [
-  '#60a5fa', // blue-400
-  '#34d399', // green-400
-  '#fbbf24', // amber-400
-  '#f87171', // red-400
-  '#a78bfa', // violet-400
-  '#f472b6', // pink-400
-  '#22d3ee', // cyan-400
-  '#a3e635', // lime-400
-  '#fb923c', // orange-400
-  '#818cf8', // indigo-400
-  '#2dd4bf', // teal-400
-  '#fb7185', // rose-400
-  '#c084fc', // purple-400
-  '#facc15', // yellow-400
+  CHART_COLORS.blue400, // blue-400
+  CHART_COLORS.emerald400, // green-400
+  CHART_COLORS.amber400, // amber-400
+  CHART_COLORS.red400, // red-400
+  CHART_COLORS.violet400, // violet-400
+  CHART_COLORS.pink400, // pink-400
+  CHART_COLORS.cyan400, // cyan-400
+  CHART_COLORS.lime400, // lime-400
+  CHART_COLORS.orange400, // orange-400
+  CHART_COLORS.indigo400, // indigo-400
+  CHART_COLORS.teal400, // teal-400
+  CHART_COLORS.rose400, // rose-400
+  CHART_COLORS.purple400, // purple-400
+  CHART_COLORS.yellow400, // yellow-400
 ]
 
 type VisualizationTheme = 'jump' | 'saga' | 'arc' | 'character'
@@ -76,34 +77,34 @@ function getCellColor(
   arcColorMap: Map<string, string>,
   characterChapterSet: Set<number> | null
 ): string {
-  if (chapters.length === 0) return '#fca5a5' // red-300
+  if (chapters.length === 0) return CHART_COLORS.red300 // red-300
 
   const firstChapter = chapters[0]
 
   switch (theme) {
     case 'jump':
-      return '#22c55e' // green-500
+      return CHART_COLORS.green500 // green-500
 
     case 'saga':
       if (firstChapter.sagaId && sagaColorMap.has(firstChapter.sagaId)) {
         return sagaColorMap.get(firstChapter.sagaId)!
       }
-      return '#9ca3af' // gray-400
+      return CHART_COLORS.gray400 // gray-400
 
     case 'arc':
       if (firstChapter.arcId && arcColorMap.has(firstChapter.arcId)) {
         return arcColorMap.get(firstChapter.arcId)!
       }
-      return '#9ca3af' // gray-400
+      return CHART_COLORS.gray400 // gray-400
 
     case 'character': {
-      if (!characterChapterSet) return '#d1d5db' // gray-300 — no character selected
+      if (!characterChapterSet) return CHART_COLORS.gray300 // gray-300 — no character selected
       const appears = chapters.some((ch) => characterChapterSet.has(ch.number))
-      return appears ? '#22c55e' : '#d1d5db' // green-500 : gray-300
+      return appears ? CHART_COLORS.green500 : CHART_COLORS.gray300 // green-500 : gray-300
     }
 
     default:
-      return '#22c55e' // green-500
+      return CHART_COLORS.green500 // green-500
   }
 }
 
@@ -760,13 +761,12 @@ function ChapterReleaseCalendarPage() {
           </span>
         </nav>
         {/* Hero Section */}
-        <div className="relative mb-6 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-50 opacity-60 rounded-2xl"></div>
-          <div className="relative bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-2xl p-5 shadow-sm">
+        <div className="mb-6">
+          <div className="bg-white border border-gray-200 rounded-xl p-5">
             <div className="flex items-center gap-4">
-              <div className="flex-shrink-0 w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-amber-600 to-yellow-600 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="flex-shrink-0 w-12 h-12 md:w-16 md:h-16 bg-blue-50 rounded-xl flex items-center justify-center">
                 <svg
-                  className="w-6 h-6 md:w-9 md:h-9 text-white"
+                  className="w-6 h-6 md:w-9 md:h-9 text-blue-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -780,7 +780,7 @@ function ChapterReleaseCalendarPage() {
                 </svg>
               </div>
               <div>
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-yellow-600">
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900">
                   Release History by Jump Issue
                 </h1>
                 <p className="text-gray-600 text-lg mt-2">
@@ -891,9 +891,9 @@ function ChapterReleaseCalendarPage() {
         {/* Next 5 Chapters — Jump Issue Forecast */}
         {predictedSchedule.length > 0 && (
           <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">
               Next 5 Chapters — Jump Issue Forecast
-            </h3>
+            </h2>
             <p className="text-xs text-gray-500 mb-4">
               Based on {predStats.sampleSize} chapters over the last 3 years ·
               avg {predStats.avgDays.toFixed(1)} days/chapter ·{' '}
@@ -1174,9 +1174,9 @@ function ChapterReleaseCalendarPage() {
         >
           {/* Legend */}
           <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
               Legend:
-            </h3>
+            </h2>
 
             {theme === 'jump' && (
               <div className="flex flex-wrap gap-4">
@@ -1184,11 +1184,14 @@ function ChapterReleaseCalendarPage() {
                   <div
                     className="w-8 h-8 rounded"
                     style={{
-                      backgroundColor: '#22c55e',
+                      backgroundColor: CHART_COLORS.green500,
                       border: '1px solid #d1d5db',
                     }}
                   ></div>
-                  <span className="text-sm" style={{ color: '#4b5563' }}>
+                  <span
+                    className="text-sm"
+                    style={{ color: CHART_COLORS.gray600 }}
+                  >
                     Chapter Released
                   </span>
                 </div>
@@ -1196,11 +1199,14 @@ function ChapterReleaseCalendarPage() {
                   <div
                     className="w-8 h-8 rounded"
                     style={{
-                      backgroundColor: '#fca5a5',
+                      backgroundColor: CHART_COLORS.red300,
                       border: '1px solid #d1d5db',
                     }}
                   ></div>
-                  <span className="text-sm" style={{ color: '#4b5563' }}>
+                  <span
+                    className="text-sm"
+                    style={{ color: CHART_COLORS.gray600 }}
+                  >
                     No Chapter (Planned Break/Holiday)
                   </span>
                 </div>
@@ -1208,11 +1214,14 @@ function ChapterReleaseCalendarPage() {
                   <div
                     className="w-8 h-8 rounded"
                     style={{
-                      backgroundColor: '#60a5fa',
+                      backgroundColor: CHART_COLORS.blue400,
                       border: '1px solid #d1d5db',
                     }}
                   ></div>
-                  <span className="text-sm" style={{ color: '#4b5563' }}>
+                  <span
+                    className="text-sm"
+                    style={{ color: CHART_COLORS.gray600 }}
+                  >
                     Predicted Chapter
                   </span>
                 </div>
@@ -1220,11 +1229,14 @@ function ChapterReleaseCalendarPage() {
                   <div
                     className="w-8 h-8 rounded"
                     style={{
-                      backgroundColor: '#9ca3af',
+                      backgroundColor: CHART_COLORS.gray400,
                       border: '1px solid #d1d5db',
                     }}
                   ></div>
-                  <span className="text-sm" style={{ color: '#4b5563' }}>
+                  <span
+                    className="text-sm"
+                    style={{ color: CHART_COLORS.gray600 }}
+                  >
                     Predicted Break
                   </span>
                 </div>
@@ -1246,7 +1258,10 @@ function ChapterReleaseCalendarPage() {
                           border: '1px solid #d1d5db',
                         }}
                       ></div>
-                      <span className="text-sm" style={{ color: '#4b5563' }}>
+                      <span
+                        className="text-sm"
+                        style={{ color: CHART_COLORS.gray600 }}
+                      >
                         {sagaTitle}
                       </span>
                     </div>
@@ -1256,11 +1271,14 @@ function ChapterReleaseCalendarPage() {
                   <div
                     className="w-8 h-8 rounded"
                     style={{
-                      backgroundColor: '#fca5a5',
+                      backgroundColor: CHART_COLORS.red300,
                       border: '1px solid #d1d5db',
                     }}
                   ></div>
-                  <span className="text-sm" style={{ color: '#4b5563' }}>
+                  <span
+                    className="text-sm"
+                    style={{ color: CHART_COLORS.gray600 }}
+                  >
                     No Chapter
                   </span>
                 </div>
@@ -1284,14 +1302,20 @@ function ChapterReleaseCalendarPage() {
                             border: '1px solid #d1d5db',
                           }}
                         ></div>
-                        <span className="text-sm" style={{ color: '#4b5563' }}>
+                        <span
+                          className="text-sm"
+                          style={{ color: CHART_COLORS.gray600 }}
+                        >
                           {arcTitle}
                         </span>
                       </div>
                     )
                   })}
                 {arcColorMap.size > 10 && (
-                  <span className="text-xs italic" style={{ color: '#6b7280' }}>
+                  <span
+                    className="text-xs italic"
+                    style={{ color: CHART_COLORS.gray500 }}
+                  >
                     ... and {arcColorMap.size - 10} more arcs
                   </span>
                 )}
@@ -1299,11 +1323,14 @@ function ChapterReleaseCalendarPage() {
                   <div
                     className="w-8 h-8 rounded"
                     style={{
-                      backgroundColor: '#fca5a5',
+                      backgroundColor: CHART_COLORS.red300,
                       border: '1px solid #d1d5db',
                     }}
                   ></div>
-                  <span className="text-sm" style={{ color: '#4b5563' }}>
+                  <span
+                    className="text-sm"
+                    style={{ color: CHART_COLORS.gray600 }}
+                  >
                     No Chapter
                   </span>
                 </div>
@@ -1317,11 +1344,14 @@ function ChapterReleaseCalendarPage() {
                     <div
                       className="w-8 h-8 rounded"
                       style={{
-                        backgroundColor: '#22c55e',
+                        backgroundColor: CHART_COLORS.green500,
                         border: '1px solid #d1d5db',
                       }}
                     ></div>
-                    <span className="text-sm" style={{ color: '#4b5563' }}>
+                    <span
+                      className="text-sm"
+                      style={{ color: CHART_COLORS.gray600 }}
+                    >
                       {selectedCharacter?.name || 'Character'} Appears
                     </span>
                   </div>
@@ -1329,11 +1359,14 @@ function ChapterReleaseCalendarPage() {
                     <div
                       className="w-8 h-8 rounded"
                       style={{
-                        backgroundColor: '#d1d5db',
+                        backgroundColor: CHART_COLORS.gray300,
                         border: '1px solid #d1d5db',
                       }}
                     ></div>
-                    <span className="text-sm" style={{ color: '#4b5563' }}>
+                    <span
+                      className="text-sm"
+                      style={{ color: CHART_COLORS.gray600 }}
+                    >
                       {selectedCharacter?.name || 'Character'} Does Not Appear
                     </span>
                   </div>
@@ -1341,11 +1374,14 @@ function ChapterReleaseCalendarPage() {
                     <div
                       className="w-8 h-8 rounded"
                       style={{
-                        backgroundColor: '#fca5a5',
+                        backgroundColor: CHART_COLORS.red300,
                         border: '1px solid #d1d5db',
                       }}
                     ></div>
-                    <span className="text-sm" style={{ color: '#4b5563' }}>
+                    <span
+                      className="text-sm"
+                      style={{ color: CHART_COLORS.gray600 }}
+                    >
                       No Chapter
                     </span>
                   </div>
@@ -1400,7 +1436,7 @@ function ChapterReleaseCalendarPage() {
               </>
             )}
 
-            <p className="text-xs mt-2" style={{ color: '#6b7280' }}>
+            <p className="text-xs mt-2" style={{ color: CHART_COLORS.gray500 }}>
               * Double issues show multiple chapter numbers in the same cell.{' '}
               {!isCompact && 'Click on chapter numbers to view details.'}
               {isCompact &&
@@ -1417,7 +1453,7 @@ function ChapterReleaseCalendarPage() {
                     className="px-2 py-1 text-xs font-bold sticky left-0 z-10"
                     style={{
                       border: '2px solid #d1d5db',
-                      backgroundColor: '#f3f4f6',
+                      backgroundColor: CHART_COLORS.gray100,
                       minWidth: '60px',
                     }}
                   >
@@ -1429,7 +1465,7 @@ function ChapterReleaseCalendarPage() {
                       className="px-2 py-1 text-xs font-bold"
                       style={{
                         border: '2px solid #d1d5db',
-                        backgroundColor: '#dbeafe',
+                        backgroundColor: CHART_COLORS.blue100,
                         minWidth: isCompact ? '40px' : '60px',
                       }}
                     >
@@ -1447,7 +1483,7 @@ function ChapterReleaseCalendarPage() {
                       className="px-2 py-1 text-xs font-semibold text-center sticky left-0 z-10"
                       style={{
                         border: '2px solid #d1d5db',
-                        backgroundColor: '#f3f4f6',
+                        backgroundColor: CHART_COLORS.gray100,
                       }}
                     >
                       {issueNum}
@@ -1476,7 +1512,7 @@ function ChapterReleaseCalendarPage() {
                               className="px-1 py-1 text-center align-middle"
                               style={{
                                 border: '2px solid #d1d5db',
-                                backgroundColor: '#60a5fa', // blue-400
+                                backgroundColor: CHART_COLORS.blue400, // blue-400
                               }}
                               title={`Predicted Ch. ${pred.chapterNum} — ${yearData.year} Issue ${predIssueEnd ? `${issueNum}–${predIssueEnd}` : issueNum}`}
                             >
@@ -1484,7 +1520,7 @@ function ChapterReleaseCalendarPage() {
                                 <span
                                   style={{
                                     fontSize: '0.75rem',
-                                    color: '#1e3a8a',
+                                    color: CHART_COLORS.blue900,
                                     fontWeight: 600,
                                   }}
                                 >
@@ -1503,7 +1539,7 @@ function ChapterReleaseCalendarPage() {
                               className="px-1 py-1 text-center align-middle"
                               style={{
                                 border: '2px solid #d1d5db',
-                                backgroundColor: '#9ca3af', // gray-400
+                                backgroundColor: CHART_COLORS.gray400, // gray-400
                               }}
                               title={`Predicted break — ${yearData.year} Issue ${predIssueEnd ? `${issueNum}–${predIssueEnd}` : issueNum}`}
                             >
@@ -1511,7 +1547,7 @@ function ChapterReleaseCalendarPage() {
                                 <span
                                   style={{
                                     fontSize: '0.75rem',
-                                    color: '#374151',
+                                    color: CHART_COLORS.gray700,
                                   }}
                                 >
                                   -
@@ -1528,14 +1564,14 @@ function ChapterReleaseCalendarPage() {
                             className="px-1 py-1 text-center"
                             style={{
                               border: '2px solid #d1d5db',
-                              backgroundColor: '#fca5a5',
+                              backgroundColor: CHART_COLORS.red300,
                             }}
                           >
                             {!isCompact && (
                               <span
                                 style={{
                                   fontSize: '0.75rem',
-                                  color: '#4b5563',
+                                  color: CHART_COLORS.gray600,
                                 }}
                               >
                                 -
@@ -1606,14 +1642,14 @@ function ChapterReleaseCalendarPage() {
                                 <Link
                                   to={`/chapters/${chapter.number}`}
                                   className="text-xs font-bold hover:underline cursor-pointer"
-                                  style={{ color: '#2563eb' }}
+                                  style={{ color: CHART_COLORS.blue600 }}
                                 >
                                   {chapter.number}
                                 </Link>
                                 {idx < issue.chapters.length - 1 && (
                                   <span
                                     style={{
-                                      color: '#4b5563',
+                                      color: CHART_COLORS.gray600,
                                       fontSize: '0.75rem',
                                     }}
                                   >

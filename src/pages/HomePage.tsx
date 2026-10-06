@@ -110,12 +110,11 @@ function HomePage() {
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Hero — pitch on the left, live rankings on the right (above the fold) */}
-      <section className="bg-gradient-to-br from-blue-50 via-white to-emerald-50 border-b border-gray-200">
+      <section className="bg-white border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-6 py-8 md:py-10">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8 items-start">
             <div className="lg:col-span-2 lg:pt-2">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold mb-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
                 Your Log Pose to Laugh Tale
               </div>
               <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 leading-tight">
@@ -356,7 +355,7 @@ function HomePage() {
             Did you know?
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-200 rounded-xl p-4">
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
               <div className="text-3xl font-bold text-amber-900">
                 {stats?.totalPages?.toLocaleString() ?? '—'}
               </div>
@@ -364,7 +363,7 @@ function HomePage() {
                 total pages of manga in the database
               </div>
             </div>
-            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-200 rounded-xl p-4">
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
               <div className="text-3xl font-bold text-emerald-900">
                 {publicationYears !== null ? `${publicationYears}+` : '—'}
               </div>
@@ -372,7 +371,7 @@ function HomePage() {
                 years of publication covered
               </div>
             </div>
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 border border-purple-200 rounded-xl p-4">
+            <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
               <div className="text-3xl font-bold text-purple-900">
                 {stats?.sagas || '—'}
               </div>

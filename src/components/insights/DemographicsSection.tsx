@@ -16,6 +16,7 @@ import type {
   RegionCount,
   AgeStatusBucket,
 } from '../../services/analytics/insightsAnalytics'
+import { CHART_COLORS } from '../../constants/chartColors'
 
 interface DemographicsSectionProps {
   bloodType: BloodTypeDistribution[]
@@ -42,26 +43,31 @@ export function DemographicsSection({
               data={ageDistribution}
               margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
               <XAxis
                 dataKey="ageRange"
                 tick={{ fontSize: 11 }}
-                stroke="#6b7280"
+                stroke={CHART_COLORS.axis}
               />
-              <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
+              <YAxis tick={{ fontSize: 11 }} stroke={CHART_COLORS.axis} />
               <Tooltip />
               <Legend />
-              <Bar dataKey="alive" stackId="a" fill="#10b981" name="Alive" />
+              <Bar
+                dataKey="alive"
+                stackId="a"
+                fill={CHART_COLORS.emerald500}
+                name="Alive"
+              />
               <Bar
                 dataKey="deceased"
                 stackId="a"
-                fill="#ef4444"
+                fill={CHART_COLORS.red500}
                 name="Deceased"
               />
               <Bar
                 dataKey="unknown"
                 stackId="a"
-                fill="#9ca3af"
+                fill={CHART_COLORS.gray400}
                 name="Unknown"
               />
             </BarChart>
@@ -83,22 +89,22 @@ export function DemographicsSection({
               data={bloodType}
               margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
               <XAxis
                 dataKey="bloodType"
                 tick={{ fontSize: 12 }}
-                stroke="#6b7280"
+                stroke={CHART_COLORS.axis}
               />
               <YAxis
                 tick={{ fontSize: 11 }}
-                stroke="#6b7280"
+                stroke={CHART_COLORS.axis}
                 label={{
                   value: 'Characters',
                   angle: -90,
                   position: 'insideLeft',
                   style: {
                     fontSize: 11,
-                    fill: '#6b7280',
+                    fill: CHART_COLORS.gray500,
                     textAnchor: 'middle',
                   },
                 }}
@@ -115,7 +121,7 @@ export function DemographicsSection({
               />
               <Bar
                 dataKey="count"
-                fill="#3b82f6"
+                fill={CHART_COLORS.blue500}
                 name="Characters"
                 radius={[4, 4, 0, 0]}
               />
@@ -147,21 +153,25 @@ export function OriginRegionBubble({ regionCounts }: OriginRegionBubbleProps) {
             layout="vertical"
             margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis type="number" tick={{ fontSize: 11 }} stroke="#6b7280" />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
+            <XAxis
+              type="number"
+              tick={{ fontSize: 11 }}
+              stroke={CHART_COLORS.axis}
+            />
             <YAxis
               dataKey="region"
               type="category"
               width={120}
               tick={{ fontSize: 10 }}
-              stroke="#6b7280"
+              stroke={CHART_COLORS.axis}
             />
             <Tooltip
               formatter={(value: number) => [`${value} characters`, 'Count']}
             />
             <Bar
               dataKey="count"
-              fill="#3b82f6"
+              fill={CHART_COLORS.blue500}
               name="Characters"
               radius={[0, 8, 8, 0]}
             >

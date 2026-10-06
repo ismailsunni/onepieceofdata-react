@@ -15,6 +15,7 @@ import { fetchInsightsRawData } from '../../services/analytics/insightsAnalytics
 import { ChartCard } from '../common/ChartCard'
 import { RangeSlider } from '../common/RangeSlider'
 import { STRAW_HAT_IDS } from '../../constants/characters'
+import { CHART_COLORS } from '../../constants/chartColors'
 
 interface CharPoint {
   id: string
@@ -165,13 +166,13 @@ export function AppearanceConcentrationSection() {
         </style>
         <ResponsiveContainer width="100%" height={500}>
           <ScatterChart margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
             <XAxis
               type="number"
               dataKey="sagas"
               name="Sagas"
               tick={{ fontSize: 11 }}
-              stroke="#6b7280"
+              stroke={CHART_COLORS.axis}
               domain={[0, 'auto']}
               allowDecimals={false}
             >
@@ -179,7 +180,7 @@ export function AppearanceConcentrationSection() {
                 value="Number of Sagas"
                 position="insideBottom"
                 offset={-10}
-                style={{ fontSize: 12, fill: '#6b7280' }}
+                style={{ fontSize: 12, fill: CHART_COLORS.gray500 }}
               />
             </XAxis>
             <YAxis
@@ -187,14 +188,14 @@ export function AppearanceConcentrationSection() {
               dataKey="appearances"
               name="Appearances"
               tick={{ fontSize: 11 }}
-              stroke="#6b7280"
+              stroke={CHART_COLORS.axis}
             >
               <Label
                 value="Chapter Appearances"
                 angle={-90}
                 position="insideLeft"
                 offset={5}
-                style={{ fontSize: 12, fill: '#6b7280' }}
+                style={{ fontSize: 12, fill: CHART_COLORS.gray500 }}
               />
             </YAxis>
             <Tooltip
@@ -242,9 +243,9 @@ export function AppearanceConcentrationSection() {
             />
             <Scatter
               data={filtered}
-              fill="#8b5cf6"
+              fill={CHART_COLORS.violet500}
               fillOpacity={0.5}
-              stroke="#7c3aed"
+              stroke={CHART_COLORS.violet600}
               strokeWidth={1}
               isAnimationActive={false}
             />

@@ -14,6 +14,7 @@ import type {
   SagaPacing,
   ChapterComplexityPoint,
 } from '../../services/analytics/insightsAnalytics'
+import { CHART_COLORS } from '../../constants/chartColors'
 
 interface StorySectionProps {
   sagaPacing: SagaPacing[]
@@ -112,7 +113,10 @@ export function StorySection({
                 data={chapterComplexity}
                 margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke={CHART_COLORS.grid}
+                />
                 <XAxis
                   dataKey="chapter"
                   type="number"
@@ -121,21 +125,21 @@ export function StorySection({
                     1, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100,
                   ]}
                   tick={{ fontSize: 11 }}
-                  stroke="#6b7280"
+                  stroke={CHART_COLORS.gray500}
                   label={{
                     value: 'Chapter',
                     position: 'insideBottom',
                     offset: -5,
-                    style: { fontSize: 11, fill: '#6b7280' },
+                    style: { fontSize: 11, fill: CHART_COLORS.gray500 },
                   }}
                 />
-                <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
+                <YAxis tick={{ fontSize: 11 }} stroke={CHART_COLORS.axis} />
                 <Tooltip
                   labelFormatter={(label: number) => {
-                    const d = chapterComplexity.find(
-                      (p) => p.chapter === label
-                    )
-                    return d ? `Chapter ${label} (${d.arc})` : `Chapter ${label}`
+                    const d = chapterComplexity.find((p) => p.chapter === label)
+                    return d
+                      ? `Chapter ${label} (${d.arc})`
+                      : `Chapter ${label}`
                   }}
                   formatter={(value: number, name: string) => [
                     name === 'Characters in Chapter'
@@ -148,8 +152,8 @@ export function StorySection({
                 <Area
                   type="monotone"
                   dataKey="characters"
-                  fill="#dbeafe"
-                  stroke="#93c5fd"
+                  fill={CHART_COLORS.blue100}
+                  stroke={CHART_COLORS.blue300}
                   strokeWidth={1}
                   fillOpacity={0.4}
                   name="Characters in Chapter"
@@ -157,7 +161,7 @@ export function StorySection({
                 <Line
                   type="monotone"
                   dataKey="rollingAvg"
-                  stroke="#2563eb"
+                  stroke={CHART_COLORS.blue600}
                   strokeWidth={2}
                   dot={false}
                   name="Rolling Average (20 ch.)"
@@ -165,7 +169,7 @@ export function StorySection({
                 <Line
                   type="linear"
                   dataKey="trend"
-                  stroke="#ef4444"
+                  stroke={CHART_COLORS.red500}
                   strokeWidth={2}
                   strokeDasharray="8 4"
                   dot={false}

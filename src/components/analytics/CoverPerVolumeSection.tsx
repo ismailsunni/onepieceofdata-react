@@ -13,6 +13,7 @@ import {
 import { fetchCharacters } from '../../services/characterService'
 import { ChartCard } from '../common/ChartCard'
 import { STRAW_HAT_IDS } from '../../constants/characters'
+import { CHART_COLORS } from '../../constants/chartColors'
 
 interface VolumeCoverData {
   volume: number
@@ -87,10 +88,10 @@ export function CoverPerVolumeSection() {
             data={volumeData}
             margin={{ top: 10, right: 20, left: 10, bottom: 60 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
             <XAxis
               dataKey="volume"
-              tick={{ fontSize: 10, fill: '#6b7280' }}
+              tick={{ fontSize: 10, fill: CHART_COLORS.axis }}
               angle={-45}
               textAnchor="end"
               height={60}
@@ -98,16 +99,16 @@ export function CoverPerVolumeSection() {
                 value: 'Volume Number',
                 position: 'insideBottom',
                 offset: -15,
-                style: { fontSize: 12, fill: '#6b7280' },
+                style: { fontSize: 12, fill: CHART_COLORS.gray500 },
               }}
             />
             <YAxis
-              tick={{ fontSize: 11, fill: '#6b7280' }}
+              tick={{ fontSize: 11, fill: CHART_COLORS.axis }}
               label={{
                 value: 'Characters on Cover',
                 angle: -90,
                 position: 'insideLeft',
-                style: { fontSize: 11, fill: '#6b7280' },
+                style: { fontSize: 11, fill: CHART_COLORS.axis },
               }}
               allowDecimals={false}
             />
@@ -156,9 +157,19 @@ export function CoverPerVolumeSection() {
               }}
             />
             {!hideStrawHats && (
-              <Bar dataKey="shp" stackId="a" fill="#f59e0b" name="shp" />
+              <Bar
+                dataKey="shp"
+                stackId="a"
+                fill={CHART_COLORS.amber500}
+                name="shp"
+              />
             )}
-            <Bar dataKey="nonShp" stackId="a" fill="#8b5cf6" name="nonShp" />
+            <Bar
+              dataKey="nonShp"
+              stackId="a"
+              fill={CHART_COLORS.violet500}
+              name="nonShp"
+            />
           </BarChart>
         </ResponsiveContainer>
       </ChartCard>

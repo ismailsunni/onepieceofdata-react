@@ -433,7 +433,7 @@ function VolumeDetailPage() {
               {row.name || 'Unknown'}
             </Link>
             {isDebut && (
-              <span className="px-1.5 py-0.5 bg-yellow-400 text-yellow-900 text-[10px] font-bold rounded">
+              <span className="px-1.5 py-0.5 bg-yellow-400 text-yellow-900 text-xs font-bold rounded">
                 DEBUT
               </span>
             )}
@@ -702,18 +702,14 @@ function VolumeDetailPage() {
         </div>
 
         {/* Hero Section */}
-        <div className="relative mb-8 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 opacity-60"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-white/80 to-transparent"></div>
-
-          <Card className="relative border-2 border-amber-100">
+        <div className="mb-8">
+          <Card>
             <div className="flex flex-col lg:flex-row items-start justify-between gap-6">
               <div className="flex-1">
                 <div className="inline-block mb-3">
-                  <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600 mb-2">
+                  <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
                     Volume {volume.number}
                   </h1>
-                  <div className="h-1 w-32 bg-gradient-to-r from-amber-600 to-orange-600 rounded-full"></div>
                 </div>
                 {volume.title && (
                   <p className="text-xl text-gray-700 font-medium">

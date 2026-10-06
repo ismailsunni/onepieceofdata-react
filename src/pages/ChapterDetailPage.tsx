@@ -355,13 +355,13 @@ function ChapterDetailPage() {
               {row.name || 'Unknown'}
             </Link>
             {isDebut && (
-              <span className="px-1.5 py-0.5 bg-yellow-400 text-yellow-900 text-[10px] font-bold rounded">
+              <span className="px-1.5 py-0.5 bg-yellow-400 text-yellow-900 text-xs font-bold rounded">
                 DEBUT
               </span>
             )}
             {showStreak && (
               <span
-                className="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-semibold rounded"
+                className="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 text-xs font-semibold rounded"
                 title={`${streak} consecutive chapters`}
               >
                 STREAK {streak}
@@ -369,7 +369,7 @@ function ChapterDetailPage() {
             )}
             {showGap && (
               <span
-                className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-semibold rounded"
+                className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-xs font-semibold rounded"
                 title={`Last seen in chapter ${chapterNumber! - gap - 1}`}
               >
                 BACK AFTER {gap} CHAPTER{gap === 1 ? '' : 'S'}
@@ -549,18 +549,14 @@ function ChapterDetailPage() {
         </div>
 
         {/* Hero Section */}
-        <div className="relative mb-8 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 opacity-60"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-white/80 to-transparent"></div>
-
-          <Card className="relative border-2 border-emerald-100">
+        <div className="mb-8">
+          <Card>
             <div className="flex flex-col lg:flex-row items-start justify-between gap-6">
               <div className="flex-1">
                 <div className="inline-block mb-3">
-                  <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600 mb-2">
+                  <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
                     Chapter {chapter.number}
                   </h1>
-                  <div className="h-1 w-32 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-full"></div>
                 </div>
                 {chapter.title && (
                   <p className="text-xl text-gray-700 font-medium mb-4">

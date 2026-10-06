@@ -16,6 +16,7 @@ import {
   type SagaIntroRate,
 } from '../../services/analyticsService'
 import { SectionTitle } from './SectionTitle'
+import { CHART_COLORS } from '../../constants/chartColors'
 
 export interface AppearancesSectionProps {
   insights: {
@@ -49,7 +50,8 @@ export function AppearancesSection({
 }: AppearancesSectionProps) {
   const wondersData = wondersMode === 'arc' ? arcCountDist : sagaCountDist
   const wondersDataKey = wondersMode === 'arc' ? 'arcCount' : 'sagaCount'
-  const wondersFill = wondersMode === 'arc' ? '#8b5cf6' : '#ec4899'
+  const wondersFill =
+    wondersMode === 'arc' ? CHART_COLORS.violet500 : CHART_COLORS.pink500
 
   return (
     <>
@@ -91,16 +93,16 @@ export function AppearancesSection({
               data={insights.arcIntroRate}
               margin={{ top: 5, right: 30, left: 20, bottom: 80 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
               <XAxis
                 dataKey="arc"
                 tick={{ fontSize: 9 }}
                 angle={-45}
                 textAnchor="end"
                 height={100}
-                stroke="#6b7280"
+                stroke={CHART_COLORS.axis}
               />
-              <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
+              <YAxis tick={{ fontSize: 11 }} stroke={CHART_COLORS.axis} />
               <Tooltip
                 labelFormatter={(label: string) => {
                   const d = insights.arcIntroRate.find((a) => a.arc === label)
@@ -113,7 +115,7 @@ export function AppearancesSection({
                   dataKey="returningCharacters"
                   name="Returning Characters"
                   stackId="characters"
-                  fill="#f59e0b"
+                  fill={CHART_COLORS.amber500}
                   radius={
                     arcCharMode === 'returning' ? [4, 4, 0, 0] : undefined
                   }
@@ -124,7 +126,7 @@ export function AppearancesSection({
                   dataKey="newCharacters"
                   name="New Characters"
                   stackId="characters"
-                  fill="#3b82f6"
+                  fill={CHART_COLORS.blue500}
                   radius={[4, 4, 0, 0]}
                 />
               )}
@@ -168,16 +170,16 @@ export function AppearancesSection({
               data={insights.sagaIntroRate}
               margin={{ top: 5, right: 30, left: 20, bottom: 80 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
               <XAxis
                 dataKey="saga"
                 tick={{ fontSize: 10 }}
                 angle={-45}
                 textAnchor="end"
                 height={100}
-                stroke="#6b7280"
+                stroke={CHART_COLORS.axis}
               />
-              <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
+              <YAxis tick={{ fontSize: 11 }} stroke={CHART_COLORS.axis} />
               <Tooltip />
               <Legend />
               {(sagaCharMode === 'both' || sagaCharMode === 'returning') && (
@@ -185,7 +187,7 @@ export function AppearancesSection({
                   dataKey="returningCharacters"
                   name="Returning Characters"
                   stackId="characters"
-                  fill="#f59e0b"
+                  fill={CHART_COLORS.amber500}
                   radius={
                     sagaCharMode === 'returning' ? [4, 4, 0, 0] : undefined
                   }
@@ -196,7 +198,7 @@ export function AppearancesSection({
                   dataKey="newCharacters"
                   name="New Characters"
                   stackId="characters"
-                  fill="#3b82f6"
+                  fill={CHART_COLORS.blue500}
                   radius={[4, 4, 0, 0]}
                 />
               )}
@@ -268,13 +270,13 @@ export function AppearancesSection({
               data={wondersData}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
               <XAxis
                 dataKey={wondersDataKey}
                 tick={{ fontSize: 11 }}
-                stroke="#6b7280"
+                stroke={CHART_COLORS.axis}
               />
-              <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
+              <YAxis tick={{ fontSize: 11 }} stroke={CHART_COLORS.axis} />
               <Tooltip />
               <Bar
                 dataKey="characterCount"
@@ -295,7 +297,7 @@ export function AppearancesSection({
                       y={y - 5}
                       textAnchor="middle"
                       fontSize={11}
-                      fill="#374151"
+                      fill={CHART_COLORS.gray700}
                     >
                       {value} ({pct}%)
                     </text>

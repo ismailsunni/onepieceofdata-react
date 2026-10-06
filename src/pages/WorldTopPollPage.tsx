@@ -25,6 +25,7 @@ import ErrorState from '../components/common/ErrorState'
 import EmptyState from '../components/common/EmptyState'
 import StatCard from '../components/common/StatCard'
 import { ChartCard } from '../components/common/ChartCard'
+import { CHART_COLORS } from '../constants/chartColors'
 
 interface PollRow extends CharacterPollEntry {
   displayName: string
@@ -412,7 +413,7 @@ function WorldTopPollPage() {
                   >
                     <CartesianGrid
                       strokeDasharray="3 3"
-                      stroke="#e5e7eb"
+                      stroke={CHART_COLORS.grid}
                       horizontal={false}
                     />
                     <XAxis type="number" hide />
@@ -420,17 +421,21 @@ function WorldTopPollPage() {
                       type="category"
                       dataKey="name"
                       width={190}
-                      tick={{ fontSize: 12, fill: '#4b5563' }}
+                      tick={{ fontSize: 12, fill: CHART_COLORS.gray600 }}
                     />
                     <Tooltip
                       formatter={(v: number) => [v.toLocaleString(), 'Votes']}
                     />
-                    <Bar dataKey="votes" fill="#2563eb" radius={[0, 4, 4, 0]}>
+                    <Bar
+                      dataKey="votes"
+                      fill={CHART_COLORS.blue600}
+                      radius={[0, 4, 4, 0]}
+                    >
                       <LabelList
                         dataKey="votes"
                         position="right"
                         formatter={(v: unknown) => Number(v).toLocaleString()}
-                        style={{ fontSize: 11, fill: '#4b5563' }}
+                        style={{ fontSize: 11, fill: CHART_COLORS.gray600 }}
                       />
                     </Bar>
                   </BarChart>

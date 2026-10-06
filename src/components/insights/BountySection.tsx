@@ -22,6 +22,7 @@ import {
 } from '../../services/analyticsService'
 import { formatBounty, bountyJumpColumns } from './constants'
 import { SectionTitle } from './SectionTitle'
+import { CHART_COLORS } from '../../constants/chartColors'
 
 export interface BountySectionProps {
   insights: {
@@ -73,13 +74,13 @@ export function BountySection({
         >
           <ResponsiveContainer width="100%" height={400}>
             <ScatterChart margin={{ top: 10, right: 30, left: 20, bottom: 10 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
               <XAxis
                 type="number"
                 dataKey="appearances"
                 name="Appearances"
                 tick={{ fontSize: 11 }}
-                stroke="#6b7280"
+                stroke={CHART_COLORS.axis}
               />
               <YAxis
                 type="number"
@@ -87,7 +88,7 @@ export function BountySection({
                 name="Bounty"
                 tickFormatter={formatBounty}
                 tick={{ fontSize: 11 }}
-                stroke="#6b7280"
+                stroke={CHART_COLORS.axis}
               />
               <Tooltip
                 content={({ payload }) => {
@@ -140,7 +141,7 @@ export function BountySection({
                       )
                     : insights.bountyVsAppearance
                 }
-                fill="#6366f1"
+                fill={CHART_COLORS.indigo500}
                 fillOpacity={0.6}
               >
                 {(hideStrawHats
@@ -151,7 +152,11 @@ export function BountySection({
                 ).map((entry, i) => (
                   <Cell
                     key={i}
-                    fill={entry.status === 'Alive' ? '#10b981' : '#ef4444'}
+                    fill={
+                      entry.status === 'Alive'
+                        ? CHART_COLORS.emerald500
+                        : CHART_COLORS.red500
+                    }
                   />
                 ))}
               </Scatter>
@@ -221,11 +226,11 @@ export function BountySection({
               layout="vertical"
               margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
               <XAxis
                 type="number"
                 tick={{ fontSize: 11 }}
-                stroke="#6b7280"
+                stroke={CHART_COLORS.axis}
                 domain={bountyTierPercent ? [0, 100] : [0, 'auto']}
                 allowDataOverflow={bountyTierPercent}
                 tickFormatter={bountyTierPercent ? (v) => `${v}%` : undefined}
@@ -235,7 +240,7 @@ export function BountySection({
                 type="category"
                 width={90}
                 tick={{ fontSize: 10 }}
-                stroke="#6b7280"
+                stroke={CHART_COLORS.axis}
               />
               <Tooltip
                 formatter={(value: number) =>

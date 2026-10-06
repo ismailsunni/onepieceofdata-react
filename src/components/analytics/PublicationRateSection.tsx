@@ -17,6 +17,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts'
+import { CHART_COLORS } from '../../constants/chartColors'
 
 export function PublicationRateSection() {
   const {
@@ -346,22 +347,22 @@ export function PublicationRateSection() {
             data={yearlyStats}
             margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
             <XAxis
               dataKey="year"
               angle={-45}
               textAnchor="end"
               height={80}
-              tick={{ fontSize: 12, fill: '#6b7280' }}
+              tick={{ fontSize: 12, fill: CHART_COLORS.axis }}
             />
             <YAxis
               label={{
                 value: 'Weeks',
                 angle: -90,
                 position: 'insideLeft',
-                style: { fill: '#6b7280' },
+                style: { fill: CHART_COLORS.axis },
               }}
-              tick={{ fontSize: 12, fill: '#6b7280' }}
+              tick={{ fontSize: 12, fill: CHART_COLORS.gray500 }}
             />
             <Tooltip
               contentStyle={{
@@ -426,10 +427,15 @@ export function PublicationRateSection() {
             <Bar
               dataKey="chapters"
               stackId="a"
-              fill="#10b981"
+              fill={CHART_COLORS.emerald500}
               name="chapters"
             />
-            <Bar dataKey="breaks" stackId="a" fill="#ef4444" name="breaks" />
+            <Bar
+              dataKey="breaks"
+              stackId="a"
+              fill={CHART_COLORS.red500}
+              name="breaks"
+            />
           </BarChart>
         </ResponsiveContainer>
         <p className="text-xs text-gray-500 mt-4">
@@ -559,12 +565,12 @@ export function PublicationRateSection() {
                       style={{
                         color:
                           parseFloat(publicationRate) === 100
-                            ? '#10b981' // green
+                            ? CHART_COLORS.emerald500 // green
                             : parseFloat(publicationRate) >= 95
-                              ? '#3b82f6' // blue
+                              ? CHART_COLORS.blue500 // blue
                               : parseFloat(publicationRate) >= 90
-                                ? '#f59e0b' // amber
-                                : '#ef4444', // red
+                                ? CHART_COLORS.amber500 // amber
+                                : CHART_COLORS.red500, // red
                       }}
                     >
                       {publicationRate}%
@@ -624,28 +630,28 @@ export function PublicationRateSection() {
             <div className="flex items-center gap-2">
               <div
                 className="w-4 h-4 rounded"
-                style={{ backgroundColor: '#10b981' }}
+                style={{ backgroundColor: CHART_COLORS.emerald500 }}
               ></div>
               <span className="text-xs text-gray-600">100% (Perfect)</span>
             </div>
             <div className="flex items-center gap-2">
               <div
                 className="w-4 h-4 rounded"
-                style={{ backgroundColor: '#3b82f6' }}
+                style={{ backgroundColor: CHART_COLORS.blue500 }}
               ></div>
               <span className="text-xs text-gray-600">95-99% (Excellent)</span>
             </div>
             <div className="flex items-center gap-2">
               <div
                 className="w-4 h-4 rounded"
-                style={{ backgroundColor: '#f59e0b' }}
+                style={{ backgroundColor: CHART_COLORS.amber500 }}
               ></div>
               <span className="text-xs text-gray-600">90-94% (Good)</span>
             </div>
             <div className="flex items-center gap-2">
               <div
                 className="w-4 h-4 rounded"
-                style={{ backgroundColor: '#ef4444' }}
+                style={{ backgroundColor: CHART_COLORS.red500 }}
               ></div>
               <span className="text-xs text-gray-600">
                 &lt;90% (Many Breaks)

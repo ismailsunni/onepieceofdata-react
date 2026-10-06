@@ -17,6 +17,7 @@ import {
   type SpherePlacement,
   type WordCloudItem,
 } from '../../utils/wordCloud'
+import { CHART_COLORS } from '../../constants/chartColors'
 
 export type WordCloudMetric = 'chapter' | 'cover' | 'arc' | 'saga' | 'bounty'
 
@@ -216,7 +217,7 @@ function CharacterWordCloudFlat({
                   fontWeight={w.isSHP ? 700 : 500}
                   fontSize={w.size}
                   fill={fill}
-                  stroke={needsOutline ? '#374151' : undefined}
+                  stroke={needsOutline ? CHART_COLORS.gray700 : undefined}
                   strokeWidth={needsOutline ? 1 : undefined}
                   paintOrder={needsOutline ? 'stroke fill' : undefined}
                   style={{
@@ -486,7 +487,7 @@ function CharacterWordCloudSphere({
                   fontWeight={p.isSHP ? 700 : 500}
                   fontSize={p.size}
                   fill={p.color}
-                  stroke={needsOutline ? '#374151' : undefined}
+                  stroke={needsOutline ? CHART_COLORS.gray700 : undefined}
                   strokeWidth={needsOutline ? 1 : undefined}
                   paintOrder={needsOutline ? 'stroke fill' : undefined}
                   style={{
@@ -579,9 +580,8 @@ export function CharacterWordCloudSection() {
     if (exporting) return
     setExporting(format)
     try {
-      const { buildSpherePlacements: build } = await import(
-        '../../utils/wordCloud'
-      )
+      const { buildSpherePlacements: build } =
+        await import('../../utils/wordCloud')
       const { exportSphereAsGif, exportSphereAsSvg, downloadBlob } =
         await import('../../utils/wordCloudExport')
       const placementsForExport = build(items, minValue, maxValue)

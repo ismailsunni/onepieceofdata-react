@@ -300,13 +300,13 @@ function ChatPage() {
               </div>
               <div className="bg-white border border-gray-200 rounded-xl px-3 py-2">
                 <div className="flex gap-1">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" />
+                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full motion-safe:animate-pulse" />
                   <div
-                    className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
+                    className="w-1.5 h-1.5 bg-gray-400 rounded-full motion-safe:animate-pulse"
                     style={{ animationDelay: '0.15s' }}
                   />
                   <div
-                    className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
+                    className="w-1.5 h-1.5 bg-gray-400 rounded-full motion-safe:animate-pulse"
                     style={{ animationDelay: '0.3s' }}
                   />
                 </div>
@@ -351,7 +351,7 @@ function ChatPage() {
             </svg>
           </button>
         </div>
-        <p className="text-center text-[10px] text-gray-400 mt-1">
+        <p className="text-center text-xs text-gray-500 mt-1">
           Data from One Piece Wiki (CC-BY-SA) • Powered by Groq
         </p>
       </div>

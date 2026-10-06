@@ -12,6 +12,7 @@ import {
   type CumulativeDebutSeries,
   type DebutGranularity,
 } from '../../services/analyticsService'
+import { CHART_COLORS } from '../../constants/chartColors'
 
 const GRANULARITIES: { value: DebutGranularity; label: string }[] = [
   { value: 'chapter', label: 'Chapter' },
@@ -112,7 +113,7 @@ export function CumulativeDebutChartBody({
           data={series.points}
           margin={{ top: 5, right: 30, left: 10, bottom: 6 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
           {isChapter ? (
             <XAxis
               dataKey="x"
@@ -120,12 +121,12 @@ export function CumulativeDebutChartBody({
               domain={[1, 'dataMax']}
               height={X_AXIS_BAND}
               tick={{ fontSize: 11 }}
-              stroke="#6b7280"
+              stroke={CHART_COLORS.axis}
               label={{
                 value: 'Chapter',
                 position: 'insideBottom',
                 offset: 12,
-                style: { fontSize: 12, fill: '#6b7280' },
+                style: { fontSize: 12, fill: CHART_COLORS.gray500 },
               }}
             />
           ) : (
@@ -137,19 +138,23 @@ export function CumulativeDebutChartBody({
               textAnchor="end"
               height={X_AXIS_BAND}
               tick={{ fontSize: 11 }}
-              stroke="#6b7280"
+              stroke={CHART_COLORS.gray500}
             />
           )}
           <YAxis
             tick={{ fontSize: 11 }}
-            stroke="#6b7280"
+            stroke={CHART_COLORS.axis}
             allowDecimals={false}
             width={48}
             label={{
               value: 'Characters debuted',
               angle: -90,
               position: 'insideLeft',
-              style: { fontSize: 12, fill: '#6b7280', textAnchor: 'middle' },
+              style: {
+                fontSize: 12,
+                fill: CHART_COLORS.gray500,
+                textAnchor: 'middle',
+              },
             }}
           />
           <Tooltip
@@ -169,9 +174,9 @@ export function CumulativeDebutChartBody({
             type="monotone"
             dataKey="cumulative"
             name="Cumulative debuts"
-            stroke="#059669"
+            stroke={CHART_COLORS.emerald600}
             strokeWidth={2}
-            dot={isChapter ? false : { r: 3, fill: '#059669' }}
+            dot={isChapter ? false : { r: 3, fill: CHART_COLORS.emerald600 }}
             activeDot={{ r: 5 }}
             isAnimationActive={false}
           />
@@ -182,15 +187,15 @@ export function CumulativeDebutChartBody({
               x={isChapter ? b.x : b.label}
               y={b.cumulative}
               r={6}
-              fill="#f59e0b"
-              stroke="#ffffff"
+              fill={CHART_COLORS.amber500}
+              stroke={CHART_COLORS.white}
               strokeWidth={2}
               label={{
                 value: `#${i + 1} +${b.delta}`,
                 position: 'top',
                 fontSize: 11,
                 fontWeight: 600,
-                fill: '#b45309',
+                fill: CHART_COLORS.amber700,
               }}
             />
           ))}

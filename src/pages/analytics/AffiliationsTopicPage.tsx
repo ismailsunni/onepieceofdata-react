@@ -83,13 +83,12 @@ function AffiliationsTopicPage() {
         </nav>
 
         {/* Hero */}
-        <div className="relative mb-6 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-rose-50 via-red-50 to-rose-50 opacity-60 rounded-2xl"></div>
-          <div className="relative bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-2xl p-5 shadow-sm">
+        <div className="mb-6">
+          <div className="bg-white border border-gray-200 rounded-xl p-5">
             <div className="flex items-center gap-4">
-              <div className="flex-shrink-0 w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-rose-600 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="flex-shrink-0 w-12 h-12 md:w-16 md:h-16 bg-blue-50 rounded-xl flex items-center justify-center">
                 <svg
-                  className="w-6 h-6 md:w-9 md:h-9 text-white"
+                  className="w-6 h-6 md:w-9 md:h-9 text-blue-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -103,7 +102,7 @@ function AffiliationsTopicPage() {
                 </svg>
               </div>
               <div>
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-rose-600 to-red-600">
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900">
                   Affiliations & Organizations
                 </h1>
                 <p className="text-gray-600 text-lg mt-2">

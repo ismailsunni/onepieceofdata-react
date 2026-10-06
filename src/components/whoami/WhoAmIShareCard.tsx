@@ -1,5 +1,6 @@
 import { forwardRef } from 'react'
 import type { WhoAmIRoundResult } from '../../types/whoAmI'
+import { CHART_COLORS } from '../../constants/chartColors'
 
 export type ShareFormat = 'square' | 'story'
 
@@ -26,7 +27,7 @@ const WhoAmIShareCard = forwardRef<HTMLDivElement, WhoAmIShareCardProps>(
           height: `${height}px`,
           background:
             'linear-gradient(135deg, #0a0a0a 0%, #1e3a8a 50%, #0a0a0a 100%)',
-          color: '#ffffff',
+          color: CHART_COLORS.white,
           fontFamily:
             '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
           padding: isStory ? '120px 80px' : '80px',
@@ -125,7 +126,7 @@ const WhoAmIShareCard = forwardRef<HTMLDivElement, WhoAmIShareCardProps>(
               fontSize: isStory ? '72px' : '56px',
               fontWeight: 800,
               margin: '32px 0 0 0',
-              color: '#fbbf24',
+              color: CHART_COLORS.amber400,
             }}
           >
             {rating}
@@ -215,7 +216,7 @@ const WhoAmIShareCard = forwardRef<HTMLDivElement, WhoAmIShareCardProps>(
               fontSize: isStory ? '44px' : '32px',
               fontWeight: 700,
               margin: 0,
-              color: '#fbbf24',
+              color: CHART_COLORS.amber400,
             }}
           >
             onepieceofdata.com

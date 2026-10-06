@@ -25,6 +25,7 @@ import { useCumulativeDebuts } from '../analytics/useCumulativeDebuts'
 import type { Character } from '../../types/character'
 import type { Arc, Saga } from '../../types/arc'
 import { EmbedFooter } from './EmbedFooter'
+import { CHART_COLORS } from '../../constants/chartColors'
 
 // ── #5 Most Loyal ───────────────────────────────────────────────────────────
 
@@ -40,16 +41,16 @@ export function EmbedMostLoyal({ data }: { data: LoyalCharacter[] }) {
           layout="vertical"
           margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
           <XAxis
             type="number"
             tick={{ fontSize: 11 }}
-            stroke="#6b7280"
+            stroke={CHART_COLORS.axis}
             label={{
               value: 'Density (%)',
               position: 'insideBottom',
               offset: -5,
-              style: { fontSize: 11, fill: '#6b7280' },
+              style: { fontSize: 11, fill: CHART_COLORS.gray500 },
             }}
           />
           <YAxis
@@ -57,7 +58,7 @@ export function EmbedMostLoyal({ data }: { data: LoyalCharacter[] }) {
             type="category"
             width={110}
             tick={{ fontSize: 10 }}
-            stroke="#6b7280"
+            stroke={CHART_COLORS.axis}
           />
           <Tooltip
             formatter={(value: number) => [`${value}%`, 'Density']}
@@ -68,7 +69,11 @@ export function EmbedMostLoyal({ data }: { data: LoyalCharacter[] }) {
                 : label
             }}
           />
-          <Bar dataKey="density" fill="#6366f1" radius={[0, 8, 8, 0]} />
+          <Bar
+            dataKey="density"
+            fill={CHART_COLORS.indigo500}
+            radius={[0, 8, 8, 0]}
+          />
         </BarChart>
       </ResponsiveContainer>
       <EmbedFooter />
@@ -88,7 +93,7 @@ export function EmbedWondersDistribution({
   const [mode, setMode] = useState<'arc' | 'saga'>('arc')
   const data = mode === 'arc' ? arcData : sagaData
   const dataKey = mode === 'arc' ? 'arcCount' : 'sagaCount'
-  const fill = mode === 'arc' ? '#8b5cf6' : '#ec4899'
+  const fill = mode === 'arc' ? CHART_COLORS.violet500 : CHART_COLORS.pink500
 
   return (
     <div className="p-4 font-sans">
@@ -117,9 +122,13 @@ export function EmbedWondersDistribution({
           data={data}
           margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis dataKey={dataKey} tick={{ fontSize: 11 }} stroke="#6b7280" />
-          <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
+          <XAxis
+            dataKey={dataKey}
+            tick={{ fontSize: 11 }}
+            stroke={CHART_COLORS.axis}
+          />
+          <YAxis tick={{ fontSize: 11 }} stroke={CHART_COLORS.axis} />
           <Tooltip />
           <Bar
             dataKey="characterCount"
@@ -137,7 +146,7 @@ export function EmbedWondersDistribution({
                   y={y - 5}
                   textAnchor="middle"
                   fontSize={11}
-                  fill="#374151"
+                  fill={CHART_COLORS.gray700}
                 >
                   {value} ({pct}%)
                 </text>
@@ -183,16 +192,16 @@ export function EmbedArcIntroRate({ data }: { data: ArcIntroRate[] }) {
           data={data}
           margin={{ top: 5, right: 30, left: 20, bottom: 80 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
           <XAxis
             dataKey="arc"
             tick={{ fontSize: 9 }}
             angle={-45}
             textAnchor="end"
             height={100}
-            stroke="#6b7280"
+            stroke={CHART_COLORS.axis}
           />
-          <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
+          <YAxis tick={{ fontSize: 11 }} stroke={CHART_COLORS.axis} />
           <Tooltip
             labelFormatter={(label: string) => {
               const d = data.find((a) => a.arc === label)
@@ -205,7 +214,7 @@ export function EmbedArcIntroRate({ data }: { data: ArcIntroRate[] }) {
               dataKey="returningCharacters"
               name="Returning Characters"
               stackId="characters"
-              fill="#f59e0b"
+              fill={CHART_COLORS.amber500}
               radius={mode === 'returning' ? [4, 4, 0, 0] : undefined}
             />
           )}
@@ -214,7 +223,7 @@ export function EmbedArcIntroRate({ data }: { data: ArcIntroRate[] }) {
               dataKey="newCharacters"
               name="New Characters"
               stackId="characters"
-              fill="#3b82f6"
+              fill={CHART_COLORS.blue500}
               radius={[4, 4, 0, 0]}
             />
           )}
@@ -257,16 +266,16 @@ export function EmbedSagaIntroRate({ data }: { data: SagaIntroRate[] }) {
           data={data}
           margin={{ top: 5, right: 30, left: 20, bottom: 80 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
           <XAxis
             dataKey="saga"
             tick={{ fontSize: 10 }}
             angle={-45}
             textAnchor="end"
             height={100}
-            stroke="#6b7280"
+            stroke={CHART_COLORS.axis}
           />
-          <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
+          <YAxis tick={{ fontSize: 11 }} stroke={CHART_COLORS.axis} />
           <Tooltip />
           <Legend />
           {(mode === 'both' || mode === 'returning') && (
@@ -274,7 +283,7 @@ export function EmbedSagaIntroRate({ data }: { data: SagaIntroRate[] }) {
               dataKey="returningCharacters"
               name="Returning Characters"
               stackId="characters"
-              fill="#f59e0b"
+              fill={CHART_COLORS.amber500}
               radius={mode === 'returning' ? [4, 4, 0, 0] : undefined}
             />
           )}
@@ -283,7 +292,7 @@ export function EmbedSagaIntroRate({ data }: { data: SagaIntroRate[] }) {
               dataKey="newCharacters"
               name="New Characters"
               stackId="characters"
-              fill="#3b82f6"
+              fill={CHART_COLORS.blue500}
               radius={[4, 4, 0, 0]}
             />
           )}

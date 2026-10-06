@@ -14,6 +14,7 @@ import { fetchCharacters } from '../../services/characterService'
 import { ChartCard } from '../common/ChartCard'
 import { RangeSlider } from '../common/RangeSlider'
 import { STRAW_HAT_IDS } from '../../constants/characters'
+import { CHART_COLORS } from '../../constants/chartColors'
 
 interface AgeBountyPoint {
   id: string
@@ -144,19 +145,19 @@ export function AgeBountyScatterSection() {
       >
         <ResponsiveContainer width="100%" height={500}>
           <ScatterChart margin={{ top: 10, right: 30, left: 20, bottom: 10 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
             <XAxis
               type="number"
               dataKey="age"
               name="Age"
               tick={{ fontSize: 11 }}
-              stroke="#6b7280"
+              stroke={CHART_COLORS.axis}
               domain={[ageRange[0], ageRange[1]]}
               label={{
                 value: 'Age',
                 position: 'insideBottom',
                 offset: -5,
-                style: { fontSize: 11, fill: '#6b7280' },
+                style: { fontSize: 11, fill: CHART_COLORS.gray500 },
               }}
             />
             <YAxis
@@ -164,7 +165,7 @@ export function AgeBountyScatterSection() {
               dataKey="bounty"
               name="Bounty"
               tick={{ fontSize: 11 }}
-              stroke="#6b7280"
+              stroke={CHART_COLORS.axis}
               domain={[bountyRange[0], bountyRange[1]]}
               tickFormatter={formatBounty}
               width={60}
@@ -219,18 +220,18 @@ export function AgeBountyScatterSection() {
                   key={i}
                   fill={
                     point.status === 'Alive'
-                      ? '#10b981'
+                      ? CHART_COLORS.emerald500
                       : point.status === 'Deceased'
-                        ? '#ef4444'
-                        : '#9ca3af'
+                        ? CHART_COLORS.red500
+                        : CHART_COLORS.gray400
                   }
                   fillOpacity={0.6}
                   stroke={
                     point.status === 'Alive'
-                      ? '#059669'
+                      ? CHART_COLORS.emerald600
                       : point.status === 'Deceased'
-                        ? '#dc2626'
-                        : '#6b7280'
+                        ? CHART_COLORS.red600
+                        : CHART_COLORS.gray500
                   }
                   strokeWidth={1}
                 />

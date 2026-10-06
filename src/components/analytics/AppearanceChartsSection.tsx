@@ -21,6 +21,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts'
+import { CHART_COLORS } from '../../constants/chartColors'
 
 interface MatrixCharacter {
   id: string
@@ -103,7 +104,9 @@ export function AppearanceChartsSection({
       }
     }
     const total = concentrationData.reduce((s, c) => s + c.total, 0)
-    const recurring = concentrationData.filter((c) => c.sagasAppeared >= 5).length
+    const recurring = concentrationData.filter(
+      (c) => c.sagasAppeared >= 5
+    ).length
     return {
       totalTracked: concentrationData.length,
       avgAppearances: (total / concentrationData.length).toFixed(1),
@@ -234,16 +237,19 @@ export function AppearanceChartsSection({
                 layout="vertical"
                 margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke={CHART_COLORS.grid}
+                />
                 <XAxis
                   type="number"
                   tick={{ fontSize: 11 }}
-                  stroke="#6b7280"
+                  stroke={CHART_COLORS.axis}
                   label={{
                     value: 'Density (%)',
                     position: 'insideBottom',
                     offset: -5,
-                    style: { fontSize: 11, fill: '#6b7280' },
+                    style: { fontSize: 11, fill: CHART_COLORS.gray500 },
                   }}
                 />
                 <YAxis
@@ -251,7 +257,7 @@ export function AppearanceChartsSection({
                   type="category"
                   width={110}
                   tick={{ fontSize: 10 }}
-                  stroke="#6b7280"
+                  stroke={CHART_COLORS.axis}
                 />
                 <Tooltip
                   formatter={(value: number) => [`${value}%`, 'Density']}
@@ -262,7 +268,11 @@ export function AppearanceChartsSection({
                       : label
                   }}
                 />
-                <Bar dataKey="density" fill="#6366f1" radius={[0, 8, 8, 0]} />
+                <Bar
+                  dataKey="density"
+                  fill={CHART_COLORS.indigo500}
+                  radius={[0, 8, 8, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -336,9 +346,7 @@ function ConcentrationTable({
     }
     if (typeof av === 'string' && typeof bv === 'string')
       return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av)
-    return sortDir === 'asc'
-      ? Number(av) - Number(bv)
-      : Number(bv) - Number(av)
+    return sortDir === 'asc' ? Number(av) - Number(bv) : Number(bv) - Number(av)
   })
 
   const toggleSort = (field: SortField) => {

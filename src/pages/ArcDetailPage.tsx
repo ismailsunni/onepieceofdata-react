@@ -538,18 +538,14 @@ function ArcDetailPage() {
         </div>
 
         {/* Hero Section */}
-        <div className="relative mb-8 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-teal-50 to-green-50 opacity-60"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-white/80 to-transparent"></div>
-
-          <Card className="relative border-2 border-emerald-100">
+        <div className="mb-8">
+          <Card>
             <div className="flex flex-col lg:flex-row items-start justify-between gap-6">
               <div className="flex-1">
                 <div className="inline-block mb-3">
-                  <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600 mb-2">
+                  <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
                     {arc.title}
                   </h1>
-                  <div className="h-1 w-32 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-full"></div>
                 </div>
                 {arc.japanese_title && (
                   <p className="text-lg text-gray-600 mb-1">
