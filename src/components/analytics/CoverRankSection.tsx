@@ -13,6 +13,7 @@ import {
 import { fetchInsightsRawData } from '../../services/analytics/insightsAnalytics'
 import { ChartCard } from '../common/ChartCard'
 import type { Character } from '../../types/character'
+import { CHART_COLORS } from '../../constants/chartColors'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -114,11 +115,11 @@ function computeCoverOverlap(
 // ── Color helper ─────────────────────────────────────────────────────────────
 
 function barColor(pct: number): string {
-  if (pct === 100) return '#059669' // emerald-600
-  if (pct >= 75) return '#10b981' // emerald-500
-  if (pct >= 50) return '#fbbf24' // amber-400
-  if (pct >= 25) return '#f97316' // orange-500
-  return '#ef4444' // red-500
+  if (pct === 100) return CHART_COLORS.emerald600 // emerald-600
+  if (pct >= 75) return CHART_COLORS.emerald500 // emerald-500
+  if (pct >= 50) return CHART_COLORS.amber400 // amber-400
+  if (pct >= 25) return CHART_COLORS.orange500 // orange-500
+  return CHART_COLORS.red500 // red-500
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -136,11 +137,11 @@ export function CoverRankSection() {
   }, [raw])
 
   const LEGEND_BUCKETS = [
-    { label: '100%', color: '#059669', min: 100, max: 100 },
-    { label: '75–99%', color: '#10b981', min: 75, max: 99 },
-    { label: '50–74%', color: '#fbbf24', min: 50, max: 74 },
-    { label: '25–49%', color: '#f97316', min: 25, max: 49 },
-    { label: '<25%', color: '#ef4444', min: 0, max: 24 },
+    { label: '100%', color: CHART_COLORS.emerald600, min: 100, max: 100 },
+    { label: '75–99%', color: CHART_COLORS.emerald500, min: 75, max: 99 },
+    { label: '50–74%', color: CHART_COLORS.amber400, min: 50, max: 74 },
+    { label: '25–49%', color: CHART_COLORS.orange500, min: 25, max: 49 },
+    { label: '<25%', color: CHART_COLORS.red500, min: 0, max: 24 },
   ]
 
   const bucketCounts = useMemo(() => {
@@ -247,10 +248,10 @@ export function CoverRankSection() {
               data={volumes}
               margin={{ top: 10, right: 20, left: 10, bottom: 60 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
               <XAxis
                 dataKey="volume"
-                tick={{ fontSize: 10, fill: '#6b7280' }}
+                tick={{ fontSize: 10, fill: CHART_COLORS.axis }}
                 angle={-45}
                 textAnchor="end"
                 height={60}
@@ -258,11 +259,11 @@ export function CoverRankSection() {
                   value: 'Volume',
                   position: 'insideBottom',
                   offset: -15,
-                  style: { fontSize: 12, fill: '#6b7280' },
+                  style: { fontSize: 12, fill: CHART_COLORS.gray500 },
                 }}
               />
               <YAxis
-                tick={{ fontSize: 11, fill: '#6b7280' }}
+                tick={{ fontSize: 11, fill: CHART_COLORS.axis }}
                 domain={[0, 100]}
                 tickFormatter={(v: number) => `${v}%`}
                 label={{
@@ -270,7 +271,7 @@ export function CoverRankSection() {
                   angle: -90,
                   position: 'insideLeft',
                   offset: 5,
-                  style: { fontSize: 11, fill: '#6b7280' },
+                  style: { fontSize: 11, fill: CHART_COLORS.gray500 },
                 }}
               />
               <Tooltip

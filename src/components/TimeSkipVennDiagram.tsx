@@ -1,5 +1,6 @@
 import { TimeSkipData } from '../services/analyticsService'
 import { ChartCard } from './common/ChartCard'
+import { CHART_COLORS } from '../constants/chartColors'
 
 interface TimeSkipVennDiagramProps {
   data: TimeSkipData
@@ -35,9 +36,9 @@ function TimeSkipVennDiagram({ data }: TimeSkipVennDiagramProps) {
               cx="140"
               cy="150"
               r="100"
-              fill="#3b82f6"
+              fill={CHART_COLORS.blue500}
               opacity="0.6"
-              stroke="#2563eb"
+              stroke={CHART_COLORS.blue600}
               strokeWidth="2"
             />
 
@@ -46,9 +47,9 @@ function TimeSkipVennDiagram({ data }: TimeSkipVennDiagramProps) {
               cx="260"
               cy="150"
               r="100"
-              fill="#10b981"
+              fill={CHART_COLORS.emerald500}
               opacity="0.6"
-              stroke="#059669"
+              stroke={CHART_COLORS.emerald600}
               strokeWidth="2"
             />
 
@@ -114,7 +115,7 @@ function TimeSkipVennDiagram({ data }: TimeSkipVennDiagramProps) {
 
         {/* Statistics */}
         <div className="flex flex-col gap-4 w-full lg:w-auto">
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+          <div className="bg-blue-50 border border-blue-200 p-4 rounded">
             <div className="flex items-center justify-between gap-8">
               <div>
                 <p className="text-sm text-blue-700 font-medium">
@@ -131,7 +132,7 @@ function TimeSkipVennDiagram({ data }: TimeSkipVennDiagramProps) {
             </div>
           </div>
 
-          <div className="bg-purple-50 border-l-4 border-purple-500 p-4 rounded">
+          <div className="bg-purple-50 border border-purple-200 p-4 rounded">
             <div className="flex items-center justify-between gap-8">
               <div>
                 <p className="text-sm text-purple-700 font-medium">
@@ -148,7 +149,7 @@ function TimeSkipVennDiagram({ data }: TimeSkipVennDiagramProps) {
             </div>
           </div>
 
-          <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+          <div className="bg-green-50 border border-green-200 p-4 rounded">
             <div className="flex items-center justify-between gap-8">
               <div>
                 <p className="text-sm text-green-700 font-medium">
@@ -167,7 +168,7 @@ function TimeSkipVennDiagram({ data }: TimeSkipVennDiagramProps) {
             </div>
           </div>
 
-          <div className="bg-gray-100 border-l-4 border-gray-500 p-4 rounded">
+          <div className="bg-gray-100 border border-gray-200 p-4 rounded">
             <div className="flex items-center justify-between gap-8">
               <div>
                 <p className="text-sm text-gray-700 font-medium">

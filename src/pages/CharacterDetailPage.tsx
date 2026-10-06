@@ -34,6 +34,7 @@ import { CharacterOccupation } from '../types/occupation'
 import { fetchDevilFruitsByCharacter } from '../services/devilFruitService'
 import { CharacterDevilFruit } from '../types/devilFruit'
 import { getCharacterImageUrl } from '../utils/characterImage'
+import { CHART_COLORS } from '../constants/chartColors'
 
 // Service function to fetch a single character by ID
 async function fetchCharacterById(id: string): Promise<Character | null> {
@@ -542,11 +543,8 @@ function CharacterDetailPage() {
         </div>
 
         {/* Hero Section */}
-        <div className="relative mb-8 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 opacity-60"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-white/80 to-transparent"></div>
-
-          <Card className="relative border-2 border-blue-100">
+        <div className="mb-8">
+          <Card>
             <div className="flex flex-col lg:flex-row items-start justify-between gap-8">
               {/* Portrait */}
               <div className="flex-shrink-0 self-center lg:self-start">
@@ -573,10 +571,9 @@ function CharacterDetailPage() {
               {/* Character Name & Status */}
               <div className="flex-1">
                 <div className="inline-block mb-3">
-                  <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-2">
+                  <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
                     {character.name || 'Unknown'}
                   </h1>
-                  <div className="h-1 w-24 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3 mt-4">
@@ -609,7 +606,7 @@ function CharacterDetailPage() {
                       <span
                         className={`w-2 h-2 rounded-full mr-2 ${
                           character.status?.toLowerCase() === 'alive'
-                            ? 'bg-green-500 animate-pulse'
+                            ? 'bg-green-500'
                             : character.status?.toLowerCase() === 'deceased'
                               ? 'bg-red-500'
                               : 'bg-gray-500'
@@ -1097,7 +1094,7 @@ function CharacterDetailPage() {
                                     : 'View Chart'}
                                 </button>
                                 {showBountyChart && (
-                                  <div className="absolute right-0 top-12 bg-white border-2 border-amber-200 rounded-xl shadow-2xl p-5 z-50 w-[500px]">
+                                  <div className="absolute right-0 top-12 bg-white border-2 border-amber-200 rounded-xl shadow-lg p-4 sm:p-5 z-50 w-[min(500px,calc(100vw-2rem))]">
                                     <div className="flex items-center justify-between mb-3">
                                       <h4 className="text-sm font-semibold text-gray-900">
                                         Bounty Progression
@@ -1170,7 +1167,7 @@ function CharacterDetailPage() {
                                         >
                                           <CartesianGrid
                                             strokeDasharray="3 3"
-                                            stroke="#f3f4f6"
+                                            stroke={CHART_COLORS.gray100}
                                           />
                                           <XAxis
                                             dataKey="step"
@@ -1179,13 +1176,13 @@ function CharacterDetailPage() {
                                               position: 'insideBottom',
                                               offset: -10,
                                             }}
-                                            stroke="#6b7280"
+                                            stroke={CHART_COLORS.gray500}
                                           />
                                           <YAxis
                                             tickFormatter={(value) =>
                                               formatBountyValue(value)
                                             }
-                                            stroke="#6b7280"
+                                            stroke={CHART_COLORS.axis}
                                           />
                                           <Tooltip
                                             formatter={(value: number) => [
@@ -1203,10 +1200,10 @@ function CharacterDetailPage() {
                                           <Line
                                             type="monotone"
                                             dataKey="bounty"
-                                            stroke="#f59e0b"
+                                            stroke={CHART_COLORS.amber500}
                                             strokeWidth={3}
                                             dot={{
-                                              fill: '#f59e0b',
+                                              fill: CHART_COLORS.amber500,
                                               r: 5,
                                               strokeWidth: 2,
                                               stroke: '#fff',
@@ -1875,7 +1872,7 @@ function AffiliationsCard({
                 <span className="text-rose-400">({aff.sub_group})</span>
               )}
               <span
-                className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium ${getStatusBadge(aff.status)}`}
+                className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${getStatusBadge(aff.status)}`}
               >
                 {aff.status}
               </span>
@@ -1946,7 +1943,7 @@ function OccupationsCard({
             <span className="flex items-center gap-1.5">
               {occ.role}
               <span
-                className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium ${getStatusBadge(occ.status)}`}
+                className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${getStatusBadge(occ.status)}`}
               >
                 {occ.status}
               </span>

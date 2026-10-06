@@ -165,7 +165,7 @@ function CharacterAvatar({ id, name }: { id: string; name: string | null }) {
           className="w-full h-full object-cover object-top"
         />
       ) : (
-        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-700 text-white text-sm font-bold">
+        <div className="w-full h-full flex items-center justify-center bg-blue-600 text-white text-sm font-bold">
           {(name || '?').slice(0, 2).toUpperCase()}
         </div>
       )}
@@ -239,7 +239,7 @@ function ChapterBreakRowItem({
       <div className="shrink-0 w-5 text-center text-sm font-bold text-gray-400 tabular-nums">
         {rank}
       </div>
-      <div className="shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 text-white font-bold flex items-center justify-center text-xs text-center leading-tight border-2 border-gray-200 shadow-sm">
+      <div className="shrink-0 w-16 h-16 rounded-full bg-amber-600 text-white font-bold flex items-center justify-center text-xs text-center leading-tight border-2 border-gray-200 shadow-sm">
         Ch.
         <br />
         {b.toChapter}
@@ -280,7 +280,7 @@ function ArcRowItem({
       <div className="shrink-0 w-5 text-center text-sm font-bold text-gray-400 tabular-nums">
         {rank}
       </div>
-      <div className="shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 text-white font-bold flex items-center justify-center text-xl border-2 border-gray-200 shadow-sm">
+      <div className="shrink-0 w-16 h-16 rounded-full bg-purple-600 text-white font-bold flex items-center justify-center text-xl border-2 border-gray-200 shadow-sm">
         {a.title.charAt(0).toUpperCase()}
       </div>
       <div className="flex-1 min-w-0">
@@ -318,7 +318,7 @@ function SagaRowItem({
       <div className="shrink-0 w-5 text-center text-sm font-bold text-gray-400 tabular-nums">
         {rank}
       </div>
-      <div className="shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 text-white font-bold flex items-center justify-center text-xl border-2 border-gray-200 shadow-sm">
+      <div className="shrink-0 w-16 h-16 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center text-xl border-2 border-gray-200 shadow-sm">
         {s.title.charAt(0).toUpperCase()}
       </div>
       <div className="flex-1 min-w-0">

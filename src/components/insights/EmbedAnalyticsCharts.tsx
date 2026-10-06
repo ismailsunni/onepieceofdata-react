@@ -20,6 +20,7 @@ import {
 } from '../../services/analytics/chapterAnalytics'
 import { fetchCharacters } from '../../services/characterService'
 import { EmbedFooter } from './EmbedFooter'
+import { CHART_COLORS } from '../../constants/chartColors'
 
 function EmbedLoading() {
   return (
@@ -54,22 +55,22 @@ export function EmbedPublicationRate() {
           data={yearlyStats}
           margin={{ top: 10, right: 20, left: 10, bottom: 60 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
           <XAxis
             dataKey="year"
             angle={-45}
             textAnchor="end"
             height={70}
-            tick={{ fontSize: 11, fill: '#6b7280' }}
+            tick={{ fontSize: 11, fill: CHART_COLORS.axis }}
           />
           <YAxis
             label={{
               value: 'Weeks',
               angle: -90,
               position: 'insideLeft',
-              style: { fill: '#6b7280', fontSize: 11 },
+              style: { fill: CHART_COLORS.axis, fontSize: 11 },
             }}
-            tick={{ fontSize: 11, fill: '#6b7280' }}
+            tick={{ fontSize: 11, fill: CHART_COLORS.gray500 }}
           />
           <Tooltip
             content={({ active, payload, label }) => {
@@ -112,8 +113,18 @@ export function EmbedPublicationRate() {
               return value
             }}
           />
-          <Bar dataKey="chapters" stackId="a" fill="#10b981" name="chapters" />
-          <Bar dataKey="breaks" stackId="a" fill="#ef4444" name="breaks" />
+          <Bar
+            dataKey="chapters"
+            stackId="a"
+            fill={CHART_COLORS.emerald500}
+            name="chapters"
+          />
+          <Bar
+            dataKey="breaks"
+            stackId="a"
+            fill={CHART_COLORS.red500}
+            name="breaks"
+          />
         </BarChart>
       </ResponsiveContainer>
       <EmbedFooter />
@@ -134,13 +145,13 @@ const IMPORTANT_ATTRIBUTES = [
 ]
 
 const COMPLETENESS_COLORS = [
-  '#3b82f6',
-  '#10b981',
-  '#f59e0b',
-  '#ef4444',
-  '#8b5cf6',
-  '#ec4899',
-  '#06b6d4',
+  CHART_COLORS.blue500,
+  CHART_COLORS.emerald500,
+  CHART_COLORS.amber500,
+  CHART_COLORS.red500,
+  CHART_COLORS.violet500,
+  CHART_COLORS.pink500,
+  CHART_COLORS.cyan500,
 ]
 
 export function EmbedCompleteness() {
@@ -305,18 +316,18 @@ export function EmbedAgeBounty() {
       </div>
       <ResponsiveContainer width="100%" height={400}>
         <ScatterChart margin={{ top: 10, right: 20, left: 10, bottom: 10 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
           <XAxis
             type="number"
             dataKey="age"
             name="Age"
             tick={{ fontSize: 11 }}
-            stroke="#6b7280"
+            stroke={CHART_COLORS.axis}
             label={{
               value: 'Age',
               position: 'insideBottom',
               offset: -5,
-              style: { fontSize: 11, fill: '#6b7280' },
+              style: { fontSize: 11, fill: CHART_COLORS.gray500 },
             }}
           />
           <YAxis
@@ -324,7 +335,7 @@ export function EmbedAgeBounty() {
             dataKey="bounty"
             name="Bounty"
             tick={{ fontSize: 11 }}
-            stroke="#6b7280"
+            stroke={CHART_COLORS.axis}
             tickFormatter={fmtBounty}
             width={55}
           />
@@ -371,18 +382,18 @@ export function EmbedAgeBounty() {
                 key={i}
                 fill={
                   p.status === 'Alive'
-                    ? '#10b981'
+                    ? CHART_COLORS.emerald500
                     : p.status === 'Deceased'
-                      ? '#ef4444'
-                      : '#9ca3af'
+                      ? CHART_COLORS.red500
+                      : CHART_COLORS.gray400
                 }
                 fillOpacity={0.6}
                 stroke={
                   p.status === 'Alive'
-                    ? '#059669'
+                    ? CHART_COLORS.emerald600
                     : p.status === 'Deceased'
-                      ? '#dc2626'
-                      : '#6b7280'
+                      ? CHART_COLORS.red600
+                      : CHART_COLORS.gray500
                 }
                 strokeWidth={1}
               />

@@ -19,6 +19,7 @@ import type {
   CoverStar,
   CoverVsMain,
 } from '../../services/analytics/insightsAnalytics'
+import { CHART_COLORS } from '../../constants/chartColors'
 
 // ── #17 Cover Stars ─────────────────────────────────────────────────────────
 
@@ -34,19 +35,23 @@ export function EmbedCoverStars({ data }: { data: CoverStar[] }) {
           layout="vertical"
           margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis type="number" tick={{ fontSize: 11 }} stroke="#6b7280" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
+          <XAxis
+            type="number"
+            tick={{ fontSize: 11 }}
+            stroke={CHART_COLORS.axis}
+          />
           <YAxis
             dataKey="name"
             type="category"
             width={110}
             tick={{ fontSize: 10 }}
-            stroke="#6b7280"
+            stroke={CHART_COLORS.axis}
           />
           <Tooltip />
           <Bar
             dataKey="coverAppearances"
-            fill="#f59e0b"
+            fill={CHART_COLORS.amber500}
             name="Cover Appearances"
             radius={[0, 8, 8, 0]}
           />
@@ -67,20 +72,20 @@ export function EmbedCoverVsMain({ data }: { data: CoverVsMain[] }) {
       </h2>
       <ResponsiveContainer width="100%" height="100%">
         <ScatterChart margin={{ top: 10, right: 30, left: 20, bottom: 10 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
           <XAxis
             type="number"
             dataKey="main"
             name="Main Story Appearances"
             tick={{ fontSize: 11 }}
-            stroke="#6b7280"
+            stroke={CHART_COLORS.axis}
           />
           <YAxis
             type="number"
             dataKey="cover"
             name="Volume Cover Appearances"
             tick={{ fontSize: 11 }}
-            stroke="#6b7280"
+            stroke={CHART_COLORS.axis}
           />
           <Tooltip
             labelFormatter={(
@@ -88,7 +93,11 @@ export function EmbedCoverVsMain({ data }: { data: CoverVsMain[] }) {
               payload: ReadonlyArray<{ payload?: { name?: string } }>
             ) => payload?.[0]?.payload?.name || ''}
           />
-          <Scatter data={data} fill="#8b5cf6" fillOpacity={0.5} />
+          <Scatter
+            data={data}
+            fill={CHART_COLORS.violet500}
+            fillOpacity={0.5}
+          />
         </ScatterChart>
       </ResponsiveContainer>
       <EmbedFooter />
@@ -169,16 +178,16 @@ export function EmbedCoverPerVolume() {
           data={volumeData}
           margin={{ top: 10, right: 20, left: 10, bottom: 60 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
           <XAxis
             dataKey="volume"
-            tick={{ fontSize: 9, fill: '#6b7280' }}
+            tick={{ fontSize: 9, fill: CHART_COLORS.axis }}
             angle={-45}
             textAnchor="end"
             height={50}
           />
           <YAxis
-            tick={{ fontSize: 11, fill: '#6b7280' }}
+            tick={{ fontSize: 11, fill: CHART_COLORS.axis }}
             allowDecimals={false}
           />
           <Tooltip
@@ -222,9 +231,19 @@ export function EmbedCoverPerVolume() {
             }}
           />
           {!hideStrawHats && (
-            <Bar dataKey="shp" stackId="a" fill="#f59e0b" name="shp" />
+            <Bar
+              dataKey="shp"
+              stackId="a"
+              fill={CHART_COLORS.amber500}
+              name="shp"
+            />
           )}
-          <Bar dataKey="nonShp" stackId="a" fill="#8b5cf6" name="nonShp" />
+          <Bar
+            dataKey="nonShp"
+            stackId="a"
+            fill={CHART_COLORS.violet500}
+            name="nonShp"
+          />
         </BarChart>
       </ResponsiveContainer>
       <EmbedFooter />

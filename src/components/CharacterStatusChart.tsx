@@ -9,6 +9,7 @@ import {
 } from 'recharts'
 import { StatusDistribution } from '../services/analyticsService'
 import { ChartCard } from './common/ChartCard'
+import { CHART_COLORS } from '../constants/chartColors'
 
 interface CharacterStatusChartProps {
   data: StatusDistribution[]
@@ -78,7 +79,7 @@ function CharacterStatusChart({ data }: CharacterStatusChartProps) {
           </Pie>
           <Tooltip
             contentStyle={{
-              backgroundColor: '#ffffff',
+              backgroundColor: CHART_COLORS.white,
               border: '1px solid #e5e7eb',
               borderRadius: '0.375rem',
             }}

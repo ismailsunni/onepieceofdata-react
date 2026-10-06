@@ -34,6 +34,7 @@ import {
 } from '../../services/analyticsService'
 import { formatBounty, bountyJumpColumns } from './constants'
 import { EmbedFooter } from './EmbedFooter'
+import { CHART_COLORS } from '../../constants/chartColors'
 
 // ── #1 Cast Complexity ──────────────────────────────────────────────────────
 
@@ -52,22 +53,22 @@ export function EmbedCastComplexity({
           data={data}
           margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
           <XAxis
             dataKey="chapter"
             type="number"
             domain={[1, 'dataMax']}
             ticks={[1, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100]}
             tick={{ fontSize: 11 }}
-            stroke="#6b7280"
+            stroke={CHART_COLORS.axis}
             label={{
               value: 'Chapter',
               position: 'insideBottom',
               offset: -5,
-              style: { fontSize: 11, fill: '#6b7280' },
+              style: { fontSize: 11, fill: CHART_COLORS.gray500 },
             }}
           />
-          <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
+          <YAxis tick={{ fontSize: 11 }} stroke={CHART_COLORS.axis} />
           <Tooltip
             labelFormatter={(label: number) => {
               const d = data.find((p) => p.chapter === label)
@@ -84,8 +85,8 @@ export function EmbedCastComplexity({
           <Area
             type="monotone"
             dataKey="characters"
-            fill="#dbeafe"
-            stroke="#93c5fd"
+            fill={CHART_COLORS.blue100}
+            stroke={CHART_COLORS.blue300}
             strokeWidth={1}
             fillOpacity={0.4}
             name="Characters in Chapter"
@@ -93,7 +94,7 @@ export function EmbedCastComplexity({
           <Line
             type="monotone"
             dataKey="rollingAvg"
-            stroke="#2563eb"
+            stroke={CHART_COLORS.blue600}
             strokeWidth={2}
             dot={false}
             name="Rolling Average (20 ch.)"
@@ -101,7 +102,7 @@ export function EmbedCastComplexity({
           <Line
             type="linear"
             dataKey="trend"
-            stroke="#ef4444"
+            stroke={CHART_COLORS.red500}
             strokeWidth={2}
             strokeDasharray="8 4"
             dot={false}
@@ -145,13 +146,13 @@ export function EmbedBountyVsAppearance({
       </div>
       <ResponsiveContainer width="100%" height="100%">
         <ScatterChart margin={{ top: 10, right: 30, left: 20, bottom: 10 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
           <XAxis
             type="number"
             dataKey="appearances"
             name="Appearances"
             tick={{ fontSize: 11 }}
-            stroke="#6b7280"
+            stroke={CHART_COLORS.axis}
           />
           <YAxis
             type="number"
@@ -159,7 +160,7 @@ export function EmbedBountyVsAppearance({
             name="Bounty"
             tickFormatter={formatBounty}
             tick={{ fontSize: 11 }}
-            stroke="#6b7280"
+            stroke={CHART_COLORS.axis}
           />
           <Tooltip
             content={({ payload }) => {
@@ -204,11 +205,19 @@ export function EmbedBountyVsAppearance({
               )
             }}
           />
-          <Scatter data={filtered} fill="#6366f1" fillOpacity={0.6}>
+          <Scatter
+            data={filtered}
+            fill={CHART_COLORS.indigo500}
+            fillOpacity={0.6}
+          >
             {filtered.map((entry, i) => (
               <Cell
                 key={i}
-                fill={entry.status === 'Alive' ? '#10b981' : '#ef4444'}
+                fill={
+                  entry.status === 'Alive'
+                    ? CHART_COLORS.emerald500
+                    : CHART_COLORS.red500
+                }
               />
             ))}
           </Scatter>
@@ -307,11 +316,11 @@ export function EmbedRegionBountyTier({
           layout="vertical"
           margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
           <XAxis
             type="number"
             tick={{ fontSize: 11 }}
-            stroke="#6b7280"
+            stroke={CHART_COLORS.axis}
             domain={showPct ? [0, 100] : [0, 'auto']}
             allowDataOverflow={showPct}
             tickFormatter={showPct ? (v) => `${v}%` : undefined}
@@ -321,7 +330,7 @@ export function EmbedRegionBountyTier({
             type="category"
             width={90}
             tick={{ fontSize: 10 }}
-            stroke="#6b7280"
+            stroke={CHART_COLORS.axis}
           />
           <Tooltip
             formatter={(value: number) => (showPct ? `${value}%` : value)}
@@ -390,17 +399,17 @@ export function EmbedBountyDistribution() {
           data={rows}
           margin={{ top: 10, right: 20, left: 10, bottom: 70 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
           <XAxis
             dataKey="range"
             angle={-45}
             textAnchor="end"
             height={80}
             tick={{ fontSize: 10 }}
-            stroke="#6b7280"
+            stroke={CHART_COLORS.axis}
             interval={0}
           />
-          <YAxis tick={{ fontSize: 11 }} stroke="#6b7280" />
+          <YAxis tick={{ fontSize: 11 }} stroke={CHART_COLORS.axis} />
           <Tooltip
             formatter={(value: number, name: string) => [
               `${value} characters`,
@@ -419,11 +428,11 @@ export function EmbedBountyDistribution() {
             height={28}
             formatter={(v) => (v === 'alive' ? 'Alive' : 'Deceased/Unknown')}
           />
-          <Bar dataKey="alive" stackId="a" fill="#10b981" />
+          <Bar dataKey="alive" stackId="a" fill={CHART_COLORS.emerald500} />
           <Bar
             dataKey="notAlive"
             stackId="a"
-            fill="#ef4444"
+            fill={CHART_COLORS.red500}
             radius={[6, 6, 0, 0]}
           />
         </BarChart>
@@ -445,7 +454,7 @@ export function EmbedTopBounties() {
 
   const rows = data ?? []
   const statusColor = (s: string | null) =>
-    s === 'Alive' ? '#10b981' : '#ef4444'
+    s === 'Alive' ? CHART_COLORS.emerald500 : CHART_COLORS.red500
 
   return (
     <div className="p-4 font-sans">
@@ -485,11 +494,11 @@ export function EmbedTopBounties() {
             layout="vertical"
             margin={{ top: 5, right: 20, left: 5, bottom: 5 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
             <XAxis
               type="number"
               tick={{ fontSize: 11 }}
-              stroke="#6b7280"
+              stroke={CHART_COLORS.axis}
               tickFormatter={formatBounty}
             />
             <YAxis
@@ -497,7 +506,7 @@ export function EmbedTopBounties() {
               type="category"
               width={190}
               tick={{ fontSize: 10 }}
-              stroke="#6b7280"
+              stroke={CHART_COLORS.axis}
               tickFormatter={(name: string) => {
                 const c = rows.find((d) => d.name === name)
                 const parts = [c?.origin_region, c?.blood_type_group]
@@ -703,11 +712,11 @@ export function EmbedBloodTypeBountyTier({
           layout="vertical"
           margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
           <XAxis
             type="number"
             tick={{ fontSize: 11 }}
-            stroke="#6b7280"
+            stroke={CHART_COLORS.axis}
             domain={showPct ? [0, 100] : [0, 'auto']}
             allowDataOverflow={showPct}
             tickFormatter={showPct ? (v) => `${v}%` : undefined}
@@ -717,7 +726,7 @@ export function EmbedBloodTypeBountyTier({
             type="category"
             width={50}
             tick={{ fontSize: 11 }}
-            stroke="#6b7280"
+            stroke={CHART_COLORS.axis}
           />
           <Tooltip
             formatter={(value: number) => (showPct ? `${value}%` : value)}

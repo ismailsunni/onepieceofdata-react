@@ -18,6 +18,7 @@ import {
   type RaceFrame,
   type RaceScoringMode,
 } from '../../utils/appearanceRace'
+import { CHART_COLORS } from '../../constants/chartColors'
 
 export type RaceSHPFilter = 'all' | 'hide' | 'only'
 export type BarScale = 'absolute' | 'relative'
@@ -157,7 +158,7 @@ function RaceRow({
   // Flip text to dark on light bars (Usopp's yellow, Franky's pale blue,
   // Brook's gray, Vivi's white) so labels stay legible.
   const lightBar = isLightColor(color)
-  const insideTextColor = lightBar ? '#111827' : '#ffffff'
+  const insideTextColor = lightBar ? CHART_COLORS.gray900 : CHART_COLORS.white
   const insideTextShadow = lightBar
     ? '0 1px 1px rgba(255, 255, 255, 0.55)'
     : '0 1px 2px rgba(0, 0, 0, 0.45)'

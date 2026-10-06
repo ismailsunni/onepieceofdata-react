@@ -14,6 +14,7 @@ import {
   type BloodTypeBountyTierData,
   BOUNTY_TIER_LABELS,
 } from '../../services/analyticsService'
+import { CHART_COLORS } from '../../constants/chartColors'
 
 interface BloodTypeBountySectionProps {
   data: BloodTypeBountyTierData[]
@@ -72,11 +73,11 @@ export function BloodTypeBountySection({ data }: BloodTypeBountySectionProps) {
             layout="vertical"
             margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
             <XAxis
               type="number"
               tick={{ fontSize: 11 }}
-              stroke="#6b7280"
+              stroke={CHART_COLORS.axis}
               domain={showPct ? [0, 100] : [0, 'auto']}
               allowDataOverflow={showPct}
               tickFormatter={showPct ? (v) => `${v}%` : undefined}
@@ -86,7 +87,7 @@ export function BloodTypeBountySection({ data }: BloodTypeBountySectionProps) {
               type="category"
               width={50}
               tick={{ fontSize: 11 }}
-              stroke="#6b7280"
+              stroke={CHART_COLORS.axis}
             />
             <Tooltip
               formatter={(value: number) => (showPct ? `${value}%` : value)}

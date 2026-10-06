@@ -10,12 +10,13 @@ import {
 } from 'recharts'
 import { OriginRegionData } from '../services/analyticsService'
 import { ChartCard } from './common/ChartCard'
+import { CHART_COLORS } from '../constants/chartColors'
 
 interface OriginRegionChartProps {
   data: OriginRegionData[]
 }
 
-const BAR_COLOR = '#6366f1' // indigo-500
+const BAR_COLOR = CHART_COLORS.indigo500 // indigo-500
 
 function OriginRegionChart({ data }: OriginRegionChartProps) {
   return (
@@ -37,11 +38,11 @@ function OriginRegionChart({ data }: OriginRegionChartProps) {
           <CartesianGrid
             strokeDasharray="3 3"
             horizontal={false}
-            stroke="#f3f4f6"
+            stroke={CHART_COLORS.gray100}
           />
           <XAxis
             type="number"
-            tick={{ fontSize: 12, fill: '#6b7280' }}
+            tick={{ fontSize: 12, fill: CHART_COLORS.axis }}
             tickLine={false}
             axisLine={false}
           />
@@ -49,19 +50,19 @@ function OriginRegionChart({ data }: OriginRegionChartProps) {
             type="category"
             dataKey="region"
             width={130}
-            tick={{ fontSize: 12, fill: '#374151' }}
+            tick={{ fontSize: 12, fill: CHART_COLORS.gray700 }}
             tickLine={false}
             axisLine={false}
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: '#ffffff',
+              backgroundColor: CHART_COLORS.white,
               border: '1px solid #e5e7eb',
               borderRadius: '0.5rem',
               fontSize: '0.875rem',
             }}
             formatter={(value: number) => [`${value} characters`, 'Count']}
-            cursor={{ fill: '#f3f4f6' }}
+            cursor={{ fill: CHART_COLORS.gray100 }}
           />
           <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={28}>
             {data.map((_, index) => (

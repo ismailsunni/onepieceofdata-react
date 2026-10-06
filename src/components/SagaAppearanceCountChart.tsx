@@ -14,6 +14,7 @@ interface SagaAppearanceCountChartProps {
 }
 
 import { ChartCard } from './common/ChartCard'
+import { CHART_COLORS } from '../constants/chartColors'
 
 export function SagaAppearanceCountChart({
   data,
@@ -47,7 +48,7 @@ export function SagaAppearanceCountChart({
               value: 'Number of Sagas',
               position: 'insideBottom',
               offset: -10,
-              style: { fontSize: 14, fill: '#6b7280' },
+              style: { fontSize: 14, fill: CHART_COLORS.gray500 },
             }}
           />
           <YAxis
@@ -55,7 +56,11 @@ export function SagaAppearanceCountChart({
               value: 'Number of Characters',
               angle: -90,
               position: 'insideLeft',
-              style: { textAnchor: 'middle', fontSize: 14, fill: '#6b7280' },
+              style: {
+                textAnchor: 'middle',
+                fontSize: 14,
+                fill: CHART_COLORS.axis,
+              },
             }}
           />
           <Tooltip
@@ -77,7 +82,11 @@ export function SagaAppearanceCountChart({
               return null
             }}
           />
-          <Bar dataKey="characterCount" fill="#06b6d4" radius={[8, 8, 0, 0]} />
+          <Bar
+            dataKey="characterCount"
+            fill={CHART_COLORS.cyan500}
+            radius={[8, 8, 0, 0]}
+          />
         </BarChart>
       </ResponsiveContainer>
     </ChartCard>

@@ -4,6 +4,7 @@ import { Network, DataSet } from 'vis-network/standalone'
 import { useTimelineData, SAGA_COLORS } from '../../hooks/useTimelineData'
 import TimelineModal, { type TimelineSelection } from './TimelineModal'
 import type { Character } from '../../types/character'
+import { CHART_COLORS } from '../../constants/chartColors'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -302,13 +303,13 @@ export default function StoryTimeline() {
           shape: 'circle',
           color: {
             background: it.color,
-            border: '#ffffff',
-            highlight: { background: it.color, border: '#111827' },
+            border: CHART_COLORS.white,
+            highlight: { background: it.color, border: CHART_COLORS.gray900 },
           },
           borderWidth: 3,
           widthConstraint: { minimum: 70, maximum: 150 },
           margin: 14,
-          font: { size: 17, color: '#ffffff', face: 'system-ui' },
+          font: { size: 17, color: CHART_COLORS.white, face: 'system-ui' },
         })
       )
       items.slice(1).forEach((it, i) =>
@@ -316,7 +317,10 @@ export default function StoryTimeline() {
           id: `e${i}`,
           from: items[i].id,
           to: it.id,
-          color: { color: '#cbd5e1', highlight: '#94a3b8' },
+          color: {
+            color: CHART_COLORS.slate300,
+            highlight: CHART_COLORS.slate400,
+          },
           width: 2.5,
           arrows: { to: { enabled: true, scaleFactor: 0.5 } },
         })
@@ -324,7 +328,7 @@ export default function StoryTimeline() {
     } else {
       const children = items.filter((it) => !it.isContext)
       const neighbors = items.filter((it) => it.isContext)
-      const parentColor = children[0]?.color ?? '#9ca3af'
+      const parentColor = children[0]?.color ?? CHART_COLORS.gray400
       const parentTitle =
         level === 'arc' ? (focusedSaga?.title ?? '') : (focusedArc?.title ?? '')
       const isChapters = level === 'chapter'
@@ -348,7 +352,7 @@ export default function StoryTimeline() {
           border: parentColor,
           highlight: {
             background: hexToRgba(parentColor, 0.16),
-            border: '#111827',
+            border: CHART_COLORS.gray900,
           },
         },
         borderWidth: 3,
@@ -365,7 +369,7 @@ export default function StoryTimeline() {
         y: -(R - 30),
         fixed: true,
         widthConstraint: { maximum: Math.max(160, R * 1.3) },
-        font: { size: 22, color: '#374151', face: 'system-ui' },
+        font: { size: 22, color: CHART_COLORS.gray700, face: 'system-ui' },
         chosen: false,
       })
 
@@ -381,8 +385,8 @@ export default function StoryTimeline() {
           y: Math.sin(ang) * rr,
           color: {
             background: it.color,
-            border: '#ffffff',
-            highlight: { background: it.color, border: '#111827' },
+            border: CHART_COLORS.white,
+            highlight: { background: it.color, border: CHART_COLORS.gray900 },
           },
           borderWidth: 2,
           widthConstraint: isChapters
@@ -391,7 +395,7 @@ export default function StoryTimeline() {
           margin: isChapters ? 6 : 11,
           font: {
             size: isChapters ? 13 : 14,
-            color: '#ffffff',
+            color: CHART_COLORS.white,
             face: 'system-ui',
           },
         })
@@ -401,7 +405,10 @@ export default function StoryTimeline() {
           id: `ce${i}`,
           from: children[i].id,
           to: it.id,
-          color: { color: '#94a3b8', highlight: '#475569' },
+          color: {
+            color: CHART_COLORS.slate400,
+            highlight: CHART_COLORS.slate600,
+          },
           width: 2,
           arrows: { to: { enabled: true, scaleFactor: 0.4 } },
         })
@@ -416,15 +423,18 @@ export default function StoryTimeline() {
           y: 0,
           fixed: true,
           color: {
-            background: '#f1f5f9',
+            background: CHART_COLORS.slate100,
             border: it.color,
-            highlight: { background: '#e2e8f0', border: '#111827' },
+            highlight: {
+              background: CHART_COLORS.slate200,
+              border: CHART_COLORS.gray900,
+            },
           },
           borderWidth: 2,
           shapeProperties: { borderDashes: [6, 4] },
           widthConstraint: { minimum: 60, maximum: 120 },
           margin: 12,
-          font: { size: 14, color: '#475569', face: 'system-ui' },
+          font: { size: 14, color: CHART_COLORS.slate600, face: 'system-ui' },
         })
         // Connect the neighbour to the boundary arc so the chain stays
         // continuous: previous saga → first arc, last arc → next saga, with
@@ -438,7 +448,10 @@ export default function StoryTimeline() {
             id: `cn-${it.id}`,
             from,
             to,
-            color: { color: '#cbd5e1', highlight: '#94a3b8' },
+            color: {
+              color: CHART_COLORS.slate300,
+              highlight: CHART_COLORS.slate400,
+            },
             dashes: true,
             width: 2,
             arrows: { to: { enabled: true, scaleFactor: 0.45 } },

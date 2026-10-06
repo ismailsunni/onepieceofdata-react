@@ -11,6 +11,7 @@ import {
 } from 'recharts'
 import { TopBounty } from '../services/analyticsService'
 import { ChartCard } from './common/ChartCard'
+import { CHART_COLORS } from '../constants/chartColors'
 
 interface TopBountiesChartProps {
   dataAll: TopBounty[]
@@ -20,9 +21,9 @@ interface TopBountiesChartProps {
 // Get color based on character status
 const getStatusColor = (status: string | null): string => {
   if (status === 'Alive') {
-    return '#10b981' // green-500
+    return CHART_COLORS.emerald500 // green-500
   }
-  return '#ef4444' // red-500 for Deceased or Unknown
+  return CHART_COLORS.red500 // red-500 for Deceased or Unknown
 }
 
 function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
@@ -56,14 +57,14 @@ function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
             <div className="flex items-center gap-2">
               <div
                 className="w-4 h-4 rounded"
-                style={{ backgroundColor: '#10b981' }}
+                style={{ backgroundColor: CHART_COLORS.emerald500 }}
               ></div>
               <span className="text-xs text-gray-600">Alive</span>
             </div>
             <div className="flex items-center gap-2">
               <div
                 className="w-4 h-4 rounded"
-                style={{ backgroundColor: '#ef4444' }}
+                style={{ backgroundColor: CHART_COLORS.red500 }}
               ></div>
               <span className="text-xs text-gray-600">Deceased/Unknown</span>
             </div>
@@ -99,11 +100,11 @@ function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
           layout="vertical"
           margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
           <XAxis
             type="number"
             tick={{ fontSize: 12 }}
-            stroke="#6b7280"
+            stroke={CHART_COLORS.axis}
             tickFormatter={formatBounty}
           />
           <YAxis
@@ -111,7 +112,7 @@ function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
             type="category"
             width={200}
             tick={{ fontSize: 11 }}
-            stroke="#6b7280"
+            stroke={CHART_COLORS.axis}
             tickFormatter={(name: string) => {
               const c = data.find((d) => d.name === name)
               const parts = [c?.origin_region, c?.blood_type_group]
@@ -122,7 +123,7 @@ function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: '#ffffff',
+              backgroundColor: CHART_COLORS.white,
               border: '1px solid #e5e7eb',
               borderRadius: '0.375rem',
             }}

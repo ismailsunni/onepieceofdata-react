@@ -4,6 +4,7 @@ import { fetchCharacters } from '../../services/characterService'
 import { StatCard } from './'
 import { ChartCard } from '../common/ChartCard'
 import { RangeSlider } from '../common/RangeSlider'
+import { CHART_COLORS } from '../../constants/chartColors'
 
 // Define important attributes to track
 const IMPORTANT_ATTRIBUTES = [
@@ -18,16 +19,16 @@ const IMPORTANT_ATTRIBUTES = [
 
 // Color palette
 const COLORS = [
-  '#3b82f6', // blue-500
-  '#10b981', // green-500
-  '#f59e0b', // amber-500
-  '#ef4444', // red-500
-  '#8b5cf6', // violet-500
-  '#ec4899', // pink-500
-  '#06b6d4', // cyan-500
-  '#84cc16', // lime-500
-  '#f97316', // orange-500
-  '#6366f1', // indigo-500
+  CHART_COLORS.blue500, // blue-500
+  CHART_COLORS.emerald500, // green-500
+  CHART_COLORS.amber500, // amber-500
+  CHART_COLORS.red500, // red-500
+  CHART_COLORS.violet500, // violet-500
+  CHART_COLORS.pink500, // pink-500
+  CHART_COLORS.cyan500, // cyan-500
+  CHART_COLORS.lime500, // lime-500
+  CHART_COLORS.orange500, // orange-500
+  CHART_COLORS.indigo500, // indigo-500
 ]
 
 export function CompletenessSection() {

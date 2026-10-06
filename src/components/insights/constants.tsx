@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Column } from '../common/SortableTable'
 import { type BountyJump } from '../../services/analyticsService'
+import { CATEGORICAL_COLORS } from '../../constants/chartColors'
 
 export const formatBounty = (value: number) => {
   if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`
@@ -9,20 +10,7 @@ export const formatBounty = (value: number) => {
   return value.toLocaleString()
 }
 
-export const SAGA_COLORS = [
-  '#3b82f6',
-  '#8b5cf6',
-  '#ec4899',
-  '#f59e0b',
-  '#10b981',
-  '#ef4444',
-  '#06b6d4',
-  '#f97316',
-  '#84cc16',
-  '#6366f1',
-  '#14b8a6',
-  '#e11d48',
-]
+export const SAGA_COLORS = CATEGORICAL_COLORS
 
 export const bountyJumpColumns: Column<BountyJump>[] = [
   {

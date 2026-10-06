@@ -1,6 +1,8 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faScaleBalanced } from '@fortawesome/free-solid-svg-icons'
 import { fetchCharacters } from '../services/characterService'
 import { fetchAllDevilFruits } from '../services/devilFruitService'
 import type { Character } from '../types/character'
@@ -476,12 +478,11 @@ function CharacterComparePage() {
         </nav>
 
         {/* Hero */}
-        <div className="relative mb-8 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-white" />
-          <div className="relative p-6">
+        <div className="mb-8 rounded-xl border border-gray-200 bg-white">
+          <div className="p-6">
             <div className="flex items-center gap-4">
-              <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-amber-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg text-2xl">
-                ⚔️
+              <div className="flex-shrink-0 w-14 h-14 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
+                <FontAwesomeIcon icon={faScaleBalanced} className="w-6 h-6" />
               </div>
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold text-gray-900">

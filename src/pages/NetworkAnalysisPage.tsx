@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Network, DataSet } from 'vis-network/standalone'
 import { SectionHeader } from '../components/analytics'
 import { RangeSlider } from '../components/common/RangeSlider'
+import { CHART_COLORS } from '../constants/chartColors'
 
 // ─── Dataset definitions ──────────────────────────────────────────────────────
 const DATASETS = [
@@ -106,18 +107,18 @@ interface Stats {
 
 // ─── Community detection (Louvain phase-1, modularity optimisation) ──────────
 const COMMUNITY_COLORS = [
-  '#3b82f6', // blue
-  '#ef4444', // red
-  '#22c55e', // green
-  '#f59e0b', // amber
-  '#8b5cf6', // violet
-  '#ec4899', // pink
-  '#14b8a6', // teal
-  '#f97316', // orange
-  '#6366f1', // indigo
-  '#84cc16', // lime
-  '#06b6d4', // cyan
-  '#a855f7', // purple
+  CHART_COLORS.blue500, // blue
+  CHART_COLORS.red500, // red
+  CHART_COLORS.green500, // green
+  CHART_COLORS.amber500, // amber
+  CHART_COLORS.violet500, // violet
+  CHART_COLORS.pink500, // pink
+  CHART_COLORS.teal500, // teal
+  CHART_COLORS.orange500, // orange
+  CHART_COLORS.indigo500, // indigo
+  CHART_COLORS.lime500, // lime
+  CHART_COLORS.cyan500, // cyan
+  CHART_COLORS.purple500, // purple
 ]
 
 function detectCommunities(
@@ -208,7 +209,7 @@ function detectCommunities(
 function makeTooltip(html: string): HTMLDivElement {
   const div = document.createElement('div')
   div.style.cssText =
-    'font-family:Inter,sans-serif;font-size:12px;padding:6px 10px;line-height:1.6;' +
+    'font-family:system-ui,sans-serif;font-size:12px;padding:6px 10px;line-height:1.6;' +
     'background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.12);max-width:220px'
   div.innerHTML = html
   return div
@@ -427,8 +428,8 @@ export default function NetworkAnalysisPage() {
         const bg =
           community >= 0
             ? COMMUNITY_COLORS[community % COMMUNITY_COLORS.length]
-            : '#3b82f6'
-        const border = community >= 0 ? bg : '#1d4ed8'
+            : CHART_COLORS.blue500
+        const border = community >= 0 ? bg : CHART_COLORS.blue700
         return {
           id: n.id,
           label: n.name,
@@ -439,10 +440,13 @@ export default function NetworkAnalysisPage() {
           color: {
             background: bg,
             border,
-            highlight: { background: '#f59e0b', border: '#d97706' },
-            hover: { background: '#60a5fa', border },
+            highlight: {
+              background: CHART_COLORS.amber500,
+              border: CHART_COLORS.amber600,
+            },
+            hover: { background: CHART_COLORS.blue400, border },
           },
-          font: { color: '#1f2937', size: 11 },
+          font: { color: CHART_COLORS.gray800, size: 11 },
         }
       })
 
@@ -460,10 +464,10 @@ export default function NetworkAnalysisPage() {
           `<strong>${e.source_name}</strong> + <strong>${e.target_name}</strong><br/>${e.weight} co-appearances`
         ),
         color: {
-          color: '#93c5fd',
+          color: CHART_COLORS.blue300,
           opacity: 0.7,
-          highlight: '#f59e0b',
-          hover: '#60a5fa',
+          highlight: CHART_COLORS.amber500,
+          hover: CHART_COLORS.blue400,
         },
       }))
 
@@ -564,30 +568,48 @@ export default function NetworkAnalysisPage() {
                     return {
                       id: n.id,
                       color: {
-                        background: '#f59e0b',
-                        border: '#d97706',
-                        highlight: { background: '#fbbf24', border: '#d97706' },
-                        hover: { background: '#fbbf24', border: '#d97706' },
+                        background: CHART_COLORS.amber500,
+                        border: CHART_COLORS.amber600,
+                        highlight: {
+                          background: CHART_COLORS.amber400,
+                          border: CHART_COLORS.amber600,
+                        },
+                        hover: {
+                          background: CHART_COLORS.amber400,
+                          border: CHART_COLORS.amber600,
+                        },
                       },
                     }
                   } else if (neighborIds.has(n.id)) {
                     return {
                       id: n.id,
                       color: {
-                        background: '#60a5fa',
-                        border: '#3b82f6',
-                        highlight: { background: '#93c5fd', border: '#3b82f6' },
-                        hover: { background: '#93c5fd', border: '#3b82f6' },
+                        background: CHART_COLORS.blue400,
+                        border: CHART_COLORS.blue500,
+                        highlight: {
+                          background: CHART_COLORS.blue300,
+                          border: CHART_COLORS.blue500,
+                        },
+                        hover: {
+                          background: CHART_COLORS.blue300,
+                          border: CHART_COLORS.blue500,
+                        },
                       },
                     }
                   } else {
                     return {
                       id: n.id,
                       color: {
-                        background: '#e5e7eb',
-                        border: '#d1d5db',
-                        highlight: { background: '#e5e7eb', border: '#d1d5db' },
-                        hover: { background: '#e5e7eb', border: '#d1d5db' },
+                        background: CHART_COLORS.gray200,
+                        border: CHART_COLORS.gray300,
+                        highlight: {
+                          background: CHART_COLORS.gray200,
+                          border: CHART_COLORS.gray300,
+                        },
+                        hover: {
+                          background: CHART_COLORS.gray200,
+                          border: CHART_COLORS.gray300,
+                        },
                       },
                     }
                   }
@@ -691,30 +713,48 @@ export default function NetworkAnalysisPage() {
         return {
           id: n.id,
           color: {
-            background: '#f59e0b',
-            border: '#d97706',
-            highlight: { background: '#fbbf24', border: '#d97706' },
-            hover: { background: '#fbbf24', border: '#d97706' },
+            background: CHART_COLORS.amber500,
+            border: CHART_COLORS.amber600,
+            highlight: {
+              background: CHART_COLORS.amber400,
+              border: CHART_COLORS.amber600,
+            },
+            hover: {
+              background: CHART_COLORS.amber400,
+              border: CHART_COLORS.amber600,
+            },
           },
         }
       } else if (neighborIds.has(n.id)) {
         return {
           id: n.id,
           color: {
-            background: '#60a5fa',
-            border: '#3b82f6',
-            highlight: { background: '#93c5fd', border: '#3b82f6' },
-            hover: { background: '#93c5fd', border: '#3b82f6' },
+            background: CHART_COLORS.blue400,
+            border: CHART_COLORS.blue500,
+            highlight: {
+              background: CHART_COLORS.blue300,
+              border: CHART_COLORS.blue500,
+            },
+            hover: {
+              background: CHART_COLORS.blue300,
+              border: CHART_COLORS.blue500,
+            },
           },
         }
       } else {
         return {
           id: n.id,
           color: {
-            background: '#e5e7eb',
-            border: '#d1d5db',
-            highlight: { background: '#e5e7eb', border: '#d1d5db' },
-            hover: { background: '#e5e7eb', border: '#d1d5db' },
+            background: CHART_COLORS.gray200,
+            border: CHART_COLORS.gray300,
+            highlight: {
+              background: CHART_COLORS.gray200,
+              border: CHART_COLORS.gray300,
+            },
+            hover: {
+              background: CHART_COLORS.gray200,
+              border: CHART_COLORS.gray300,
+            },
           },
         }
       }
@@ -729,10 +769,16 @@ export default function NetworkAnalysisPage() {
     const updates = (nodesDataSetRef.current.get() as any[]).map((n: any) => ({
       id: n.id,
       color: baseNodeColorsRef.current.get(n.id) ?? {
-        background: '#3b82f6',
-        border: '#1d4ed8',
-        highlight: { background: '#f59e0b', border: '#d97706' },
-        hover: { background: '#60a5fa', border: '#1d4ed8' },
+        background: CHART_COLORS.blue500,
+        border: CHART_COLORS.blue700,
+        highlight: {
+          background: CHART_COLORS.amber500,
+          border: CHART_COLORS.amber600,
+        },
+        hover: {
+          background: CHART_COLORS.blue400,
+          border: CHART_COLORS.blue700,
+        },
       },
     }))
     nodesDataSetRef.current.update(updates)
@@ -831,6 +877,7 @@ export default function NetworkAnalysisPage() {
           <span className="text-gray-900 font-medium">Character Network</span>
         </nav>
         <SectionHeader
+          as="h1"
           title="Character Network Analysis"
           description="Explore how One Piece characters are connected through co-appearances. Node size reflects appearance count; edge width reflects co-appearance frequency."
         />
@@ -1132,9 +1179,9 @@ export default function NetworkAnalysisPage() {
                 <div className="absolute bottom-4 left-4 bg-white border border-gray-200 rounded-xl shadow-lg p-4 z-10 w-64 max-h-[60vh] flex flex-col">
                   {/* Header */}
                   <div className="flex items-start justify-between gap-3 mb-3">
-                    <h4 className="font-semibold text-gray-900 text-sm leading-tight">
+                    <h2 className="font-semibold text-gray-900 text-sm leading-tight">
                       {selectedNode.name}
-                    </h4>
+                    </h2>
                     <button
                       onClick={() => deselectNode()}
                       className="text-gray-400 hover:text-gray-600 flex-shrink-0 -mt-0.5"
@@ -1208,9 +1255,9 @@ export default function NetworkAnalysisPage() {
 
         {showCommunities && communityGroups.length > 0 && (
           <div className="mt-4 bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-            <h3 className="text-sm font-semibold text-gray-800 mb-4">
+            <h2 className="text-sm font-semibold text-gray-800 mb-4">
               Communities · {communityGroups.length} detected
-            </h3>
+            </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {communityGroups.map(({ communityIndex, nodes }) => {
                 const color =

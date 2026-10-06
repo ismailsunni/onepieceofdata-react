@@ -82,7 +82,7 @@ export function ChartCard({
       <div className="mb-4">
         <div className="flex items-start justify-between mb-2">
           <div className="flex-1">
-            <h3 className="text-xl font-semibold text-gray-900">{title}</h3>
+            <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
             {description && (
               <p className="text-sm text-gray-600 mt-1">{description}</p>
             )}
@@ -192,7 +192,7 @@ export function ChartCard({
                     >
                       {copied === 'embed' ? 'Copied!' : 'Copy to clipboard'}
                     </button>
-                    <p className="mt-2 text-[10px] text-gray-400">
+                    <p className="mt-2 text-xs text-gray-500">
                       Works on blogs and sites that allow iframes. Not supported
                       on Substack or Medium.
                     </p>

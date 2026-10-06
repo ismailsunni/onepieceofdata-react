@@ -11,6 +11,7 @@ import {
 } from 'recharts'
 import { Arc } from '../types/arc'
 import { ChartCard } from './common/ChartCard'
+import { CHART_COLORS } from '../constants/chartColors'
 
 export type ArcMetric = 'chapters' | 'pages'
 
@@ -65,7 +66,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
     return (
       <div
         style={{
-          backgroundColor: '#ffffff',
+          backgroundColor: CHART_COLORS.white,
           border: '1px solid #e5e7eb',
           borderRadius: '0.375rem',
           padding: '12px',
@@ -74,7 +75,11 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
         }}
       >
         <p
-          style={{ fontWeight: 'bold', color: '#1f2937', marginBottom: '8px' }}
+          style={{
+            fontWeight: 'bold',
+            color: CHART_COLORS.gray800,
+            marginBottom: '8px',
+          }}
         >
           {label} ({totalChapters})
         </p>
@@ -84,7 +89,9 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
             const payloadItem = payload.find((p) => p.name === arc.name)
             return (
               <div key={index} style={{ marginBottom: '4px' }}>
-                <span style={{ color: payloadItem?.color || '#6b7280' }}>
+                <span
+                  style={{ color: payloadItem?.color || CHART_COLORS.gray500 }}
+                >
                   ●
                 </span>{' '}
                 <span style={{ fontSize: '13px' }}>
@@ -116,31 +123,31 @@ function ArcLengthChart({
   }
   // Define color palette at the top level so it's consistent across both views
   const colors = [
-    '#1e40af',
-    '#dc2626',
-    '#059669',
-    '#d97706',
-    '#7c3aed',
-    '#db2777',
-    '#0891b2',
-    '#ea580c',
-    '#4f46e5',
-    '#65a30d',
-    '#0284c7',
-    '#e11d48',
-    '#16a34a',
-    '#ca8a04',
-    '#9333ea',
-    '#c026d3',
-    '#0369a1',
-    '#f97316',
-    '#6366f1',
-    '#84cc16',
-    '#0e7490',
-    '#be123c',
-    '#15803d',
-    '#a16207',
-    '#7e22ce',
+    CHART_COLORS.blue800,
+    CHART_COLORS.red600,
+    CHART_COLORS.emerald600,
+    CHART_COLORS.amber600,
+    CHART_COLORS.violet600,
+    CHART_COLORS.pink600,
+    CHART_COLORS.cyan600,
+    CHART_COLORS.orange600,
+    CHART_COLORS.indigo600,
+    CHART_COLORS.lime600,
+    CHART_COLORS.sky600,
+    CHART_COLORS.rose600,
+    CHART_COLORS.green600,
+    CHART_COLORS.yellow600,
+    CHART_COLORS.purple600,
+    CHART_COLORS.fuchsia600,
+    CHART_COLORS.sky700,
+    CHART_COLORS.orange500,
+    CHART_COLORS.indigo500,
+    CHART_COLORS.lime500,
+    CHART_COLORS.cyan700,
+    CHART_COLORS.rose700,
+    CHART_COLORS.green700,
+    CHART_COLORS.yellow700,
+    CHART_COLORS.purple700,
   ]
 
   // First, build a consistent mapping of arc names to colors
@@ -190,7 +197,7 @@ function ArcLengthChart({
             data={chartData}
             margin={{ top: 20, right: 30, left: 60, bottom: 100 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
             <XAxis
               dataKey="saga"
               angle={-45}
@@ -198,12 +205,16 @@ function ArcLengthChart({
               height={120}
               interval={0}
               tick={{ fontSize: 11 }}
-              stroke="#6b7280"
+              stroke={CHART_COLORS.gray500}
               label={{
                 value: 'Arc',
                 position: 'insideBottom',
                 offset: -10,
-                style: { fontSize: 14, fill: '#6b7280', textAnchor: 'middle' },
+                style: {
+                  fontSize: 14,
+                  fill: CHART_COLORS.gray500,
+                  textAnchor: 'middle',
+                },
               }}
             />
             <YAxis
@@ -212,13 +223,21 @@ function ArcLengthChart({
                 angle: -90,
                 position: 'insideLeft',
                 offset: 10,
-                style: { fontSize: 14, fill: '#6b7280', textAnchor: 'middle' },
+                style: {
+                  fontSize: 14,
+                  fill: CHART_COLORS.axis,
+                  textAnchor: 'middle',
+                },
               }}
               tick={{ fontSize: 12 }}
-              stroke="#6b7280"
+              stroke={CHART_COLORS.gray500}
             />
             <Tooltip content={<CustomTooltip />} />
-            <Bar dataKey="totalChapters" fill="#059669" radius={[4, 4, 0, 0]}>
+            <Bar
+              dataKey="totalChapters"
+              fill={CHART_COLORS.emerald600}
+              radius={[4, 4, 0, 0]}
+            >
               {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color as string} />
               ))}
@@ -315,18 +334,18 @@ function ArcLengthChart({
           data={chartData}
           margin={{ top: 20, right: 30, left: 60, bottom: 60 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
           {/* Background for Paradise (first half) */}
           {splitIndex > 0 && (
             <ReferenceArea
               x1={chartData[0].saga}
               x2={chartData[splitIndex - 1].saga}
-              fill="#dbeafe"
+              fill={CHART_COLORS.blue100}
               fillOpacity={0.5}
               label={{
                 value: `Paradise (${paradiseChapters})`,
                 position: 'insideTop',
-                fill: '#1e40af',
+                fill: CHART_COLORS.blue800,
                 fontSize: 14,
                 fontWeight: 'bold',
                 offset: 10,
@@ -338,12 +357,12 @@ function ArcLengthChart({
             <ReferenceArea
               x1={chartData[splitIndex].saga}
               x2={chartData[chartData.length - 1].saga}
-              fill="#fef2f2"
+              fill={CHART_COLORS.red50}
               fillOpacity={0.5}
               label={{
                 value: `New World (${newWorldChapters})`,
                 position: 'insideTop',
-                fill: '#dc2626',
+                fill: CHART_COLORS.red600,
                 fontSize: 14,
                 fontWeight: 'bold',
                 offset: 10,
@@ -357,12 +376,16 @@ function ArcLengthChart({
             height={100}
             interval={0}
             tick={{ fontSize: 12 }}
-            stroke="#6b7280"
+            stroke={CHART_COLORS.gray500}
             label={{
               value: 'Saga',
               position: 'insideBottom',
               offset: -10,
-              style: { fontSize: 14, fill: '#6b7280', textAnchor: 'middle' },
+              style: {
+                fontSize: 14,
+                fill: CHART_COLORS.gray500,
+                textAnchor: 'middle',
+              },
             }}
           />
           <YAxis
@@ -371,10 +394,14 @@ function ArcLengthChart({
               angle: -90,
               position: 'insideLeft',
               offset: 10,
-              style: { fontSize: 14, fill: '#6b7280', textAnchor: 'middle' },
+              style: {
+                fontSize: 14,
+                fill: CHART_COLORS.axis,
+                textAnchor: 'middle',
+              },
             }}
             tick={{ fontSize: 12 }}
-            stroke="#6b7280"
+            stroke={CHART_COLORS.gray500}
           />
           <Tooltip content={<CustomTooltip />} />
           {arcNames.map((arcName, index) => (

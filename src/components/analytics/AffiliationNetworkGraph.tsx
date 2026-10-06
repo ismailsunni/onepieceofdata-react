@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Network, DataSet } from 'vis-network/standalone'
 import { fetchAllAffiliations } from '../../services/affiliationService'
 import { CharacterAffiliation } from '../../types/affiliation'
+import { CHART_COLORS } from '../../constants/chartColors'
 
 interface GroupNode {
   id: string
@@ -117,11 +118,14 @@ export function AffiliationNetworkGraph() {
         label: `${n.label}\n(${n.memberCount})`,
         size: 10 + (n.memberCount / maxSize) * 40,
         color: {
-          background: '#dbeafe',
-          border: '#3b82f6',
-          highlight: { background: '#93c5fd', border: '#2563eb' },
+          background: CHART_COLORS.blue100,
+          border: CHART_COLORS.blue500,
+          highlight: {
+            background: CHART_COLORS.blue300,
+            border: CHART_COLORS.blue600,
+          },
         },
-        font: { size: 10, face: 'system-ui', color: '#374151' },
+        font: { size: 10, face: 'system-ui', color: CHART_COLORS.gray700 },
         title: `${n.label}: ${n.memberCount} members`,
       }))
     )
@@ -133,7 +137,11 @@ export function AffiliationNetworkGraph() {
         to: e.to,
         value: e.weight,
         width: 1 + (e.weight / maxEdgeWeight) * 6,
-        color: { color: '#d1d5db', highlight: '#6366f1', opacity: 0.6 },
+        color: {
+          color: CHART_COLORS.gray300,
+          highlight: CHART_COLORS.indigo500,
+          opacity: 0.6,
+        },
         title: `${e.sharedMembers.length} shared members`,
       }))
     )
@@ -390,9 +398,7 @@ export function AffiliationNetworkGraph() {
                         .sort((a, b) => b.weight - a.weight)
                         .map((e) => {
                           const other =
-                            e.from === selectedNodeInfo.node.id
-                              ? e.to
-                              : e.from
+                            e.from === selectedNodeInfo.node.id ? e.to : e.from
                           return (
                             <div
                               key={other}

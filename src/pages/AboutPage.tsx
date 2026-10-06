@@ -197,7 +197,7 @@ function AboutPage() {
           </section>
 
           {/* Support the Project */}
-          <section className="bg-amber-50 border-l-4 border-amber-500 rounded-lg p-6">
+          <section className="bg-amber-50 border border-amber-200 rounded-lg p-6">
             <h3 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
               <span>☕</span>
               Support the Project

@@ -551,18 +551,14 @@ function SagaDetailPage() {
         </div>
 
         {/* Hero Section */}
-        <div className="relative mb-8 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-indigo-50 to-violet-50 opacity-60"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-white/80 to-transparent"></div>
-
-          <Card className="relative border-2 border-purple-100">
+        <div className="mb-8">
+          <Card>
             <div className="flex flex-col lg:flex-row items-start justify-between gap-6">
               <div className="flex-1">
                 <div className="inline-block mb-3">
-                  <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600 mb-2">
+                  <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
                     {saga.title}
                   </h1>
-                  <div className="h-1 w-32 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full"></div>
                 </div>
                 {saga.japanese_title && (
                   <p className="text-lg text-gray-600 mb-1">
@@ -614,7 +610,7 @@ function SagaDetailPage() {
                 )}
               </div>
 
-              <div className="flex-shrink-0 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-6 border-2 border-purple-200 shadow-sm">
+              <div className="flex-shrink-0 bg-purple-50 rounded-xl p-6 border border-purple-200">
                 <div className="flex items-center gap-2 mb-2">
                   <svg
                     className="w-5 h-5 text-purple-600"
