@@ -4,10 +4,10 @@ import { fetchCharacters } from '../services/characterService'
 import { fetchArcs } from '../services/arcService'
 import { fetchSagas } from '../services/sagaService'
 import {
+  buildScopes,
   charactersInScope,
   isGuessable,
   type RollCallGuess,
-  type RollCallScope,
   type RollCallScopeType,
 } from '../services/rollCallService'
 import { CACHE } from '../constants/cache'
@@ -20,7 +20,7 @@ type Phase = 'intro' | 'playing' | 'result'
 
 export default function RollCallPage() {
   const [phase, setPhase] = useState<Phase>('intro')
-  const [scopeType, setScopeType] = useState<RollCallScopeType>('saga')
+  const [scopeType, setScopeType] = useState<RollCallScopeType>('arc')
   const [selectedId, setSelectedId] = useState('')
   const [guesses, setGuesses] = useState<RollCallGuess[]>([])
   const [secondsLeft, setSecondsLeft] = useState(0)
@@ -47,25 +47,16 @@ export default function RollCallPage() {
     [characters.data]
   )
 
-  const options = useMemo(() => {
-    const items =
-      scopeType === 'saga'
-        ? (sagas.data ?? []).map((s) => ({ id: s.saga_id, title: s.title }))
-        : (arcs.data ?? []).map((a) => ({ id: a.arc_id, title: a.title }))
-    return items.map((o) => ({
-      ...o,
-      count: charactersInScope(pool, { type: scopeType, ...o }).length,
-    }))
-  }, [scopeType, sagas.data, arcs.data, pool])
-
-  const selected = options.find((o) => o.id === selectedId) ?? options[0]
-  const scope = useMemo<RollCallScope | null>(
+  const options = useMemo(
     () =>
-      selected
-        ? { type: scopeType, id: selected.id, title: selected.title }
-        : null,
-    [scopeType, selected]
+      buildScopes(scopeType, arcs.data ?? [], sagas.data ?? []).map((s) => ({
+        ...s,
+        count: charactersInScope(pool, s).length,
+      })),
+    [scopeType, sagas.data, arcs.data, pool]
   )
+
+  const scope = options.find((o) => o.id === selectedId) ?? options[0] ?? null
 
   const targets = useMemo(
     () => (scope ? charactersInScope(pool, scope) : []),
@@ -108,7 +99,7 @@ export default function RollCallPage() {
             setSelectedId('')
           }}
           options={options}
-          selectedId={selected?.id ?? ''}
+          selectedId={scope?.id ?? ''}
           onSelect={setSelectedId}
           onStart={start}
           isLoading={characters.isLoading || arcs.isLoading || sagas.isLoading}

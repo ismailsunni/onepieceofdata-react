@@ -1,4 +1,7 @@
-import type { RollCallScopeType } from '../../services/rollCallService'
+import {
+  SCOPE_TYPES,
+  type RollCallScopeType,
+} from '../../services/rollCallService'
 
 export interface ScopeOption {
   id: string
@@ -16,11 +19,6 @@ interface RollCallIntroProps {
   isLoading: boolean
 }
 
-const SCOPE_TYPES: { id: RollCallScopeType; label: string }[] = [
-  { id: 'saga', label: 'Saga' },
-  { id: 'arc', label: 'Arc' },
-]
-
 export default function RollCallIntro({
   scopeType,
   onScopeTypeChange,
@@ -31,6 +29,7 @@ export default function RollCallIntro({
   isLoading,
 }: RollCallIntroProps) {
   const selected = options.find((o) => o.id === selectedId)
+  const minutes = SCOPE_TYPES.find((t) => t.id === scopeType)?.minutes
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 text-center">
@@ -38,13 +37,13 @@ export default function RollCallIntro({
         Roll Call
       </h1>
       <p className="text-gray-600 text-lg mb-6 max-w-md">
-        Pick a saga or arc, then name every character who appears in it before
-        the clock runs out.
+        Pick an arc, a saga, one side of the time skip or the whole story, then
+        name every character who appears in it before the clock runs out.
       </p>
 
       <div
         role="group"
-        aria-label="Choose saga or arc"
+        aria-label="Choose what to play"
         className="inline-flex bg-gray-100 rounded-xl p-1 mb-4"
       >
         {SCOPE_TYPES.map((t) => (
@@ -53,7 +52,7 @@ export default function RollCallIntro({
             type="button"
             onClick={() => onScopeTypeChange(t.id)}
             aria-pressed={scopeType === t.id}
-            className={`px-6 py-2 rounded-lg text-sm font-semibold transition-colors ${
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
               scopeType === t.id
                 ? 'bg-white text-blue-600 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
@@ -65,9 +64,7 @@ export default function RollCallIntro({
       </div>
 
       <label className="w-full max-w-sm text-left mb-6">
-        <span className="sr-only">
-          Choose {scopeType === 'saga' ? 'a saga' : 'an arc'}
-        </span>
+        <span className="sr-only">Choose the round</span>
         <select
           value={selectedId}
           onChange={(e) => onSelect(e.target.value)}
@@ -86,7 +83,7 @@ export default function RollCallIntro({
         {[
           `Name all ${selected?.count ?? '…'} characters in ${selected?.title ?? 'the selection'}`,
           'Type to search — pick a name from the suggestions',
-          '10 minutes on the clock — give up any time',
+          `${minutes} minutes on the clock — give up any time`,
           'Wrong guesses are counted, so choose carefully',
         ].map((line, i) => (
           <div key={i} className="flex items-start gap-3">

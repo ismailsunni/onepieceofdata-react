@@ -39,7 +39,7 @@ const GAMES: {
     path: '/games/roll-call',
     label: 'Roll Call',
     description:
-      'Pick a saga or arc and name every character in it. 10 minutes on the clock — wrong guesses count!',
+      'Name every character in an arc, a saga, either side of the time skip or the whole story — against the clock. Wrong guesses count!',
     icon: faUsers,
   },
 ]

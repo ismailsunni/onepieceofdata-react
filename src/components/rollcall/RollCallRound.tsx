@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Character } from '../../types/character'
 import {
-  ROLL_CALL_SECONDS,
+  scopeSeconds,
   formatClock,
   type RollCallGuess,
   type RollCallScope,
@@ -25,8 +25,8 @@ export default function RollCallRound({
   onGuess,
   onFinish,
 }: RollCallRoundProps) {
-  const [endsAt] = useState(() => Date.now() + ROLL_CALL_SECONDS * 1000)
-  const [secondsLeft, setSecondsLeft] = useState(ROLL_CALL_SECONDS)
+  const [endsAt] = useState(() => Date.now() + scopeSeconds(scope.type) * 1000)
+  const [secondsLeft, setSecondsLeft] = useState(() => scopeSeconds(scope.type))
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -93,7 +93,7 @@ export default function RollCallRound({
             <span className="text-green-700">✅ {lastGuess.name}</span>
           ) : (
             <span className="text-red-600">
-              ❌ {lastGuess.name} isn't in this {scope.type}
+              ❌ {lastGuess.name} isn't in this one
             </span>
           ))}
       </p>

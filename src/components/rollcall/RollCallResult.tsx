@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import type { Character } from '../../types/character'
 import {
-  ROLL_CALL_SECONDS,
+  scopeSeconds,
   formatClock,
   type RollCallGuess,
   type RollCallScope,
@@ -40,7 +40,7 @@ export default function RollCallResult({
     .map((c) => ({ id: c.id, name: c.name! }))
   const total = targets.length
   const pct = total ? Math.round((correct.length / total) * 100) : 0
-  const timeUsed = formatClock(ROLL_CALL_SECONDS - secondsLeft)
+  const timeUsed = formatClock(scopeSeconds(scope.type) - secondsLeft)
 
   const text = `I named ${correct.length} / ${total} characters (${pct}%) from ${scope.title} in One Piece of Data - Roll Call! ❌ ${wrong.length} wrong · ⏱ ${timeUsed}\nhttps://onepieceofdata.com/#/games/roll-call`
 
@@ -106,7 +106,7 @@ export default function RollCallResult({
             onClick={onChangeScope}
             className="flex-1 py-3 px-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors"
           >
-            Change {scope.type === 'saga' ? 'Saga' : 'Arc'}
+            Change Round
           </button>
           <button
             onClick={onPlayAgain}
