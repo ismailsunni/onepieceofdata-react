@@ -5,13 +5,17 @@ interface CharacterGuessInputProps {
   characters: Character[]
   onGuess: (characterId: string, characterName: string) => void
   disabled: boolean
+  /** Open suggestions below the input instead of above. */
+  dropDown?: boolean
 }
 
 export default function CharacterGuessInput({
   characters,
   onGuess,
   disabled,
+  dropDown = false,
 }: CharacterGuessInputProps) {
+  const placement = dropDown ? 'top-full mt-1' : 'bottom-full mb-1'
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const [highlightIndex, setHighlightIndex] = useState(-1)
@@ -49,6 +53,7 @@ export default function CharacterGuessInput({
       setQuery('')
       setOpen(false)
       setHighlightIndex(-1)
+      inputRef.current?.focus()
     },
     [onGuess]
   )
@@ -134,7 +139,7 @@ export default function CharacterGuessInput({
           id={listboxId}
           role="listbox"
           aria-label="Character suggestions"
-          className="absolute bottom-full mb-1 left-0 right-0 z-50 bg-white border border-gray-200 rounded-lg shadow-lg"
+          className={`absolute ${placement} left-0 right-0 z-50 bg-white border border-gray-200 rounded-lg shadow-lg`}
         >
           <div ref={listRef} className="max-h-48 overflow-y-auto">
             <p className="px-3 py-1.5 text-xs text-gray-600" aria-live="polite">
@@ -166,7 +171,7 @@ export default function CharacterGuessInput({
         <div
           role="status"
           aria-live="polite"
-          className="absolute bottom-full mb-1 left-0 right-0 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-sm text-gray-600 text-center"
+          className={`absolute ${placement} left-0 right-0 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-sm text-gray-600 text-center`}
         >
           No characters found
         </div>

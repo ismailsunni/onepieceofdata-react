@@ -4,6 +4,7 @@ import {
   faImage,
   faQuestion,
   faBookOpen,
+  faUsers,
 } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 
@@ -33,6 +34,13 @@ const GAMES: {
     description:
       'A character appears in just one chapter — place where they showed up. Three modes: 4 options, all arcs, or guess the chapter.',
     icon: faBookOpen,
+  },
+  {
+    path: '/games/roll-call',
+    label: 'Roll Call',
+    description:
+      'Pick a saga or arc and name every character in it. 10 minutes on the clock — wrong guesses count!',
+    icon: faUsers,
   },
 ]
 

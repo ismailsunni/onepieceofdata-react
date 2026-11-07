@@ -22,6 +22,7 @@ const GAMES_ITEMS: NavItem[] = [
   { to: '/games/guess-character', label: 'Guess the Character' },
   { to: '/games/who-am-i', label: 'Who Am I?' },
   { to: '/games/one-chapter-wonders', label: 'One-Chapter Wonders' },
+  { to: '/games/roll-call', label: 'Roll Call' },
 ]
 
 const ANALYTICS_ITEMS: NavItem[] = [
