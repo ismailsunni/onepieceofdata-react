@@ -5,6 +5,7 @@ import {
   faQuestion,
   faBookOpen,
   faUsers,
+  faUserSecret,
 } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 
@@ -41,6 +42,13 @@ const GAMES: {
     description:
       'Name every character in an arc, a saga, either side of the time skip or the whole story — against the clock. Wrong guesses count!',
     icon: faUsers,
+  },
+  {
+    path: '/games/mystery-character',
+    label: 'Mystery Character',
+    description:
+      'A daily mystery character in 8 guesses. Each guess compares debut arc, saga, chapters, bounty, devil fruit and more.',
+    icon: faUserSecret,
   },
 ]
 
