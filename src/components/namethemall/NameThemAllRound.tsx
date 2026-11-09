@@ -3,6 +3,8 @@ import type { Character } from '../../types/character'
 import {
   scopeSeconds,
   formatClock,
+  matchCharacterName,
+  normalizeName,
   type NameThemAllGuess,
   type NameThemAllScope,
 } from '../../services/nameThemAllService'
@@ -45,6 +47,30 @@ export default function NameThemAllRound({
   const correct = guesses.filter((g) => g.correct)
   const wrong = guesses.filter((g) => !g.correct)
   const lastGuess = guesses[guesses.length - 1]
+  const [text, setText] = useState('')
+  const [notice, setNotice] = useState<string | null>(null)
+
+  const submitText = (e: React.FormEvent) => {
+    e.preventDefault()
+    const input = text.trim()
+    if (!input) return
+    const match = matchCharacterName(input, pool)
+    if (match.kind === 'ambiguous') {
+      setNotice('Several characters match — be more specific')
+      return
+    }
+    const [id, name] =
+      match.kind === 'match'
+        ? [match.character.id, match.character.name!]
+        : [`typed:${normalizeName(input)}`, input]
+    setText('')
+    if (guessedIds.has(id)) {
+      setNotice(`Already guessed ${name}`)
+      return
+    }
+    setNotice(null)
+    onGuess(id, name)
+  }
 
   useEffect(() => {
     if (correct.length === total) onFinish(secondsLeft)
@@ -80,22 +106,48 @@ export default function NameThemAllRound({
         <span className="text-red-600">{wrong.length} wrong</span>
       </div>
 
-      <CharacterGuessInput
-        characters={options}
-        onGuess={onGuess}
-        disabled={false}
-        dropDown
-      />
+      {scope.type === 'all' ? (
+        <form onSubmit={submitText}>
+          <input
+            type="text"
+            aria-label="Type a character name and press Enter"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Type a name and press Enter…"
+            autoFocus
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            enterKeyHint="send"
+            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+          />
+        </form>
+      ) : (
+        <CharacterGuessInput
+          characters={options}
+          onGuess={onGuess}
+          disabled={false}
+          dropDown
+        />
+      )}
 
-      <p className="h-6 mt-2 text-sm text-center" aria-live="polite">
-        {lastGuess &&
+      <p className="min-h-6 mt-2 text-sm text-center" aria-live="polite">
+        {notice ? (
+          <span className="text-amber-700">{notice}</span>
+        ) : (
+          lastGuess &&
           (lastGuess.correct ? (
             <span className="text-green-700">✅ {lastGuess.name}</span>
           ) : (
             <span className="text-red-600">
-              ❌ {lastGuess.name} isn't in this one
+              ❌ {lastGuess.name}{' '}
+              {lastGuess.id.startsWith('typed:')
+                ? '— no character by that name'
+                : "isn't in this one"}
             </span>
-          ))}
+          ))
+        )}
       </p>
 
       <GuessList title="Found" guesses={correct} tone="green" />

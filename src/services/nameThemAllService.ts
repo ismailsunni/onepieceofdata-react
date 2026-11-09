@@ -91,3 +91,70 @@ export function formatClock(seconds: number): string {
   const s = seconds % 60
   return `${m}:${s.toString().padStart(2, '0')}`
 }
+
+export const normalizeName = (s: string): string =>
+  s
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+function levenshtein(a: string, b: string): number {
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j)
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i]
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(
+        prev[j] + 1,
+        cur[j - 1] + 1,
+        prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+      )
+    }
+    prev = cur
+  }
+  return prev[b.length]
+}
+
+/** Typos allowed for an input: none for short names, up to 2 for long ones. */
+const maxTypos = (len: number) => (len <= 3 ? 0 : len <= 6 ? 1 : 2)
+
+export type NameMatch =
+  | { kind: 'match'; character: Character }
+  | { kind: 'ambiguous' }
+  | { kind: 'none' }
+
+/**
+ * Match free text against character names (full name or any single word of
+ * it, e.g. "Luffy"), allowing a few typos. Ties between characters are
+ * reported as ambiguous.
+ */
+export function matchCharacterName(
+  input: string,
+  characters: Character[]
+): NameMatch {
+  const q = normalizeName(input)
+  if (!q) return { kind: 'none' }
+  const limit = maxTypos(q.length)
+
+  let best = Infinity
+  let hits: Character[] = []
+  for (const c of characters) {
+    const full = normalizeName(c.name ?? '')
+    const keys = [full, ...full.split(' ').filter((w) => w.length >= 3)]
+    const d = Math.min(...keys.map((k) => levenshtein(q, k)))
+    if (d > limit || d > best) continue
+    if (d < best) {
+      best = d
+      hits = []
+    }
+    hits.push(c)
+  }
+
+  if (hits.length === 0) return { kind: 'none' }
+  if (hits.length === 1) return { kind: 'match', character: hits[0] }
+  const exact = hits.filter((c) => normalizeName(c.name ?? '') === q)
+  if (exact.length === 1) return { kind: 'match', character: exact[0] }
+  return { kind: 'ambiguous' }
+}

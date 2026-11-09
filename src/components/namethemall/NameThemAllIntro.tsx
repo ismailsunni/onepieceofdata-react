@@ -82,7 +82,9 @@ export default function NameThemAllIntro({
       <div className="bg-white border border-gray-200 rounded-xl p-6 mb-8 max-w-sm w-full text-left space-y-3">
         {[
           `Name all ${selected?.count ?? '…'} characters in ${selected?.title ?? 'the selection'}`,
-          'Type to search — pick a name from the suggestions',
+          scopeType === 'all'
+            ? 'No suggestions — type a name and press Enter (small typos are OK)'
+            : 'Type to search — pick a name from the suggestions',
           `${minutes} minutes on the clock — give up any time`,
           'Wrong guesses are counted, so choose carefully',
         ].map((line, i) => (
