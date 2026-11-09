@@ -2,6 +2,8 @@ import {
   SCOPE_TYPES,
   type NameThemAllScopeType,
 } from '../../services/nameThemAllService'
+import type { NameThemAllStats } from '../../services/nameThemAllStatsService'
+import NameThemAllBest from './NameThemAllBest'
 
 export interface ScopeOption {
   id: string
@@ -17,6 +19,7 @@ interface NameThemAllIntroProps {
   onSelect: (id: string) => void
   onStart: () => void
   isLoading: boolean
+  stats: NameThemAllStats
 }
 
 export default function NameThemAllIntro({
@@ -27,6 +30,7 @@ export default function NameThemAllIntro({
   onSelect,
   onStart,
   isLoading,
+  stats,
 }: NameThemAllIntroProps) {
   const selected = options.find((o) => o.id === selectedId)
   const minutes = SCOPE_TYPES.find((t) => t.id === scopeType)?.minutes
@@ -95,6 +99,10 @@ export default function NameThemAllIntro({
             <p className="text-gray-700 text-sm">{line}</p>
           </div>
         ))}
+      </div>
+
+      <div className="w-full max-w-sm mb-8 empty:hidden">
+        <NameThemAllBest stats={stats} />
       </div>
 
       <button

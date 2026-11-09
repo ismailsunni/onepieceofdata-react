@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { fetchCharacters } from '../services/characterService'
 import { fetchArcs } from '../services/arcService'
@@ -10,6 +10,11 @@ import {
   type NameThemAllGuess,
   type NameThemAllScopeType,
 } from '../services/nameThemAllService'
+import {
+  loadNameThemAllStats,
+  saveNameThemAllResult,
+  type NameThemAllStats,
+} from '../services/nameThemAllStatsService'
 import { CACHE } from '../constants/cache'
 import NameThemAllIntro from '../components/namethemall/NameThemAllIntro'
 import NameThemAllRound from '../components/namethemall/NameThemAllRound'
@@ -25,6 +30,11 @@ export default function NameThemAllPage() {
   const [guesses, setGuesses] = useState<NameThemAllGuess[]>([])
   const [secondsLeft, setSecondsLeft] = useState(0)
   const [round, setRound] = useState(0)
+  const [result, setResult] = useState<{
+    stats: NameThemAllStats
+    isNewBest: boolean
+  } | null>(null)
+  const savedRound = useRef(0)
 
   const characters = useQuery({
     queryKey: ['characters'],
@@ -70,10 +80,26 @@ export default function NameThemAllPage() {
     setPhase('playing')
   }
 
-  const finish = useCallback((left: number) => {
-    setSecondsLeft(left)
-    setPhase('result')
-  }, [])
+  const statsKey = scope ? `${scope.type}:${scope.id}` : ''
+
+  const finish = useCallback(
+    (left: number) => {
+      if (savedRound.current === round) return
+      savedRound.current = round
+      const correct = guesses.filter((g) => g.correct).length
+      setResult(
+        saveNameThemAllResult(
+          statsKey,
+          correct,
+          guesses.length - correct,
+          targets.length
+        )
+      )
+      setSecondsLeft(left)
+      setPhase('result')
+    },
+    [round, guesses, statsKey, targets.length]
+  )
 
   const handleGuess = (id: string, name: string) =>
     setGuesses((prev) => [...prev, { id, name, correct: targetIds.has(id) }])
@@ -103,6 +129,7 @@ export default function NameThemAllPage() {
           onSelect={setSelectedId}
           onStart={start}
           isLoading={characters.isLoading || arcs.isLoading || sagas.isLoading}
+          stats={loadNameThemAllStats(statsKey)}
         />
       )}
 
@@ -118,12 +145,14 @@ export default function NameThemAllPage() {
         />
       )}
 
-      {phase === 'result' && scope && (
+      {phase === 'result' && scope && result && (
         <NameThemAllResult
           scope={scope}
           targets={targets}
           guesses={guesses}
           secondsLeft={secondsLeft}
+          stats={result.stats}
+          isNewBest={result.isNewBest}
           onPlayAgain={start}
           onChangeScope={() => setPhase('intro')}
         />

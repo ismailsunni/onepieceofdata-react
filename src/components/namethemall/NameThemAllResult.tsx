@@ -7,6 +7,8 @@ import {
   type NameThemAllScope,
 } from '../../services/nameThemAllService'
 import { shareImage, shareText } from '../../utils/shareGame'
+import type { NameThemAllStats } from '../../services/nameThemAllStatsService'
+import NameThemAllBest from './NameThemAllBest'
 import { GuessList } from './NameThemAllRound'
 import NameThemAllShareCard, { type ShareFormat } from './NameThemAllShareCard'
 
@@ -17,6 +19,8 @@ interface NameThemAllResultProps {
   secondsLeft: number
   onPlayAgain: () => void
   onChangeScope: () => void
+  stats: NameThemAllStats
+  isNewBest: boolean
 }
 
 export default function NameThemAllResult({
@@ -26,6 +30,8 @@ export default function NameThemAllResult({
   secondsLeft,
   onPlayAgain,
   onChangeScope,
+  stats,
+  isNewBest,
 }: NameThemAllResultProps) {
   const squareRef = useRef<HTMLDivElement>(null)
   const storyRef = useRef<HTMLDivElement>(null)
@@ -70,6 +76,10 @@ export default function NameThemAllResult({
           {wrong.length} wrong {wrong.length === 1 ? 'guess' : 'guesses'}
         </span>
         <span className="text-gray-600">⏱ {timeUsed}</span>
+      </div>
+
+      <div className="w-full flex justify-center mt-6">
+        <NameThemAllBest stats={stats} isNewBest={isNewBest} />
       </div>
 
       <div className="w-full">
