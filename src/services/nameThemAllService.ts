@@ -3,10 +3,10 @@ import type { Arc, Saga } from '../types/arc'
 
 export const TIME_SKIP_CHAPTER = 598
 
-export type RollCallScopeType = 'arc' | 'saga' | 'half' | 'all'
+export type NameThemAllScopeType = 'arc' | 'saga' | 'half' | 'all'
 
 export const SCOPE_TYPES: {
-  id: RollCallScopeType
+  id: NameThemAllScopeType
   label: string
   minutes: number
 }[] = [
@@ -16,18 +16,18 @@ export const SCOPE_TYPES: {
   { id: 'all', label: 'All', minutes: 60 },
 ]
 
-export const scopeSeconds = (type: RollCallScopeType): number =>
+export const scopeSeconds = (type: NameThemAllScopeType): number =>
   (SCOPE_TYPES.find((t) => t.id === type)?.minutes ?? 10) * 60
 
-export interface RollCallScope {
-  type: RollCallScopeType
+export interface NameThemAllScope {
+  type: NameThemAllScopeType
   id: string
   title: string
   start: number
   end: number
 }
 
-export interface RollCallGuess {
+export interface NameThemAllGuess {
   id: string
   name: string
   correct: boolean
@@ -39,7 +39,7 @@ export function isGuessable(c: Character): boolean {
 
 export function charactersInScope(
   characters: Character[],
-  { start, end }: RollCallScope
+  { start, end }: NameThemAllScope
 ): Character[] {
   return characters.filter(
     (c) =>
@@ -48,12 +48,12 @@ export function charactersInScope(
 }
 
 const scope = (
-  type: RollCallScopeType,
+  type: NameThemAllScopeType,
   id: string,
   name: string,
   start: number,
   end: number
-): RollCallScope => ({
+): NameThemAllScope => ({
   type,
   id,
   title: `${name} (Ch. ${start}–${end})`,
@@ -62,10 +62,10 @@ const scope = (
 })
 
 export function buildScopes(
-  type: RollCallScopeType,
+  type: NameThemAllScopeType,
   arcs: Arc[],
   sagas: Saga[]
-): RollCallScope[] {
+): NameThemAllScope[] {
   const last = Math.max(0, ...sagas.map((s) => s.end_chapter))
   switch (type) {
     case 'arc':

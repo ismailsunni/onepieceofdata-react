@@ -36,8 +36,8 @@ const GAMES: {
     icon: faBookOpen,
   },
   {
-    path: '/games/roll-call',
-    label: 'Roll Call',
+    path: '/games/name-them-all',
+    label: 'Name Them All',
     description:
       'Name every character in an arc, a saga, either side of the time skip or the whole story — against the clock. Wrong guesses count!',
     icon: faUsers,

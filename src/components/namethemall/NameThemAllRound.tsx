@@ -3,28 +3,28 @@ import type { Character } from '../../types/character'
 import {
   scopeSeconds,
   formatClock,
-  type RollCallGuess,
-  type RollCallScope,
-} from '../../services/rollCallService'
+  type NameThemAllGuess,
+  type NameThemAllScope,
+} from '../../services/nameThemAllService'
 import CharacterGuessInput from '../whoami/CharacterGuessInput'
 
-interface RollCallRoundProps {
-  scope: RollCallScope
+interface NameThemAllRoundProps {
+  scope: NameThemAllScope
   total: number
   pool: Character[]
-  guesses: RollCallGuess[]
+  guesses: NameThemAllGuess[]
   onGuess: (id: string, name: string) => void
   onFinish: (secondsLeft: number) => void
 }
 
-export default function RollCallRound({
+export default function NameThemAllRound({
   scope,
   total,
   pool,
   guesses,
   onGuess,
   onFinish,
-}: RollCallRoundProps) {
+}: NameThemAllRoundProps) {
   const [endsAt] = useState(() => Date.now() + scopeSeconds(scope.type) * 1000)
   const [secondsLeft, setSecondsLeft] = useState(() => scopeSeconds(scope.type))
 

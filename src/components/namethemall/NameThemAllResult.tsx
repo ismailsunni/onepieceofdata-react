@@ -3,30 +3,30 @@ import type { Character } from '../../types/character'
 import {
   scopeSeconds,
   formatClock,
-  type RollCallGuess,
-  type RollCallScope,
-} from '../../services/rollCallService'
+  type NameThemAllGuess,
+  type NameThemAllScope,
+} from '../../services/nameThemAllService'
 import { shareImage, shareText } from '../../utils/shareGame'
-import { GuessList } from './RollCallRound'
-import RollCallShareCard, { type ShareFormat } from './RollCallShareCard'
+import { GuessList } from './NameThemAllRound'
+import NameThemAllShareCard, { type ShareFormat } from './NameThemAllShareCard'
 
-interface RollCallResultProps {
-  scope: RollCallScope
+interface NameThemAllResultProps {
+  scope: NameThemAllScope
   targets: Character[]
-  guesses: RollCallGuess[]
+  guesses: NameThemAllGuess[]
   secondsLeft: number
   onPlayAgain: () => void
   onChangeScope: () => void
 }
 
-export default function RollCallResult({
+export default function NameThemAllResult({
   scope,
   targets,
   guesses,
   secondsLeft,
   onPlayAgain,
   onChangeScope,
-}: RollCallResultProps) {
+}: NameThemAllResultProps) {
   const squareRef = useRef<HTMLDivElement>(null)
   const storyRef = useRef<HTMLDivElement>(null)
   const [sharing, setSharing] = useState<ShareFormat | null>(null)
@@ -42,7 +42,7 @@ export default function RollCallResult({
   const pct = total ? Math.round((correct.length / total) * 100) : 0
   const timeUsed = formatClock(scopeSeconds(scope.type) - secondsLeft)
 
-  const text = `I named ${correct.length} / ${total} characters (${pct}%) from ${scope.title} in One Piece of Data - Roll Call! ❌ ${wrong.length} wrong · ⏱ ${timeUsed}\nhttps://onepieceofdata.com/#/games/roll-call`
+  const text = `I named ${correct.length} / ${total} characters (${pct}%) from ${scope.title} in One Piece of Data - Name Them All! ❌ ${wrong.length} wrong · ⏱ ${timeUsed}\nhttps://onepieceofdata.com/#/games/name-them-all`
 
   const handleShareImage = async (format: ShareFormat) => {
     const node = format === 'square' ? squareRef.current : storyRef.current
@@ -50,8 +50,8 @@ export default function RollCallResult({
     setSharing(format)
     await shareImage(
       node,
-      `one-piece-of-data-roll-call-${format}.png`,
-      'One Piece of Data — Roll Call',
+      `one-piece-of-data-name-them-all-${format}.png`,
+      'One Piece of Data — Name Them All',
       text
     )
     setSharing(null)
@@ -127,7 +127,7 @@ export default function RollCallResult({
         }}
       >
         {(['square', 'story'] as const).map((f) => (
-          <RollCallShareCard
+          <NameThemAllShareCard
             key={f}
             ref={f === 'square' ? squareRef : storyRef}
             format={f}

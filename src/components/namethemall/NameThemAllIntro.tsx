@@ -1,7 +1,7 @@
 import {
   SCOPE_TYPES,
-  type RollCallScopeType,
-} from '../../services/rollCallService'
+  type NameThemAllScopeType,
+} from '../../services/nameThemAllService'
 
 export interface ScopeOption {
   id: string
@@ -9,9 +9,9 @@ export interface ScopeOption {
   count: number
 }
 
-interface RollCallIntroProps {
-  scopeType: RollCallScopeType
-  onScopeTypeChange: (type: RollCallScopeType) => void
+interface NameThemAllIntroProps {
+  scopeType: NameThemAllScopeType
+  onScopeTypeChange: (type: NameThemAllScopeType) => void
   options: ScopeOption[]
   selectedId: string
   onSelect: (id: string) => void
@@ -19,7 +19,7 @@ interface RollCallIntroProps {
   isLoading: boolean
 }
 
-export default function RollCallIntro({
+export default function NameThemAllIntro({
   scopeType,
   onScopeTypeChange,
   options,
@@ -27,14 +27,14 @@ export default function RollCallIntro({
   onSelect,
   onStart,
   isLoading,
-}: RollCallIntroProps) {
+}: NameThemAllIntroProps) {
   const selected = options.find((o) => o.id === selectedId)
   const minutes = SCOPE_TYPES.find((t) => t.id === scopeType)?.minutes
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 text-center">
       <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
-        Roll Call
+        Name Them All
       </h1>
       <p className="text-gray-600 text-lg mb-6 max-w-md">
         Pick an arc, a saga, one side of the time skip or the whole story, then

@@ -7,22 +7,22 @@ import {
   buildScopes,
   charactersInScope,
   isGuessable,
-  type RollCallGuess,
-  type RollCallScopeType,
-} from '../services/rollCallService'
+  type NameThemAllGuess,
+  type NameThemAllScopeType,
+} from '../services/nameThemAllService'
 import { CACHE } from '../constants/cache'
-import RollCallIntro from '../components/rollcall/RollCallIntro'
-import RollCallRound from '../components/rollcall/RollCallRound'
-import RollCallResult from '../components/rollcall/RollCallResult'
+import NameThemAllIntro from '../components/namethemall/NameThemAllIntro'
+import NameThemAllRound from '../components/namethemall/NameThemAllRound'
+import NameThemAllResult from '../components/namethemall/NameThemAllResult'
 import ErrorState from '../components/common/ErrorState'
 
 type Phase = 'intro' | 'playing' | 'result'
 
-export default function RollCallPage() {
+export default function NameThemAllPage() {
   const [phase, setPhase] = useState<Phase>('intro')
-  const [scopeType, setScopeType] = useState<RollCallScopeType>('arc')
+  const [scopeType, setScopeType] = useState<NameThemAllScopeType>('arc')
   const [selectedId, setSelectedId] = useState('')
-  const [guesses, setGuesses] = useState<RollCallGuess[]>([])
+  const [guesses, setGuesses] = useState<NameThemAllGuess[]>([])
   const [secondsLeft, setSecondsLeft] = useState(0)
   const [round, setRound] = useState(0)
 
@@ -92,7 +92,7 @@ export default function RollCallPage() {
   return (
     <div className="max-w-lg mx-auto px-4 py-6">
       {phase === 'intro' && (
-        <RollCallIntro
+        <NameThemAllIntro
           scopeType={scopeType}
           onScopeTypeChange={(t) => {
             setScopeType(t)
@@ -107,7 +107,7 @@ export default function RollCallPage() {
       )}
 
       {phase === 'playing' && scope && (
-        <RollCallRound
+        <NameThemAllRound
           key={round}
           scope={scope}
           total={targets.length}
@@ -119,7 +119,7 @@ export default function RollCallPage() {
       )}
 
       {phase === 'result' && scope && (
-        <RollCallResult
+        <NameThemAllResult
           scope={scope}
           targets={targets}
           guesses={guesses}
