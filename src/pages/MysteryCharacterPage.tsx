@@ -18,13 +18,17 @@ import {
   type Db,
   type Profile,
 } from '../services/mysteryCharacterService'
+import {
+  loadMysteryStats,
+  saveMysteryResult,
+  type MysteryMode,
+} from '../services/mysteryCharacterStatsService'
 import { shareText } from '../utils/shareGame'
 import { CACHE } from '../constants/cache'
 import CharacterGuessInput from '../components/whoami/CharacterGuessInput'
 import MysteryGuessCard from '../components/mystery/MysteryGuessCard'
+import MysteryStatsPanel from '../components/mystery/MysteryStatsPanel'
 import ErrorState from '../components/common/ErrorState'
-
-type Mode = 'daily' | 'practice'
 
 const q = <T,>(key: string, fn: () => Promise<T>) => ({
   queryKey: [key],
@@ -33,7 +37,7 @@ const q = <T,>(key: string, fn: () => Promise<T>) => ({
 })
 
 export default function MysteryCharacterPage() {
-  const [mode, setMode] = useState<Mode>('daily')
+  const [mode, setMode] = useState<MysteryMode>('daily')
   const [seed, setSeed] = useState(() => Math.random())
 
   const characters = useQuery(q('characters', fetchCharacters))
@@ -114,6 +118,7 @@ export default function MysteryCharacterPage() {
           key={mode === 'daily' ? date : `p${seed}`}
           db={db}
           answer={answer}
+          mode={mode}
           storageKey={mode === 'daily' ? `opod-mystery-daily-${date}` : null}
           shareTitle={mode === 'daily' ? date : 'Practice'}
           onPlayAgain={
@@ -125,7 +130,13 @@ export default function MysteryCharacterPage() {
   )
 }
 
-function load(key: string | null): { guesses: string[]; gaveUp: boolean } {
+interface GameState {
+  guesses: string[]
+  gaveUp: boolean
+  recorded?: boolean
+}
+
+function load(key: string | null): GameState {
   try {
     if (key) return JSON.parse(localStorage.getItem(key) ?? '')
   } catch {
@@ -137,18 +148,36 @@ function load(key: string | null): { guesses: string[]; gaveUp: boolean } {
 function Game({
   db,
   answer,
+  mode,
   storageKey,
   shareTitle,
   onPlayAgain,
 }: {
   db: Db
   answer: Profile
+  mode: MysteryMode
   storageKey: string | null
   shareTitle: string
   onPlayAgain: (() => void) | null
 }) {
   const [state, setState] = useState(() => load(storageKey))
   const { guesses, gaveUp } = state
+  const [stats, setStats] = useState(() => loadMysteryStats(mode))
+  const [isNewBest, setIsNewBest] = useState(false)
+
+  const update = (next: GameState) => {
+    const win = next.guesses.includes(answer.id)
+    if (
+      !next.recorded &&
+      (win || next.gaveUp || next.guesses.length >= MAX_GUESSES)
+    ) {
+      const r = saveMysteryResult(mode, win ? next.guesses.length : null)
+      setStats(r.stats)
+      setIsNewBest(r.isNewBest)
+      next = { ...next, recorded: true }
+    }
+    setState(next)
+  }
 
   useEffect(() => {
     if (!storageKey) return
@@ -193,9 +222,7 @@ function Game({
         <>
           <CharacterGuessInput
             characters={options}
-            onGuess={(id) =>
-              setState((s) => ({ ...s, guesses: [...s.guesses, id] }))
-            }
+            onGuess={(id) => update({ ...state, guesses: [...guesses, id] })}
             disabled={false}
             dropDown
           />
@@ -205,7 +232,7 @@ function Game({
             </span>
             {guesses.length > 0 && (
               <button
-                onClick={() => setState((s) => ({ ...s, gaveUp: true }))}
+                onClick={() => update({ ...state, gaveUp: true })}
                 className="text-red-600 hover:underline"
               >
                 Give up
@@ -253,6 +280,13 @@ function Game({
               </button>
             )}
           </div>
+          <div className="mt-4">
+            <MysteryStatsPanel
+              stats={stats}
+              isNewBest={isNewBest}
+              highlight={won ? guesses.length : undefined}
+            />
+          </div>
         </div>
       )}
 
@@ -265,6 +299,8 @@ function Game({
           correct={r.p.id === answer.id}
         />
       ))}
+
+      {!over && <MysteryStatsPanel stats={stats} />}
     </div>
   )
 }
