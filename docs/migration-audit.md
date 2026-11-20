@@ -35,7 +35,7 @@ All routes live in `src/App.tsx`. `/embed/insights/:chartId` sits outside the ap
 
 ## Row counts
 
-TODO: not measured yet. Run these against Supabase: `character`, `arc`, `saga`, `chapter`, `volume`, plus distinct `group_name` in `character_affiliation`, distinct `role` in `character_occupation`, and devil fruits in `character_devil_fruit`.
+Measured 2026-11-20 by `scripts/fetch-build-data.ts`: 1,469 characters, 33 arcs, 11 sagas, 1,198 chapters, 115 volumes, 342 affiliations, 669 occupations, 134 devil fruits. With list and analytics pages this is 3,992 prerendered pages, about 12,000 files including `.data` files and OG cards, under the 20,000-file limit of Workers static assets on the free plan.
 
 ## Browser-only code (Node prerender risks)
 

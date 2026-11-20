@@ -32,8 +32,11 @@ The project uses a page-based architecture (not feature-based):
 
 ```
 src/
-├── App.tsx                 # App root and router setup
-├── main.tsx                # Entry point
+├── root.tsx                # HTML shell, providers (React Router framework mode)
+├── routes.ts               # Route config
+├── layouts/AppLayout.tsx   # Header + page chrome; SEO loader for prerendered pages
+├── seo/                    # Page SEO model (pages.server.ts), meta tags (meta.ts)
+├── data/buildData.ts       # Build-time data snapshot types
 ├── pages/                  # Route-level page components
 │   ├── CharactersPage.tsx, CharacterDetailPage.tsx, ...
 │   ├── ArcsPage.tsx, ArcDetailPage.tsx, ...
@@ -94,7 +97,7 @@ npm install
 ### Development
 
 ```bash
-# Start development server
+# Start development server (fetches build data on first run)
 npm run dev
 
 # Run tests
@@ -128,11 +131,12 @@ npx wrangler deploy
 
 ## Important Technical Considerations
 
-### Routing
+### Routing and prerendering
 
-- Uses BrowserRouter with clean URLs (e.g., `domain.com/characters`)
-- Cloudflare serves `index.html` for unknown paths (`not_found_handling: single-page-application` in `wrangler.jsonc`)
-- An inline script in `index.html` rewrites legacy `/#/...` links to clean paths
+- React Router v7 framework mode (`react-router.config.ts`, `appDirectory: 'src'`) with `ssr: false` and build-time `prerender`. Clean URLs (e.g., `domain.com/characters`)
+- Add routes in `src/routes.ts`. A new public page also needs an entry in `src/seo/pages.server.ts` to be prerendered with metadata; interactive tools that only work in the browser go in `src/constants/clientOnlyPaths.ts`
+- Prerendered HTML must match the first client render: no `window`, `localStorage`, `Math.random()` or `Date.now()` during render; read them in `useEffect`
+- An inline script in `root.tsx` redirects legacy `/#/...` links to clean paths
 - Never hard-code `#/` in links or share URLs
 
 ### Performance Optimization
@@ -578,7 +582,7 @@ Store user preferences (theme, layout settings) in localStorage.
 
 ## Deployment Configuration
 
-Deployed to Cloudflare Workers static assets from `dist/` (see `wrangler.jsonc`, `.github/workflows/deploy-cloudflare.yml`). Cache headers are in `public/_headers`. The migration to prerendered pages is tracked in `docs/migration-plan.md`.
+Deployed to Cloudflare Workers static assets from `build/client/` with a small Worker (`worker/index.ts`) for the SPA fallback and 404s. See `wrangler.jsonc`, `.github/workflows/deploy-cloudflare.yml` and the README. Cache headers are in `public/_headers`, legacy redirects in `public/_redirects`.
 
 ## Development Phases
 

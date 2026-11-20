@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -351,10 +351,13 @@ function SkeletonRows() {
 }
 
 function HomeSpotlight() {
-  // Pick a random ranking on mount so the front page feels fresh on each visit.
-  const [index, setIndex] = useState(() =>
-    Math.floor(Math.random() * RANKINGS.length)
-  )
+  // Pick a random ranking after mount (not during render, which must match
+  // the prerendered HTML) so the front page feels fresh on each visit.
+  const [index, setIndex] = useState(0)
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- post-hydration only
+    setIndex(Math.floor(Math.random() * RANKINGS.length))
+  }, [])
   const ranking = RANKINGS[index]
   const shpIds = useMemo(() => new Set(Object.keys(STRAW_HAT_COLORS)), [])
 

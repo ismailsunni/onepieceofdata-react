@@ -1,6 +1,7 @@
 import React, { useRef, useState, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
 import { DownloadChartButton } from './DownloadChartButton'
+import { SITE_URL } from '../../constants/site'
 
 interface ChartCardProps {
   title: string
@@ -45,10 +46,10 @@ export function ChartCard({
   const [copied, setCopied] = useState<'link' | 'embed' | null>(null)
 
   const permalinkUrl = chartId
-    ? `${window.location.origin}${location.pathname}#${chartId}`
+    ? `${SITE_URL}${location.pathname}#${chartId}`
     : null
 
-  const embedUrl = embedPath ? `${window.location.origin}${embedPath}` : null
+  const embedUrl = embedPath ? `${SITE_URL}${embedPath}` : null
 
   const embedCode = embedUrl
     ? `<iframe src="${embedUrl}" width="100%" height="500" frameborder="0" style="border:1px solid #e5e7eb;border-radius:12px;" loading="lazy"></iframe>`

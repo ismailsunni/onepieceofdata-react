@@ -4,3 +4,7 @@
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
+
+# Keep the workers.dev preview copy out of search results
+https://onepieceofdata.onepieceofdata-react.workers.dev/*
+  X-Robots-Tag: noindex

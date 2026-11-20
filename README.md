@@ -91,13 +91,29 @@ See `CLAUDE.md` for architecture, design system, and contribution conventions.
 
 ## Deployment
 
-Every push to `master` builds the site and deploys it to Cloudflare with `wrangler deploy` (`.github/workflows/deploy-cloudflare.yml`, config in `wrangler.jsonc`). Unknown paths fall back to `index.html`, and cache headers live in `public/_headers`.
+The site is a static build served by Cloudflare (Workers static assets, `wrangler.jsonc`):
+
+- `npm run build` fetches the Supabase tables once (`scripts/fetch-build-data.ts` → `.cache/build-data.json`), prerenders every entity, list and analytics page with React Router (`ssr: false` + `prerender`), then writes `sitemap.xml`, `robots.txt` and OG cards (`scripts/postbuild.ts`). Set `SKIP_OG=1` to skip the cards.
+- Client-only routes (games, chat, interactive tools) are served by the SPA fallback; `worker/index.ts` returns a real 404 for unknown paths.
+- `VITE_SITE_URL` sets the canonical domain (default `https://onepieceofdata.com`).
+- Manual deploy: `npm run build && npm run deploy`. Local preview of the build: `npm run preview`.
+
+`.github/workflows/deploy-cloudflare.yml` deploys on push to `master`, on a `data-updated` repository dispatch, and manually. It refuses to deploy if the page count drops more than 5% from the live sitemap.
 
 Required repository secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
 
-Manual deploy: `npm run build && npx wrangler deploy`.
+### Weekly rebuild trigger
 
-Until DNS moves to Cloudflare, `deploy.yml` also publishes to GitHub Pages (with a `404.html` SPA fallback). See `docs/migration-plan.md`.
+The data pipeline (`ismailsunni/onepieceofdata`) triggers a rebuild after each weekly run. Add this as the last step of its workflow, with a fine-grained PAT scoped to this repository (Contents: read and write) stored as `SITE_DISPATCH_TOKEN`:
+
+```yaml
+- name: Rebuild onepieceofdata.com
+  run: gh api repos/ismailsunni/onepieceofdata-react/dispatches -f event_type=data-updated
+  env:
+    GH_TOKEN: ${{ secrets.SITE_DISPATCH_TOKEN }}
+```
+
+Until DNS moves to Cloudflare, `deploy.yml` also publishes to GitHub Pages. See `docs/migration-plan.md`.
 
 ## Data Source & Attribution
 
