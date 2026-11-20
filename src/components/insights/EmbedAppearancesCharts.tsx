@@ -381,7 +381,7 @@ export function EmbedGapAnalysis({ data }: { data: CharacterGap[] }) {
               >
                 <td className="py-2 px-3 font-medium">
                   <a
-                    href={`/#/characters/${g.id}`}
+                    href={`/characters/${g.id}`}
                     target="_top"
                     className="text-blue-600 hover:text-blue-800 hover:underline"
                   >

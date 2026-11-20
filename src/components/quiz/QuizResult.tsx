@@ -83,7 +83,7 @@ export default function QuizResult({
       )
       .join('\n')
 
-    const gameUrl = 'https://onepieceofdata.com/#/games/guess-character'
+    const gameUrl = 'https://onepieceofdata.com/games/guess-character'
     return `I reached ${rating.label} with ${totalScore} points in One Piece of Data - Guess the Character!\n${resultLines}\n${gameUrl}`
   }
 

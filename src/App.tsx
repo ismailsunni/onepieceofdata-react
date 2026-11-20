@@ -1,5 +1,5 @@
 import {
-  HashRouter,
+  BrowserRouter,
   Routes,
   Route,
   Navigate,
@@ -84,8 +84,8 @@ const ArcQuizPage = lazy(() => import('./pages/ArcQuizPage'))
 const NameThemAllPage = lazy(() => import('./pages/NameThemAllPage'))
 const MysteryCharacterPage = lazy(() => import('./pages/MysteryCharacterPage'))
 
-// Tracks SPA route changes as Umami pageviews. HashRouter changes the URL
-// hash, which Umami's auto-tracker ignores, so we send them manually.
+// Tracks SPA route changes as Umami pageviews (auto-tracking is disabled in
+// index.html, so every route change is sent here).
 declare global {
   interface Window {
     umami?: {
@@ -104,7 +104,7 @@ const RouteTracker = () => {
 
   useEffect(() => {
     if (typeof window === 'undefined' || !window.umami) return
-    const url = `/#${location.pathname}${location.search}`
+    const url = `${location.pathname}${location.search}`
     window.umami.track((props) => ({ ...props, url }))
   }, [location.pathname, location.search])
 
@@ -112,7 +112,7 @@ const RouteTracker = () => {
 }
 
 // Scrolls to the element matching the URL hash (e.g. chart permalinks like
-// /#/analytics/characters#top-characters-per-arc). The app scrolls inside
+// /analytics/characters#top-characters-per-arc). The app scrolls inside
 // #main-content, not the window, so native anchor scrolling never fires.
 // Pages are lazy-loaded, so poll briefly until the target element mounts.
 const ScrollToHash = () => {
@@ -167,7 +167,7 @@ function App() {
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClient}>
-        <HashRouter>
+        <BrowserRouter>
           <RouteTracker />
           <ScrollToHash />
           <ErrorBoundary>
@@ -421,7 +421,7 @@ function App() {
             </Suspense>
           </ErrorBoundary>
           <Toaster position="bottom-right" toastOptions={{ duration: 3000 }} />
-        </HashRouter>
+        </BrowserRouter>
       </QueryClientProvider>
     </AuthProvider>
   )

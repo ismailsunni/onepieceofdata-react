@@ -40,3 +40,4 @@ supabase/.temp/
 
 # Generated word cloud renders (npm run wordcloud)
 /out/
+.wrangler

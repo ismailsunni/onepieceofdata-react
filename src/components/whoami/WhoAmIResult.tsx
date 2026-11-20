@@ -83,7 +83,7 @@ export default function WhoAmIResult({
       })
       .join('\n')
 
-    const gameUrl = 'https://onepieceofdata.com/#/games/who-am-i'
+    const gameUrl = 'https://onepieceofdata.com/games/who-am-i'
     return `I reached ${rating.label} with ${totalScore} points in One Piece of Data - Who Am I?\n${resultLines}\n${gameUrl}`
   }
 

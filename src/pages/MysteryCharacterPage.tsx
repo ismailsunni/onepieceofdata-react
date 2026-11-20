@@ -212,7 +212,7 @@ function Game({
         ('together' in r.rel && r.p.id !== answer.id ? ' 🤝' : '')
     )
     shareText(
-      `🏴‍☠️ One Piece of Data — Mystery Character ${shareTitle}\n${won ? guesses.length : 'X'}/${MAX_GUESSES}\n${lines.join('\n')}\nhttps://onepieceofdata.com/#/games/mystery-character`
+      `🏴‍☠️ One Piece of Data — Mystery Character ${shareTitle}\n${won ? guesses.length : 'X'}/${MAX_GUESSES}\n${lines.join('\n')}\nhttps://onepieceofdata.com/games/mystery-character`
     )
   }
 

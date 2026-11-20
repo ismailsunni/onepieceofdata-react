@@ -32,14 +32,14 @@ A data-exploration site for the One Piece universe — characters, arcs, devil f
 ## Tech Stack
 
 - **React 19** + TypeScript, **Vite**
-- **React Router v7** (HashRouter for GitHub Pages)
+- **React Router v7** (BrowserRouter, clean URLs)
 - **TanStack Query** (data fetching) and **TanStack Table** (tables)
 - **TailwindCSS v4** + Headless UI + Radix
 - **Recharts**, **Sigma.js** + Graphology, **vis-network**
 - **Supabase** (PostgreSQL backend)
 - **Vitest** + React Testing Library
 - ESLint, Prettier, Husky pre-commit hooks
-- Deployed via GitHub Actions to GitHub Pages
+- Deployed via GitHub Actions to Cloudflare (Workers static assets)
 
 ## Getting Started
 
@@ -91,9 +91,13 @@ See `CLAUDE.md` for architecture, design system, and contribution conventions.
 
 ## Deployment
 
-Every push to `master` triggers a GitHub Actions workflow that builds and deploys to GitHub Pages.
+Every push to `master` builds the site and deploys it to Cloudflare with `wrangler deploy` (`.github/workflows/deploy-cloudflare.yml`, config in `wrangler.jsonc`). Unknown paths fall back to `index.html`, and cache headers live in `public/_headers`.
 
-First-time setup: **Settings → Pages → Source: GitHub Actions**.
+Required repository secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
+
+Manual deploy: `npm run build && npx wrangler deploy`.
+
+Until DNS moves to Cloudflare, `deploy.yml` also publishes to GitHub Pages (with a `404.html` SPA fallback). See `docs/migration-plan.md`.
 
 ## Data Source & Attribution
 

@@ -36,6 +36,11 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
+      # BrowserRouter needs an SPA fallback; GitHub Pages only offers 404.html.
+      # Remove this workflow once the domain is served by Cloudflare.
+      - name: SPA fallback
+        run: cp dist/index.html dist/404.html
+
       - name: Setup Pages
         uses: actions/configure-pages@v6
 

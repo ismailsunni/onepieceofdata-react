@@ -131,7 +131,11 @@ function detectFilters(): Map<string, string> {
     }
     if (/showPct|Percent|setPct/.test(body)) parts.push('Count / %')
     if (/setMode\b/.test(body)) {
-      if (/['"]arc['"][\s\S]*?['"]saga['"]|['"]saga['"][\s\S]*?['"]arc['"]/.test(body)) {
+      if (
+        /['"]arc['"][\s\S]*?['"]saga['"]|['"]saga['"][\s\S]*?['"]arc['"]/.test(
+          body
+        )
+      ) {
         parts.push('Arcs / Sagas')
       } else {
         parts.push('Both / New / Returning')
@@ -170,8 +174,8 @@ function buildComment(
     '/**',
     ' * Embed renderers for all insight charts.',
     ' *',
-    ' * Each chart is accessible at: /#/embed/insights/<slug>',
-    ' * Permalink on the main page:  /#/analytics/<topic>#<slug>',
+    ' * Each chart is accessible at: /embed/insights/<slug>',
+    ' * Permalink on the main page:  /analytics/<topic>#<slug>',
     ' *',
     ` * ${hr('┌', '┬', '┐')}`,
     ` * ${row('Title', 'Slug', 'Interactive Filters')}`,

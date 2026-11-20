@@ -22,10 +22,6 @@ interface ChartCardProps {
   embedPath?: string
 }
 
-function getBaseUrl(): string {
-  return window.location.origin + window.location.pathname
-}
-
 export function ChartCard({
   title,
   children,
@@ -49,10 +45,10 @@ export function ChartCard({
   const [copied, setCopied] = useState<'link' | 'embed' | null>(null)
 
   const permalinkUrl = chartId
-    ? `${getBaseUrl()}#${location.pathname}#${chartId}`
+    ? `${window.location.origin}${location.pathname}#${chartId}`
     : null
 
-  const embedUrl = embedPath ? `${getBaseUrl()}#${embedPath}` : null
+  const embedUrl = embedPath ? `${window.location.origin}${embedPath}` : null
 
   const embedCode = embedUrl
     ? `<iframe src="${embedUrl}" width="100%" height="500" frameborder="0" style="border:1px solid #e5e7eb;border-radius:12px;" loading="lazy"></iframe>`

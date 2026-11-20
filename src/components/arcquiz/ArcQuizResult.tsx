@@ -105,7 +105,7 @@ export default function ArcQuizResult({
       })
       .join('\n')
 
-    const gameUrl = 'https://onepieceofdata.com/#/games/one-chapter-wonders'
+    const gameUrl = 'https://onepieceofdata.com/games/one-chapter-wonders'
     return `I reached ${rating.label} with ${totalScore} points in One Piece of Data - One-Chapter Wonders (${modeLabel})!\n${resultLines}\n${gameUrl}`
   }
 
