@@ -19,6 +19,21 @@ class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('[ErrorBoundary] Uncaught error:', error, info.componentStack)
+    // A deploy removed the old hashed chunks this tab still references:
+    // reload once to pick up the new build (guarded against reload loops).
+    if (
+      /dynamically imported module|module script failed/i.test(error.message)
+    ) {
+      try {
+        const last = Number(sessionStorage.getItem('chunk-reload') || 0)
+        if (Date.now() - last > 10_000) {
+          sessionStorage.setItem('chunk-reload', String(Date.now()))
+          window.location.reload()
+        }
+      } catch {
+        // storage unavailable: keep the fallback UI
+      }
+    }
   }
 
   handleRetry = () => {
