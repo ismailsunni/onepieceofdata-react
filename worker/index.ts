@@ -2,10 +2,6 @@
 // fallback for client-only routes, and a real 404 for everything else.
 import { isClientOnlyPath } from '../src/constants/clientOnlyPaths'
 
-// Google Search Console ownership file (routed here by run_worker_first,
-// since asset html_handling would redirect the .html URL)
-const GOOGLE_VERIFY = 'google22336630a6d3a036.html'
-
 interface Env {
   ASSETS: { fetch: (input: Request | URL) => Promise<Response> }
 }
@@ -13,11 +9,6 @@ interface Env {
 export default {
   async fetch(request: Request, env: Env) {
     const url = new URL(request.url)
-    if (url.pathname === `/${GOOGLE_VERIFY}`) {
-      return new Response(`google-site-verification: ${GOOGLE_VERIFY}`, {
-        headers: { 'Content-Type': 'text/html' },
-      })
-    }
     // Missing files (including .data for non-prerendered paths)
     if (/\.[a-z0-9]+$/i.test(url.pathname)) {
       return new Response('Not found', { status: 404 })

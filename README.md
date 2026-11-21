@@ -113,8 +113,6 @@ The data pipeline (`ismailsunni/onepieceofdata`) triggers a rebuild after each w
     GH_TOKEN: ${{ secrets.SITE_DISPATCH_TOKEN }}
 ```
 
-`deploy.yml` (GitHub Pages) is kept as a manual fallback. See `docs/migration-plan.md`.
-
 ## Data Source & Attribution
 
 Character, arc, and chapter data is scraped from the [One Piece Fandom Wiki](https://onepiece.fandom.com/) and used under fair use for non-commercial educational purposes. One Piece is © Eiichiro Oda / Shueisha / Toei Animation.

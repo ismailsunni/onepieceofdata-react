@@ -6,7 +6,7 @@
   NODE_VERSION = "22"
   SKIP_OG = "1"
 
-# Production stays on GitHub Pages — skip Netlify production builds.
+# Production is on Cloudflare — skip Netlify production builds.
 # `ignore = "exit 0"` always exits 0, which tells Netlify to skip the build.
 [context.production]
   ignore = "exit 0"
