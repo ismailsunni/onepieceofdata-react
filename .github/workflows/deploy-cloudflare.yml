@@ -1,0 +1,77 @@
+name: Deploy to Cloudflare
+
+on:
+  push:
+    branches:
+      - master
+  # Fired by the weekly data pipeline (ismailsunni/onepieceofdata)
+  repository_dispatch:
+    types: [data-updated]
+  workflow_dispatch:
+
+concurrency:
+  group: cloudflare
+  cancel-in-progress: false
+
+env:
+  # Canonical URLs, sitemap and OG image links. Switch to
+  # https://onepieceofdata.com at DNS cutover.
+  VITE_SITE_URL: https://onepieceofdata.onepieceofdata-react.workers.dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+
+      # OG cards are only re-rendered when their data changes
+      - uses: actions/cache@v4
+        with:
+          path: .cache/og
+          key: og-${{ github.run_id }}
+          restore-keys: og-
+
+      - name: Build
+        run: |
+          start=$(date +%s)
+          npm run build 2>&1 | tee build.log
+          echo "BUILD_SECONDS=$(( $(date +%s) - start ))" >> "$GITHUB_ENV"
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      # A half-loaded database must not replace the live site
+      - name: Page count guard
+        run: |
+          new=$(grep -c '<loc>' build/client/sitemap.xml)
+          old=$(curl -sf "$VITE_SITE_URL/sitemap.xml" | grep -c '<loc>' || true)
+          old=${old:-0}
+          echo "PAGES=$new" >> "$GITHUB_ENV"
+          echo "Pages: $new (live: $old)"
+          if [ "$old" -gt 0 ] && [ $((new * 100)) -lt $((old * 95)) ]; then
+            echo "::error::Page count dropped more than 5% ($old -> $new); not deploying"
+            exit 1
+          fi
+
+      - uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+
+      - name: Summary
+        run: |
+          {
+            echo "### Deployed to Cloudflare"
+            echo "- Trigger: ${{ github.event_name }}"
+            echo "- Pages prerendered: $PAGES"
+            echo "- $(grep -o 'OG cards: .*' build.log)"
+            echo "- Build time: ${BUILD_SECONDS}s"
+          } >> "$GITHUB_STEP_SUMMARY"

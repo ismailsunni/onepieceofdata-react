@@ -1,8 +1,8 @@
 /**
  * Embed renderers for all insight charts.
  *
- * Each chart is accessible at: /#/embed/insights/<slug>
- * Permalink on the main page:  /#/analytics/<topic>#<slug>
+ * Each chart is accessible at: /embed/insights/<slug>
+ * Permalink on the main page:  /analytics/<topic>#<slug>
  *
  * ┌────────────────────────────────────────────────┬────────────────────────────┬────────────────────────────┐
  * │ Title                                          │ Slug                       │ Interactive Filters        │

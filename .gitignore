@@ -40,3 +40,11 @@ supabase/.temp/
 
 # Generated word cloud renders (npm run wordcloud)
 /out/
+.wrangler
+
+# Build-time data snapshot (scripts/fetch-build-data.ts)
+/.cache/
+
+# React Router build output and generated types
+/build/
+/.react-router/

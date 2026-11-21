@@ -48,7 +48,7 @@ export default function NameThemAllResult({
   const pct = total ? Math.round((correct.length / total) * 100) : 0
   const timeUsed = formatClock(scopeSeconds(scope.type) - secondsLeft)
 
-  const text = `I named ${correct.length} / ${total} characters (${pct}%) from ${scope.title} in One Piece of Data - Name Them All! ❌ ${wrong.length} wrong · ⏱ ${timeUsed}\nhttps://onepieceofdata.com/#/games/name-them-all`
+  const text = `I named ${correct.length} / ${total} characters (${pct}%) from ${scope.title} in One Piece of Data - Name Them All! ❌ ${wrong.length} wrong · ⏱ ${timeUsed}\nhttps://onepieceofdata.com/games/name-them-all`
 
   const handleShareImage = async (format: ShareFormat) => {
     const node = format === 'square' ? squareRef.current : storyRef.current

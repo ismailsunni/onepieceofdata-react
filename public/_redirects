@@ -1,0 +1,10 @@
+/analytics/character-stats /analytics/bounty 301
+/analytics/region-bounty /analytics/bounty 301
+/analytics/insights /analytics/bounty 301
+/analytics/character-appearances /analytics/appearances 301
+/analytics/saga-matrix /analytics/appearances 301
+/analytics/story-arcs /analytics/story 301
+/analytics/publication-rate /analytics/story 301
+/analytics/birthdays /analytics/demographics 301
+/analytics/character-completeness /analytics/data-quality 301
+/analytics/affiliation-network /analytics/affiliations 301

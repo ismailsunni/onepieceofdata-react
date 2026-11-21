@@ -19,6 +19,21 @@ class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('[ErrorBoundary] Uncaught error:', error, info.componentStack)
+    // A deploy removed the old hashed chunks this tab still references:
+    // reload once to pick up the new build (guarded against reload loops).
+    if (
+      /dynamically imported module|module script failed/i.test(error.message)
+    ) {
+      try {
+        const last = Number(sessionStorage.getItem('chunk-reload') || 0)
+        if (Date.now() - last > 10_000) {
+          sessionStorage.setItem('chunk-reload', String(Date.now()))
+          window.location.reload()
+        }
+      } catch {
+        // storage unavailable: keep the fallback UI
+      }
+    }
   }
 
   handleRetry = () => {
@@ -33,14 +48,26 @@ class ErrorBoundary extends Component<Props, State> {
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4">
           <div className="bg-white border border-gray-200 rounded-xl p-8 max-w-md w-full text-center shadow-md">
             <div className="inline-flex items-center justify-center w-12 h-12 bg-red-100 text-red-600 rounded-lg mb-4">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                />
               </svg>
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Something went wrong</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Something went wrong
+            </h2>
             <p className="text-sm text-gray-600 mb-6">
-              An unexpected error occurred. You can try again or go back to the home page.
+              An unexpected error occurred. You can try again or go back to the
+              home page.
             </p>
             {this.state.error && (
               <p className="text-xs text-gray-400 font-mono mb-6 break-all">
@@ -55,7 +82,7 @@ class ErrorBoundary extends Component<Props, State> {
                 Try again
               </button>
               <a
-                href="#/"
+                href="/"
                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
               >
                 Go home

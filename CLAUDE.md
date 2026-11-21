@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-One Piece of Data is a React-based data exploration application for visualizing and analyzing One Piece universe data. This is a migration from an existing Streamlit application to a modern React stack, hosted on GitHub Pages with Supabase as the backend.
+One Piece of Data is a React-based data exploration application for visualizing and analyzing One Piece universe data. This is a migration from an existing Streamlit application to a modern React stack, hosted on Cloudflare with Supabase as the backend.
 
 ## Tech Stack
 
 - **Frontend:** React 19 with TypeScript, built with Vite
-- **Routing:** React Router v7 with HashRouter (for GitHub Pages compatibility)
+- **Routing:** React Router v7 with BrowserRouter (clean URLs)
 - **State Management:** React Context API + Custom Hooks
 - **UI Framework:** TailwindCSS v4 + Headless UI + Radix UI (slider)
 - **Tables:** TanStack Table (React Table v8)
@@ -20,7 +20,7 @@ One Piece of Data is a React-based data exploration application for visualizing 
 - **Notifications:** react-hot-toast
 - **Markdown:** react-markdown
 - **Backend:** Supabase (PostgreSQL database, REST API)
-- **Hosting:** GitHub Pages
+- **Hosting:** Cloudflare (Workers static assets)
 - **Testing:** Vitest + React Testing Library
 - **Linting/Formatting:** ESLint + Prettier + Husky (pre-commit hooks)
 
@@ -32,8 +32,11 @@ The project uses a page-based architecture (not feature-based):
 
 ```
 src/
-├── App.tsx                 # App root and router setup
-├── main.tsx                # Entry point
+├── root.tsx                # HTML shell, providers (React Router framework mode)
+├── routes.ts               # Route config
+├── layouts/AppLayout.tsx   # Header + page chrome; SEO loader for prerendered pages
+├── seo/                    # Page SEO model (pages.server.ts), meta tags (meta.ts)
+├── data/buildData.ts       # Build-time data snapshot types
 ├── pages/                  # Route-level page components
 │   ├── CharactersPage.tsx, CharacterDetailPage.tsx, ...
 │   ├── ArcsPage.tsx, ArcDetailPage.tsx, ...
@@ -94,7 +97,7 @@ npm install
 ### Development
 
 ```bash
-# Start development server
+# Start development server (fetches build data on first run)
 npm run dev
 
 # Run tests
@@ -122,17 +125,19 @@ npm run build
 # Preview production build locally
 npm run preview
 
-# Deploy to GitHub Pages
-npm run deploy
+# Deploy to Cloudflare (CI does this on push to master)
+npx wrangler deploy
 ```
 
 ## Important Technical Considerations
 
-### Routing with GitHub Pages
+### Routing and prerendering
 
-- **MUST use HashRouter** instead of BrowserRouter due to GitHub Pages limitations
-- Direct URL access and page refreshes work with HashRouter without 404 errors
-- URLs will have `/#/` format (e.g., `domain.com/#/characters`)
+- React Router v7 framework mode (`react-router.config.ts`, `appDirectory: 'src'`) with `ssr: false` and build-time `prerender`. Clean URLs (e.g., `domain.com/characters`)
+- Add routes in `src/routes.ts`. A new public page also needs an entry in `src/seo/pages.server.ts` to be prerendered with metadata; interactive tools that only work in the browser go in `src/constants/clientOnlyPaths.ts`
+- Prerendered HTML must match the first client render: no `window`, `localStorage`, `Math.random()` or `Date.now()` during render; read them in `useEffect`
+- An inline script in `root.tsx` redirects legacy `/#/...` links to clean paths
+- Never hard-code `#/` in links or share URLs
 
 ### Performance Optimization
 
@@ -402,7 +407,6 @@ Six color variations for different contexts:
 ```tsx
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUser } from '@fortawesome/free-solid-svg-icons'
-
 ;<div className="inline-flex items-center justify-center w-10 h-10 bg-blue-100 text-blue-600 rounded-lg">
   <FontAwesomeIcon icon={faUser} className="w-5 h-5" />
 </div>
@@ -578,13 +582,7 @@ Store user preferences (theme, layout settings) in localStorage.
 
 ## Deployment Configuration
 
-When deploying to GitHub Pages:
-
-1. Set `base` in `vite.config.ts` to match repository name: `base: '/onepieceofdata-react/'`
-2. Ensure HashRouter is used in routing configuration
-3. Run `npm run build` to create production bundle
-4. Deploy using `npm run deploy` (gh-pages package)
-5. Verify deployment at: `https://[username].github.io/onepieceofdata-react/`
+Deployed to Cloudflare Workers static assets from `build/client/` with a small Worker (`worker/index.ts`) for the SPA fallback and 404s. See `wrangler.jsonc`, `.github/workflows/deploy-cloudflare.yml` and the README. Cache headers are in `public/_headers`, legacy redirects in `public/_redirects`.
 
 ## Development Phases
 
@@ -634,10 +632,10 @@ Use polyfills if needed for older browser support.
 
 ## Known Constraints
 
-- **GitHub Pages**: Static site only, no server-side rendering
+- **Static hosting**: No server-side rendering; all pages are static assets
 - **Supabase Free Tier**: 500 MB storage, 2 GB bandwidth/month
-- **No Backend Routes**: All routing must be client-side via HashRouter
-- **CORS**: Configure Supabase CORS settings for GitHub Pages domain
+- **No Backend Routes**: All routing is client-side
+- **Supabase Auth**: Add each deployed origin to the Supabase Auth redirect allowlist
 
 ## Code Style
 

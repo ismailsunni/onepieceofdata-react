@@ -1,0 +1,13 @@
+{
+  "name": "onepieceofdata",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-11-20",
+  "assets": {
+    "directory": "./build/client",
+    "binding": "ASSETS",
+    // /characters/x serves characters/x/index.html without a redirect
+    "html_handling": "drop-trailing-slash",
+    // Unmatched paths go to the Worker (SPA fallback or 404)
+    "not_found_handling": "none"
+  }
+}
