@@ -113,7 +113,7 @@ The data pipeline (`ismailsunni/onepieceofdata`) triggers a rebuild after each w
     GH_TOKEN: ${{ secrets.SITE_DISPATCH_TOKEN }}
 ```
 
-Until DNS moves to Cloudflare, `deploy.yml` also publishes to GitHub Pages. See `docs/migration-plan.md`.
+`deploy.yml` (GitHub Pages) is kept as a manual fallback. See `docs/migration-plan.md`.
 
 ## Data Source & Attribution
 

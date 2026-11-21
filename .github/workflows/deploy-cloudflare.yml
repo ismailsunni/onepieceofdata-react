@@ -14,9 +14,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # Canonical URLs, sitemap and OG image links. Switch to
-  # https://onepieceofdata.com at DNS cutover.
-  VITE_SITE_URL: https://onepieceofdata.onepieceofdata-react.workers.dev
+  # Canonical URLs, sitemap and OG image links
+  VITE_SITE_URL: https://onepieceofdata.com
 
 jobs:
   deploy:
