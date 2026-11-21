@@ -1,9 +1,9 @@
 name: Deploy to GitHub Pages
 
+# Fallback only: the site is served by Cloudflare. Run manually if DNS is
+# pointed back to GitHub Pages.
 on:
-  push:
-    branches:
-      - master
+  workflow_dispatch:
 
 permissions:
   contents: read
