@@ -1,36 +1,21 @@
 import { useQuery } from '@tanstack/react-query'
-import {
-  fetchBountyDistribution,
-  fetchBountyStats,
-  fetchTopBounties,
-} from '../../services/analyticsService'
+import { bountyQueries } from '../../queries/bounty'
 import BountyDistributionChart from '../BountyDistributionChart'
 import TopBountiesChart from '../TopBountiesChart'
 import { StatCard } from './index'
 import { formatBounty } from '../insights/constants'
 
 export function BountyStatsSection() {
-  const { data: bountyData = [], isLoading: bountyLoading } = useQuery({
-    queryKey: ['analytics', 'bounty-distribution'],
-    queryFn: fetchBountyDistribution,
-  })
-
-  const { data: bountyStats, isLoading: bountyStatsLoading } = useQuery({
-    queryKey: ['analytics', 'bounty-stats'],
-    queryFn: fetchBountyStats,
-  })
-
+  const { data: bountyData = [], isLoading: bountyLoading } = useQuery(
+    bountyQueries.distribution
+  )
+  const { data: bountyStats, isLoading: bountyStatsLoading } = useQuery(
+    bountyQueries.stats
+  )
   const { data: topBountiesAll = [], isLoading: topBountiesLoadingAll } =
-    useQuery({
-      queryKey: ['analytics', 'top-bounties', 'all'],
-      queryFn: () => fetchTopBounties(10, false),
-    })
-
+    useQuery(bountyQueries.topAll)
   const { data: topBountiesAlive = [], isLoading: topBountiesLoadingAlive } =
-    useQuery({
-      queryKey: ['analytics', 'top-bounties', 'alive'],
-      queryFn: () => fetchTopBounties(10, true),
-    })
+    useQuery(bountyQueries.topAlive)
 
   const isLoading =
     bountyLoading ||

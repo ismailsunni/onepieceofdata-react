@@ -489,7 +489,9 @@ function CharacterDetailPage() {
                   <img
                     src={characterImageUrl}
                     alt={character.name || 'Character portrait'}
-                    className="w-32 lg:w-40 max-h-48 lg:max-h-56 rounded-xl object-contain bg-gray-100 border-2 border-white shadow-md"
+                    width={128}
+                    height={192}
+                    className="w-32 lg:w-40 h-48 lg:h-56 rounded-xl object-contain bg-gray-100 border-2 border-white shadow-md"
                     onError={handleImgError}
                   />
                 )}
