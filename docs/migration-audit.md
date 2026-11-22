@@ -77,3 +77,15 @@ Pages call TanStack Query with functions from `src/services/*`, but several deta
   | `/analytics/bounty`           | 43 / 96 / 100 / 100 | 7.4 s | 580 ms | 0.22 |
 
   Detail and analytics pages render skeletons, then fill them with client-side Supabase data, so LCP waits for that fetch and the swap causes layout shift. Possible fixes: seed React Query from the build data, and reserve chart heights.
+
+- Lighthouse after the performance work (PRs #38–#40: build-time query prefetch, per-character story graph, no Suspense shell). Two runs each; local runs vary by about ±10 points:
+
+  | Page                          | Performance | LCP       | TBT        | CLS    |
+  | ----------------------------- | ----------- | --------- | ---------- | ------ |
+  | `/`                           | 80–89       | 3.0–3.8 s | 20 ms      | 0–0.05 |
+  | `/characters`                 | 77–80       | 3.8–4.2 s | 80–100 ms  | 0      |
+  | `/characters/Monkey_D._Luffy` | 68–77       | 4.2–5.4 s | 0–14 ms    | 0.01   |
+  | `/chapters/1000`              | 80–82       | 3.6–3.8 s | 10–30 ms   | 0.01   |
+  | `/analytics/bounty`           | 64–76       | 2.8–3.7 s | 580–660 ms | 0      |
+
+  Content now paints at first paint (FCP = LCP) and layout shift is gone. What remains is mostly network time on the simulated slow 4G connection, plus chart hydration on analytics pages (TBT ~600 ms on `/analytics/bounty`).
