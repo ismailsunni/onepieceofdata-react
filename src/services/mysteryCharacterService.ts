@@ -108,7 +108,7 @@ export function formatBounty(b: number | null): string {
   if (!b) return 'None'
   if (b >= 1e9) return `${+(b / 1e9).toFixed(2)}B`
   if (b >= 1e6) return `${+(b / 1e6).toFixed(1)}M`
-  return b.toLocaleString()
+  return b.toLocaleString('en-US')
 }
 
 export function compare(g: Profile, a: Profile): Clue[] {

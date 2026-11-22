@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
 import { STRAW_HAT_IDS } from '../constants/characters'
-import { logger } from '../utils/logger'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { fetchCharactersByVolume, volumeQueries } from '../queries/volume'
+import { arcsQuery, sagasQuery } from '../queries/reference'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faArrowLeft,
@@ -11,123 +12,12 @@ import {
   faExternalLinkAlt,
 } from '@fortawesome/free-solid-svg-icons'
 import { faXTwitter } from '@fortawesome/free-brands-svg-icons'
-import { supabase } from '../services/supabase'
-import { Volume } from '../types/volume'
 import { Chapter } from '../types/chapter'
 import { Character } from '../types/character'
 import { Arc, Saga } from '../types/arc'
 import { fetchVolumes } from '../services/volumeService'
-import { fetchArcs } from '../services/arcService'
-import { fetchSagas } from '../services/sagaService'
 import SortableTable, { Column } from '../components/common/SortableTable'
 import { getCharacterImageUrl } from '../utils/characterImage'
-
-// Service functions
-async function fetchVolumeByNumber(
-  volumeNumber: number
-): Promise<Volume | null> {
-  try {
-    if (!supabase) {
-      logger.error('Supabase client is not initialized')
-      return null
-    }
-
-    const { data, error } = await supabase
-      .from('volume')
-      .select('*')
-      .eq('number', volumeNumber)
-      .single()
-
-    if (error) {
-      logger.error('Error fetching volume:', error)
-      return null
-    }
-
-    return data
-  } catch (error) {
-    logger.error('Error in fetchVolumeByNumber:', error)
-    return null
-  }
-}
-
-async function fetchChaptersByVolume(volumeNumber: number): Promise<Chapter[]> {
-  try {
-    if (!supabase) {
-      logger.error('Supabase client is not initialized')
-      return []
-    }
-
-    const { data, error } = await supabase
-      .from('chapter')
-      .select('*')
-      .eq('volume', volumeNumber)
-      .order('number', { ascending: true })
-
-    if (error) {
-      logger.error('Error fetching chapters by volume:', error)
-      return []
-    }
-
-    return data || []
-  } catch (error) {
-    logger.error('Error in fetchChaptersByVolume:', error)
-    return []
-  }
-}
-
-async function fetchCharactersByVolume(
-  volumeNumber: number
-): Promise<Character[]> {
-  try {
-    if (!supabase) {
-      logger.error('Supabase client is not initialized')
-      return []
-    }
-
-    const { data, error } = await supabase
-      .from('character')
-      .select('*')
-      .contains('volume_list', [volumeNumber])
-      .order('first_appearance', { ascending: true })
-
-    if (error) {
-      logger.error('Error fetching characters by volume:', error)
-      return []
-    }
-
-    return data || []
-  } catch (error) {
-    logger.error('Error in fetchCharactersByVolume:', error)
-    return []
-  }
-}
-
-async function fetchCharactersByCoverVolume(
-  volumeNumber: number
-): Promise<Character[]> {
-  try {
-    if (!supabase) {
-      logger.error('Supabase client is not initialized')
-      return []
-    }
-
-    const { data, error } = await supabase
-      .from('character')
-      .select('*')
-      .contains('cover_volume_list', [volumeNumber])
-      .order('name', { ascending: true })
-
-    if (error) {
-      logger.error('Error fetching characters by cover volume:', error)
-      return []
-    }
-
-    return data || []
-  } catch (error) {
-    logger.error('Error in fetchCharactersByCoverVolume:', error)
-    return []
-  }
-}
 
 // ===== REUSABLE COMPONENTS =====
 
@@ -206,15 +96,14 @@ function VolumeDetailPage() {
   const [copyLinkFeedback, setCopyLinkFeedback] = useState(false)
   const [hideStrawHats, setHideStrawHats] = useState(false)
 
+  const q = volumeQueries(volumeNumber ?? 0)
   const { data: volume, isLoading: volumeLoading } = useQuery({
-    queryKey: ['volume', volumeNumber],
-    queryFn: () => fetchVolumeByNumber(volumeNumber!),
+    ...q.volume,
     enabled: !!volumeNumber,
   })
 
   const { data: chapters = [] } = useQuery({
-    queryKey: ['volume-chapters', volumeNumber],
-    queryFn: () => fetchChaptersByVolume(volumeNumber!),
+    ...q.chapters,
     enabled: !!volumeNumber,
   })
 
@@ -225,8 +114,7 @@ function VolumeDetailPage() {
   })
 
   const { data: coverCharacters = [] } = useQuery({
-    queryKey: ['volume-cover-characters', volumeNumber],
-    queryFn: () => fetchCharactersByCoverVolume(volumeNumber!),
+    ...q.coverCharacters,
     enabled: !!volumeNumber,
   })
 
@@ -235,15 +123,9 @@ function VolumeDetailPage() {
     queryFn: fetchVolumes,
   })
 
-  const { data: allArcs = [] } = useQuery({
-    queryKey: ['arcs'],
-    queryFn: fetchArcs,
-  })
+  const { data: allArcs = [] } = useQuery(arcsQuery)
 
-  const { data: allSagas = [] } = useQuery({
-    queryKey: ['sagas'],
-    queryFn: fetchSagas,
-  })
+  const { data: allSagas = [] } = useQuery(sagasQuery)
 
   // Arcs and sagas this volume covers — overlap on chapter ranges.
   const { volumeArcs, volumeSagas, volumeStartChapter, volumeEndChapter } =
@@ -406,6 +288,7 @@ function VolumeDetailPage() {
       render: (row) =>
         row.date
           ? new Date(row.date).toLocaleDateString('en-US', {
+              timeZone: 'UTC',
               year: 'numeric',
               month: 'short',
               day: 'numeric',
@@ -459,7 +342,7 @@ function VolumeDetailPage() {
       sortValue: (row) => row.bounty ?? -1,
       render: (row) =>
         row.bounty != null && row.bounty > 0
-          ? `₿${row.bounty.toLocaleString()}`
+          ? `₿${row.bounty.toLocaleString('en-US')}`
           : '-',
     },
     {
@@ -503,7 +386,7 @@ function VolumeDetailPage() {
       sortValue: (row) => row.bounty ?? -1,
       render: (row) =>
         row.bounty != null && row.bounty > 0
-          ? `₿${row.bounty.toLocaleString()}`
+          ? `₿${row.bounty.toLocaleString('en-US')}`
           : '-',
     },
     {

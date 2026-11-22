@@ -517,7 +517,7 @@ export function EmbedTopBounties() {
             />
             <Tooltip
               formatter={(value: number) => [
-                `฿${value.toLocaleString()}`,
+                `฿${value.toLocaleString('en-US')}`,
                 'Bounty',
               ]}
               labelFormatter={(label: string) => {

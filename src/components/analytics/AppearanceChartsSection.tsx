@@ -130,7 +130,7 @@ export function AppearanceChartsSection({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
         <StatCard
           label="Characters Tracked"
-          value={overviewStats.totalTracked.toLocaleString()}
+          value={overviewStats.totalTracked.toLocaleString('en-US')}
           icon={
             <svg
               className="w-5 h-5"

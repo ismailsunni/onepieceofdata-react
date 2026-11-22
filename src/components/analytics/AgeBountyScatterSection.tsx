@@ -190,7 +190,7 @@ export function AgeBountyScatterSection() {
                         <p className="text-gray-600">
                           <span className="font-medium">Bounty:</span>{' '}
                           <span className="text-amber-600 font-semibold">
-                            {d.bounty.toLocaleString()}
+                            {d.bounty.toLocaleString('en-US')}
                           </span>
                         </p>
                         <p className="text-gray-600">

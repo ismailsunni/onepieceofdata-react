@@ -11,7 +11,7 @@ const formatBounty = (bounty: number | null) => {
   if (bounty >= 1_000_000_000) return `${(bounty / 1_000_000_000).toFixed(1)}B`
   if (bounty >= 1_000_000) return `${(bounty / 1_000_000).toFixed(0)}M`
   if (bounty >= 1_000) return `${(bounty / 1_000).toFixed(0)}K`
-  return bounty.toLocaleString()
+  return bounty.toLocaleString('en-US')
 }
 
 function getStatusBadge(status: string) {

@@ -1,6 +1,7 @@
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { logger } from '../utils/logger'
 import { useQuery } from '@tanstack/react-query'
+import { chapterQueries } from '../queries/chapter'
+import { arcsQuery } from '../queries/reference'
 import { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -10,103 +11,10 @@ import {
   faExternalLinkAlt,
 } from '@fortawesome/free-solid-svg-icons'
 import { faXTwitter } from '@fortawesome/free-brands-svg-icons'
-import { supabase } from '../services/supabase'
-import { Chapter } from '../types/chapter'
 import { Character } from '../types/character'
-import { Arc } from '../types/arc'
 import { fetchChapters } from '../services/chapterService'
-import { fetchArcs } from '../services/arcService'
 import { STRAW_HAT_IDS } from '../constants/characters'
 import SortableTable, { Column } from '../components/common/SortableTable'
-
-// Service function to fetch a single chapter by number
-async function fetchChapterByNumber(
-  chapterNumber: number
-): Promise<Chapter | null> {
-  try {
-    if (!supabase) {
-      logger.error('Supabase client is not initialized')
-      return null
-    }
-
-    const { data, error } = await supabase
-      .from('chapter')
-      .select('*')
-      .eq('number', chapterNumber)
-      .single()
-
-    if (error) {
-      logger.error('Error fetching chapter:', error)
-      return null
-    }
-
-    return data
-  } catch (error) {
-    logger.error('Error in fetchChapterByNumber:', error)
-    return null
-  }
-}
-
-// Service function to fetch characters that appear in this chapter
-async function fetchCharactersByChapter(
-  chapterNumber: number
-): Promise<Character[]> {
-  try {
-    if (!supabase) {
-      logger.error('Supabase client is not initialized')
-      return []
-    }
-
-    const { data, error } = await supabase
-      .from('character')
-      .select('*')
-      .contains('chapter_list', [chapterNumber])
-      .order('first_appearance', { ascending: true })
-
-    if (error) {
-      logger.error('Error fetching characters by chapter:', error)
-      return []
-    }
-
-    return data || []
-  } catch (error) {
-    logger.error('Error in fetchCharactersByChapter:', error)
-    return []
-  }
-}
-
-type ArcWithSagaRange = Arc & {
-  saga?: { title: string; start_chapter: number; end_chapter: number }
-}
-
-// Service function to fetch arc for this chapter
-async function fetchArcByChapter(
-  chapterNumber: number
-): Promise<ArcWithSagaRange | null> {
-  try {
-    if (!supabase) {
-      logger.error('Supabase client is not initialized')
-      return null
-    }
-
-    const { data, error } = await supabase
-      .from('arc')
-      .select('*, saga:saga_id(title, start_chapter, end_chapter)')
-      .lte('start_chapter', chapterNumber)
-      .gte('end_chapter', chapterNumber)
-      .single()
-
-    if (error) {
-      logger.error('Error fetching arc by chapter:', error)
-      return null
-    }
-
-    return data
-  } catch (error) {
-    logger.error('Error in fetchArcByChapter:', error)
-    return null
-  }
-}
 
 // Threshold for showing streak / absence badges on the character list.
 const APPEARANCE_BADGE_THRESHOLD = 10
@@ -204,21 +112,19 @@ function ChapterDetailPage() {
   const [copyLinkFeedback, setCopyLinkFeedback] = useState(false)
   const [hideStrawHats, setHideStrawHats] = useState(false)
 
+  const q = chapterQueries(chapterNumber ?? 0)
   const { data: chapter, isLoading: chapterLoading } = useQuery({
-    queryKey: ['chapter', chapterNumber],
-    queryFn: () => fetchChapterByNumber(chapterNumber!),
+    ...q.chapter,
     enabled: !!chapterNumber,
   })
 
   const { data: characters = [], isLoading: charactersLoading } = useQuery({
-    queryKey: ['chapter-characters', chapterNumber],
-    queryFn: () => fetchCharactersByChapter(chapterNumber!),
+    ...q.characters,
     enabled: !!chapterNumber,
   })
 
   const { data: arc } = useQuery({
-    queryKey: ['chapter-arc', chapterNumber],
-    queryFn: () => fetchArcByChapter(chapterNumber!),
+    ...q.arc,
     enabled: !!chapterNumber,
   })
 
@@ -227,10 +133,7 @@ function ChapterDetailPage() {
     queryFn: fetchChapters,
   })
 
-  const { data: allArcs = [] } = useQuery({
-    queryKey: ['arcs'],
-    queryFn: fetchArcs,
-  })
+  const { data: allArcs = [] } = useQuery(arcsQuery)
 
   // Resolve a chapter number to its containing arc.
   const arcForChapter = (ch: number) =>
@@ -283,6 +186,7 @@ function ChapterDetailPage() {
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return 'Unknown'
     return new Date(dateStr).toLocaleDateString('en-US', {
+      timeZone: 'UTC',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -391,7 +295,7 @@ function ChapterDetailPage() {
       sortValue: (row) => row.bounty ?? -1,
       render: (row) =>
         row.bounty != null && row.bounty > 0
-          ? `₿${row.bounty.toLocaleString()}`
+          ? `₿${row.bounty.toLocaleString('en-US')}`
           : '-',
     },
     {

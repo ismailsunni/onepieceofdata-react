@@ -35,9 +35,9 @@ function BountyDistributionChart({
         </p>
         {stats && (
           <p className="text-sm text-gray-500 mt-2">
-            {stats.charactersWithBounty.toLocaleString()} of{' '}
-            {stats.totalCharacters.toLocaleString()} characters have a bounty (
-            {stats.percentage}%)
+            {stats.charactersWithBounty.toLocaleString('en-US')} of{' '}
+            {stats.totalCharacters.toLocaleString('en-US')} characters have a
+            bounty ({stats.percentage}%)
           </p>
         )}
       </div>

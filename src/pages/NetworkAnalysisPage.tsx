@@ -1010,7 +1010,7 @@ export default function NetworkAnalysisPage() {
                     >
                       <span className="truncate">{n.name}</span>
                       <span className="text-xs text-gray-400 flex-shrink-0">
-                        {n.appearance_count.toLocaleString()} apps
+                        {n.appearance_count.toLocaleString('en-US')} apps
                       </span>
                     </button>
                   ))}
@@ -1120,16 +1120,16 @@ export default function NetworkAnalysisPage() {
               <div className="flex flex-wrap gap-3 text-sm text-gray-500">
                 <span className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-1">
                   <span className="font-semibold text-blue-600">
-                    {stats.nodesShown.toLocaleString()}
+                    {stats.nodesShown.toLocaleString('en-US')}
                   </span>{' '}
                   characters
                   <span className="text-gray-400 ml-1">
-                    / {stats.totalEligible.toLocaleString()} eligible
+                    / {stats.totalEligible.toLocaleString('en-US')} eligible
                   </span>
                 </span>
                 <span className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-1">
                   <span className="font-semibold text-indigo-600">
-                    {stats.edgesShown.toLocaleString()}
+                    {stats.edgesShown.toLocaleString('en-US')}
                   </span>{' '}
                   connections
                 </span>
@@ -1208,19 +1208,19 @@ export default function NetworkAnalysisPage() {
                     <div className="flex justify-between gap-4">
                       <dt className="text-gray-400">Appearances</dt>
                       <dd className="font-semibold text-gray-800">
-                        {selectedNode.appearance_count.toLocaleString()}
+                        {selectedNode.appearance_count.toLocaleString('en-US')}
                       </dd>
                     </div>
                     <div className="flex justify-between gap-4">
                       <dt className="text-gray-400">Connections shown</dt>
                       <dd className="font-semibold text-gray-800">
-                        {neighbors.length.toLocaleString()}
+                        {neighbors.length.toLocaleString('en-US')}
                       </dd>
                     </div>
                     <div className="flex justify-between gap-4">
                       <dt className="text-gray-400">Weighted degree</dt>
                       <dd className="font-semibold text-gray-800">
-                        {selectedNode.weighted_degree.toLocaleString()}
+                        {selectedNode.weighted_degree.toLocaleString('en-US')}
                       </dd>
                     </div>
                   </dl>
@@ -1298,7 +1298,7 @@ export default function NetworkAnalysisPage() {
                             {n.name}
                           </span>
                           <span className="text-xs text-gray-400 flex-shrink-0">
-                            {n.appearance_count.toLocaleString()}
+                            {n.appearance_count.toLocaleString('en-US')}
                           </span>
                         </button>
                       ))}

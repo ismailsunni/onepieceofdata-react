@@ -438,12 +438,14 @@ async function main(): Promise<void> {
     const svg = exportRaceAsSvg(snapshot, { ...exportOpts, progress })
     writeFileSync(outAbs, svg, 'utf-8')
     console.log(
-      `Wrote ${args.output} (chapter ${snapshot.chapter}, ${svg.length.toLocaleString()} bytes)`
+      `Wrote ${args.output} (chapter ${snapshot.chapter}, ${svg.length.toLocaleString('en-US')} bytes)`
     )
   } else if (args.format === 'gif') {
     const bytes = await renderGif(sliced, exportOpts, args)
     writeFileSync(outAbs, bytes)
-    console.log(`Wrote ${args.output} (${bytes.length.toLocaleString()} bytes)`)
+    console.log(
+      `Wrote ${args.output} (${bytes.length.toLocaleString('en-US')} bytes)`
+    )
   } else {
     await renderPngFrames(sliced, exportOpts, args, outAbs)
   }

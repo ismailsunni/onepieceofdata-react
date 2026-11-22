@@ -542,11 +542,15 @@ async function main(): Promise<void> {
   if (args.format === 'svg') {
     const svg = renderSvg(placements, args)
     writeFileSync(outAbs, svg, 'utf-8')
-    console.log(`Wrote ${args.output} (${svg.length.toLocaleString()} bytes)`)
+    console.log(
+      `Wrote ${args.output} (${svg.length.toLocaleString('en-US')} bytes)`
+    )
   } else if (args.format === 'gif') {
     const bytes = await renderGif(placements, args)
     writeFileSync(outAbs, bytes)
-    console.log(`Wrote ${args.output} (${bytes.length.toLocaleString()} bytes)`)
+    console.log(
+      `Wrote ${args.output} (${bytes.length.toLocaleString('en-US')} bytes)`
+    )
   } else {
     await renderPngFrames(placements, args, outAbs)
   }

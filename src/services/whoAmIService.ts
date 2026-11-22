@@ -67,7 +67,7 @@ function formatBounty(bounty: number): string {
     const m = bounty / 1_000_000
     return `${Number.isInteger(m) ? m : m.toFixed(1)} million`
   }
-  return bounty.toLocaleString()
+  return bounty.toLocaleString('en-US')
 }
 
 function generateHints(

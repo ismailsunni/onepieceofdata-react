@@ -193,7 +193,7 @@ export function EmbedCompleteness() {
         Data Completeness per Attribute
       </h2>
       <p className="text-xs text-gray-500 mb-3">
-        {total.toLocaleString()} characters tracked
+        {total.toLocaleString('en-US')} characters tracked
       </p>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -353,7 +353,7 @@ export function EmbedAgeBounty() {
                     <p>
                       Bounty:{' '}
                       <span className="font-semibold">
-                        {d.bounty.toLocaleString()}
+                        {d.bounty.toLocaleString('en-US')}
                       </span>
                     </p>
                     <p>

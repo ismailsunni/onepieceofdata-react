@@ -16,7 +16,7 @@ function formatBounty(bounty: number | null): string {
   const millions = bounty / 1_000_000
   if (billions >= 1) return `฿${billions.toFixed(billions % 1 === 0 ? 0 : 1)}B`
   if (millions >= 1) return `฿${millions.toFixed(millions % 1 === 0 ? 0 : 1)}M`
-  return `฿${bounty.toLocaleString()}`
+  return `฿${bounty.toLocaleString('en-US')}`
 }
 
 function countBounties(bounties: string | null): number | null {
@@ -583,14 +583,14 @@ function CharacterComparePage() {
                       ? field.format
                         ? field.format(char1)
                         : n1 !== null
-                          ? n1.toLocaleString()
+                          ? n1.toLocaleString('en-US')
                           : '—'
                       : '—'
                     val2 = char2
                       ? field.format
                         ? field.format(char2)
                         : n2 !== null
-                          ? n2.toLocaleString()
+                          ? n2.toLocaleString('en-US')
                           : '—'
                       : '—'
 

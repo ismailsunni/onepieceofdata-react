@@ -790,7 +790,9 @@ export function StoryGraphView() {
         {/* Counts */}
         <div className="ml-auto text-sm text-gray-500">
           {visibleNodeIds.size} nodes · {visibleEdges.length} edges
-          {data ? ` (of ${data.edges.length.toLocaleString()} total)` : ''}
+          {data
+            ? ` (of ${data.edges.length.toLocaleString('en-US')} total)`
+            : ''}
         </div>
       </div>
 
@@ -1016,7 +1018,7 @@ export function StoryGraphView() {
             </p>
           </div>
           <div className="text-sm text-gray-500">
-            {visibleEdges.length.toLocaleString()} rows
+            {visibleEdges.length.toLocaleString('en-US')} rows
           </div>
         </div>
         <EdgeTable
@@ -1065,7 +1067,7 @@ function CharacterMiniProfile({ characterId }: { characterId: string }) {
     if (b == null) return null
     if (b >= 1_000_000_000) return `${(b / 1_000_000_000).toFixed(2)}B`
     if (b >= 1_000_000) return `${(b / 1_000_000).toFixed(0)}M`
-    return b.toLocaleString()
+    return b.toLocaleString('en-US')
   }
 
   // Resolve first arc slug → display title (fallback: title-cased slug)

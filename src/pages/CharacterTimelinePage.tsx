@@ -455,7 +455,7 @@ function CharacterTimelinePage() {
                           </td>
                           <td className="px-3 py-2 text-right tabular-nums">
                             {char.bounty
-                              ? `฿${char.bounty.toLocaleString()}`
+                              ? `฿${char.bounty.toLocaleString('en-US')}`
                               : '-'}
                           </td>
                           <td className="px-3 py-2 text-center">

@@ -25,7 +25,8 @@ export function RangeSlider({
             {label}
           </label>
           <span className="text-xs font-semibold text-blue-600">
-            {value[0].toLocaleString()} – {value[1].toLocaleString()}
+            {value[0].toLocaleString('en-US')} –{' '}
+            {value[1].toLocaleString('en-US')}
           </span>
         </div>
       )}

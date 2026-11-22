@@ -82,8 +82,8 @@ export function CumulativeDebutControls({
       {/* Hidden / single-bucket count */}
       <span className={`${text} text-gray-500`}>
         {filterOn
-          ? `Hiding ${hiddenCount.toLocaleString()} one-${noun} character${hiddenCount === 1 ? '' : 's'}`
-          : `${hiddenCount.toLocaleString()} character${hiddenCount === 1 ? '' : 's'} appear in a single ${noun}`}
+          ? `Hiding ${hiddenCount.toLocaleString('en-US')} one-${noun} character${hiddenCount === 1 ? '' : 's'}`
+          : `${hiddenCount.toLocaleString('en-US')} character${hiddenCount === 1 ? '' : 's'} appear in a single ${noun}`}
       </span>
     </div>
   )
@@ -165,7 +165,7 @@ export function CumulativeDebutChartBody({
               const total = Number(value) || 0
               const delta = (item?.payload?.delta as number) ?? 0
               return [
-                `${total.toLocaleString()} total (+${delta.toLocaleString()} new)`,
+                `${total.toLocaleString('en-US')} total (+${delta.toLocaleString('en-US')} new)`,
                 'Debuted',
               ]
             }}
@@ -211,7 +211,7 @@ export function CumulativeDebutChartBody({
               <span className="font-semibold text-amber-700">#{i + 1}</span>{' '}
               {b.label}{' '}
               <span className="text-gray-500">
-                (+{b.delta.toLocaleString()} new)
+                (+{b.delta.toLocaleString('en-US')} new)
               </span>
             </span>
           ))}

@@ -1,8 +1,13 @@
 import { useMemo, useState } from 'react'
 import { STRAW_HAT_IDS } from '../constants/characters'
-import { logger } from '../utils/logger'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import {
+  arcChaptersQuery,
+  arcQuery,
+  fetchCharactersByArc,
+} from '../queries/arc'
+import { arcsQuery } from '../queries/reference'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faArrowLeft,
@@ -11,93 +16,10 @@ import {
   faExternalLinkAlt,
 } from '@fortawesome/free-solid-svg-icons'
 import { faXTwitter } from '@fortawesome/free-brands-svg-icons'
-import { supabase } from '../services/supabase'
-import { Arc } from '../types/arc'
 import { Character } from '../types/character'
 import { Chapter } from '../types/chapter'
-import { fetchArcs } from '../services/arcService'
 import SortableTable, { Column } from '../components/common/SortableTable'
 import { getCharacterImageUrl } from '../utils/characterImage'
-
-// Service functions
-async function fetchArcById(id: string): Promise<Arc | null> {
-  try {
-    if (!supabase) {
-      logger.error('Supabase client is not initialized')
-      return null
-    }
-
-    const { data, error } = await supabase
-      .from('arc')
-      .select('*, saga:saga_id(title)')
-      .eq('arc_id', id)
-      .single()
-
-    if (error) {
-      logger.error('Error fetching arc:', error)
-      return null
-    }
-
-    return data
-  } catch (error) {
-    logger.error('Error in fetchArcById:', error)
-    return null
-  }
-}
-
-async function fetchChaptersByArc(
-  startChapter: number,
-  endChapter: number
-): Promise<Chapter[]> {
-  try {
-    if (!supabase) {
-      logger.error('Supabase client is not initialized')
-      return []
-    }
-
-    const { data, error } = await supabase
-      .from('chapter')
-      .select('*')
-      .gte('number', startChapter)
-      .lte('number', endChapter)
-      .order('number', { ascending: true })
-
-    if (error) {
-      logger.error('Error fetching chapters by arc:', error)
-      return []
-    }
-
-    return data || []
-  } catch (error) {
-    logger.error('Error in fetchChaptersByArc:', error)
-    return []
-  }
-}
-
-async function fetchCharactersByArc(arcId: string): Promise<Character[]> {
-  try {
-    if (!supabase) {
-      logger.error('Supabase client is not initialized')
-      return []
-    }
-
-    const { data, error } = await supabase
-      .from('character')
-      .select('*')
-      .contains('arc_list', [arcId])
-      .order('first_appearance', { ascending: true })
-
-    if (error) {
-      logger.error('Error fetching characters by arc:', error)
-      return []
-    }
-
-    return data || []
-  } catch (error) {
-    logger.error('Error in fetchCharactersByArc:', error)
-    return []
-  }
-}
 
 // ===== REUSABLE COMPONENTS =====
 
@@ -191,16 +113,11 @@ function ArcDetailPage() {
   const [hideStrawHats, setHideStrawHats] = useState(false)
 
   const { data: arc, isLoading: arcLoading } = useQuery({
-    queryKey: ['arc', id],
-    queryFn: () => fetchArcById(id!),
+    ...arcQuery(id ?? ''),
     enabled: !!id,
   })
 
-  const { data: chapters = [] } = useQuery({
-    queryKey: ['arc-chapters', arc?.start_chapter, arc?.end_chapter],
-    queryFn: () => fetchChaptersByArc(arc!.start_chapter, arc!.end_chapter),
-    enabled: !!arc,
-  })
+  const { data: chapters = [] } = useQuery(arcChaptersQuery(arc))
 
   const { data: characters = [] } = useQuery({
     queryKey: ['arc-characters', arc?.arc_id],
@@ -208,10 +125,7 @@ function ArcDetailPage() {
     enabled: !!arc,
   })
 
-  const { data: allArcs = [] } = useQuery({
-    queryKey: ['arcs'],
-    queryFn: fetchArcs,
-  })
+  const { data: allArcs = [] } = useQuery(arcsQuery)
 
   const sortedArcs = [...allArcs].sort(
     (a, b) => a.start_chapter - b.start_chapter
@@ -344,6 +258,7 @@ function ArcDetailPage() {
       render: (row) =>
         row.date
           ? new Date(row.date).toLocaleDateString('en-US', {
+              timeZone: 'UTC',
               year: 'numeric',
               month: 'short',
               day: 'numeric',
@@ -396,7 +311,7 @@ function ArcDetailPage() {
       sortValue: (row) => row.bounty ?? -1,
       render: (row) =>
         row.bounty != null && row.bounty > 0
-          ? `₿${row.bounty.toLocaleString()}`
+          ? `₿${row.bounty.toLocaleString('en-US')}`
           : '-',
     },
     {

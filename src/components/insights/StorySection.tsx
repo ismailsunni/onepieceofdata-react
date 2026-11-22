@@ -79,7 +79,7 @@ export function StorySection({
                       {s.totalChapters}
                     </td>
                     <td className="py-2 px-3 text-right text-gray-600">
-                      {s.totalPages.toLocaleString()}
+                      {s.totalPages.toLocaleString('en-US')}
                     </td>
                     <td className="py-2 px-3 text-right font-medium text-blue-600">
                       {s.characterCount}

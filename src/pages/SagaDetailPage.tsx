@@ -1,8 +1,14 @@
 import { useState, useMemo } from 'react'
 import { STRAW_HAT_IDS } from '../constants/characters'
-import { logger } from '../utils/logger'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import {
+  fetchCharactersBySaga,
+  sagaArcsQuery,
+  sagaQuery,
+  sagaVolumesQuery,
+} from '../queries/saga'
+import { sagasQuery } from '../queries/reference'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faArrowLeft,
@@ -11,128 +17,10 @@ import {
   faExternalLinkAlt,
 } from '@fortawesome/free-solid-svg-icons'
 import { faXTwitter } from '@fortawesome/free-brands-svg-icons'
-import { supabase } from '../services/supabase'
-import { Saga, Arc } from '../types/arc'
+import { Arc } from '../types/arc'
 import { Character } from '../types/character'
 import SortableTable, { Column } from '../components/common/SortableTable'
 import { getCharacterImageUrl } from '../utils/characterImage'
-
-// Service functions
-async function fetchSagaById(id: string): Promise<Saga | null> {
-  try {
-    if (!supabase) {
-      logger.error('Supabase client is not initialized')
-      return null
-    }
-
-    const { data, error } = await supabase
-      .from('saga')
-      .select('*')
-      .eq('saga_id', id)
-      .single()
-
-    if (error) {
-      logger.error('Error fetching saga:', error)
-      return null
-    }
-
-    return data
-  } catch (error) {
-    logger.error('Error in fetchSagaById:', error)
-    return null
-  }
-}
-
-async function fetchArcsBySaga(sagaId: string): Promise<Arc[]> {
-  try {
-    if (!supabase) {
-      logger.error('Supabase client is not initialized')
-      return []
-    }
-
-    const { data, error } = await supabase
-      .from('arc')
-      .select('*')
-      .eq('saga_id', sagaId)
-      .order('start_chapter', { ascending: true })
-
-    if (error) {
-      logger.error('Error fetching arcs by saga:', error)
-      return []
-    }
-
-    return data || []
-  } catch (error) {
-    logger.error('Error in fetchArcsBySaga:', error)
-    return []
-  }
-}
-
-async function fetchCharactersBySaga(sagaId: string): Promise<Character[]> {
-  try {
-    if (!supabase) {
-      logger.error('Supabase client is not initialized')
-      return []
-    }
-
-    const { data, error } = await supabase
-      .from('character')
-      .select('*')
-      .contains('saga_list', [sagaId])
-      .order('first_appearance', { ascending: true })
-
-    if (error) {
-      logger.error('Error fetching characters by saga:', error)
-      return []
-    }
-
-    return data || []
-  } catch (error) {
-    logger.error('Error in fetchCharactersBySaga:', error)
-    return []
-  }
-}
-
-async function fetchVolumeRange(
-  startChapter: number,
-  endChapter: number
-): Promise<{ startVol: number | null; endVol: number | null }> {
-  if (!supabase) return { startVol: null, endVol: null }
-  const { data } = await supabase
-    .from('chapter')
-    .select('volume')
-    .gte('number', startChapter)
-    .lte('number', endChapter)
-    .not('volume', 'is', null)
-    .order('volume', { ascending: true })
-  if (!data || data.length === 0) return { startVol: null, endVol: null }
-  const volumes = data.map((d) => d.volume).filter(Boolean) as number[]
-  return { startVol: Math.min(...volumes), endVol: Math.max(...volumes) }
-}
-
-async function fetchSagas(): Promise<Saga[]> {
-  try {
-    if (!supabase) {
-      logger.error('Supabase client is not initialized')
-      return []
-    }
-
-    const { data, error } = await supabase
-      .from('saga')
-      .select('*')
-      .order('start_chapter', { ascending: true })
-
-    if (error) {
-      logger.error('Error fetching sagas:', error)
-      return []
-    }
-
-    return data || []
-  } catch (error) {
-    logger.error('Error in fetchSagas:', error)
-    return []
-  }
-}
 
 // ===== REUSABLE COMPONENTS =====
 
@@ -211,16 +99,11 @@ function SagaDetailPage() {
   const [hideStrawHats, setHideStrawHats] = useState(false)
 
   const { data: saga, isLoading: sagaLoading } = useQuery({
-    queryKey: ['saga', id],
-    queryFn: () => fetchSagaById(id!),
+    ...sagaQuery(id ?? ''),
     enabled: !!id,
   })
 
-  const { data: arcs = [] } = useQuery({
-    queryKey: ['saga-arcs', saga?.saga_id],
-    queryFn: () => fetchArcsBySaga(saga!.saga_id),
-    enabled: !!saga,
-  })
+  const { data: arcs = [] } = useQuery(sagaArcsQuery(saga))
 
   const { data: characters = [] } = useQuery({
     queryKey: ['saga-characters', saga?.saga_id],
@@ -228,16 +111,9 @@ function SagaDetailPage() {
     enabled: !!saga,
   })
 
-  const { data: volumeRange } = useQuery({
-    queryKey: ['saga-volumes', saga?.start_chapter, saga?.end_chapter],
-    queryFn: () => fetchVolumeRange(saga!.start_chapter, saga!.end_chapter),
-    enabled: !!saga,
-  })
+  const { data: volumeRange } = useQuery(sagaVolumesQuery(saga))
 
-  const { data: allSagas = [] } = useQuery({
-    queryKey: ['sagas'],
-    queryFn: fetchSagas,
-  })
+  const { data: allSagas = [] } = useQuery(sagasQuery)
 
   const sortedSagas = [...allSagas].sort(
     (a, b) => a.start_chapter - b.start_chapter
@@ -409,7 +285,7 @@ function SagaDetailPage() {
       sortValue: (row) => row.bounty ?? -1,
       render: (row) =>
         row.bounty != null && row.bounty > 0
-          ? `₿${row.bounty.toLocaleString()}`
+          ? `₿${row.bounty.toLocaleString('en-US')}`
           : '-',
     },
     {
