@@ -1,4 +1,3 @@
-import { Suspense } from 'react'
 import {
   Outlet,
   useLoaderData,
@@ -9,7 +8,6 @@ import {
 } from 'react-router'
 import { HydrationBoundary } from '@tanstack/react-query'
 import Header from '../components/Header'
-import PageLoader from '../components/common/PageLoader'
 import PageSummary from '../components/seo/PageSummary'
 import { isClientOnlyPath } from '../constants/clientOnlyPaths'
 import { seoMeta } from '../seo/meta'
@@ -52,11 +50,9 @@ export default function AppLayout() {
     <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
       <Header />
       <div id="main-content" className="flex-1 overflow-y-auto">
-        <Suspense fallback={<PageLoader />}>
-          <HydrationBoundary state={queries}>
-            <Outlet />
-          </HydrationBoundary>
-        </Suspense>
+        <HydrationBoundary state={queries}>
+          <Outlet />
+        </HydrationBoundary>
         {seo && <PageSummary seo={seo} />}
       </div>
     </div>
