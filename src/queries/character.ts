@@ -3,6 +3,7 @@ import { supabase } from '../services/supabase'
 import { fetchAffiliationsByCharacter } from '../services/affiliationService'
 import { fetchDevilFruitsByCharacter } from '../services/devilFruitService'
 import { fetchOccupationsByCharacter } from '../services/occupationService'
+import { fetchCharacterSubgraph } from '../services/storyGraphService'
 import { Character } from '../types/character'
 import { logger } from '../utils/logger'
 
@@ -16,6 +17,9 @@ async function fetchCharacterById(id: string): Promise<Character | null> {
   if (error) logger.error('Error fetching character:', error)
   return data
 }
+
+/** Story graph relations below this confidence are hidden */
+export const RELATION_MIN_CONFIDENCE = 0.7
 
 // Shared by CharacterDetailPage and the build-time prefetch
 export const characterQueries = (id: string) => ({
@@ -35,5 +39,10 @@ export const characterQueries = (id: string) => ({
   devilFruits: queryOptions({
     queryKey: ['character-devil-fruits', id],
     queryFn: () => fetchDevilFruitsByCharacter(id),
+  }),
+  relations: queryOptions({
+    queryKey: ['character-relations', id],
+    queryFn: () => fetchCharacterSubgraph(id, RELATION_MIN_CONFIDENCE),
+    staleTime: 10 * 60 * 1000,
   }),
 })

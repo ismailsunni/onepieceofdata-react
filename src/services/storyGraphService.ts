@@ -87,3 +87,36 @@ export async function fetchCharacterArcMembership(): Promise<CharacterArcMembers
   }
   return { sagas, arcs }
 }
+
+/**
+ * One character's relationships: its edges at or above `minConfidence` and
+ * the nodes on the other end (a few KB, versus ~1.5 MB for the full graph).
+ */
+export async function fetchCharacterSubgraph(
+  characterId: string,
+  minConfidence: number
+): Promise<StoryGraphData> {
+  const empty = { nodes: [], edges: [] }
+  if (!supabase) return empty
+  const nodeCols = 'id, type, canonical_name, source_id'
+  const { data: node } = await supabase
+    .from('graph_nodes')
+    .select(nodeCols)
+    .eq('type', 'character')
+    .eq('source_id', characterId)
+    .maybeSingle()
+  if (!node) return empty
+  const { data: edges, error } = await supabase
+    .from('graph_edges')
+    .select('id, subject_id, relation, object_id, confidence')
+    .or(`subject_id.eq.${node.id},object_id.eq.${node.id}`)
+    .gte('confidence', minConfidence)
+  if (error) throw error
+  const ids = [...new Set(edges.flatMap((e) => [e.subject_id, e.object_id]))]
+  const { data: nodes, error: nodesError } = await supabase
+    .from('graph_nodes')
+    .select(nodeCols)
+    .in('id', ids)
+  if (nodesError) throw nodesError
+  return { nodes: nodes as GraphNode[], edges: edges as GraphEdge[] }
+}

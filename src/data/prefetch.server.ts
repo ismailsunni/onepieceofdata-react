@@ -8,6 +8,7 @@ import {
   type FetchQueryOptions,
 } from '@tanstack/react-query'
 import { arcChaptersQuery, arcQuery } from '../queries/arc'
+import { bountyQueries } from '../queries/bounty'
 import { chapterQueries } from '../queries/chapter'
 import { characterQueries } from '../queries/character'
 import { arcsQuery, sagasQuery } from '../queries/reference'
@@ -22,6 +23,18 @@ type Fetch = <T, K extends readonly unknown[]>(
 
 const ROUTES: [RegExp, (param: string, fetch: Fetch) => Promise<unknown>][] = [
   [
+    /^\/analytics\/(bounty)$/,
+    (_, f) => {
+      const q = bountyQueries
+      return Promise.all([
+        f(q.distribution),
+        f(q.stats),
+        f(q.topAll),
+        f(q.topAlive),
+      ])
+    },
+  ],
+  [
     /^\/characters\/([^/]+)$/,
     (id, f) => {
       const q = characterQueries(id)
@@ -30,6 +43,7 @@ const ROUTES: [RegExp, (param: string, fetch: Fetch) => Promise<unknown>][] = [
         f(q.occupations),
         f(q.affiliations),
         f(q.devilFruits),
+        f(q.relations),
         f(arcsQuery),
         f(sagasQuery),
       ])

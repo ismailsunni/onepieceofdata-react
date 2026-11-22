@@ -1,11 +1,13 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { fetchStoryGraph } from '../../services/storyGraphService'
+import {
+  characterQueries,
+  RELATION_MIN_CONFIDENCE as MIN_CONFIDENCE,
+} from '../../queries/character'
 import { GraphEdge, GraphNode } from '../../types/storyGraph'
 import { formatRelationDirected } from '../../utils/formatRelation'
 
-const MIN_CONFIDENCE = 0.7
 const MAX_PER_GROUP = 12
 
 // Only fought / allies / enemies are reliable enough from the extracted
@@ -82,11 +84,7 @@ export function CharacterRelationships({
   characterId: string
   characterName: string
 }) {
-  const { data, isLoading } = useQuery({
-    queryKey: ['story-graph'],
-    queryFn: fetchStoryGraph,
-    staleTime: 10 * 60 * 1000,
-  })
+  const { data, isLoading } = useQuery(characterQueries(characterId).relations)
 
   const groups = useMemo<RelationGroup[]>(() => {
     if (!data) return []

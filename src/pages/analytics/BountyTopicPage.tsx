@@ -141,10 +141,10 @@ function BountyTopicPage() {
           </div>
         </div>
 
+        <BountyStatsSection />
+
         {insights ? (
           <>
-            <BountyStatsSection />
-
             <BountySection
               insights={insights}
               hideStrawHats={hideStrawHats}
