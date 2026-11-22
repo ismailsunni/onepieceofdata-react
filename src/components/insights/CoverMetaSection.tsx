@@ -17,6 +17,8 @@ import type {
   CoverVsMain,
 } from '../../services/analytics/insightsAnalytics'
 import { CHART_COLORS } from '../../constants/chartColors'
+import { useIsNarrow } from '../../hooks/useIsNarrow'
+import { truncateLabel } from '../../utils/chartLabels'
 
 interface CoverMetaSectionProps {
   coverStars: CoverStar[]
@@ -27,6 +29,7 @@ export function CoverMetaSection({
   coverStars,
   coverVsMain,
 }: CoverMetaSectionProps) {
+  const narrow = useIsNarrow()
   const [hideStrawHats, setHideStrawHats] = useState(true)
 
   const filteredCoverVsMain = useMemo(
@@ -52,7 +55,7 @@ export function CoverMetaSection({
             <BarChart
               data={coverStars}
               layout="vertical"
-              margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
+              margin={{ top: 5, right: narrow ? 10 : 30, left: 5, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
               <XAxis
@@ -63,7 +66,10 @@ export function CoverMetaSection({
               <YAxis
                 dataKey="name"
                 type="category"
-                width={110}
+                width={narrow ? 90 : 110}
+                tickFormatter={(v: string) =>
+                  narrow ? truncateLabel(v, 13) : v
+                }
                 tick={{ fontSize: 10 }}
                 stroke={CHART_COLORS.axis}
               />

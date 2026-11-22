@@ -44,21 +44,21 @@ function BountyDistributionChart({
       <ResponsiveContainer width="100%" height={400}>
         <BarChart
           data={data}
-          margin={{ top: 20, right: 30, left: 60, bottom: 80 }}
+          margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
           <XAxis
             dataKey="range"
             angle={-45}
             textAnchor="end"
-            height={100}
+            height={80}
             tick={{ fontSize: 11 }}
             stroke={CHART_COLORS.axis}
             interval={0}
             label={{
               value: 'Bounty Range',
               position: 'insideBottom',
-              offset: -20,
+              offset: 0,
               style: { fontSize: 14, fill: CHART_COLORS.gray500 },
             }}
           />

@@ -195,7 +195,7 @@ function ArcLengthChart({
         <ResponsiveContainer width="100%" height={500}>
           <BarChart
             data={chartData}
-            margin={{ top: 20, right: 30, left: 60, bottom: 100 }}
+            margin={{ top: 20, right: 10, left: 0, bottom: 5 }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
             <XAxis
@@ -209,7 +209,7 @@ function ArcLengthChart({
               label={{
                 value: 'Arc',
                 position: 'insideBottom',
-                offset: -10,
+                offset: 0,
                 style: {
                   fontSize: 14,
                   fill: CHART_COLORS.gray500,
@@ -345,7 +345,7 @@ function ArcLengthChart({
       <ResponsiveContainer width="100%" height={500}>
         <BarChart
           data={chartData}
-          margin={{ top: 20, right: 30, left: 60, bottom: 60 }}
+          margin={{ top: 20, right: 10, left: 0, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
           {/* Background for Paradise (first half) */}
@@ -377,7 +377,7 @@ function ArcLengthChart({
             label={{
               value: 'Saga',
               position: 'insideBottom',
-              offset: -10,
+              offset: 0,
               style: {
                 fontSize: 14,
                 fill: CHART_COLORS.gray500,

@@ -91,7 +91,7 @@ export function AppearancesSection({
           <ResponsiveContainer width="100%" height={400}>
             <BarChart
               data={insights.arcIntroRate}
-              margin={{ top: 5, right: 30, left: 20, bottom: 80 }}
+              margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
               <XAxis
@@ -168,7 +168,7 @@ export function AppearancesSection({
           <ResponsiveContainer width="100%" height={400}>
             <BarChart
               data={insights.sagaIntroRate}
-              margin={{ top: 5, right: 30, left: 20, bottom: 80 }}
+              margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
               <XAxis

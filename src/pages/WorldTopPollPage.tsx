@@ -26,6 +26,8 @@ import EmptyState from '../components/common/EmptyState'
 import StatCard from '../components/common/StatCard'
 import { ChartCard } from '../components/common/ChartCard'
 import { CHART_COLORS } from '../constants/chartColors'
+import { useIsNarrow } from '../hooks/useIsNarrow'
+import { truncateLabel } from '../utils/chartLabels'
 
 interface PollRow extends CharacterPollEntry {
   displayName: string
@@ -62,6 +64,7 @@ const MOVER_SCOPE = 200
 const MOVER_COUNT = 8
 
 function WorldTopPollPage() {
+  const narrow = useIsNarrow()
   const [pollId, setPollId] = useState(LATEST_POLL_ID)
   const [search, setSearch] = useState('')
   const [matchFilter, setMatchFilter] = useState<MatchFilter>('all')
@@ -409,7 +412,12 @@ function WorldTopPollPage() {
                   <BarChart
                     data={votesChartData}
                     layout="vertical"
-                    margin={{ top: 8, right: 72, bottom: 8, left: 8 }}
+                    margin={{
+                      top: 8,
+                      right: narrow ? 40 : 72,
+                      bottom: 8,
+                      left: 0,
+                    }}
                   >
                     <CartesianGrid
                       strokeDasharray="3 3"
@@ -420,7 +428,10 @@ function WorldTopPollPage() {
                     <YAxis
                       type="category"
                       dataKey="name"
-                      width={190}
+                      width={narrow ? 100 : 190}
+                      tickFormatter={(v: string) =>
+                        narrow ? truncateLabel(v, 14) : v
+                      }
                       tick={{ fontSize: 12, fill: CHART_COLORS.gray600 }}
                     />
                     <Tooltip
@@ -438,7 +449,9 @@ function WorldTopPollPage() {
                         dataKey="votes"
                         position="right"
                         formatter={(v: unknown) =>
-                          Number(v).toLocaleString('en-US')
+                          Number(v).toLocaleString('en-US', {
+                            notation: narrow ? 'compact' : 'standard',
+                          })
                         }
                         style={{ fontSize: 11, fill: CHART_COLORS.gray600 }}
                       />

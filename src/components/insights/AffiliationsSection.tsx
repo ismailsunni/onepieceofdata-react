@@ -15,6 +15,8 @@ import type {
   CrewLoyalty,
 } from '../../services/analytics/insightsAnalytics'
 import { CHART_COLORS } from '../../constants/chartColors'
+import { useIsNarrow } from '../../hooks/useIsNarrow'
+import { truncateLabel } from '../../utils/chartLabels'
 
 interface AffiliationsSectionProps {
   largestGroups: GroupSize[]
@@ -25,6 +27,7 @@ export function AffiliationsSection({
   largestGroups,
   crewLoyalty,
 }: AffiliationsSectionProps) {
+  const narrow = useIsNarrow()
   return (
     <>
       {/* ─── SECTION: Affiliations ─── */}
@@ -39,11 +42,11 @@ export function AffiliationsSection({
           chartId="largest-groups"
           embedPath="/embed/insights/largest-groups"
         >
-          <ResponsiveContainer width="100%" height={600}>
+          <ResponsiveContainer width="100%" height={narrow ? 760 : 600}>
             <BarChart
               data={largestGroups}
               layout="vertical"
-              margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
+              margin={{ top: 5, right: narrow ? 10 : 30, left: 5, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
               <XAxis
@@ -54,7 +57,10 @@ export function AffiliationsSection({
               <YAxis
                 dataKey="groupName"
                 type="category"
-                width={150}
+                width={narrow ? 100 : 150}
+                tickFormatter={(v: string) =>
+                  narrow ? truncateLabel(v, 16) : v
+                }
                 tick={{ fontSize: 9 }}
                 stroke={CHART_COLORS.axis}
               />
@@ -94,11 +100,11 @@ export function AffiliationsSection({
           chartId="crew-loyalty"
           embedPath="/embed/insights/crew-loyalty"
         >
-          <ResponsiveContainer width="100%" height={500}>
+          <ResponsiveContainer width="100%" height={narrow ? 640 : 500}>
             <BarChart
               data={crewLoyalty}
               layout="vertical"
-              margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
+              margin={{ top: 5, right: narrow ? 10 : 30, left: 5, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
               <XAxis
@@ -109,7 +115,10 @@ export function AffiliationsSection({
               <YAxis
                 dataKey="groupName"
                 type="category"
-                width={150}
+                width={narrow ? 100 : 150}
+                tickFormatter={(v: string) =>
+                  narrow ? truncateLabel(v, 16) : v
+                }
                 tick={{ fontSize: 9 }}
                 stroke={CHART_COLORS.axis}
               />

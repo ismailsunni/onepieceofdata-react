@@ -15,12 +15,14 @@ import {
   BOUNTY_TIER_LABELS,
 } from '../../services/analyticsService'
 import { CHART_COLORS } from '../../constants/chartColors'
+import { useIsNarrow } from '../../hooks/useIsNarrow'
 
 interface BloodTypeBountySectionProps {
   data: BloodTypeBountyTierData[]
 }
 
 export function BloodTypeBountySection({ data }: BloodTypeBountySectionProps) {
+  const narrow = useIsNarrow()
   const [showPct, setShowPct] = useState(true)
 
   const pctData = useMemo(
@@ -67,7 +69,7 @@ export function BloodTypeBountySection({ data }: BloodTypeBountySectionProps) {
             {showPct ? 'Show counts' : 'Show %'}
           </button>
         </div>
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={narrow ? 380 : 300}>
           <BarChart
             data={showPct ? pctData : data}
             layout="vertical"

@@ -345,7 +345,7 @@ export function PublicationRateSection() {
         <ResponsiveContainer width="100%" height={400}>
           <BarChart
             data={yearlyStats}
-            margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+            margin={{ top: 20, right: 10, left: 0, bottom: 5 }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
             <XAxis
