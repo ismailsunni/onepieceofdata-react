@@ -22,6 +22,8 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { CHART_COLORS } from '../../constants/chartColors'
+import { useIsNarrow } from '../../hooks/useIsNarrow'
+import { truncateLabel } from '../../utils/chartLabels'
 
 interface MatrixCharacter {
   id: string
@@ -54,6 +56,7 @@ interface AppearanceChartsSectionProps {
 export function AppearanceChartsSection({
   mostLoyal,
 }: AppearanceChartsSectionProps) {
+  const narrow = useIsNarrow()
   const { data: timeSkipData, isLoading: timeSkipLoading } = useQuery({
     queryKey: ['analytics', 'time-skip-distribution'],
     queryFn: fetchTimeSkipDistribution,
@@ -235,7 +238,12 @@ export function AppearanceChartsSection({
               <BarChart
                 data={mostLoyal}
                 layout="vertical"
-                margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
+                margin={{
+                  top: 5,
+                  right: narrow ? 10 : 30,
+                  left: 5,
+                  bottom: 5,
+                }}
               >
                 <CartesianGrid
                   strokeDasharray="3 3"
@@ -255,7 +263,10 @@ export function AppearanceChartsSection({
                 <YAxis
                   dataKey="name"
                   type="category"
-                  width={110}
+                  width={narrow ? 90 : 110}
+                  tickFormatter={(v: string) =>
+                    narrow ? truncateLabel(v, 13) : v
+                  }
                   tick={{ fontSize: 10 }}
                   stroke={CHART_COLORS.axis}
                 />

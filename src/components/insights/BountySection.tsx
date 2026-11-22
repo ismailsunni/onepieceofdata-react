@@ -23,6 +23,8 @@ import {
 import { formatBounty, bountyJumpColumns } from './constants'
 import { SectionTitle } from './SectionTitle'
 import { CHART_COLORS } from '../../constants/chartColors'
+import { useIsNarrow } from '../../hooks/useIsNarrow'
+import { truncateLabel } from '../../utils/chartLabels'
 
 export interface BountySectionProps {
   insights: {
@@ -46,6 +48,7 @@ export function BountySection({
   regionBountyTierCount,
   regionBountyTierPct,
 }: BountySectionProps) {
+  const narrow = useIsNarrow()
   return (
     <>
       {/* ─── SECTION: Bounty Deep Dives ─── */}
@@ -224,7 +227,7 @@ export function BountySection({
                 bountyTierPercent ? regionBountyTierPct : regionBountyTierCount
               }
               layout="vertical"
-              margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
+              margin={{ top: 5, right: narrow ? 10 : 30, left: 5, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
               <XAxis
@@ -238,7 +241,10 @@ export function BountySection({
               <YAxis
                 dataKey="region"
                 type="category"
-                width={90}
+                width={narrow ? 80 : 90}
+                tickFormatter={(v: string) =>
+                  narrow ? truncateLabel(v, 12) : v
+                }
                 tick={{ fontSize: 10 }}
                 stroke={CHART_COLORS.axis}
               />

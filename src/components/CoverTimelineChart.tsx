@@ -16,6 +16,8 @@ import { supabase } from '../services/supabase'
 import { fetchDatabaseStats } from '../services/statsService'
 import type { Saga } from '../types/arc'
 import { CHART_COLORS } from '../constants/chartColors'
+import { useIsNarrow } from '../hooks/useIsNarrow'
+import { truncateLabel } from '../utils/chartLabels'
 
 interface CoverTimelineChartProps {
   characters: Character[]
@@ -133,7 +135,7 @@ const CustomTooltip = ({ active, payload }: TooltipProps) => {
   return null
 }
 
-const CustomYAxisTick = (characterNames: string[]) => {
+const CustomYAxisTick = (characterNames: string[], maxChars: number) => {
   return ({ x, y, payload }: AxisTickProps) => {
     if (!payload) return null
     return (
@@ -147,7 +149,7 @@ const CustomYAxisTick = (characterNames: string[]) => {
           fontSize={12}
           className="truncate"
         >
-          {characterNames[payload.value]}
+          {truncateLabel(characterNames[payload.value] ?? '', maxChars)}
         </text>
       </g>
     )
@@ -155,6 +157,7 @@ const CustomYAxisTick = (characterNames: string[]) => {
 }
 
 const CoverTimelineChart = memo(({ characters }: CoverTimelineChartProps) => {
+  const narrow = useIsNarrow()
   const { data: sagas = [] } = useQuery({
     queryKey: ['saga-timeline-chart'],
     queryFn: fetchSagasForChart,
@@ -225,8 +228,8 @@ const CoverTimelineChart = memo(({ characters }: CoverTimelineChartProps) => {
   }, [dbStats?.volumes, characters])
 
   const yAxisTick = useMemo(
-    () => CustomYAxisTick(characterNames),
-    [characterNames]
+    () => CustomYAxisTick(characterNames, narrow ? 11 : 40),
+    [characterNames, narrow]
   )
 
   const hasData = chartData.length > 0
@@ -247,9 +250,9 @@ const CoverTimelineChart = memo(({ characters }: CoverTimelineChartProps) => {
             <ScatterChart
               margin={{
                 top: 20,
-                right: 20,
-                bottom: 60,
-                left: 120,
+                right: narrow ? 10 : 20,
+                bottom: 20,
+                left: narrow ? 30 : 120,
               }}
             >
               {/* Saga background bands (mapped to volume ranges) */}

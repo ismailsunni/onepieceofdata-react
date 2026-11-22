@@ -17,6 +17,8 @@ import type {
   AgeStatusBucket,
 } from '../../services/analytics/insightsAnalytics'
 import { CHART_COLORS } from '../../constants/chartColors'
+import { useIsNarrow } from '../../hooks/useIsNarrow'
+import { truncateLabel } from '../../utils/chartLabels'
 
 interface DemographicsSectionProps {
   bloodType: BloodTypeDistribution[]
@@ -138,6 +140,7 @@ interface OriginRegionBubbleProps {
 }
 
 export function OriginRegionBubble({ regionCounts }: OriginRegionBubbleProps) {
+  const narrow = useIsNarrow()
   return (
     <div className="mb-6">
       <ChartCard
@@ -151,7 +154,7 @@ export function OriginRegionBubble({ regionCounts }: OriginRegionBubbleProps) {
           <BarChart
             data={regionCounts.slice(0, 15)}
             layout="vertical"
-            margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
+            margin={{ top: 5, right: narrow ? 10 : 30, left: 5, bottom: 5 }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
             <XAxis
@@ -162,7 +165,8 @@ export function OriginRegionBubble({ regionCounts }: OriginRegionBubbleProps) {
             <YAxis
               dataKey="region"
               type="category"
-              width={120}
+              width={narrow ? 90 : 120}
+              tickFormatter={(v: string) => (narrow ? truncateLabel(v, 14) : v)}
               tick={{ fontSize: 10 }}
               stroke={CHART_COLORS.axis}
             />

@@ -12,6 +12,8 @@ import {
 import { TopBounty } from '../services/analyticsService'
 import { ChartCard } from './common/ChartCard'
 import { CHART_COLORS } from '../constants/chartColors'
+import { useIsNarrow } from '../hooks/useIsNarrow'
+import { truncateLabel } from '../utils/chartLabels'
 
 interface TopBountiesChartProps {
   dataAll: TopBounty[]
@@ -28,6 +30,7 @@ const getStatusColor = (status: string | null): string => {
 
 function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
   const [showAliveOnly, setShowAliveOnly] = useState(false)
+  const narrow = useIsNarrow()
   const data = showAliveOnly ? dataAlive : dataAll
 
   // Format bounty for display
@@ -98,7 +101,7 @@ function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
         <BarChart
           data={data}
           layout="vertical"
-          margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
+          margin={{ top: 5, right: narrow ? 10 : 30, left: 5, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
           <XAxis
@@ -110,10 +113,11 @@ function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
           <YAxis
             dataKey="name"
             type="category"
-            width={200}
+            width={narrow ? 100 : 200}
             tick={{ fontSize: 11 }}
             stroke={CHART_COLORS.axis}
             tickFormatter={(name: string) => {
+              if (narrow) return truncateLabel(name, 15)
               const c = data.find((d) => d.name === name)
               const parts = [c?.origin_region, c?.blood_type_group]
                 .filter(Boolean)
