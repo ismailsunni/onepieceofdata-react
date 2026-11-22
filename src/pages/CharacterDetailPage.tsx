@@ -1,5 +1,4 @@
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { logger } from '../utils/logger'
 import { useQuery } from '@tanstack/react-query'
 import { useState, useCallback } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -23,69 +22,14 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { supabase } from '../services/supabase'
-import { Character } from '../types/character'
-import { fetchArcs } from '../services/arcService'
+import { characterQueries } from '../queries/character'
+import { arcsQuery, sagasQuery } from '../queries/reference'
 import { Arc, Saga } from '../types/arc'
-import { fetchAffiliationsByCharacter } from '../services/affiliationService'
 import { CharacterRelationships } from '../components/analytics/CharacterRelationships'
 import { CharacterAffiliation } from '../types/affiliation'
-import { fetchOccupationsByCharacter } from '../services/occupationService'
 import { CharacterOccupation } from '../types/occupation'
-import { fetchDevilFruitsByCharacter } from '../services/devilFruitService'
-import { CharacterDevilFruit } from '../types/devilFruit'
 import { getCharacterImageUrl } from '../utils/characterImage'
 import { CHART_COLORS } from '../constants/chartColors'
-
-// Service function to fetch a single character by ID
-async function fetchCharacterById(id: string): Promise<Character | null> {
-  try {
-    if (!supabase) {
-      logger.error('Supabase client is not initialized')
-      return null
-    }
-
-    const { data, error } = await supabase
-      .from('character')
-      .select('*')
-      .eq('id', id)
-      .single()
-
-    if (error) {
-      logger.error('Error fetching character:', error)
-      return null
-    }
-
-    return data
-  } catch (error) {
-    logger.error('Error in fetchCharacterById:', error)
-    return null
-  }
-}
-
-// Service function to fetch all sagas
-async function fetchSagas(): Promise<Saga[]> {
-  try {
-    if (!supabase) {
-      logger.error('Supabase client is not initialized')
-      return []
-    }
-
-    const { data, error } = await supabase
-      .from('saga')
-      .select('*')
-      .order('start_chapter', { ascending: true })
-
-    if (error) {
-      logger.error('Error fetching sagas:', error)
-      return []
-    }
-
-    return data || []
-  } catch (error) {
-    logger.error('Error in fetchSagas:', error)
-    return []
-  }
-}
 
 // ===== REUSABLE COMPONENTS =====
 
@@ -200,43 +144,26 @@ function CharacterDetailPage() {
   const [copyLinkFeedback, setCopyLinkFeedback] = useState(false)
   const [showAllChapters, setShowAllChapters] = useState(false)
 
+  const q = characterQueries(id ?? '')
   const {
     data: character,
     isLoading,
     error,
-  } = useQuery({
-    queryKey: ['character', id],
-    queryFn: () => fetchCharacterById(id!),
-    enabled: !!id,
-  })
+  } = useQuery({ ...q.character, enabled: !!id })
 
-  // Fetch arcs and sagas for name mapping
-  const { data: arcs = [] } = useQuery({
-    queryKey: ['arcs'],
-    queryFn: fetchArcs,
-  })
-
-  const { data: sagas = [] } = useQuery({
-    queryKey: ['sagas'],
-    queryFn: fetchSagas,
-  })
-
+  // Arcs and sagas for name mapping
+  const { data: arcs = [] } = useQuery(arcsQuery)
+  const { data: sagas = [] } = useQuery(sagasQuery)
   const { data: occupations = [] } = useQuery({
-    queryKey: ['character-occupations', id],
-    queryFn: () => fetchOccupationsByCharacter(id!),
+    ...q.occupations,
     enabled: !!id,
-    staleTime: 10 * 60 * 1000,
   })
-
   const { data: affiliations = [] } = useQuery({
-    queryKey: ['character-affiliations', id],
-    queryFn: () => fetchAffiliationsByCharacter(id!),
+    ...q.affiliations,
     enabled: !!id,
   })
-
-  const { data: devilFruits = [] } = useQuery<CharacterDevilFruit[]>({
-    queryKey: ['character-devil-fruits', id],
-    queryFn: () => fetchDevilFruitsByCharacter(id!),
+  const { data: devilFruits = [] } = useQuery({
+    ...q.devilFruits,
     enabled: !!id,
   })
 
@@ -337,7 +264,7 @@ function CharacterDetailPage() {
   const formatBounty = (bounty: number | null) => {
     if (!bounty) return 'Unknown'
     if (bounty === 0) return 'None'
-    return `₿${bounty.toLocaleString()}`
+    return `₿${bounty.toLocaleString('en-US')}`
   }
 
   // Format bounty history
@@ -369,7 +296,7 @@ function CharacterDetailPage() {
       } else if (b >= 1000) {
         return `₿${(b / 1000).toFixed(0)}K`
       } else {
-        return `₿${b.toLocaleString()}`
+        return `₿${b.toLocaleString('en-US')}`
       }
     })
   }
@@ -383,7 +310,7 @@ function CharacterDetailPage() {
     } else if (bounty >= 1000) {
       return `₿${(bounty / 1000).toFixed(0)}K`
     } else {
-      return `₿${bounty.toLocaleString()}`
+      return `₿${bounty.toLocaleString('en-US')}`
     }
   }
 
@@ -485,8 +412,8 @@ function CharacterDetailPage() {
         </nav>
 
         {/* Action Buttons Row */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => navigate('/characters')}
               className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg transition-colors shadow-sm"
@@ -1186,7 +1113,7 @@ function CharacterDetailPage() {
                                           />
                                           <Tooltip
                                             formatter={(value: number) => [
-                                              `₿${value.toLocaleString()}`,
+                                              `₿${value.toLocaleString('en-US')}`,
                                               'Bounty',
                                             ]}
                                             contentStyle={{

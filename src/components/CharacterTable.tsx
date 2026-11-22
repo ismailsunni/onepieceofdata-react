@@ -544,7 +544,7 @@ function CharacterTable({
         header: 'Bounty',
         cell: (info) => {
           const bounty = info.getValue()
-          return bounty ? `฿${bounty.toLocaleString()}` : '-'
+          return bounty ? `฿${bounty.toLocaleString('en-US')}` : '-'
         },
         filterFn: rangeFilter as never,
         meta: { filterType: 'range' } as ColumnFilterMeta,

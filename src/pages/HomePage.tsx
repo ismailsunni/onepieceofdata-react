@@ -77,7 +77,7 @@ async function fetchLatestRelease(): Promise<LatestRelease> {
 function formatDate(iso: string | null): string {
   if (!iso) return ''
   try {
-    return new Date(iso).toLocaleDateString(undefined, {
+    return new Date(iso).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -211,7 +211,7 @@ function HomePage() {
                     <div className="text-xl font-bold text-gray-900 tabular-nums min-h-[1.75rem] min-w-[3ch]">
                       {statsLoading
                         ? '…'
-                        : (stats?.chapters || 0).toLocaleString()}
+                        : (stats?.chapters || 0).toLocaleString('en-US')}
                     </div>
                   </Link>
                 </li>
@@ -223,7 +223,7 @@ function HomePage() {
                     <div className="text-xl font-bold text-gray-900 tabular-nums min-h-[1.75rem] min-w-[3ch]">
                       {statsLoading
                         ? '…'
-                        : (stats?.characters || 0).toLocaleString()}
+                        : (stats?.characters || 0).toLocaleString('en-US')}
                     </div>
                   </Link>
                 </li>
@@ -233,7 +233,9 @@ function HomePage() {
                       Arcs
                     </div>
                     <div className="text-xl font-bold text-gray-900 tabular-nums min-h-[1.75rem] min-w-[3ch]">
-                      {statsLoading ? '…' : (stats?.arcs || 0).toLocaleString()}
+                      {statsLoading
+                        ? '…'
+                        : (stats?.arcs || 0).toLocaleString('en-US')}
                     </div>
                   </Link>
                 </li>
@@ -245,7 +247,7 @@ function HomePage() {
                     <div className="text-xl font-bold text-gray-900 tabular-nums min-h-[1.75rem] min-w-[3ch]">
                       {statsLoading
                         ? '…'
-                        : (stats?.devilFruits || 0).toLocaleString()}
+                        : (stats?.devilFruits || 0).toLocaleString('en-US')}
                     </div>
                   </Link>
                 </li>
@@ -357,7 +359,7 @@ function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
               <div className="text-3xl font-bold text-amber-900">
-                {stats?.totalPages?.toLocaleString() ?? '—'}
+                {stats?.totalPages?.toLocaleString('en-US') ?? '—'}
               </div>
               <div className="text-sm text-amber-800 mt-1">
                 total pages of manga in the database

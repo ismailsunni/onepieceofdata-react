@@ -5,9 +5,10 @@ import { searchAll } from '../services/searchService'
 
 interface SearchProps {
   onNavigate?: () => void
+  autoFocus?: boolean
 }
 
-function Search({ onNavigate }: SearchProps = {}) {
+function Search({ onNavigate, autoFocus }: SearchProps = {}) {
   const [query, setQuery] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const [debouncedQuery, setDebouncedQuery] = useState('')
@@ -39,7 +40,10 @@ function Search({ onNavigate }: SearchProps = {}) {
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false)
       }
     }
@@ -55,19 +59,20 @@ function Search({ onNavigate }: SearchProps = {}) {
     onNavigate?.()
   }
 
-  const hasResults = results && (
-    results.characters.length > 0 ||
-    results.arcs.length > 0 ||
-    results.sagas.length > 0 ||
-    results.chapters.length > 0 ||
-    results.volumes.length > 0
-  )
+  const hasResults =
+    results &&
+    (results.characters.length > 0 ||
+      results.arcs.length > 0 ||
+      results.sagas.length > 0 ||
+      results.chapters.length > 0 ||
+      results.volumes.length > 0)
 
   return (
     <div ref={searchRef} className="relative w-full md:w-64 lg:w-80">
       <div className="relative">
         <input
           type="text"
+          autoFocus={autoFocus}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => {
@@ -100,7 +105,12 @@ function Search({ onNavigate }: SearchProps = {}) {
             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
             aria-label="Clear search"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -193,7 +203,11 @@ function Search({ onNavigate }: SearchProps = {}) {
                   <span className="text-lg">📖</span>
                   <div>
                     <div>Volume {volume.number}</div>
-                    {volume.title && <div className="text-xs text-gray-500">{volume.title}</div>}
+                    {volume.title && (
+                      <div className="text-xs text-gray-500">
+                        {volume.title}
+                      </div>
+                    )}
                   </div>
                 </button>
               ))}
@@ -215,7 +229,11 @@ function Search({ onNavigate }: SearchProps = {}) {
                   <span className="text-lg">📚</span>
                   <div>
                     <div>Chapter {chapter.number}</div>
-                    {chapter.title && <div className="text-xs text-gray-500">{chapter.title}</div>}
+                    {chapter.title && (
+                      <div className="text-xs text-gray-500">
+                        {chapter.title}
+                      </div>
+                    )}
                   </div>
                 </button>
               ))}

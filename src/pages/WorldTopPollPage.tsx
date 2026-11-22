@@ -289,7 +289,7 @@ function WorldTopPollPage() {
           <span className="text-gray-400">—</span>
         ) : (
           <span className="font-semibold text-gray-900">
-            {row.points.toLocaleString()}
+            {row.points.toLocaleString('en-US')}
           </span>
         ),
     },
@@ -368,19 +368,19 @@ function WorldTopPollPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               <StatCard
                 label="Ranked entries"
-                value={stats.total.toLocaleString()}
+                value={stats.total.toLocaleString('en-US')}
                 color="blue"
                 subtitle={`${edition?.shortLabel} edition`}
               />
               <StatCard
                 label="Votes for #1"
-                value={stats.topVotes.toLocaleString()}
+                value={stats.topVotes.toLocaleString('en-US')}
                 color="amber"
                 subtitle={`Vote counts published for the top ${edition?.pointsUpTo}`}
               />
               <StatCard
                 label="Matched to characters"
-                value={stats.linked.toLocaleString()}
+                value={stats.linked.toLocaleString('en-US')}
                 color="emerald"
                 subtitle={`${stats.unlinked} unmatched (ships, animals, groups)`}
               />
@@ -424,7 +424,10 @@ function WorldTopPollPage() {
                       tick={{ fontSize: 12, fill: CHART_COLORS.gray600 }}
                     />
                     <Tooltip
-                      formatter={(v: number) => [v.toLocaleString(), 'Votes']}
+                      formatter={(v: number) => [
+                        v.toLocaleString('en-US'),
+                        'Votes',
+                      ]}
                     />
                     <Bar
                       dataKey="votes"
@@ -434,7 +437,9 @@ function WorldTopPollPage() {
                       <LabelList
                         dataKey="votes"
                         position="right"
-                        formatter={(v: unknown) => Number(v).toLocaleString()}
+                        formatter={(v: unknown) =>
+                          Number(v).toLocaleString('en-US')
+                        }
                         style={{ fontSize: 11, fill: CHART_COLORS.gray600 }}
                       />
                     </Bar>
@@ -467,8 +472,8 @@ function WorldTopPollPage() {
                 className="w-full sm:w-80 px-4 py-2.5 bg-white border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               />
               <span className="text-sm text-gray-600">
-                {filtered.length.toLocaleString()} of{' '}
-                {stats.total.toLocaleString()} entries
+                {filtered.length.toLocaleString('en-US')} of{' '}
+                {stats.total.toLocaleString('en-US')} entries
               </span>
               <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
                 <input

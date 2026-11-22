@@ -76,7 +76,7 @@ export function RegionBountySection() {
     if (value >= 1000000000) return `${(value / 1000000000).toFixed(1)}B`
     if (value >= 1000000) return `${(value / 1000000).toFixed(0)}M`
     if (value >= 1000) return `${(value / 1000).toFixed(0)}K`
-    return value.toLocaleString()
+    return value.toLocaleString('en-US')
   }
 
   const renderSortIcon = (column: SortKey) => {
@@ -269,16 +269,16 @@ export function RegionBountySection() {
                     {region.characterCount}
                   </td>
                   <td className="py-3 px-3 text-right font-medium text-amber-600">
-                    ฿{region.totalBounty.toLocaleString()}
+                    ฿{region.totalBounty.toLocaleString('en-US')}
                   </td>
                   <td className="py-3 px-3 text-right font-medium text-purple-600">
-                    ฿{region.averageBounty.toLocaleString()}
+                    ฿{region.averageBounty.toLocaleString('en-US')}
                   </td>
                   <td className="py-3 px-3 text-right font-medium text-blue-600">
-                    ฿{region.medianBounty.toLocaleString()}
+                    ฿{region.medianBounty.toLocaleString('en-US')}
                   </td>
                   <td className="py-3 px-3 text-right font-medium text-emerald-600">
-                    ฿{region.avgTopN.toLocaleString()}
+                    ฿{region.avgTopN.toLocaleString('en-US')}
                   </td>
                   <td className="py-3 px-3 text-gray-700">
                     <div className="flex flex-wrap gap-1">

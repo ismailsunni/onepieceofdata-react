@@ -78,12 +78,9 @@ export function ChartCard({
       {/* Header */}
       <div className="mb-4">
         <div className="flex items-start justify-between mb-2">
-          <div className="flex-1">
-            <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
-            {description && (
-              <p className="text-sm text-gray-600 mt-1">{description}</p>
-            )}
-          </div>
+          <h2 className="flex-1 text-xl font-semibold text-gray-900">
+            {title}
+          </h2>
 
           {/* Actions area */}
           <div className="flex items-center gap-2 ml-4">
@@ -252,6 +249,8 @@ export function ChartCard({
             ) : null}
           </div>
         </div>
+        {/* Full width below the title row, not squeezed beside the actions */}
+        {description && <p className="text-sm text-gray-600">{description}</p>}
 
         {filters && (
           <div className="mt-3 pt-3 border-t border-gray-200">{filters}</div>

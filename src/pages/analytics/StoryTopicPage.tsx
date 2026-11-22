@@ -1,6 +1,7 @@
 import { useMemo, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import SectionLoader from '../../components/common/SectionLoader'
 import {
   fetchInsightsRawData,
   computePagesPerArc,
@@ -30,7 +31,7 @@ function StoryTopicPage() {
     }
   }, [location])
 
-  const { data: raw, isLoading } = useQuery({
+  const { data: raw } = useQuery({
     queryKey: ['insights-raw-data'],
     queryFn: fetchInsightsRawData,
     staleTime: 10 * 60 * 1000,
@@ -49,18 +50,6 @@ function StoryTopicPage() {
       ),
     }
   }, [raw])
-
-  if (isLoading) {
-    return (
-      <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-        <div className="flex justify-center items-center py-32">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600"></div>
-        </div>
-      </main>
-    )
-  }
-
-  if (!insights) return null
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
@@ -122,20 +111,26 @@ function StoryTopicPage() {
           </div>
         </div>
 
-        {/* Section 1: Story Structure */}
-        <SectionTitle title="Story Structure" />
+        {insights ? (
+          <>
+            {/* Section 1: Story Structure */}
+            <SectionTitle title="Story Structure" />
 
-        <ArcLengthSection pagesPerArc={insights.pagesPerArc} />
+            <ArcLengthSection pagesPerArc={insights.pagesPerArc} />
 
-        <StorySection
-          sagaPacing={insights.sagaPacing}
-          chapterComplexity={insights.chapterComplexity}
-        />
+            <StorySection
+              sagaPacing={insights.sagaPacing}
+              chapterComplexity={insights.chapterComplexity}
+            />
 
-        {/* Section 2: Publication Cadence */}
-        <SectionTitle title="Publication Cadence" />
+            {/* Section 2: Publication Cadence */}
+            <SectionTitle title="Publication Cadence" />
 
-        <PublicationRateSection />
+            <PublicationRateSection />
+          </>
+        ) : (
+          <SectionLoader />
+        )}
       </div>
     </main>
   )

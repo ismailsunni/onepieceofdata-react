@@ -131,7 +131,7 @@ export async function fetchDatabaseStats(): Promise<DatabaseStats> {
       const diffInMs = endDate.getTime() - startDate.getTime()
       const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24))
 
-      publicationSpan = diffInDays.toLocaleString()
+      publicationSpan = diffInDays.toLocaleString('en-US')
     }
 
     return {

@@ -57,6 +57,7 @@ function ChapterTable({
           if (!date) return '-'
           // Format date as YYYY-MM-DD or use locale formatting
           return new Date(date).toLocaleDateString('en-US', {
+            timeZone: 'UTC',
             year: 'numeric',
             month: 'short',
             day: 'numeric',

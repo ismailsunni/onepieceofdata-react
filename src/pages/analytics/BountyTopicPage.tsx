@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import SectionLoader from '../../components/common/SectionLoader'
 import {
   fetchInsightsRawData,
   computeBountyVsAppearance,
@@ -35,7 +36,7 @@ function BountyTopicPage() {
   const [hideStrawHats, setHideStrawHats] = useState(true)
   const [bountyTierPercent, setBountyTierPercent] = useState(true)
 
-  const { data: raw, isLoading } = useQuery({
+  const { data: raw } = useQuery({
     queryKey: ['insights-raw-data'],
     queryFn: fetchInsightsRawData,
     staleTime: 10 * 60 * 1000,
@@ -80,18 +81,6 @@ function BountyTopicPage() {
       }),
     [regionBountyTierCount]
   )
-
-  if (isLoading) {
-    return (
-      <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-        <div className="flex justify-center items-center py-32">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-amber-600"></div>
-        </div>
-      </main>
-    )
-  }
-
-  if (!insights) return null
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
@@ -152,23 +141,29 @@ function BountyTopicPage() {
           </div>
         </div>
 
-        <BountyStatsSection />
+        {insights ? (
+          <>
+            <BountyStatsSection />
 
-        <BountySection
-          insights={insights}
-          hideStrawHats={hideStrawHats}
-          onToggleHideStrawHats={() => setHideStrawHats((v) => !v)}
-          bountyTierPercent={bountyTierPercent}
-          onToggleBountyTierPercent={() => setBountyTierPercent((v) => !v)}
-          regionBountyTierCount={regionBountyTierCount}
-          regionBountyTierPct={regionBountyTierPct}
-        />
+            <BountySection
+              insights={insights}
+              hideStrawHats={hideStrawHats}
+              onToggleHideStrawHats={() => setHideStrawHats((v) => !v)}
+              bountyTierPercent={bountyTierPercent}
+              onToggleBountyTierPercent={() => setBountyTierPercent((v) => !v)}
+              regionBountyTierCount={regionBountyTierCount}
+              regionBountyTierPct={regionBountyTierPct}
+            />
 
-        <BloodTypeBountySection data={insights.bloodTypeBountyTier} />
+            <BloodTypeBountySection data={insights.bloodTypeBountyTier} />
 
-        <BloodTypeBountyBreakdownSection />
+            <BloodTypeBountyBreakdownSection />
 
-        <RegionBountySection />
+            <RegionBountySection />
+          </>
+        ) : (
+          <SectionLoader />
+        )}
       </div>
     </main>
   )

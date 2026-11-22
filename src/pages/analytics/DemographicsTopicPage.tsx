@@ -1,6 +1,7 @@
 import { useMemo, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import SectionLoader from '../../components/common/SectionLoader'
 import {
   fetchInsightsRawData,
   computeBloodTypeDistribution,
@@ -33,7 +34,7 @@ function DemographicsTopicPage() {
     }
   }, [location])
 
-  const { data: raw, isLoading } = useQuery({
+  const { data: raw } = useQuery({
     queryKey: ['insights-raw-data'],
     queryFn: fetchInsightsRawData,
     staleTime: 10 * 60 * 1000,
@@ -48,18 +49,6 @@ function DemographicsTopicPage() {
       ageDistribution: computeAgeDistribution(characters),
     }
   }, [raw])
-
-  if (isLoading) {
-    return (
-      <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-        <div className="flex justify-center items-center py-32">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-pink-600"></div>
-        </div>
-      </main>
-    )
-  }
-
-  if (!insights) return null
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
@@ -122,25 +111,31 @@ function DemographicsTopicPage() {
           </div>
         </div>
 
-        {/* Section 1: Who They Are */}
-        <SectionTitle title="Who They Are" />
+        {insights ? (
+          <>
+            {/* Section 1: Who They Are */}
+            <SectionTitle title="Who They Are" />
 
-        <DemographicsSection
-          bloodType={insights.bloodType}
-          ageDistribution={insights.ageDistribution}
-        />
+            <DemographicsSection
+              bloodType={insights.bloodType}
+              ageDistribution={insights.ageDistribution}
+            />
 
-        {/* Section 2: Where & When */}
-        <SectionTitle title="Where & When" />
+            {/* Section 2: Where & When */}
+            <SectionTitle title="Where & When" />
 
-        <OriginRegionBubble regionCounts={insights.regionCounts} />
+            <OriginRegionBubble regionCounts={insights.regionCounts} />
 
-        <BirthdayCalendarSection />
+            <BirthdayCalendarSection />
 
-        {/* Section 3: Age vs Bounty */}
-        <SectionTitle title="Age & Power" />
+            {/* Section 3: Age vs Bounty */}
+            <SectionTitle title="Age & Power" />
 
-        <AgeBountyScatterSection />
+            <AgeBountyScatterSection />
+          </>
+        ) : (
+          <SectionLoader />
+        )}
       </div>
     </main>
   )

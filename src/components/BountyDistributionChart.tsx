@@ -35,9 +35,9 @@ function BountyDistributionChart({
         </p>
         {stats && (
           <p className="text-sm text-gray-500 mt-2">
-            {stats.charactersWithBounty.toLocaleString()} of{' '}
-            {stats.totalCharacters.toLocaleString()} characters have a bounty (
-            {stats.percentage}%)
+            {stats.charactersWithBounty.toLocaleString('en-US')} of{' '}
+            {stats.totalCharacters.toLocaleString('en-US')} characters have a
+            bounty ({stats.percentage}%)
           </p>
         )}
       </div>
@@ -97,7 +97,7 @@ function BountyDistributionChart({
           />
           <Legend
             verticalAlign="top"
-            height={36}
+            wrapperStyle={{ paddingBottom: 8 }}
             formatter={(value) =>
               value === 'alive' ? 'Alive' : 'Deceased/Unknown'
             }

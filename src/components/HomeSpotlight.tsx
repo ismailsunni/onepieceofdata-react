@@ -147,7 +147,7 @@ function formatBounty(bounty: number | null): string {
   if (!bounty) return '—'
   if (bounty >= 1_000_000_000) return `฿${(bounty / 1_000_000_000).toFixed(2)}B`
   if (bounty >= 1_000_000) return `฿${(bounty / 1_000_000).toFixed(0)}M`
-  return `฿${bounty.toLocaleString()}`
+  return `฿${bounty.toLocaleString('en-US')}`
 }
 
 function CharacterAvatar({ id, name }: { id: string; name: string | null }) {
@@ -221,12 +221,12 @@ function ChapterBreakRowItem({
   rank: number
   metricLabel: string
 }) {
-  const fromDate = new Date(b.fromDate).toLocaleDateString(undefined, {
+  const fromDate = new Date(b.fromDate).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
   })
-  const toDate = new Date(b.toDate).toLocaleDateString(undefined, {
+  const toDate = new Date(b.toDate).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -254,7 +254,7 @@ function ChapterBreakRowItem({
       </div>
       <div className="text-right shrink-0">
         <div className="text-sm font-semibold text-gray-900">
-          {b.days.toLocaleString()}
+          {b.days.toLocaleString('en-US')}
         </div>
         <div className="text-xs text-gray-500">{metricLabel}</div>
       </div>
@@ -635,7 +635,7 @@ function HomeSpotlight() {
                 key={c.id}
                 c={c}
                 rank={i + 1}
-                metric={(c.appearance_count ?? 0).toLocaleString()}
+                metric={(c.appearance_count ?? 0).toLocaleString('en-US')}
                 metricLabel={ranking.metricLabel}
               />
             ))}
@@ -663,7 +663,7 @@ function HomeSpotlight() {
                 key={c.id}
                 c={c}
                 rank={i + 1}
-                metric={(c.cover_appearance_count ?? 0).toLocaleString()}
+                metric={(c.cover_appearance_count ?? 0).toLocaleString('en-US')}
                 metricLabel={ranking.metricLabel}
               />
             ))}
@@ -677,7 +677,7 @@ function HomeSpotlight() {
                 key={c.id}
                 c={c}
                 rank={i + 1}
-                metric={(c.appearance_count ?? 0).toLocaleString()}
+                metric={(c.appearance_count ?? 0).toLocaleString('en-US')}
                 metricLabel={ranking.metricLabel}
               />
             ))}
@@ -691,7 +691,7 @@ function HomeSpotlight() {
                 key={c.id}
                 c={c}
                 rank={i + 1}
-                metric={(c.cover_appearance_count ?? 0).toLocaleString()}
+                metric={(c.cover_appearance_count ?? 0).toLocaleString('en-US')}
                 metricLabel={ranking.metricLabel}
               />
             ))}
@@ -705,7 +705,7 @@ function HomeSpotlight() {
                 key={c.id}
                 c={c}
                 rank={i + 1}
-                metric={c.sagaCount.toLocaleString()}
+                metric={c.sagaCount.toLocaleString('en-US')}
                 metricLabel={ranking.metricLabel}
               />
             ))}
@@ -719,9 +719,9 @@ function HomeSpotlight() {
                 key={c.id}
                 c={c}
                 rank={i + 1}
-                metric={c.gapLength.toLocaleString()}
+                metric={c.gapLength.toLocaleString('en-US')}
                 metricLabel={ranking.metricLabel}
-                subtitle={`Ch. ${c.gapStart} → ${c.gapEnd} · ${(c.appearance_count ?? 0).toLocaleString()} total apps`}
+                subtitle={`Ch. ${c.gapStart} → ${c.gapEnd} · ${(c.appearance_count ?? 0).toLocaleString('en-US')} total apps`}
               />
             ))}
           </div>

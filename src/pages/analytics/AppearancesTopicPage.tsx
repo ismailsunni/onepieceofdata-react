@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import SectionLoader from '../../components/common/SectionLoader'
 import {
   fetchInsightsRawData,
   computeMostLoyal,
@@ -44,7 +45,7 @@ function AppearancesTopicPage() {
   >('both')
   const [wondersMode, setWondersMode] = useState<'arc' | 'saga'>('arc')
 
-  const { data: raw, isLoading } = useQuery({
+  const { data: raw } = useQuery({
     queryKey: ['insights-raw-data'],
     queryFn: fetchInsightsRawData,
     staleTime: 10 * 60 * 1000,
@@ -75,18 +76,6 @@ function AppearancesTopicPage() {
         : [],
     [raw, minChapters]
   )
-
-  if (isLoading) {
-    return (
-      <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-        <div className="flex justify-center items-center py-32">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-emerald-600"></div>
-        </div>
-      </main>
-    )
-  }
-
-  if (!insights) return null
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
@@ -149,109 +138,115 @@ function AppearancesTopicPage() {
           </div>
         </div>
 
-        {/* Section 1: Overview & Loyalty */}
-        <AppearanceChartsSection mostLoyal={insights.mostLoyal} />
+        {insights ? (
+          <>
+            {/* Section 1: Overview & Loyalty */}
+            <AppearanceChartsSection mostLoyal={insights.mostLoyal} />
 
-        {/* Section 2: Introduction Cadence */}
-        <AppearancesSection
-          insights={{
-            arcIntroRate: insights.arcIntroRate,
-            sagaIntroRate: insights.sagaIntroRate,
-          }}
-          minChapters={minChapters}
-          setMinChapters={setMinChapters}
-          arcCharMode={arcCharMode}
-          setArcCharMode={setArcCharMode}
-          sagaCharMode={sagaCharMode}
-          setSagaCharMode={setSagaCharMode}
-          wondersMode={wondersMode}
-          setWondersMode={setWondersMode}
-          arcCountDist={arcCountDist}
-          sagaCountDist={sagaCountDist}
-        />
+            {/* Section 2: Introduction Cadence */}
+            <AppearancesSection
+              insights={{
+                arcIntroRate: insights.arcIntroRate,
+                sagaIntroRate: insights.sagaIntroRate,
+              }}
+              minChapters={minChapters}
+              setMinChapters={setMinChapters}
+              arcCharMode={arcCharMode}
+              setArcCharMode={setArcCharMode}
+              sagaCharMode={sagaCharMode}
+              setSagaCharMode={setSagaCharMode}
+              wondersMode={wondersMode}
+              setWondersMode={setWondersMode}
+              arcCountDist={arcCountDist}
+              sagaCountDist={sagaCountDist}
+            />
 
-        {/* Cumulative Character Debuts */}
-        <SectionTitle title="Character Debuts" />
-        {raw && (
-          <CumulativeDebutSection
-            characters={raw.characters}
-            arcs={raw.arcs}
-            sagas={raw.sagas}
-          />
-        )}
+            {/* Cumulative Character Debuts */}
+            <SectionTitle title="Character Debuts" />
+            {raw && (
+              <CumulativeDebutSection
+                characters={raw.characters}
+                arcs={raw.arcs}
+                sagas={raw.sagas}
+              />
+            )}
 
-        {/* Section 3: Deep Dives */}
-        <SectionTitle title="Deep Dives" />
+            {/* Section 3: Deep Dives */}
+            <SectionTitle title="Deep Dives" />
 
-        {/* Longest Disappearances */}
-        <div className="mb-6">
-          <ChartCard
-            title="Longest Disappearances"
-            description="Characters with the longest gap between chapter appearances. Who vanished and came back?"
-            downloadFileName="gap-analysis"
-            chartId="gap-analysis"
-            embedPath="/embed/insights/gap-analysis"
-          >
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b-2 border-gray-200">
-                    <th className="text-left py-3 px-3 font-semibold text-gray-900">
-                      Character
-                    </th>
-                    <th className="text-right py-3 px-3 font-semibold text-gray-900">
-                      Gap (chapters)
-                    </th>
-                    <th className="text-right py-3 px-3 font-semibold text-gray-900">
-                      From Ch.
-                    </th>
-                    <th className="text-right py-3 px-3 font-semibold text-gray-900">
-                      To Ch.
-                    </th>
-                    <th className="text-right py-3 px-3 font-semibold text-gray-900">
-                      Total Appearances
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {insights.longestGaps.map((g, i) => (
-                    <tr
-                      key={g.name}
-                      className={`border-b border-gray-100 ${i % 2 === 0 ? 'bg-gray-50/50' : ''}`}
-                    >
-                      <td className="py-2 px-3 font-medium">
-                        <Link
-                          to={`/characters/${g.id}`}
-                          className="text-blue-600 hover:text-blue-800 hover:underline"
+            {/* Longest Disappearances */}
+            <div className="mb-6">
+              <ChartCard
+                title="Longest Disappearances"
+                description="Characters with the longest gap between chapter appearances. Who vanished and came back?"
+                downloadFileName="gap-analysis"
+                chartId="gap-analysis"
+                embedPath="/embed/insights/gap-analysis"
+              >
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b-2 border-gray-200">
+                        <th className="text-left py-3 px-3 font-semibold text-gray-900">
+                          Character
+                        </th>
+                        <th className="text-right py-3 px-3 font-semibold text-gray-900">
+                          Gap (chapters)
+                        </th>
+                        <th className="text-right py-3 px-3 font-semibold text-gray-900">
+                          From Ch.
+                        </th>
+                        <th className="text-right py-3 px-3 font-semibold text-gray-900">
+                          To Ch.
+                        </th>
+                        <th className="text-right py-3 px-3 font-semibold text-gray-900">
+                          Total Appearances
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {insights.longestGaps.map((g, i) => (
+                        <tr
+                          key={g.name}
+                          className={`border-b border-gray-100 ${i % 2 === 0 ? 'bg-gray-50/50' : ''}`}
                         >
-                          {g.name}
-                        </Link>
-                      </td>
-                      <td className="py-2 px-3 text-right font-bold text-red-600">
-                        {g.gapLength}
-                      </td>
-                      <td className="py-2 px-3 text-right text-gray-600">
-                        {g.gapStart}
-                      </td>
-                      <td className="py-2 px-3 text-right text-gray-600">
-                        {g.gapEnd}
-                      </td>
-                      <td className="py-2 px-3 text-right text-gray-600">
-                        {g.totalAppearances}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                          <td className="py-2 px-3 font-medium">
+                            <Link
+                              to={`/characters/${g.id}`}
+                              className="text-blue-600 hover:text-blue-800 hover:underline"
+                            >
+                              {g.name}
+                            </Link>
+                          </td>
+                          <td className="py-2 px-3 text-right font-bold text-red-600">
+                            {g.gapLength}
+                          </td>
+                          <td className="py-2 px-3 text-right text-gray-600">
+                            {g.gapStart}
+                          </td>
+                          <td className="py-2 px-3 text-right text-gray-600">
+                            {g.gapEnd}
+                          </td>
+                          <td className="py-2 px-3 text-right text-gray-600">
+                            {g.totalAppearances}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </ChartCard>
             </div>
-          </ChartCard>
-        </div>
 
-        {/* Appearance Concentration */}
-        <AppearanceConcentrationSection />
+            {/* Appearance Concentration */}
+            <AppearanceConcentrationSection />
 
-        {/* Saga Matrix Heatmap */}
-        <SagaMatrixSection />
+            {/* Saga Matrix Heatmap */}
+            <SagaMatrixSection />
+          </>
+        ) : (
+          <SectionLoader />
+        )}
       </div>
     </main>
   )

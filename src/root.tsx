@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import {
   Links,
   Meta,
@@ -122,18 +122,21 @@ export function HydrateFallback() {
 }
 
 // Reference data queries override these defaults with CACHE.REFERENCE_*
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: CACHE.DEFAULT_STALE,
-      gcTime: CACHE.DEFAULT_GC,
-      refetchOnWindowFocus: false,
-      retry: 2,
+const createQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: CACHE.DEFAULT_STALE,
+        gcTime: CACHE.DEFAULT_GC,
+        refetchOnWindowFocus: false,
+        retry: 2,
+      },
     },
-  },
-})
+  })
 
 export default function App() {
+  // One client per render: prerendered pages must not share cached data
+  const [queryClient] = useState(createQueryClient)
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClient}>
