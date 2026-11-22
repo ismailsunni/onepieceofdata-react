@@ -97,7 +97,7 @@ function BountyDistributionChart({
           />
           <Legend
             verticalAlign="top"
-            height={36}
+            wrapperStyle={{ paddingBottom: 8 }}
             formatter={(value) =>
               value === 'alive' ? 'Alive' : 'Deceased/Unknown'
             }

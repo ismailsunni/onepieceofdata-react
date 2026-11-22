@@ -48,7 +48,7 @@ function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
       chartId="top-bounties"
       embedPath="/embed/insights/top-bounties"
     >
-      <div className="flex justify-between items-start mb-4">
+      <div className="flex flex-wrap justify-between items-start gap-3 mb-4">
         <div>
           <p className="text-sm text-gray-600">
             Characters with the highest bounties (in Berries)
@@ -70,7 +70,7 @@ function TopBountiesChart({ dataAll, dataAlive }: TopBountiesChartProps) {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 whitespace-nowrap">
           <span className="text-sm text-gray-600">Filter:</span>
           <button
             onClick={() => setShowAliveOnly(false)}

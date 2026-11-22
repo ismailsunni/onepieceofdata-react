@@ -131,7 +131,7 @@ function Header() {
 
             {/* Search Content */}
             <div className="p-4 flex-1 overflow-y-auto">
-              <Search onNavigate={() => setMobileSearchOpen(false)} />
+              <Search autoFocus onNavigate={() => setMobileSearchOpen(false)} />
             </div>
           </div>
         </div>

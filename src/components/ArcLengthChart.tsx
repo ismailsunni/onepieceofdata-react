@@ -329,6 +329,19 @@ function ArcLengthChart({
       downloadFileName="arc-saga-lengths"
       chartId="arc-saga-lengths"
     >
+      {/* Era legend sits outside the plot so it fits on narrow screens */}
+      {splitIndex > 0 && (
+        <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2 text-sm font-semibold">
+          <span className="flex items-center gap-1.5 text-blue-800">
+            <span className="w-3 h-3 rounded-sm bg-blue-100" />
+            Paradise ({paradiseChapters})
+          </span>
+          <span className="flex items-center gap-1.5 text-red-600">
+            <span className="w-3 h-3 rounded-sm bg-red-50 border border-red-100" />
+            New World ({newWorldChapters})
+          </span>
+        </div>
+      )}
       <ResponsiveContainer width="100%" height={500}>
         <BarChart
           data={chartData}
@@ -342,14 +355,6 @@ function ArcLengthChart({
               x2={chartData[splitIndex - 1].saga}
               fill={CHART_COLORS.blue100}
               fillOpacity={0.5}
-              label={{
-                value: `Paradise (${paradiseChapters})`,
-                position: 'insideTop',
-                fill: CHART_COLORS.blue800,
-                fontSize: 14,
-                fontWeight: 'bold',
-                offset: 10,
-              }}
             />
           )}
           {/* Background for New World (second half) */}
@@ -359,14 +364,6 @@ function ArcLengthChart({
               x2={chartData[chartData.length - 1].saga}
               fill={CHART_COLORS.red50}
               fillOpacity={0.5}
-              label={{
-                value: `New World (${newWorldChapters})`,
-                position: 'insideTop',
-                fill: CHART_COLORS.red600,
-                fontSize: 14,
-                fontWeight: 'bold',
-                offset: 10,
-              }}
             />
           )}
           <XAxis

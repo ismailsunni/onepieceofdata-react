@@ -377,7 +377,7 @@ function ChapterDetailPage() {
         </nav>
 
         {/* Action Buttons Row */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
           <button
             onClick={() => navigate('/chapters')}
             className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg transition-colors shadow-sm"
@@ -387,7 +387,7 @@ function ChapterDetailPage() {
             <span className="text-sm font-medium">Back</span>
           </button>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => navigate(`/chapters/${chapter.number - 1}`)}
               disabled={chapter.number <= 1}
