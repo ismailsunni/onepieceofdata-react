@@ -67,4 +67,13 @@ Pages call TanStack Query with functions from `src/services/*`, but several deta
 ## Baseline
 
 - Bundle: entry `index-*.js` 676 kB (200 kB gzip), `vis-network` chunk 645 kB (155 kB gzip). The 300 KB initial-load target in `CLAUDE.md` is already exceeded.
-- Lighthouse: TODO, run on home and one character page before Phase 2.
+- Lighthouse (after migration, 2026-11-22, mobile, Lighthouse 12; scores are performance / accessibility / best practices / SEO):
+
+  | Page                          | Scores              | LCP   | TBT    | CLS  |
+  | ----------------------------- | ------------------- | ----- | ------ | ---- |
+  | `/`                           | 98 / 99 / 100 / 100 | 2.2 s | 10 ms  | 0.05 |
+  | `/characters`                 | 89 / 99 / 100 / 100 | 3.7 s | 50 ms  | 0    |
+  | `/characters/Monkey_D._Luffy` | 54 / 91 / 100 / 100 | 5.3 s | 20 ms  | 0.30 |
+  | `/analytics/bounty`           | 43 / 96 / 100 / 100 | 7.4 s | 580 ms | 0.22 |
+
+  Detail and analytics pages render skeletons, then fill them with client-side Supabase data, so LCP waits for that fetch and the swap causes layout shift. Possible fixes: seed React Query from the build data, and reserve chart heights.
